@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
+import DashboardIcon from "../../assets/icons/SidebarIcons/DashboardIcon";
+import RecruitmentIcon from "../../assets/icons/SidebarIcons/RecruitmentIcon";
+import OnboardingIcon from "../../assets/icons/SidebarIcons/OnboardingIcon";
+import EmployeesIcon from "../../assets/icons/SidebarIcons/EmployeesIcon";
+import ClustersIcon from "../../assets/icons/SidebarIcons/ClustersIcon";
+
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -56,27 +62,27 @@ const Sidebar = () => {
             {
               name: "Dashboard",
               path: "/dashboard",
-              icon: "path-to-dashboard-icon",
+              icon: <DashboardIcon/>,
             },
             {
               name: "Recruitment",
               path: "/recruitment",
-              icon: "path-to-recruitment-icon",
+              icon: <RecruitmentIcon/>,
             },
             {
               name: "Onboarding",
               path: "/onboarding",
-              icon: "path-to-onboarding-icon",
+              icon: <OnboardingIcon/>,
             },
             {
               name: "Employees",
               path: "/employees",
-              icon: "path-to-employees-icon",
+              icon: <EmployeesIcon/>,
             },
             {
               name: "Clusters",
               path: "/clusters",
-              icon: "path-to-clusters-icon",
+              icon: <ClustersIcon/>,
             },
           ].map((item, index) => (
             <li key={index} className="mx-4 bg-gray-100 rounded-xl shadow-md">
@@ -84,7 +90,14 @@ const Sidebar = () => {
                 to={item.path}
                 className="flex flex-col items-center justify-center py-6"
               >
-                <img src={item.icon} alt={item.name} className="w-8 h-8 mb-2" />
+                <div className="w-8 h-8 mb-2 flex items-center justify-center">
+                  {typeof item.icon === "string" ? (
+                    <img src={item.icon} alt={item.name} className="w-8 h-8" />
+                  ) : (
+                    item.icon // Render React component icon
+                  )}
+                </div>
+
                 <span className="text-sm font-medium text-gray-900">
                   {item.name}
                 </span>

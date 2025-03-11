@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/fredoka": "^5.2.5",
+    "@fontsource/inter": "^5.2.5",
     "@tailwindcss/vite": "^4.0.12",
     "framer-motion": "^12.4.11",
     "react": "^19.0.0",

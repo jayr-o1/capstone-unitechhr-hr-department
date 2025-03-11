@@ -1,2 +1,20 @@
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
+@layer base {
+  /* Define custom fonts for Tailwind */
+  :root {
+    --font-fredoka: "Fredoka", sans-serif;
+    --font-inter: "Inter", sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-fredoka {
+    font-family: var(--font-fredoka);
+  }
+  .font-inter {
+    font-family: var(--font-inter);
+  }
+}
