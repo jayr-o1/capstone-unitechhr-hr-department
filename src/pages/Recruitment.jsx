@@ -1,5 +1,7 @@
-const Recruiment = () => {
-    return(<></>);
-}
+import React from "react";
 
-export default Recruiment;
+const Recruitment = () => {
+    return <></>;
+};
+
+export default Recruitment;
