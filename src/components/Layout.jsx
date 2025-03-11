@@ -46,7 +46,7 @@ const Layout = () => {
                     <Header title={currentPage} />
 
                     {/* Page Content */}
-                    <main className="flex-1 p-4">
+                    <main className="flex-1 p-4 bg-gray-100">
                         <Outlet />
                     </main>
                 </div>
