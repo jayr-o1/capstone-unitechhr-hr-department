@@ -24,12 +24,13 @@ const Layout = () => {
         {/* Sidebar (Fixed Width) */}
         <Sidebar />
 
-        {/* Main Content Wrapper */}
-        <div className="flex-1 flex flex-col">
-          {/* Header (Shifted Right) */}
+        {/* Main Content Wrapper (Shifted Right) */}
+        <div className="flex-1 flex flex-col ml-64">
+          {" "}
+          {/* Add ml-64 to shift content */}
+          {/* Header (Full Width) */}
           <Header />
-
-          {/* Page Content (Shifted Right) */}
+          {/* Page Content */}
           <main className="flex-1 p-4">
             <Outlet />
           </main>
