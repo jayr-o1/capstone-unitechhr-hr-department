@@ -39,7 +39,7 @@ const Sidebar = () => {
             {isMobile && (
                 <button
                     onClick={toggleSidebar}
-                    className="fixed top-4 left-4 z-50 p-2 bg-gray-800 text-white rounded-md focus:outline-none hover:bg-gray-700 focus:ring-2 focus:ring-gray-500"
+                    className="fixed top-4 left-4 z-50 p-2 bg-gray-800 text-white rounded-md hover:bg-gray-700"
                 >
                     ☰
                 </button>
@@ -98,11 +98,11 @@ const Sidebar = () => {
                         ].map((item, index) => (
                             <li
                                 key={index}
-                                className="mx-4 bg-gray-100 rounded-xl shadow-md hover:bg-gray-200 focus-within:bg-gray-200 transition-colors duration-200"
+                                className="mx-4 bg-gray-100 rounded-xl shadow-md hover:bg-gray-200 transition-colors duration-200"
                             >
                                 <Link
                                     to={item.path}
-                                    className="flex flex-col items-center justify-center py-3 md:py-4 lg:py-6 focus:outline-none focus:ring-2 focus:ring-[#8d46a5] focus:ring-offset-2"
+                                    className="flex flex-col items-center justify-center py-3 md:py-4 lg:py-6"
                                 >
                                     <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10">
                                         {item.icon}
@@ -117,6 +117,7 @@ const Sidebar = () => {
 
                     {/* Optional: Add a footer or additional content here */}
                     <div className="p-4 text-center text-sm text-gray-400 border-t border-gray-700">
+                        {" "}
                         © 2025 UNITECH HR
                     </div>
                 </ul>
