@@ -25,7 +25,7 @@ const HiredApplicants = () => {
                 {hiredApplicants.map((applicant, index) => (
                     <div
                         key={index}
-                        className="p-3 rounded-lg bg-blue-100 text-blue-900 shadow-sm"
+                        className="p-3 rounded-lg bg-[#9AADEA] shadow-sm"
                     >
                         <p>
                             <span className="font-medium">
