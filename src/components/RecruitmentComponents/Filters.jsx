@@ -1,5 +1,4 @@
 import React from "react";
-import AddJobButton from "./AddJobButton";
 
 const Filters = ({
     selectedDepartments,
@@ -19,7 +18,6 @@ const Filters = ({
 
     return (
         <div className="space-y-6 h-full flex flex-col">
-            <AddJobButton />
             <div className="flex-1 overflow-y-auto">
                 {/* New Applicants Filter */}
                 <div>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import JobList from "../components/RecruitmentComponents/JobList";
 import Filters from "../components/RecruitmentComponents/Filters";
 import PaginationControls from "../components/RecruitmentComponents/PaginationControls";
+import AddJobButton from "../components/RecruitmentComponents/AddJobButton";
 
 const Recruitment = () => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -207,7 +208,7 @@ const Recruitment = () => {
     return (
         <div className="flex">
             {/* Left Side (Job Posts & Pagination) */}
-            <div className="w-2/3 pr-4">
+            <div className="w-2/3 flex flex-col justify-between">
                 <JobList jobs={currentJobs} />
                 <PaginationControls
                     currentPage={currentPage}
@@ -222,15 +223,23 @@ const Recruitment = () => {
 
             {/* Right Side (Filters) */}
             <div className="w-1/3 pl-4">
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <Filters
-                        selectedDepartments={selectedDepartments}
-                        setSelectedDepartments={setSelectedDepartments}
-                        selectedStatus={selectedStatus}
-                        setSelectedStatus={setSelectedStatus}
-                        showNewApplicants={showNewApplicants}
-                        setShowNewApplicants={setShowNewApplicants}
-                    />
+                <div className="bg-white rounded-lg shadow-md p-6 flex flex-col">
+                    {/* Add Job Button */}
+                    <div className="mb-6">
+                        <AddJobButton />
+                    </div>
+
+                    {/* Filters */}
+                    <div>
+                        <Filters
+                            selectedDepartments={selectedDepartments}
+                            setSelectedDepartments={setSelectedDepartments}
+                            selectedStatus={selectedStatus}
+                            setSelectedStatus={setSelectedStatus}
+                            showNewApplicants={showNewApplicants}
+                            setShowNewApplicants={setShowNewApplicants}
+                        />
+                    </div>
                 </div>
             </div>
         </div>
