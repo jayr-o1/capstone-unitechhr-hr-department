@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import SuccessAlert from "../Alerts/SuccessAlert"; // Import your success alert component
-import WarningAlert from "../Alerts/WarningAlert"; // Import your warning alert component
-import ErrorAlert from "../Alerts/ErrorAlert"; // Import your error alert component
+import showSuccessAlert from "../Alerts/SuccessAlert"; // Import success alert function
+import showWarningAlert from "../Alerts/WarningAlert"; // Import warning alert function
+import showErrorAlert from "../Alerts/ErrorAlert"; // Import error alert function
 
 const AddJobModal = ({ isOpen, onClose }) => {
     const [formData, setFormData] = useState({
@@ -13,16 +13,14 @@ const AddJobModal = ({ isOpen, onClose }) => {
         salaryMin: "",
         salaryMax: "",
     });
-    const [alert, setAlert] = useState(null); // Store alert type
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const handleReset = () => {
-        setAlert("warning"); // Show warning alert first
-
-        setTimeout(() => {
+        showWarningAlert("Are you sure you want to reset all fields?", () => {
+            // Reset form fields
             setFormData({
                 position: "",
                 department: "",
@@ -33,24 +31,24 @@ const AddJobModal = ({ isOpen, onClose }) => {
                 salaryMax: "",
             });
 
-            setAlert("success"); // Show success alert after clearing
-        }, 1000); // Wait 1 second before resetting the fields
+            // Show success alert after resetting
+            showSuccessAlert("Fields have been reset!");
+        });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault(); // Prevent default form submission behavior
 
-        // Simulated validation: Check if required fields are filled
+        // Validate required fields
         if (!formData.position || !formData.department || !formData.summary) {
-            setAlert("error"); // Show error alert if fields are missing
+            showErrorAlert("Please fill all required fields!"); // Show error alert
             return;
         }
 
-        // If no errors, show success alert and close the modal after 2 seconds
-        setAlert("success");
+        // Simulate successful submission
+        showSuccessAlert("Job added successfully!"); // Show success alert
         setTimeout(() => {
             onClose(); // Close modal after 2 seconds
-            setAlert(null);
         }, 2000);
     };
 
@@ -62,9 +60,10 @@ const AddJobModal = ({ isOpen, onClose }) => {
             style={{
                 background: "rgba(0, 0, 0, 0.6)", // Semi-transparent black overlay
                 backdropFilter: "blur(8px)", // Blur effect
+                zIndex: 1000, // Ensure this is higher than other elements
             }}
         >
-            <div className="bg-white rounded-lg p-8 w-3/5 max-w-3xl shadow-lg">
+            <div className="bg-white rounded-lg p-8 w-3/5 max-w-3xl shadow-lg relative z-50">
                 {/* Modal Header */}
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-bold text-2xl">Add Job Post</h2>
@@ -75,17 +74,6 @@ const AddJobModal = ({ isOpen, onClose }) => {
                         ✕
                     </button>
                 </div>
-
-                {/* Alert Messages */}
-                {alert === "success" && (
-                    <SuccessAlert message="Job added successfully!" />
-                )}
-                {alert === "warning" && (
-                    <WarningAlert message="Fields have been reset!" />
-                )}
-                {alert === "error" && (
-                    <ErrorAlert message="Please fill all required fields!" />
-                )}
 
                 {/* Form Content */}
                 <form onSubmit={handleSubmit} className="space-y-4">
