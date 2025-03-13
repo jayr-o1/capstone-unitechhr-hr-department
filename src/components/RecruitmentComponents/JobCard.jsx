@@ -20,7 +20,7 @@ const JobCard = ({ job }) => {
                     <span>•</span>
                     <p>{job.daysAgo}</p>
                 </div>
-                <p className="text-gray-500 text-sm mt-1">{job.description}</p>
+                <p className="text-gray-500 text-sm mt-3">{job.description}</p>
             </div>
             <div className="flex items-center gap-3">
                 <button className="cursor-pointer px-6 py-2 text-[#9AADEA] border border-[#9AADEA] rounded-lg transition duration-200 hover:bg-[#9AADEA] hover:text-white">
