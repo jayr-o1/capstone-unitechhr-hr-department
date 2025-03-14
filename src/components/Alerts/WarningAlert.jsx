@@ -1,6 +1,13 @@
 import Swal from "sweetalert2";
+import showSuccessAlert from "./SuccessAlert";
 
-const showWarningAlert = (message, callback) => {
+const showWarningAlert = (
+    message,
+    onConfirm,
+    confirmText = "Yes",
+    cancelText = "Cancel",
+    successMessage = null
+) => {
     Swal.fire({
         title: "Warning",
         text: message,
@@ -8,14 +15,17 @@ const showWarningAlert = (message, callback) => {
         showCancelButton: true,
         confirmButtonColor: "#9AADEA",
         cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, reset fields!",
-        cancelButtonText: "Cancel",
-        background: "#ffffff", // Custom background color
-        color: "#000000", // Black text for contrast
+        confirmButtonText: confirmText,
+        cancelButtonText: cancelText,
+        background: "#ffffff",
+        color: "#000000",
     }).then((result) => {
         if (result.isConfirmed) {
-            // Execute the callback if the user confirms
-            callback();
+            onConfirm();
+
+            if (successMessage) {
+                showSuccessAlert(successMessage); // Use your custom SuccessAlert
+            }
         }
     });
 };

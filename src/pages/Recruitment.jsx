@@ -12,6 +12,8 @@ const Recruitment = () => {
     const [selectedStatus, setSelectedStatus] = useState("All");
     const [showNewApplicants, setShowNewApplicants] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [jobs, setJobs] = useState(jobDetailsData);
+
     const jobsPerPage = 6;
 
     // Filter jobs based on selected filters
@@ -50,11 +52,31 @@ const Recruitment = () => {
         setIsModalOpen(false);
     };
 
+    const handleCloseJob = (jobId) => {
+        setJobs((prevJobs) =>
+            prevJobs.map((job) =>
+                job.id === jobId ? { ...job, status: "Closed" } : job
+            )
+        );
+    };
+
+    const handleOpenJob = (jobId) => {
+        setJobs((prevJobs) =>
+            prevJobs.map((job) =>
+                job.id === jobId ? { ...job, status: "Open" } : job
+            )
+        );
+    };
+
     return (
         <div className="flex-1 flex">
             {/* Left Side (Job Posts & Pagination) */}
             <div className="w-2/3 flex flex-col justify-between">
-                <JobList jobs={currentJobs} />
+                <JobList
+                    jobs={currentJobs}
+                    onCloseJob={handleCloseJob}
+                    onOpenJob={handleOpenJob}
+                />
                 <PaginationControls
                     currentPage={currentPage}
                     totalJobs={filteredJobs.length}
