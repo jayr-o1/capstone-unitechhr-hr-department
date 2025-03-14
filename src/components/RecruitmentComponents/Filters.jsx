@@ -1,4 +1,5 @@
 import React from "react";
+import departments from "../../data/departments"; // Import departments data
 
 const Filters = ({
     selectedDepartments,
@@ -39,16 +40,7 @@ const Filters = ({
                 <div className="mt-4">
                     <h3 className="font-semibold text-lg">Departments</h3>
                     <div className="flex flex-col gap-2 mt-2 text-gray-600">
-                        {[
-                            "College of Business Accountancy",
-                            "College of Computer Studies",
-                            "College of Criminology",
-                            "College of Education",
-                            "College of Tourism",
-                            "College of Nursing",
-                            "College of Psychology",
-                            "College of Engineering",
-                        ].map((dept, index) => (
+                        {departments.map((dept, index) => (
                             <label key={index} className="flex items-center">
                                 <input
                                     type="checkbox"
