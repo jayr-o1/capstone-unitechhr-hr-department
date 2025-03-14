@@ -32,26 +32,28 @@ const Layout = () => {
     }, [location.pathname]);
 
     return (
-        <>
-            <PageLoader isLoading={isLoading} />
+        <div className="flex h-screen">
+            {/* Sidebar (Fixed Width) */}
+            <Sidebar />
 
-            {/* Layout Wrapper - Sidebar + Main Content */}
-            <div className="flex h-screen">
-                {/* Sidebar (Fixed Width) */}
-                <Sidebar />
+            {/* Main Content Wrapper */}
+            <div className="flex-1 flex flex-col ml-64">
+                {/* Header (Full Width) */}
+                <Header title={currentPage} />
 
-                {/* Main Content Wrapper */}
-                <div className="flex-1 flex flex-col ml-64">
-                    {/* Header (Full Width) */}
-                    <Header title={currentPage} />
-
-                    {/* Page Content */}
-                    <main className="flex-1 p-4 bg-gray-100">
+                {/* Page Content (Only this part gets the loader) */}
+                <div className="relative flex-1 h-[calc(100vh-4rem)] p-4 bg-gray-100 overflow-y-auto">
+                    <PageLoader isLoading={isLoading} />
+                    <div
+                        className={
+                            isLoading ? "opacity-50 pointer-events-none" : ""
+                        }
+                    >
                         <Outlet />
-                    </main>
+                    </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
