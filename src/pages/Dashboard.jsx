@@ -8,9 +8,9 @@ const Dashboard = () => {
     return (
         <div className="flex-1 flex flex-col h-full">
             {/* Dashboard Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-grow">
                 {/* Key Metrics Section */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:col-span-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:col-span-3">
                     {/* Recruitment Metrics */}
                     <div className="md:col-span-2 bg-white p-6 rounded-xl shadow-lg">
                         <h1 className="text-lg font-semibold text-center">

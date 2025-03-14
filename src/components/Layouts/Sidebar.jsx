@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import DashboardIcon from "../../assets/icons/SidebarIcons/DashboardIcon";
 import RecruitmentIcon from "../../assets/icons/SidebarIcons/RecruitmentIcon";
@@ -98,7 +98,11 @@ const Sidebar = () => {
                         ].map((item, index) => (
                             <li
                                 key={index}
-                                className="mx-4 bg-gray-100 rounded-xl shadow-md hover:bg-gray-200 transition-colors duration-200"
+                                className={`mx-4 bg-gray-100 rounded-xl shadow-md hover:bg-gray-200 transition-colors duration-200 ${
+                                    location.pathname === item.path
+                                        ? "bg-gray-200" // Active page styling
+                                        : "bg-gray-100 hover:bg-gray-200"
+                                }`}
                             >
                                 <Link
                                     to={item.path}
