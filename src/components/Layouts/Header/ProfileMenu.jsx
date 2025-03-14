@@ -20,7 +20,7 @@ const ProfileMenu = ({ onClose }) => {
                         <h4 className="text-base whitespace-nowrap">
                             Jay-r Olores
                             <span className="rounded bg-[#04B800] px-2 py-1 text-xs text-white ltr:ml-2 rtl:ml-2">
-                                Admin
+                                HR Head
                             </span>
                         </h4>
                         <a
