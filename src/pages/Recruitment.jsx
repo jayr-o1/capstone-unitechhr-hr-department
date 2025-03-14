@@ -4,6 +4,7 @@ import Filters from "../components/RecruitmentComponents/Filters";
 import PaginationControls from "../components/RecruitmentComponents/PaginationControls";
 import AddJobButton from "../components/RecruitmentComponents/AddJobButton";
 import AddJobModal from "../components/Modals/AddJobModal";
+import EditJobModal from "../components/Modals/EditJobModal"; // Import EditJobModal
 import jobDetailsData from "../data/jobDetailsData";
 
 const Recruitment = () => {
@@ -11,8 +12,10 @@ const Recruitment = () => {
     const [selectedDepartments, setSelectedDepartments] = useState([]);
     const [selectedStatus, setSelectedStatus] = useState("All");
     const [showNewApplicants, setShowNewApplicants] = useState(false);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false); // For AddJobModal
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false); // For EditJobModal
     const [jobs, setJobs] = useState(jobDetailsData);
+    const [selectedJob, setSelectedJob] = useState(null); // Store the job being edited
 
     const jobsPerPage = 5;
 
@@ -42,16 +45,28 @@ const Recruitment = () => {
     const indexOfFirstJob = indexOfLastJob - jobsPerPage;
     const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
 
-    // Function to open the modal
-    const handleOpenModal = () => {
-        setIsModalOpen(true);
+    // Function to open the Add Job modal
+    const handleOpenAddModal = () => {
+        setIsAddModalOpen(true);
     };
 
-    // Function to close the modal
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
+    // Function to close the Add Job modal
+    const handleCloseAddModal = () => {
+        setIsAddModalOpen(false);
     };
 
+    // Function to open the Edit Job modal
+    const handleOpenEditModal = (job) => {
+        setSelectedJob(job); // Set the job to be edited
+        setIsEditModalOpen(true); // Open the modal
+    };
+
+    // Function to close the Edit Job modal
+    const handleCloseEditModal = () => {
+        setIsEditModalOpen(false);
+    };
+
+    // Function to handle closing a job
     const handleCloseJob = (jobId) => {
         setJobs((prevJobs) =>
             prevJobs.map((job) =>
@@ -60,12 +75,21 @@ const Recruitment = () => {
         );
     };
 
+    // Function to handle opening a job
     const handleOpenJob = (jobId) => {
         setJobs((prevJobs) =>
             prevJobs.map((job) =>
                 job.id === jobId ? { ...job, status: "Open" } : job
             )
         );
+    };
+
+    // Function to handle updating a job
+    const handleUpdateJob = (updatedJob) => {
+        setJobs((prevJobs) =>
+            prevJobs.map((job) => (job.id === updatedJob.id ? updatedJob : job))
+        );
+        handleCloseEditModal(); // Close the modal after updating
     };
 
     return (
@@ -76,6 +100,7 @@ const Recruitment = () => {
                     jobs={currentJobs}
                     onCloseJob={handleCloseJob}
                     onOpenJob={handleOpenJob}
+                    onEditJob={handleOpenEditModal} // Pass the edit function
                 />
                 <PaginationControls
                     currentPage={currentPage}
@@ -98,7 +123,9 @@ const Recruitment = () => {
                         </h3>
                         <div className="border border-gray-300 rounded-lg p-4">
                             <div className="flex flex-col gap-2">
-                                <AddJobButton onOpenModal={handleOpenModal} />
+                                <AddJobButton
+                                    onOpenModal={handleOpenAddModal}
+                                />
                             </div>
                         </div>
                     </div>
@@ -123,7 +150,18 @@ const Recruitment = () => {
             </div>
 
             {/* Add Job Modal */}
-            <AddJobModal isOpen={isModalOpen} onClose={handleCloseModal} />
+            <AddJobModal
+                isOpen={isAddModalOpen}
+                onClose={handleCloseAddModal}
+            />
+
+            {/* Edit Job Modal */}
+            <EditJobModal
+                isOpen={isEditModalOpen}
+                onClose={handleCloseEditModal}
+                initialData={selectedJob}
+                onUpdateJob={handleUpdateJob} // Pass the update function
+            />
         </div>
     );
 };

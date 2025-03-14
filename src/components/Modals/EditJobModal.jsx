@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import showSuccessAlert from "../Alerts/SuccessAlert";
 import showWarningAlert from "../Alerts/WarningAlert";
 import showErrorAlert from "../Alerts/ErrorAlert";
 import departments from "../../data/departments";
-import FormField from "./RecruitmentModalComponents/FormField"; // Import the reusable FormField component
-import ActionButtons from "./RecruitmentModalComponents/ActionButtons"; // Import the reusable ActionButtons component
+import FormField from "./RecruitmentModalComponents/FormField"; // Reuse FormField
+import ActionButtons from "./RecruitmentModalComponents/ActionButtons"; // Reuse ActionButtons
 
-const AddJobModal = ({ isOpen, onClose }) => {
+const EditJobModal = ({ isOpen, onClose, initialData }) => {
     const [formData, setFormData] = useState({
         title: "",
         department: "",
@@ -19,44 +19,35 @@ const AddJobModal = ({ isOpen, onClose }) => {
         availableSlots: 1,
     });
 
+    // Pre-fill the form with initial data when the modal opens
+    useEffect(() => {
+        if (initialData) {
+            setFormData(initialData);
+        }
+    }, [initialData]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
     const handleReset = () => {
-        showWarningAlert(
-            "Are you sure you want to reset all fields?",
-            () => {
-                setFormData({
-                    title: "",
-                    department: "",
-                    summary: "",
-                    keyDuties: "",
-                    essentialSkills: "",
-                    qualifications: "",
-                    salary: "",
-                    workSetup: "",
-                    availableSlots: 1,
-                });
-            },
-            "Yes, reset it!",
-            "Cancel",
-            "Fields have been successfully reset!"
-        );
+        onClose(); // Close the modal when canceling
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        // Validate required fields
         if (!formData.title || !formData.department || !formData.summary) {
             showErrorAlert("Please fill all required fields!");
             return;
         }
 
-        showSuccessAlert("Job added successfully!");
+        // Simulate successful update
+        showSuccessAlert("Job updated successfully!");
         setTimeout(() => {
-            onClose();
+            onClose(); // Close modal after 2 seconds
         }, 2000);
     };
 
@@ -74,7 +65,7 @@ const AddJobModal = ({ isOpen, onClose }) => {
             <div className="bg-white rounded-lg p-8 w-3/5 max-w-5xl shadow-lg relative z-50 flex flex-col max-h-[90vh]">
                 {/* Modal Header */}
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="font-bold text-2xl">Add Job Post</h2>
+                    <h2 className="font-bold text-2xl">Update Job Post</h2>
                     <button
                         onClick={onClose}
                         className="cursor-pointer text-gray-500 hover:text-gray-700 text-xl"
@@ -173,10 +164,14 @@ const AddJobModal = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Buttons */}
-                <ActionButtons onSubmit={handleSubmit} onReset={handleReset} />
+                <ActionButtons
+                    onSubmit={handleSubmit}
+                    onReset={handleReset}
+                    isEditing={true}
+                />
             </div>
         </div>
     );
 };
 
-export default AddJobModal;
+export default EditJobModal;

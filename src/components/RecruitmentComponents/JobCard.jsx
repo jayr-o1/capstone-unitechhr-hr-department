@@ -7,7 +7,7 @@ import showWarningAlert from "../Alerts/WarningAlert";
 import showSuccessAlert from "../Alerts/SuccessAlert";
 import showDeleteConfirmation from "../Alerts/DeleteAlert";
 
-const JobCard = ({ job, onCloseJob, onOpenJob }) => {
+const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
@@ -61,6 +61,11 @@ const JobCard = ({ job, onCloseJob, onOpenJob }) => {
         navigate(`/recruitment/${job.id}`);
     };
 
+    // Handle edit action
+    const handleEdit = () => {
+        onEditJob(job); // Call the onEditJob function with the job data
+    };
+
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -106,7 +111,10 @@ const JobCard = ({ job, onCloseJob, onOpenJob }) => {
                 >
                     View
                 </button>
-                <button className="cursor-pointer px-6 py-2 text-white bg-[#9AADEA] border border-[#9AADEA] rounded-lg transition duration-200 hover:bg-[#7b8edc]">
+                <button
+                    onClick={handleEdit} // Call handleEdit when clicked
+                    className="cursor-pointer px-6 py-2 text-white bg-[#9AADEA] border border-[#9AADEA] rounded-lg transition duration-200 hover:bg-[#7b8edc]"
+                >
                     Edit
                 </button>
                 <button

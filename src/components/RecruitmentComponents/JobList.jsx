@@ -1,7 +1,7 @@
 import React from "react";
 import JobCard from "./JobCard";
 
-const JobList = ({ jobs, onCloseJob, onOpenJob }) => {
+const JobList = ({ jobs, onCloseJob, onOpenJob, onEditJob }) => {
     return (
         <div className="space-y-4">
             {jobs.length === 0 ? (
@@ -15,6 +15,7 @@ const JobList = ({ jobs, onCloseJob, onOpenJob }) => {
                         job={job}
                         onCloseJob={onCloseJob}
                         onOpenJob={onOpenJob}
+                        onEditJob={onEditJob} // Pass the onEditJob prop
                     />
                 ))
             )}
