@@ -6,13 +6,15 @@ import departments from "../../data/departments"; // Import departments data
 
 const AddJobModal = ({ isOpen, onClose }) => {
     const [formData, setFormData] = useState({
-        position: "",
-        department: "", // Department will now be a dropdown value
+        title: "",
+        department: "",
         summary: "",
         keyDuties: "",
-        skills: "",
-        salaryMin: "",
-        salaryMax: "",
+        essentialSkills: "",
+        qualifications: "",
+        salary: "",
+        workSetup: "",
+        availableSlots: 1,
     });
 
     const handleChange = (e) => {
@@ -21,28 +23,33 @@ const AddJobModal = ({ isOpen, onClose }) => {
     };
 
     const handleReset = () => {
-        showWarningAlert("Are you sure you want to reset all fields?", () => {
-            // Reset form fields
-            setFormData({
-                position: "",
-                department: "",
-                summary: "",
-                keyDuties: "",
-                skills: "",
-                salaryMin: "",
-                salaryMax: "",
-            });
-
-            // Show success alert after resetting
-            showSuccessAlert("Fields have been reset!");
-        });
+        showWarningAlert(
+            "Are you sure you want to reset all fields?",
+            () => {
+                // Reset form fields
+                setFormData({
+                    title: "",
+                    department: "",
+                    summary: "",
+                    keyDuties: "",
+                    essentialSkills: "",
+                    qualifications: "",
+                    salary: "",
+                    workSetup: "",
+                    availableSlots: 1,
+                });
+            },
+            "Yes, reset it!",
+            "Cancel",
+            "Fields have been successfully reset!" // Success message passed to showWarningAlert
+        );
     };
 
     const handleSubmit = (e) => {
         e.preventDefault(); // Prevent default form submission behavior
 
         // Validate required fields
-        if (!formData.position || !formData.department || !formData.summary) {
+        if (!formData.title || !formData.department || !formData.summary) {
             showErrorAlert("Please fill all required fields!"); // Show error alert
             return;
         }
@@ -65,7 +72,7 @@ const AddJobModal = ({ isOpen, onClose }) => {
                 zIndex: 1000, // Ensure this is higher than other elements
             }}
         >
-            <div className="bg-white rounded-lg p-8 w-3/5 max-w-3xl shadow-lg relative z-50">
+            <div className="bg-white rounded-lg p-8 w-3/5 max-w-5xl shadow-lg relative z-50 flex flex-col max-h-[90vh]">
                 {/* Modal Header */}
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-bold text-2xl">Add Job Post</h2>
@@ -77,166 +84,233 @@ const AddJobModal = ({ isOpen, onClose }) => {
                     </button>
                 </div>
 
-                {/* Form Content */}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Position & Department */}
-                    <div className="flex space-x-2">
-                        <div className="relative w-1/2">
-                            <input
-                                type="text"
-                                name="position"
-                                value={formData.position}
-                                onChange={handleChange}
-                                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
-                                required
-                            />
-                            <label
-                                className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
-                                           peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
-                                           peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
-                                           bg-white px-1 z-10" // Added bg-white and z-10
-                            >
-                                Position
-                            </label>
+                {/* Scrollable Form Content */}
+                <div className="overflow-y-auto flex-1">
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* First Row: Job Title and Department */}
+                        <div className="grid grid-cols-2 gap-4 pt-4">
+                            {/* Job Title */}
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    name="title"
+                                    value={formData.title}
+                                    onChange={handleChange}
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
+                                    placeholder=""
+                                    required
+                                />
+                                <label
+                                    className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
+                                               peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
+                                               peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
+                                               bg-white px-1 z-10"
+                                >
+                                    Job Title
+                                </label>
+                            </div>
+
+                            {/* Department */}
+                            <div className="relative">
+                                <select
+                                    name="department"
+                                    value={formData.department}
+                                    onChange={handleChange}
+                                    className="cursor-pointer w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer appearance-none bg-white"
+                                    required
+                                >
+                                    <option value="" hidden></option>
+                                    {departments.map((dept, index) => (
+                                        <option key={index} value={dept}>
+                                            {dept}
+                                        </option>
+                                    ))}
+                                </select>
+                                <label
+                                    className={`absolute left-3 transition-all duration-200 pointer-events-none 
+                    bg-white px-1 z-10 
+                    ${
+                        formData.department
+                            ? "-top-2 text-sm text-[#9AADEA]"
+                            : "top-3 text-gray-500"
+                    }`}
+                                >
+                                    Department
+                                </label>
+                            </div>
                         </div>
-                        <div className="relative w-1/2">
-                            <select
-                                name="department"
-                                value={formData.department}
-                                onChange={handleChange}
-                                className="cursor-pointer w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer appearance-none"
-                                required
-                            >
-                                <option value="" disabled>
-                                    Select Department
-                                </option>
-                                {departments.map((dept, index) => (
-                                    <option key={index} value={dept}>
-                                        {dept}
-                                    </option>
-                                ))}
-                            </select>
-                            <label
-                                className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
-                                           peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
-                                           peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
-                                           bg-white px-1 z-10" // Added bg-white and z-10
-                            >
-                                Department
-                            </label>
+
+                        {/* Single Column Fields */}
+                        <div className="space-y-4">
+                            {/* Summary */}
+                            <div className="relative">
+                                <textarea
+                                    name="summary"
+                                    value={formData.summary}
+                                    onChange={handleChange}
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
+                                    placeholder=""
+                                    required
+                                ></textarea>
+                                <label
+                                    className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
+                                               peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
+                                               peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
+                                               bg-white px-1 z-10"
+                                >
+                                    Summary
+                                </label>
+                            </div>
+
+                            {/* Key Duties */}
+                            <div className="relative">
+                                <textarea
+                                    name="keyDuties"
+                                    value={formData.keyDuties}
+                                    onChange={handleChange}
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
+                                    placeholder=""
+                                ></textarea>
+                                <label
+                                    className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
+                                               peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
+                                               peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
+                                               bg-white px-1 z-10"
+                                >
+                                    Key Duties
+                                </label>
+                            </div>
+
+                            {/* Essential Skills */}
+                            <div className="relative">
+                                <textarea
+                                    name="essentialSkills"
+                                    value={formData.essentialSkills}
+                                    onChange={handleChange}
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
+                                    placeholder=""
+                                ></textarea>
+                                <label
+                                    className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
+                                               peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
+                                               peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
+                                               bg-white px-1 z-10"
+                                >
+                                    Essential Skills
+                                </label>
+                            </div>
+
+                            {/* Qualifications */}
+                            <div className="relative">
+                                <textarea
+                                    name="qualifications"
+                                    value={formData.qualifications}
+                                    onChange={handleChange}
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
+                                    placeholder=""
+                                ></textarea>
+                                <label
+                                    className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
+                                               peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
+                                               peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
+                                               bg-white px-1 z-10"
+                                >
+                                    Qualifications
+                                </label>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Summary */}
-                    <div className="relative">
-                        <textarea
-                            name="summary"
-                            value={formData.summary}
-                            onChange={handleChange}
-                            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
-                            required
-                        ></textarea>
-                        <label
-                            className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
-                                       peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
-                                       peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
-                                       bg-white px-1 z-10" // Added bg-white and z-10
-                        >
-                            Summary
-                        </label>
-                    </div>
+                        {/* Last Row: Salary, Work Setup, Available Slots */}
+                        <div className="grid grid-cols-3 gap-4 pb-4">
+                            {/* Salary */}
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    name="salary"
+                                    value={formData.salary}
+                                    onChange={handleChange}
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
+                                    placeholder=""
+                                    required
+                                />
+                                <label
+                                    className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
+                                               peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
+                                               peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
+                                               bg-white px-1 z-10"
+                                >
+                                    Salary (e.g., Up to 20k)
+                                </label>
+                            </div>
 
-                    {/* Key Duties */}
-                    <div className="relative">
-                        <textarea
-                            name="keyDuties"
-                            value={formData.keyDuties}
-                            onChange={handleChange}
-                            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
-                        ></textarea>
-                        <label
-                            className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
-                                       peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
-                                       peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
-                                       bg-white px-1 z-10" // Added bg-white and z-10
-                        >
-                            Key Duties
-                        </label>
-                    </div>
+                            {/* Work Setup */}
+                            <div className="relative">
+                                <select
+                                    name="workSetup"
+                                    value={formData.workSetup}
+                                    onChange={handleChange}
+                                    className="cursor-pointer w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer appearance-none bg-white"
+                                    required
+                                >
+                                    <option value="" hidden></option>
+                                    <option value="On Site">On Site</option>
+                                    <option value="Remote">Remote</option>
+                                    <option value="Hybrid">Hybrid</option>
+                                </select>
+                                <label
+                                    className={`absolute left-3 transition-all duration-200 pointer-events-none bg-white px-1 z-10 
+            ${
+                formData.workSetup && formData.workSetup !== ""
+                    ? "-top-2 text-sm text-[#9AADEA]"
+                    : "top-3 text-gray-500"
+            }`}
+                                >
+                                    Work Setup
+                                </label>
+                            </div>
 
-                    {/* Skills and Experience */}
-                    <div className="relative">
-                        <textarea
-                            name="skills"
-                            value={formData.skills}
-                            onChange={handleChange}
-                            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
-                        ></textarea>
-                        <label
-                            className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
-                                       peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
-                                       peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
-                                       bg-white px-1 z-10" // Added bg-white and z-10
-                        >
-                            Skills and Experience
-                        </label>
-                    </div>
-
-                    {/* Salary Range */}
-                    <div className="flex space-x-2">
-                        <div className="relative w-1/2">
-                            <input
-                                type="text"
-                                name="salaryMin"
-                                value={formData.salaryMin}
-                                onChange={handleChange}
-                                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
-                            />
-                            <label
-                                className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
-                                           peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
-                                           peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
-                                           bg-white px-1 z-10" // Added bg-white and z-10
-                            >
-                                Salary Range Min
-                            </label>
+                            {/* Available Slots */}
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    name="availableSlots"
+                                    value={formData.availableSlots}
+                                    onChange={handleChange}
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
+                                    min="1"
+                                    required
+                                />
+                                <label
+                                    className={`absolute left-3 transition-all duration-200 pointer-events-none bg-white px-1 z-10 
+                    ${
+                        formData.availableSlots
+                            ? "-top-2 text-sm text-[#9AADEA]"
+                            : "top-3 text-gray-500"
+                    }`}
+                                >
+                                    Available Slots
+                                </label>
+                            </div>
                         </div>
-                        <div className="relative w-1/2">
-                            <input
-                                type="text"
-                                name="salaryMax"
-                                value={formData.salaryMax}
-                                onChange={handleChange}
-                                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer"
-                            />
-                            <label
-                                className="absolute left-3 top-3 text-gray-500 transition-all duration-200 pointer-events-none
-                                           peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA]
-                                           peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:text-sm
-                                           bg-white px-1 z-10" // Added bg-white and z-10
-                            >
-                                Salary Range Max
-                            </label>
-                        </div>
-                    </div>
+                    </form>
+                </div>
 
-                    {/* Buttons */}
-                    <div className="flex justify-center space-x-4 mt-6">
-                        <button
-                            type="submit"
-                            className="cursor-pointer px-6 py-3 bg-[#9AADEA] text-white font-semibold rounded-lg hover:bg-[#7b8edc] transition"
-                        >
-                            Add Job Post
-                        </button>
-                        <button
-                            type="button" // Prevent form submission
-                            onClick={handleReset}
-                            className="cursor-pointer px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
-                        >
-                            Reset Fields
-                        </button>
-                    </div>
-                </form>
+                {/* Buttons */}
+                <div className="flex justify-center space-x-4 mt-6">
+                    <button
+                        type="submit"
+                        className="cursor-pointer px-6 py-3 bg-[#9AADEA] text-white font-semibold rounded-lg hover:bg-[#7b8edc] transition"
+                    >
+                        Add Job Post
+                    </button>
+                    <button
+                        type="button" // Prevent form submission
+                        onClick={handleReset}
+                        className="cursor-pointer px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
+                    >
+                        Reset Fields
+                    </button>
+                </div>
             </div>
         </div>
     );
