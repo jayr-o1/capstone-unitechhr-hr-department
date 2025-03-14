@@ -107,7 +107,9 @@ const AddJobModal = ({ isOpen, onClose }) => {
                                 className="cursor-pointer w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-[#9AADEA] peer appearance-none"
                                 required
                             >
-                                <option value="" disabled>Select Department</option>
+                                <option value="" disabled>
+                                    Select Department
+                                </option>
                                 {departments.map((dept, index) => (
                                     <option key={index} value={dept}>
                                         {dept}
@@ -229,7 +231,7 @@ const AddJobModal = ({ isOpen, onClose }) => {
                         <button
                             type="button" // Prevent form submission
                             onClick={handleReset}
-                            className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
+                            className="cursor-pointer px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
                         >
                             Reset Fields
                         </button>

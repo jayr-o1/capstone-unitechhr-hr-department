@@ -1,34 +1,64 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import MoreOptionsIcon from "../../assets/icons/RecruitmentIcons/MoreOptionsIcon";
 import CloseJobIcon from "../../assets/icons/RecruitmentIcons/CloseJobIcon";
 import DeleteJobIcon from "../../assets/icons/RecruitmentIcons/DeleteJobIcon";
+import showWarningAlert from "../Alerts/WarningAlert";
+import showSuccessAlert from "../Alerts/SuccessAlert";
+import showDeleteConfirmation from "../Alerts/DeleteAlert";
 
-const JobCard = ({ job }) => {
+const JobCard = ({ job, onCloseJob, onOpenJob }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
-    const navigate = useNavigate(); // Hook for navigation
+    const navigate = useNavigate();
 
     // Toggle dropdown visibility
     const toggleDropdown = () => {
         setIsDropdownOpen((prev) => !prev);
     };
 
-    // Handle close action
-    const handleClose = () => {
-        console.log("Close job:", job.title); // Replace with actual close logic
-        setIsDropdownOpen(false); // Close the dropdown
+    // Handle close/open action
+    const handleCloseOrOpen = () => {
+        const isOpening = job.status === "Closed"; // If job is closed, we are opening it
+        const action = isOpening ? "open" : "close";
+        const pastTenseAction = isOpening ? "opened" : "closed"; // Manually define past tense
+
+        showWarningAlert(
+            `Are you sure you want to ${action} this job?`,
+            () => {
+                if (isOpening) {
+                    onOpenJob(job.id); // Call onOpenJob if the job is closed
+                } else {
+                    onCloseJob(job.id); // Call onCloseJob if the job is open
+                }
+                setIsDropdownOpen(false);
+                showSuccessAlert(
+                    `The job has been successfully ${pastTenseAction}!`
+                );
+            },
+            `Yes, ${action} it!`,
+            "Cancel",
+            `The job has been successfully ${pastTenseAction}!` // Success message passed to showWarningAlert
+        );
     };
 
     // Handle delete action
     const handleDelete = () => {
-        console.log("Delete job:", job.title); // Replace with actual delete logic
-        setIsDropdownOpen(false); // Close the dropdown
+        showDeleteConfirmation(
+            job.title,
+            () => {
+                console.log("Deleting job:", job.title);
+                setIsDropdownOpen(false);
+                // Add delete logic here
+            },
+            "Job title does not match!", // Custom error message
+            "The job has been successfully deleted!" // Success message
+        );
     };
 
     // Handle view action
     const handleView = () => {
-        navigate(`/recruitment/${job.id}`); // Navigate to job details page
+        navigate(`/recruitment/${job.id}`);
     };
 
     // Close dropdown when clicking outside
@@ -71,7 +101,7 @@ const JobCard = ({ job }) => {
             </div>
             <div className="flex items-center gap-3 relative" ref={dropdownRef}>
                 <button
-                    onClick={handleView} // Add onClick handler for "View"
+                    onClick={handleView}
                     className="cursor-pointer px-6 py-2 text-[#9AADEA] border border-[#9AADEA] rounded-lg transition duration-200 hover:bg-[#9AADEA] hover:text-white"
                 >
                     View
@@ -90,11 +120,11 @@ const JobCard = ({ job }) => {
                 {isDropdownOpen && (
                     <div className="absolute right-12 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
                         <button
-                            onClick={handleClose}
+                            onClick={handleCloseOrOpen}
                             className="cursor-pointer w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition duration-200 text-left flex items-center gap-2"
                         >
                             <CloseJobIcon className="text-gray-700 hover:text-gray-900" />{" "}
-                            Close
+                            {job.status === "Open" ? "Close" : "Open"}
                         </button>
                         <button
                             onClick={handleDelete}
