@@ -14,7 +14,7 @@ const Recruitment = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [jobs, setJobs] = useState(jobDetailsData);
 
-    const jobsPerPage = 6;
+    const jobsPerPage = 5;
 
     // Filter jobs based on selected filters
     const filteredJobs = jobDetailsData
@@ -91,21 +91,33 @@ const Recruitment = () => {
             {/* Right Side (Filters) */}
             <div className="w-1/3 pl-4">
                 <div className="bg-white rounded-lg shadow-md p-6 flex flex-col">
-                    {/* Add Job Button */}
-                    <div className="mb-6">
-                        <AddJobButton onOpenModal={handleOpenModal} />
+                    {/* Controls Section */}
+                    <div className="relative w-full mb-4">
+                        <h3 className="absolute left-3 -top-3 bg-white px-2 text-gray-400 text-sm font-semibold">
+                            Controls
+                        </h3>
+                        <div className="border border-gray-300 rounded-lg p-4">
+                            <div className="flex flex-col gap-2">
+                                <AddJobButton onOpenModal={handleOpenModal} />
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Filters */}
-                    <div>
-                        <Filters
-                            selectedDepartments={selectedDepartments}
-                            setSelectedDepartments={setSelectedDepartments}
-                            selectedStatus={selectedStatus}
-                            setSelectedStatus={setSelectedStatus}
-                            showNewApplicants={showNewApplicants}
-                            setShowNewApplicants={setShowNewApplicants}
-                        />
+                    {/* Filters Section */}
+                    <div className="relative w-full">
+                        <h3 className="absolute left-3 -top-3 bg-white px-2 text-gray-400 text-sm font-semibold">
+                            Filters
+                        </h3>
+                        <div className="border border-gray-300 rounded-lg p-4">
+                            <Filters
+                                selectedDepartments={selectedDepartments}
+                                setSelectedDepartments={setSelectedDepartments}
+                                selectedStatus={selectedStatus}
+                                setSelectedStatus={setSelectedStatus}
+                                showNewApplicants={showNewApplicants}
+                                setShowNewApplicants={setShowNewApplicants}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
