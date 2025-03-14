@@ -3,7 +3,7 @@ import NotificationDropdown from "./Header/NotificationDropdown";
 import ProfileDropdown from "./Header/ProfileDropdown";
 import fetchNotifications from "../../data/notifications"; // Import correctly
 
-const Header = ({ title }) => {
+const Header = ({ title, breadcrumb = [], onBreadcrumbClick }) => {
     const [notificationsState, setNotificationsState] = useState([]);
 
     useEffect(() => {
@@ -32,7 +32,32 @@ const Header = ({ title }) => {
     return (
         <header className="sticky top-0 bg-white shadow-sm px-4 py-2 flex items-center justify-between z-40 h-16 md:pr-4">
             <div className="flex-1 font-fredoka font-light">
-                <h1 className="text-2xl text-gray-700">{title}</h1>
+                <h1 className="text-2xl text-gray-700">
+                    {breadcrumb.length > 0
+                        ? breadcrumb.map((item, index) => (
+                              <span key={index}>
+                                  {item.path ? (
+                                      <span
+                                          onClick={() =>
+                                              onBreadcrumbClick(item.path)
+                                          }
+                                          className="text-blue-500 hover:text-blue-700 hover:underline cursor-pointer"
+                                      >
+                                          {item.title}
+                                      </span>
+                                  ) : (
+                                      <span>{item.title}</span>
+                                  )}
+                                  {index < breadcrumb.length - 1 && (
+                                      <span className="text-gray-700">
+                                          {" "}
+                                          &gt;{" "}
+                                      </span>
+                                  )}
+                              </span>
+                          ))
+                        : title}
+                </h1>
             </div>
 
             <div className="flex items-center space-x-4">

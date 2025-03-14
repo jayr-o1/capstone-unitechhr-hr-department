@@ -4,7 +4,7 @@ import Filters from "../components/RecruitmentComponents/Filters";
 import PaginationControls from "../components/RecruitmentComponents/PaginationControls";
 import AddJobButton from "../components/RecruitmentComponents/AddJobButton";
 import AddJobModal from "../components/Modals/AddJobModal";
-import jobPosts from "../data/jobPostsData"; // Import the jobPosts array
+import jobDetailsData from "../data/jobDetailsData";
 
 const Recruitment = () => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -15,7 +15,7 @@ const Recruitment = () => {
     const jobsPerPage = 6;
 
     // Filter jobs based on selected filters
-    const filteredJobs = jobPosts
+    const filteredJobs = jobDetailsData
         .filter((job) => {
             const matchesDepartment =
                 selectedDepartments.length === 0 ||
