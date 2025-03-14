@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "./Layouts/Header";
 import Sidebar from "./Layouts/Sidebar";
 import PageLoader from "./PageLoader";
+import jobDetailsData from "../data/jobDetailsData"; // Import job details
 
 const Layout = () => {
     const [isLoading, setIsLoading] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+    const { jobId } = useParams(); // Get jobId from URL
 
     // Define a mapping of paths to page titles
     const pageTitles = {
@@ -17,7 +20,17 @@ const Layout = () => {
         "/clusters": "Clusters",
     };
 
-    const currentPage = pageTitles[location.pathname] || "Dashboard"; // Default title
+    // Get the job title if on a job details page
+    const getJobTitle = (jobId) => {
+        const job = jobDetailsData.find((job) => job.id === Number(jobId));
+        return job ? job.title : "Job Details";
+    };
+
+    // Get the current page title
+    const currentPage =
+        location.pathname.startsWith("/recruitment/") && jobId
+            ? getJobTitle(jobId)
+            : pageTitles[location.pathname] || "Dashboard";
 
     // Update browser tab title when route changes
     useEffect(() => {
@@ -31,6 +44,47 @@ const Layout = () => {
         return () => clearTimeout(timer);
     }, [location.pathname]);
 
+    // Function to generate breadcrumb data
+    const generateBreadcrumb = () => {
+        const paths = location.pathname
+            .split("/")
+            .filter((path) => path !== ""); // Split the path into segments
+        const breadcrumb = [];
+
+        // Add the "Recruitment" root path
+        if (paths[0] === "recruitment") {
+            breadcrumb.push({
+                title: "Recruitment",
+                path: "/recruitment",
+            });
+
+            // If a job is opened, use job title instead of ID
+            if (paths.length > 1) {
+                const jobTitle = getJobTitle(paths[1]);
+                breadcrumb.push({
+                    title: jobTitle,
+                    path: null, // No path for the last segment
+                });
+            }
+        } else {
+            // Add other pages
+            const rootPath = `/${paths[0]}`;
+            breadcrumb.push({
+                title: pageTitles[rootPath] || paths[0],
+                path: rootPath,
+            });
+        }
+
+        return breadcrumb;
+    };
+
+    // Handle click on breadcrumb items
+    const handleBreadcrumbClick = (path) => {
+        if (path) {
+            navigate(path); // Navigate to the clicked path
+        }
+    };
+
     return (
         <div className="flex h-screen">
             {/* Sidebar (Fixed Width) */}
@@ -39,7 +93,11 @@ const Layout = () => {
             {/* Main Content Wrapper */}
             <div className="flex-1 flex flex-col ml-64">
                 {/* Header (Full Width) */}
-                <Header title={currentPage} />
+                <Header
+                    title={currentPage}
+                    breadcrumb={generateBreadcrumb()}
+                    onBreadcrumbClick={handleBreadcrumbClick}
+                />
 
                 {/* Page Content (Only this part gets the loader) */}
                 <div className="relative flex-1 h-[calc(100vh-4rem)] p-4 bg-gray-100 overflow-y-auto">

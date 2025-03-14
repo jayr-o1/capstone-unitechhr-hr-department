@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import MoreOptionsIcon from "../../assets/icons/RecruitmentIcons/MoreOptionsIcon";
 import CloseJobIcon from "../../assets/icons/RecruitmentIcons/CloseJobIcon";
 import DeleteJobIcon from "../../assets/icons/RecruitmentIcons/DeleteJobIcon";
 
 const JobCard = ({ job }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null); // Ref for the dropdown container
+    const dropdownRef = useRef(null);
+    const navigate = useNavigate(); // Hook for navigation
 
     // Toggle dropdown visibility
     const toggleDropdown = () => {
@@ -22,6 +24,11 @@ const JobCard = ({ job }) => {
     const handleDelete = () => {
         console.log("Delete job:", job.title); // Replace with actual delete logic
         setIsDropdownOpen(false); // Close the dropdown
+    };
+
+    // Handle view action
+    const handleView = () => {
+        navigate(`/recruitment/${job.id}`); // Navigate to job details page
     };
 
     // Close dropdown when clicking outside
@@ -46,6 +53,7 @@ const JobCard = ({ job }) => {
             <div className="flex-1">
                 <div className="flex items-center gap-2">
                     <h3 className="font-bold text-lg">{job.title}</h3>
+                    {/* Conditionally render the "New Applicants" tag */}
                     {job.newApplicants && (
                         <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
                             New Applicants
@@ -57,12 +65,15 @@ const JobCard = ({ job }) => {
                     <span>•</span>
                     <p>{job.department}</p>
                     <span>•</span>
-                    <p>{job.daysAgo}</p>
+                    <p>{job.datePosted}</p>
                 </div>
-                <p className="text-gray-500 text-sm mt-3">{job.description}</p>
+                <p className="text-gray-500 text-sm mt-3">{job.summary}</p>
             </div>
             <div className="flex items-center gap-3 relative" ref={dropdownRef}>
-                <button className="cursor-pointer px-6 py-2 text-[#9AADEA] border border-[#9AADEA] rounded-lg transition duration-200 hover:bg-[#9AADEA] hover:text-white">
+                <button
+                    onClick={handleView} // Add onClick handler for "View"
+                    className="cursor-pointer px-6 py-2 text-[#9AADEA] border border-[#9AADEA] rounded-lg transition duration-200 hover:bg-[#9AADEA] hover:text-white"
+                >
                     View
                 </button>
                 <button className="cursor-pointer px-6 py-2 text-white bg-[#9AADEA] border border-[#9AADEA] rounded-lg transition duration-200 hover:bg-[#7b8edc]">
