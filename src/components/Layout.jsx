@@ -101,7 +101,10 @@ const Layout = () => {
 
                 {/* Page Content (Only this part gets the loader) */}
                 <div className="relative flex-1 h-[calc(100vh-4rem)] p-4 bg-gray-100 overflow-y-auto">
+                    {/* PageLoader positioned relative to the Outlet container */}
                     <PageLoader isLoading={isLoading} />
+
+                    {/* Outlet with conditional opacity and pointer-events */}
                     <div
                         className={
                             isLoading ? "opacity-50 pointer-events-none" : ""

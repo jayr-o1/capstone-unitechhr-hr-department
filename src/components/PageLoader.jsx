@@ -6,7 +6,7 @@ const PageLoader = ({ isLoading }) => {
         <AnimatePresence>
             {isLoading && (
                 <motion.div
-                    className="absolute inset-4 z-50 flex justify-center items-center bg-white bg-opacity-70 rounded-xl"
+                    className="absolute inset-0 z-50 flex justify-center items-center bg-white bg-opacity-70"
                     initial={{ opacity: 1 }} // Start with opacity 1
                     animate={{ opacity: 1 }} // Fade in to opacity 1
                     exit={{ opacity: 0 }} // Fade out when leaving
