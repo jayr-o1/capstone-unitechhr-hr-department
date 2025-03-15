@@ -37,19 +37,29 @@ const EditJobModal = ({ isOpen, onClose, initialData }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
+    
         // Validate required fields
         if (!formData.title || !formData.department || !formData.summary) {
             showErrorAlert("Please fill all required fields!");
             return;
         }
-
-        // Simulate successful update
-        showSuccessAlert("Job updated successfully!");
-        setTimeout(() => {
-            onClose(); // Close modal after 2 seconds
-        }, 2000);
+    
+        // Show warning before updating
+        showWarningAlert(
+            "Are you sure you want to update this job post?",
+            () => {
+                // Simulate successful update
+                showSuccessAlert("Job updated successfully!");
+                setTimeout(() => {
+                    onClose(); // Close modal after 2 seconds
+                }, 2000);
+            },
+            "Update",
+            "Cancel",
+            "Job post updated successfully!"
+        );
     };
+    
 
     if (!isOpen) return null;
 

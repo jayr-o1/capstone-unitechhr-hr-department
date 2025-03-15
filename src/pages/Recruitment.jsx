@@ -8,19 +8,27 @@ import EditJobModal from "../components/Modals/EditJobModal"; // Import EditJobM
 import jobDetailsData from "../data/jobDetailsData";
 
 const Recruitment = () => {
+    // State for pagination
     const [currentPage, setCurrentPage] = useState(1);
+
+    // State for filters
     const [selectedDepartments, setSelectedDepartments] = useState([]);
     const [selectedStatus, setSelectedStatus] = useState("All");
     const [showNewApplicants, setShowNewApplicants] = useState(false);
+
+    // State for modals
     const [isAddModalOpen, setIsAddModalOpen] = useState(false); // For AddJobModal
     const [isEditModalOpen, setIsEditModalOpen] = useState(false); // For EditJobModal
+
+    // State for jobs
     const [jobs, setJobs] = useState(jobDetailsData);
     const [selectedJob, setSelectedJob] = useState(null); // Store the job being edited
 
+    // Pagination settings
     const jobsPerPage = 5;
 
     // Filter jobs based on selected filters
-    const filteredJobs = jobDetailsData
+    const filteredJobs = jobs
         .filter((job) => {
             const matchesDepartment =
                 selectedDepartments.length === 0 ||
