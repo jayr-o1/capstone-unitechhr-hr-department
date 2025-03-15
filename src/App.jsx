@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Recruitment from "./pages/Recruitment";
-import JobDetails from "./pages/JobDetails"; // Import the JobDetails component
+import JobDetails from "./pages/RecruitmentModule/JobDetails"; // Import the JobDetails component
 import Onboarding from "./pages/Onboarding";
 import Employees from "./pages/Employees";
 import Clusters from "./pages/Clusters";
