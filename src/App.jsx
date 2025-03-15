@@ -1,3 +1,4 @@
+// App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
@@ -7,6 +8,7 @@ import JobDetails from "./pages/JobDetails"; // Import the JobDetails component
 import Onboarding from "./pages/Onboarding";
 import Employees from "./pages/Employees";
 import Clusters from "./pages/Clusters";
+import { JobProvider } from "./contexts/JobContext"; // Import JobProvider
 
 function App() {
     return (
@@ -16,11 +18,21 @@ function App() {
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Dashboard />} />
                     <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="recruitment">
-                        <Route index element={<Recruitment />} />
-                        <Route path=":jobId" element={<JobDetails />} />{" "}
-                        {/* Nested route for JobDetails */}
-                    </Route>
+
+                    {/* Wrap Recruitment and its nested routes with JobProvider */}
+                    <Route
+                        path="recruitment/*"
+                        element={
+                            <JobProvider> {/* Wrap only Recruitment and its children */}
+                                <Routes>
+                                    <Route index element={<Recruitment />} />
+                                    <Route path=":jobId" element={<JobDetails />} />{" "}
+                                    {/* Nested route for JobDetails */}
+                                </Routes>
+                            </JobProvider>
+                        }
+                    />
+
                     <Route path="onboarding" element={<Onboarding />} />
                     <Route path="employees" element={<Employees />} />
                     <Route path="clusters" element={<Clusters />} />
