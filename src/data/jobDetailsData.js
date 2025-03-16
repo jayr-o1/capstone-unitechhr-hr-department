@@ -2,8 +2,7 @@ const jobDetailsData = [
     {
         id: 1,
         title: "Computer Science Instructor",
-        summary:
-            "Responsible for teaching programming, algorithms, and data structures.",
+        summary: "Responsible for teaching programming, algorithms, and data structures.",
         department: "College of Computer Studies",
         keyDuties: [
             "Teach programming",
@@ -21,6 +20,22 @@ const jobDetailsData = [
         availableSlots: 1,
         newApplicants: true,
         status: "Open",
+        applicants: [
+            {
+                name: "John Doe",
+                email: "john.doe@example.com",
+                dateApplied: "2023-10-01",
+                resumeUrl: "https://example.com/resume/john-doe",
+                status: "Pending", // Added status
+            },
+            {
+                name: "Jane Smith",
+                email: "jane.smith@example.com",
+                dateApplied: "2023-10-02",
+                resumeUrl: "https://example.com/resume/jane-smith",
+                status: "Approved", // Added status
+            },
+        ],
     },
     {
         id: 2,
@@ -36,6 +51,15 @@ const jobDetailsData = [
         availableSlots: 2,
         newApplicants: false,
         status: "Open",
+        applicants: [
+            {
+                name: "Alice Johnson",
+                email: "alice.johnson@example.com",
+                dateApplied: "2023-10-03",
+                resumeUrl: "https://example.com/resume/alice-johnson",
+                status: "Rejected", // Added status
+            },
+        ],
     },
     {
         id: 3,
@@ -60,12 +84,12 @@ const jobDetailsData = [
         availableSlots: 1,
         newApplicants: false,
         status: "Closed",
+        applicants: [], // No applicants for this job
     },
     {
         id: 4,
         title: "Information Technology Instructor",
-        summary:
-            "Teaches IT infrastructure, networking, and cybersecurity concepts.",
+        summary: "Teaches IT infrastructure, networking, and cybersecurity concepts.",
         department: "College of Computer Studies",
         keyDuties: [
             "Teach networking and IT security",
@@ -83,12 +107,20 @@ const jobDetailsData = [
         availableSlots: 1,
         newApplicants: false,
         status: "Open",
+        applicants: [
+            {
+                name: "Bob Brown",
+                email: "bob.brown@example.com",
+                dateApplied: "2023-10-04",
+                resumeUrl: "https://example.com/resume/bob-brown",
+                status: "Pending", // Added status
+            },
+        ],
     },
     {
         id: 5,
         title: "Marketing Specialist",
-        summary:
-            "Responsible for developing and executing marketing campaigns.",
+        summary: "Responsible for developing and executing marketing campaigns.",
         department: "Marketing Department",
         keyDuties: [
             "Develop marketing strategies",
@@ -103,12 +135,20 @@ const jobDetailsData = [
         availableSlots: 1,
         newApplicants: true,
         status: "Open",
+        applicants: [
+            {
+                name: "Charlie Davis",
+                email: "charlie.davis@example.com",
+                dateApplied: "2023-10-05",
+                resumeUrl: "https://example.com/resume/charlie-davis",
+                status: "Approved", // Added status
+            },
+        ],
     },
     {
         id: 6,
         title: "Human Resources Assistant",
-        summary:
-            "Supports HR processes including recruitment and employee relations.",
+        summary: "Supports HR processes including recruitment and employee relations.",
         department: "Human Resources",
         keyDuties: [
             "Assist in hiring process",
@@ -123,6 +163,7 @@ const jobDetailsData = [
         availableSlots: 1,
         newApplicants: false,
         status: "Closed",
+        applicants: [], // No applicants for this job
     },
     {
         id: 7,
@@ -142,6 +183,15 @@ const jobDetailsData = [
         availableSlots: 1,
         newApplicants: true,
         status: "Open",
+        applicants: [
+            {
+                name: "Eve Wilson",
+                email: "eve.wilson@example.com",
+                dateApplied: "2023-10-06",
+                resumeUrl: "https://example.com/resume/eve-wilson",
+                status: "Pending", // Added status
+            },
+        ],
     },
     {
         id: 8,
@@ -167,6 +217,7 @@ const jobDetailsData = [
         availableSlots: 1,
         newApplicants: false,
         status: "Closed",
+        applicants: [], // No applicants for this job
     },
     {
         id: 9,
@@ -186,6 +237,15 @@ const jobDetailsData = [
         availableSlots: 1,
         newApplicants: true,
         status: "Open",
+        applicants: [
+            {
+                name: "Frank Moore",
+                email: "frank.moore@example.com",
+                dateApplied: "2023-10-07",
+                resumeUrl: "https://example.com/resume/frank-moore",
+                status: "Rejected", // Added status
+            },
+        ],
     },
     {
         id: 10,
@@ -205,6 +265,7 @@ const jobDetailsData = [
         availableSlots: 3,
         newApplicants: false,
         status: "Closed",
+        applicants: [], // No applicants for this job
     },
 ];
 
