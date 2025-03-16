@@ -166,10 +166,10 @@ const JobDetails = () => {
           </div>
 
           {/* Right Column - Job Info */}
-          <div className="w-full md:w-1/3">
-            <div className="border border-gray-300 rounded-lg p-6">
+          <div className="w-full md:w-1/3 flex flex-col">
+            <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-md flex flex-col h-full">
               {/* Title and Description Format */}
-              <div className="space-y-4">
+              <div className="space-y-4 flex-grow">
                 <h1 className="text-3xl font-bold text-gray-900 mb-4">
                   Job Info
                 </h1>
@@ -206,32 +206,32 @@ const JobDetails = () => {
                 </div>
               </div>
 
-              {/* Updated Edit Job Post Button */}
-              <button
-                onClick={handleEditJob}
-                className="cursor-pointer w-full px-5 py-3 bg-[#9AADEA] text-white text-lg font-semibold rounded-lg hover:bg-[#7b8edc] transition duration-200 mt-6"
-              >
-                Edit Job Post
-              </button>
+              {/* Buttons Container */}
+              <div className="mt-6">
+                <button
+                  onClick={handleEditJob}
+                  className="cursor-pointer w-full px-5 py-3 bg-[#9AADEA] text-white text-lg font-semibold rounded-lg hover:bg-[#7b8edc] transition duration-200"
+                >
+                  Edit Job Post
+                </button>
 
-              {/* Close/Open Job Post Button */}
-              <button
-                onClick={handleCloseOrOpen}
-                className="cursor-pointer w-full px-5 py-3 bg-[#FFA500] text-white text-lg font-semibold rounded-lg hover:bg-[#FF8C00] transition duration-200 mt-4 flex items-center justify-center gap-2"
-              >
-                {jobDetails.status === "Open"
-                  ? "Close Job Post"
-                  : "Open Job Post"}
-              </button>
+                <button
+                  onClick={handleCloseOrOpen}
+                  className="cursor-pointer w-full px-5 py-3 bg-[#FFA500] text-white text-lg font-semibold rounded-lg hover:bg-[#FF8C00] transition duration-200 mt-4 flex items-center justify-center gap-2"
+                >
+                  {jobDetails.status === "Open"
+                    ? "Close Job Post"
+                    : "Open Job Post"}
+                </button>
 
-              {/* Delete Job Post Button */}
-              <button
-                onClick={handleDelete}
-                className="cursor-pointer w-full px-5 py-3 bg-[#FF4500] text-white text-lg font-semibold rounded-lg hover:bg-[#FF6347] transition duration-200 mt-4 flex items-center justify-center gap-2"
-              >
-                {" "}
-                Delete Job Post
-              </button>
+                <button
+                  onClick={handleDelete}
+                  className="cursor-pointer w-full px-5 py-3 bg-[#FF4500] text-white text-lg font-semibold rounded-lg hover:bg-[#FF6347] transition duration-200 mt-4 flex items-center justify-center gap-2"
+                >
+                  {" "}
+                  Delete Job Post
+                </button>
+              </div>
             </div>
           </div>
         </div>

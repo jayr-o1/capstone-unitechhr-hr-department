@@ -8,12 +8,14 @@ const jobDetailsData = [
             "Teach programming",
             "Prepare lesson plans",
             "Conduct assessments",
+            "Grade students"
         ],
         essentialSkills: [
             "Python, Java, or C++",
             "Strong understanding of algorithms",
+            "Strong understanding of database systems"
         ],
-        qualifications: ["Bachelor’s in CS", "Teaching experience preferred"],
+        qualifications: ["Bachelor’s in CS", "Teaching experience preferred", "Programming experience preferred"],
         salary: "Up to 20k",
         workSetup: "On Site",
         datePosted: "1 day ago",
