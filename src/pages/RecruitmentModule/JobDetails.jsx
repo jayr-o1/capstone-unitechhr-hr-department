@@ -1,3 +1,4 @@
+// JobDetails.js
 import React, { useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import EditJobModal from "../../components/Modals/EditJobModal";
@@ -244,7 +245,8 @@ const JobDetails = () => {
             </h2>
             {/* Horizontal Divider */}
             <hr className="border-t border-gray-300 mb-6" />
-            <ApplicantsList applicants={jobDetails.applicants} />
+            {/* Pass jobId to ApplicantsList */}
+            <ApplicantsList applicants={jobDetails.applicants} jobId={jobId} />
           </div>
         </div>
       </div>

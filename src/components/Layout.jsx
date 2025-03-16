@@ -9,7 +9,7 @@ const Layout = () => {
     const [isLoading, setIsLoading] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
-    const { jobId } = useParams(); // Get jobId from URL
+    const { jobId, applicantId } = useParams(); // Get jobId and applicantId from URL
 
     // Define a mapping of paths to page titles
     const pageTitles = {
@@ -26,10 +26,22 @@ const Layout = () => {
         return job ? job.title : "Job Details";
     };
 
+    // Get the applicant name if on an applicant details page
+    const getApplicantName = (jobId, applicantId) => {
+        const job = jobDetailsData.find((job) => job.id === Number(jobId));
+        if (job) {
+            const applicant = job.applicants.find((app) => app.id === Number(applicantId));
+            return applicant ? applicant.name : "Applicant Details";
+        }
+        return "Applicant Details";
+    };
+
     // Get the current page title
     const currentPage =
         location.pathname.startsWith("/recruitment/") && jobId
-            ? getJobTitle(jobId)
+            ? applicantId
+                ? getApplicantName(jobId, applicantId)
+                : getJobTitle(jobId)
             : pageTitles[location.pathname] || "Dashboard";
 
     // Update browser tab title when route changes
@@ -63,8 +75,17 @@ const Layout = () => {
                 const jobTitle = getJobTitle(paths[1]);
                 breadcrumb.push({
                     title: jobTitle,
-                    path: null, // No path for the last segment
+                    path: `/recruitment/${paths[1]}`,
                 });
+
+                // If an applicant is opened, add applicant name
+                if (paths.length > 2) {
+                    const applicantName = getApplicantName(paths[1], paths[2]);
+                    breadcrumb.push({
+                        title: applicantName,
+                        path: null, // No path for the last segment
+                    });
+                }
             }
         } else {
             // Add other pages
