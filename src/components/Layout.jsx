@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "./Layouts/Header";
-import Sidebar from "./Layouts/Sidebar";
+import Sidebar from "./Layouts/Sidebar"; // Fixed typo
 import PageLoader from "./PageLoader";
 import jobDetailsData from "../data/jobDetailsData"; // Import job details
 
