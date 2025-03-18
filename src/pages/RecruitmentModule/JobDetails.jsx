@@ -6,7 +6,7 @@ import { JobContext } from "../../contexts/JobContext"; // Import JobContext
 import showWarningAlert from "../../components/Alerts/WarningAlert"; // Import WarningAlert
 import showSuccessAlert from "../../components/Alerts/SuccessAlert"; // Import SuccessAlert
 import showDeleteConfirmation from "../../components/Alerts/DeleteAlert"; // Import DeleteAlert
-import ApplicantsList from "./ApplicantsList"; // Import ApplicantsList
+import ApplicantsList from "../../components/RecruitmentComponents/ApplicantDetailsComponents/ApplicantsList"; // Import ApplicantsList
 
 const JobDetails = () => {
   const { jobId } = useParams();
