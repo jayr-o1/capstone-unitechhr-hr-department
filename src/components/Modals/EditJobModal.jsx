@@ -4,6 +4,8 @@ import showWarningAlert from "../Alerts/WarningAlert";
 import showErrorAlert from "../Alerts/ErrorAlert";
 import departments from "../../data/departments";
 import FormField from "./RecruitmentModalComponents/FormField"; // Reuse FormField
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
 const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated }) => {
     const [formData, setFormData] = useState({
@@ -46,19 +48,44 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
         // Show warning before updating
         showWarningAlert(
             "Are you sure you want to update this job post?",
-            () => {
-                // Show success alert
-                showSuccessAlert("Job updated successfully!");
-                
-                // Wait for the success alert to complete before closing modal
-                setTimeout(() => {
-                    onClose(); // Close modal
+            async () => {
+                try {
+                    // Get a reference to the job document
+                    const jobRef = doc(db, "jobs", initialData.id);
                     
-                    // Call the callback to refresh jobs without page reload
-                    if (typeof onJobUpdated === 'function') {
-                        onJobUpdated();
+                    // Create updated job object with ID
+                    const updatedJobData = {
+                        ...formData,
+                        id: initialData.id,
+                        lastUpdated: new Date()
+                    };
+                    
+                    // Update the job in Firestore
+                    await updateDoc(jobRef, {
+                        ...formData,
+                        lastUpdated: new Date()
+                    });
+                    
+                    // Show success alert
+                    showSuccessAlert("Job updated successfully!");
+                    
+                    // Call the parent's onUpdateJob function with the updated job data
+                    if (typeof onUpdateJob === 'function') {
+                        onUpdateJob(updatedJobData);
+                    } else {
+                        // Wait for the success alert to complete before closing modal
+                        setTimeout(() => {
+                            onClose(); // Close modal
+                            
+                            // Call the callback to refresh jobs without page reload
+                            if (typeof onJobUpdated === 'function') {
+                                onJobUpdated();
+                            }
+                        }, 2500); // Wait a bit longer than the success alert timer (2000ms)
                     }
-                }, 2500); // Wait a bit longer than the success alert timer (2000ms)
+                } catch (error) {
+                    showErrorAlert(`Failed to update job: ${error.message}`);
+                }
             },
             "Update",
             "Cancel"

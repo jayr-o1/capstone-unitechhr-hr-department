@@ -161,8 +161,26 @@ const Recruitment = () => {
   };
 
   // Function to handle updating a job
-  const handleUpdateJob = (updatedJob) => {
-    handleCloseEditModal(); // Close the modal after updating
+  const handleUpdateJob = async (updatedJob) => {
+    try {
+      // First, update the job in the local state
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === updatedJob.id ? { ...job, ...updatedJob } : job
+        )
+      );
+      
+      // Then refresh from Firestore to ensure we have the latest data
+      await refreshJobs();
+      
+      // Increment the refresh counter to force JobList to re-render
+      setRefreshCounter(prev => prev + 1);
+      
+      // Close the modal
+      handleCloseEditModal();
+    } catch (error) {
+      showErrorAlert(`Failed to update job: ${error.message}`);
+    }
   };
 
   // Show appropriate loader based on loading state
@@ -211,7 +229,7 @@ const Recruitment = () => {
                 />
                 <button
                   onClick={refreshJobList}
-                  className="cursor-pointer w-full px-5 py-3 bg-[#9AADEA] text-white text-lg font-semibold rounded-lg hover:bg-[#7b8edc] transition duration-200"
+                  className="cursor-pointer w-full px-5 py-3 bg-green-500 text-white text-lg font-semibold rounded-lg hover:bg-green-600 transition duration-200"
                 >
                   Refresh Jobs
                 </button>
