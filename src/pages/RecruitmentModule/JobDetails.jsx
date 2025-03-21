@@ -132,9 +132,16 @@ const JobDetails = () => {
                     Key Duties
                   </h3>
                   <ul className="list-disc ml-6 text-gray-700 space-y-2">
-                    {jobDetails.keyDuties.map((duty, index) => (
-                      <li key={index}>{duty}</li>
-                    ))}
+                    {Array.isArray(jobDetails.keyDuties) 
+                      ? jobDetails.keyDuties.map((duty, index) => (
+                          <li key={index}>{duty}</li>
+                        ))
+                      : typeof jobDetails.keyDuties === 'string'
+                        ? jobDetails.keyDuties.split('\n').filter(item => item.trim()).map((duty, index) => (
+                            <li key={index}>{duty}</li>
+                          ))
+                        : <li>{jobDetails.keyDuties || 'No key duties specified'}</li>
+                    }
                   </ul>
                 </div>
 
@@ -144,9 +151,16 @@ const JobDetails = () => {
                     Essential Skills
                   </h3>
                   <ul className="list-disc ml-6 text-gray-700 space-y-2">
-                    {jobDetails.essentialSkills.map((skill, index) => (
-                      <li key={index}>{skill}</li>
-                    ))}
+                    {Array.isArray(jobDetails.essentialSkills)
+                      ? jobDetails.essentialSkills.map((skill, index) => (
+                          <li key={index}>{skill}</li>
+                        ))
+                      : typeof jobDetails.essentialSkills === 'string'
+                        ? jobDetails.essentialSkills.split('\n').filter(item => item.trim()).map((skill, index) => (
+                            <li key={index}>{skill}</li>
+                          ))
+                        : <li>{jobDetails.essentialSkills || 'No essential skills specified'}</li>
+                    }
                   </ul>
                 </div>
 
@@ -156,9 +170,16 @@ const JobDetails = () => {
                     Qualifications
                   </h3>
                   <ul className="list-disc ml-6 text-gray-700 space-y-2">
-                    {jobDetails.qualifications.map((qual, index) => (
-                      <li key={index}>{qual}</li>
-                    ))}
+                    {Array.isArray(jobDetails.qualifications)
+                      ? jobDetails.qualifications.map((qual, index) => (
+                          <li key={index}>{qual}</li>
+                        ))
+                      : typeof jobDetails.qualifications === 'string'
+                        ? jobDetails.qualifications.split('\n').filter(item => item.trim()).map((qual, index) => (
+                            <li key={index}>{qual}</li>
+                          ))
+                        : <li>{jobDetails.qualifications || 'No qualifications specified'}</li>
+                    }
                   </ul>
                 </div>
               </div>

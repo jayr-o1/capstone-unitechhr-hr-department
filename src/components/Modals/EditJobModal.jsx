@@ -23,7 +23,20 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
     // Pre-fill the form with initial data when the modal opens
     useEffect(() => {
         if (initialData) {
-            setFormData(initialData);
+            // Convert arrays to strings for the form display
+            const processedData = {
+                ...initialData,
+                keyDuties: Array.isArray(initialData.keyDuties) 
+                    ? initialData.keyDuties.join('\n') 
+                    : initialData.keyDuties || '',
+                essentialSkills: Array.isArray(initialData.essentialSkills) 
+                    ? initialData.essentialSkills.join('\n') 
+                    : initialData.essentialSkills || '',
+                qualifications: Array.isArray(initialData.qualifications) 
+                    ? initialData.qualifications.join('\n') 
+                    : initialData.qualifications || '',
+            };
+            setFormData(processedData);
         }
     }, [initialData]);
 
@@ -34,6 +47,17 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
 
     const handleReset = () => {
         onClose(); // Close the modal when canceling
+    };
+
+    // Helper function to process the form data for Firestore
+    const prepareDataForFirestore = (data) => {
+        // Convert string fields to arrays by splitting on newlines and filtering empty items
+        return {
+            ...data,
+            keyDuties: data.keyDuties ? data.keyDuties.split('\n').filter(item => item.trim()) : [],
+            essentialSkills: data.essentialSkills ? data.essentialSkills.split('\n').filter(item => item.trim()) : [],
+            qualifications: data.qualifications ? data.qualifications.split('\n').filter(item => item.trim()) : [],
+        };
     };
 
     const handleSubmit = (e) => {
@@ -53,16 +77,19 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
                     // Get a reference to the job document
                     const jobRef = doc(db, "jobs", initialData.id);
                     
+                    // Prepare the data for Firestore (convert strings to arrays)
+                    const processedData = prepareDataForFirestore(formData);
+                    
                     // Create updated job object with ID
                     const updatedJobData = {
-                        ...formData,
+                        ...processedData,
                         id: initialData.id,
                         lastUpdated: new Date()
                     };
                     
                     // Update the job in Firestore
                     await updateDoc(jobRef, {
-                        ...formData,
+                        ...processedData,
                         lastUpdated: new Date()
                     });
                     
@@ -156,6 +183,7 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
                                 value={formData.keyDuties}
                                 onChange={handleChange}
                                 placeholder="Key Duties"
+                                exampleText="IMPORTANT: Enter each item on a separate line."
                             />
                             <FormField
                                 type="textarea"
@@ -163,6 +191,7 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
                                 value={formData.essentialSkills}
                                 onChange={handleChange}
                                 placeholder="Essential Skills"
+                                exampleText="IMPORTANT: Enter each item on a separate line."
                             />
                             <FormField
                                 type="textarea"
@@ -170,6 +199,7 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
                                 value={formData.qualifications}
                                 onChange={handleChange}
                                 placeholder="Qualifications"
+                                exampleText="IMPORTANT: Enter each item on a separate line."
                             />
                         </div>
 
