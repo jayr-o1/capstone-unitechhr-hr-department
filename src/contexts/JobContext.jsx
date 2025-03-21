@@ -10,13 +10,6 @@ export const JobProvider = ({ children }) => {
     // Update jobData when jobs are fetched
     useEffect(() => {
         if (!loading && !error) {
-            console.log("Jobs fetched and set in context:", jobs); // Debugging: Log jobs set in context
-
-            // Log applicants for each job
-            jobs.forEach((job) => {
-                console.log(`Job ID: ${job.id}`);
-                console.log("Applicants:", job.applicants);
-            });
 
             setJobData(jobs);
         }

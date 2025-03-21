@@ -49,7 +49,7 @@ const AddJobModal = ({ isOpen, onClose }) => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default form submission behavior
 
         if (!formData.title || !formData.department || !formData.summary) {
             showErrorAlert("Please fill all required fields!");
@@ -59,11 +59,23 @@ const AddJobModal = ({ isOpen, onClose }) => {
         try {
             // Convert keyDuties, essentialSkills, and qualifications to arrays
             const jobData = {
-                ...formData,
-                keyDuties: formData.keyDuties.split(",").map((duty) => duty.trim()),
-                essentialSkills: formData.essentialSkills.split(",").map((skill) => skill.trim()),
-                qualifications: formData.qualifications.split(",").map((qual) => qual.trim()),
+                title: formData.title,
+                summary: formData.summary,
+                department: formData.department,
+                keyDuties: formData.keyDuties
+                    .split(",")
+                    .map((duty) => duty.trim()),
+                essentialSkills: formData.essentialSkills
+                    .split(",")
+                    .map((skill) => skill.trim()),
+                qualifications: formData.qualifications
+                    .split(",")
+                    .map((qual) => qual.trim()),
+                salary: formData.salary,
+                workSetup: formData.workSetup,
+                availableSlots: parseInt(formData.availableSlots, 10),
                 datePosted: serverTimestamp(),
+                newApplicants: false,
                 status: "Open",
             };
 
@@ -104,6 +116,9 @@ const AddJobModal = ({ isOpen, onClose }) => {
                         ✕
                     </button>
                 </div>
+
+                {/* Horizontal Divider */}
+                <hr className="border-t border-gray-300" />
 
                 {/* Scrollable Form Content */}
                 <div className="overflow-y-auto flex-1">
@@ -197,11 +212,11 @@ const AddJobModal = ({ isOpen, onClose }) => {
                                 min="1"
                             />
                         </div>
+
+                        {/* Buttons */}
+                        <ActionButtons />
                     </form>
                 </div>
-
-                {/* Buttons */}
-                <ActionButtons onSubmit={handleSubmit} onReset={handleReset} />
             </div>
         </div>
     );
