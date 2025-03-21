@@ -15,6 +15,7 @@ const Recruitment = () => {
   // Fetch jobs from Firestore
   const { jobs, loading, error, setJobs, refreshJobs } = useFetchJobs();
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const [isManuallyRefreshing, setIsManuallyRefreshing] = useState(false);
 
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,12 +41,18 @@ const Recruitment = () => {
     if (currentPage > Math.ceil(jobs.length / jobsPerPage) && currentPage > 1) {
       setCurrentPage(Math.max(1, Math.ceil(jobs.length / jobsPerPage)));
     }
-  }, [jobs]); // Using jobs object instead of just length for deeper tracking
+  }, [jobs, currentPage, jobsPerPage]); // Using jobs object instead of just length for deeper tracking
 
   // Function to handle job list refresh without page reload
   const refreshJobList = async () => {
+    setIsManuallyRefreshing(true);
     await refreshJobs(); // Fetch fresh data from Firestore
     setRefreshCounter(prev => prev + 1); // Force JobList to re-render
+    
+    // Reset the loading state after a short delay
+    setTimeout(() => {
+      setIsManuallyRefreshing(false);
+    }, 1000);
   };
 
   // Filter jobs based on selected filters
@@ -95,18 +102,15 @@ const Recruitment = () => {
     setIsEditModalOpen(false);
   };
 
-  // Force refresh from Firestore after operations
-  const handleJobAction = async () => {
-    await refreshJobs(); // Fetch fresh data from Firestore
-    setRefreshCounter(prev => prev + 1);
-  };
-
   // Function to handle closing a job
   const handleCloseJob = async (jobId) => {
     try {
       // Update the job status in Firestore
       const jobRef = doc(db, "jobs", jobId);
-      await updateDoc(jobRef, { status: "Closed" });
+      await updateDoc(jobRef, { 
+        status: "Closed",
+        lastUpdated: new Date() // Add a timestamp for when it was updated
+      });
       
       // Update the job in the local state
       setJobs((prevJobs) =>
@@ -115,11 +119,15 @@ const Recruitment = () => {
         )
       );
 
-      // Refresh jobs from Firestore
-      handleJobAction();
+      // Refresh jobs from Firestore to ensure UI is in sync with database
+      await refreshJobs();
+      
+      // Increment refresh counter to force re-render
+      setRefreshCounter(prev => prev + 1);
       
     } catch (error) {
-      showErrorAlert("Failed to close job. Please try again.");
+      console.error("Error closing job:", error);
+      showErrorAlert(`Failed to close job: ${error.message}`);
     }
   };
 
@@ -128,7 +136,10 @@ const Recruitment = () => {
     try {
       // Update the job status in Firestore
       const jobRef = doc(db, "jobs", jobId);
-      await updateDoc(jobRef, { status: "Open" });
+      await updateDoc(jobRef, { 
+        status: "Open",
+        lastUpdated: new Date() // Add a timestamp for when it was updated
+      });
       
       // Update the job in the local state
       setJobs((prevJobs) =>
@@ -137,11 +148,15 @@ const Recruitment = () => {
         )
       );
 
-      // Refresh jobs from Firestore
-      handleJobAction();
+      // Refresh jobs from Firestore to ensure UI is in sync with database
+      await refreshJobs();
+      
+      // Increment refresh counter to force re-render
+      setRefreshCounter(prev => prev + 1);
       
     } catch (error) {
-      showErrorAlert("Failed to open job. Please try again.");
+      console.error("Error opening job:", error);
+      showErrorAlert(`Failed to open job: ${error.message}`);
     }
   };
 
@@ -150,7 +165,12 @@ const Recruitment = () => {
     handleCloseEditModal(); // Close the modal after updating
   };
 
-  if (loading) return <PageLoader isLoading={true}/>;
+  // Show appropriate loader based on loading state
+  if (loading || isManuallyRefreshing) {
+    // Check if this is a page refresh (Ctrl+R)
+    const isPageRefresh = sessionStorage.getItem('isPageRefresh') === 'true';
+    return <PageLoader isLoading={true} fullscreen={isPageRefresh || isManuallyRefreshing} />;
+  }
   if (error) return <p>{error}</p>;
 
   return (

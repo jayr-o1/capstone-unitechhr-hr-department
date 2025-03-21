@@ -27,16 +27,22 @@ const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob, onDelete }) => {
         const isOpening = job.status === "Closed"; // If job is closed, we are opening it
         const action = isOpening ? "open" : "close";
         const pastTenseAction = isOpening ? "opened" : "closed"; // Manually define past tense
+        const newStatus = isOpening ? "Open" : "Closed";
 
         showWarningAlert(
             `Are you sure you want to ${action} this job?`,
             () => {
+                // Call the appropriate function based on current status
                 if (isOpening) {
                     onOpenJob(job.id); // Call onOpenJob if the job is closed
                 } else {
                     onCloseJob(job.id); // Call onCloseJob if the job is open
                 }
+                
+                // Close dropdown menu
                 setIsDropdownOpen(false);
+                
+                // Show success message to user
                 showSuccessAlert(
                     `The job has been successfully ${pastTenseAction}!`
                 );

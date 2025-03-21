@@ -1,18 +1,26 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const PageLoader = ({ isLoading }) => {
+const PageLoader = ({ isLoading, fullscreen }) => {
     return (
         <AnimatePresence>
             {isLoading && (
                 <motion.div
-                    className="fixed inset-0 z-50 flex justify-center items-center bg-white bg-opacity-70"
-                    style={{
-                        top: "4rem", // Adjust this to match the height of your Header
-                        left: "16rem", // Adjust this to match the width of your Sidebar
-                        right: 0,
-                        bottom: 0,
-                    }}
+                    className="fixed z-50 flex justify-center items-center bg-white bg-opacity-70"
+                    style={fullscreen ? 
+                        {
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0
+                        } : 
+                        {
+                            top: "4rem", // Adjust this to match the height of your Header
+                            left: "16rem", // Adjust this to match the width of your Sidebar
+                            right: 0,
+                            bottom: 0,
+                        }
+                    }
                     initial={{ opacity: 1 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -85,6 +93,12 @@ const PageLoader = ({ isLoading }) => {
             )}
         </AnimatePresence>
     );
+};
+
+// Set default props
+PageLoader.defaultProps = {
+    isLoading: false,
+    fullscreen: false
 };
 
 export default PageLoader;
