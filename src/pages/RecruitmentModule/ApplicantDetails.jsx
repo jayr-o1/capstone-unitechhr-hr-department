@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useParams } from "react-router-dom"; // Import useParams
-import jobDetailsData from "../../data/jobDetailsData";
+import { JobContext } from "../../contexts/JobContext"; // Import JobContext
 import showWarningAlert from "../../components/Alerts/WarningAlert";
 import showSuccessAlert from "../../components/Alerts/SuccessAlert";
 import ApplicantInfo from "../../components/RecruitmentComponents/ApplicantDetailsComponents/ApplicantInfo";
@@ -9,7 +9,8 @@ import RecruiterNotes from "../../components/RecruitmentComponents/ApplicantDeta
 import ScheduleInterviewModal from "../../components/Modals/ScheduleInterviewModal";
 
 const ApplicantDetails = () => {
-    const { jobId, applicantId } = useParams(); // Now useParams is defined
+    const { jobId, applicantId } = useParams(); // Get jobId and applicantId from URL
+    const { jobs } = useContext(JobContext); // Use JobContext to access jobs
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [interviewDateTime, setInterviewDateTime] = useState("");
     const [scheduledInterviews, setScheduledInterviews] = useState([
@@ -32,13 +33,40 @@ const ApplicantDetails = () => {
     const [selectedInterviewId, setSelectedInterviewId] = useState(null);
 
     // Find the job and applicant
-    const job = jobDetailsData.find((job) => job.id === Number(jobId));
+    const job = jobs.find((job) => job.id === jobId); // Find job by ID
     const applicant = job?.applicants.find(
-        (app) => app.id === Number(applicantId)
+        (app) => app.id === applicantId // Find applicant by ID
     );
 
     if (!job || !applicant) {
-        return <div className="text-gray-500">Applicant not found.</div>;
+        return (
+            <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-6 text-gray-600">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-16 h-16 text-gray-400 mb-4"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v2m0 4h.01m-6.938 4.5a9 9 0 1112.765 0M9.75 9h4.5m-2.25-3v6"
+                    />
+                </svg>
+                <h2 className="text-xl font-semibold text-gray-700">Applicant Not Found</h2>
+                <p className="text-gray-500 mt-2">
+                    Sorry, the applicant you're looking for doesn't exist or has been removed.
+                </p>
+                <button
+                    onClick={() => navigate(-1)} // Go back to the previous page
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                    Back to Job Listings
+                </button>
+            </div>
+        );
     }
 
     // Handle Hire Applicant

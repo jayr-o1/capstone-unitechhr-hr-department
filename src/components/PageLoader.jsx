@@ -6,11 +6,17 @@ const PageLoader = ({ isLoading }) => {
         <AnimatePresence>
             {isLoading && (
                 <motion.div
-                    className="absolute inset-0 z-50 flex justify-center items-center bg-white bg-opacity-70"
-                    initial={{ opacity: 1 }} // Start with opacity 1
-                    animate={{ opacity: 1 }} // Fade in to opacity 1
-                    exit={{ opacity: 0 }} // Fade out when leaving
-                    transition={{ duration: 0.1, ease: "easeIn" }} // Short fade in/out duration
+                    className="fixed inset-0 z-50 flex justify-center items-center bg-white bg-opacity-70"
+                    style={{
+                        top: "4rem", // Adjust this to match the height of your Header
+                        left: "16rem", // Adjust this to match the width of your Sidebar
+                        right: 0,
+                        bottom: 0,
+                    }}
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.1, ease: "easeIn" }}
                 >
                     {/* Rotating Clockwise */}
                     <motion.div
@@ -20,9 +26,9 @@ const PageLoader = ({ isLoading }) => {
                         transition={{
                             duration: 1,
                             ease: "easeInOut",
-                            repeat: Infinity, // Ensure infinite rotation
-                            repeatType: "loop", // Loop the animation
-                            delay: 0.25, // Delay before rotation starts
+                            repeat: Infinity,
+                            repeatType: "loop",
+                            delay: 0.25,
                         }}
                     >
                         <motion.svg
@@ -37,7 +43,7 @@ const PageLoader = ({ isLoading }) => {
                                     attributeName="transform"
                                     type="rotate"
                                     from="0 67 67"
-                                    to="360 67 67" // Clockwise rotation
+                                    to="360 67 67"
                                     repeatCount="indefinite"
                                 />
                             </path>
@@ -52,9 +58,9 @@ const PageLoader = ({ isLoading }) => {
                         transition={{
                             duration: 2,
                             ease: "easeInOut",
-                            repeat: Infinity, // Ensure infinite rotation
-                            repeatType: "loop", // Loop the animation
-                            delay: 0.25, // Delay before rotation starts
+                            repeat: Infinity,
+                            repeatType: "loop",
+                            delay: 0.25,
                         }}
                     >
                         <motion.svg
@@ -69,7 +75,7 @@ const PageLoader = ({ isLoading }) => {
                                     attributeName="transform"
                                     type="rotate"
                                     from="0 67 67"
-                                    to="-360 67 67" // Counterclockwise rotation
+                                    to="-360 67 67"
                                     repeatCount="indefinite"
                                 />
                             </path>

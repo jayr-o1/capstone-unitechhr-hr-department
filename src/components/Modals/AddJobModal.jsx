@@ -3,8 +3,10 @@ import showSuccessAlert from "../Alerts/SuccessAlert";
 import showWarningAlert from "../Alerts/WarningAlert";
 import showErrorAlert from "../Alerts/ErrorAlert";
 import departments from "../../data/departments";
-import FormField from "./RecruitmentModalComponents/FormField"; // Import the reusable FormField component
-import ActionButtons from "./RecruitmentModalComponents/ActionButtons"; // Import the reusable ActionButtons component
+import FormField from "./RecruitmentModalComponents/FormField";
+import ActionButtons from "./RecruitmentModalComponents/ActionButtons";
+import { db } from "../../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const AddJobModal = ({ isOpen, onClose }) => {
     const [formData, setFormData] = useState({
@@ -46,18 +48,50 @@ const AddJobModal = ({ isOpen, onClose }) => {
         );
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    const handleSubmit = async (e) => {
+        e.preventDefault(); // Prevent default form submission behavior
 
         if (!formData.title || !formData.department || !formData.summary) {
             showErrorAlert("Please fill all required fields!");
             return;
         }
 
-        showSuccessAlert("Job added successfully!");
-        setTimeout(() => {
-            onClose();
-        }, 2000);
+        try {
+            // Convert keyDuties, essentialSkills, and qualifications to arrays
+            const jobData = {
+                title: formData.title,
+                summary: formData.summary,
+                department: formData.department,
+                keyDuties: formData.keyDuties
+                    .split(",")
+                    .map((duty) => duty.trim()),
+                essentialSkills: formData.essentialSkills
+                    .split(",")
+                    .map((skill) => skill.trim()),
+                qualifications: formData.qualifications
+                    .split(",")
+                    .map((qual) => qual.trim()),
+                salary: formData.salary,
+                workSetup: formData.workSetup,
+                availableSlots: parseInt(formData.availableSlots, 10),
+                datePosted: serverTimestamp(),
+                newApplicants: false,
+                status: "Open",
+            };
+
+            const docRef = await addDoc(collection(db, "jobs"), jobData);
+
+            console.log("Job added with ID: ", docRef.id);
+
+            showSuccessAlert("Job added successfully!");
+            handleReset(); // Reset the form fields
+            setTimeout(() => {
+                onClose();
+            }, 2000);
+        } catch (error) {
+            console.error("Error adding job: ", error);
+            showErrorAlert("Failed to add job. Please try again.");
+        }
     };
 
     if (!isOpen) return null;
@@ -83,6 +117,9 @@ const AddJobModal = ({ isOpen, onClose }) => {
                     </button>
                 </div>
 
+                {/* Horizontal Divider */}
+                <hr className="border-t border-gray-300" />
+
                 {/* Scrollable Form Content */}
                 <div className="overflow-y-auto flex-1">
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -94,6 +131,7 @@ const AddJobModal = ({ isOpen, onClose }) => {
                                 value={formData.title}
                                 onChange={handleChange}
                                 placeholder="Job Title"
+                                exampleText="e.g., Computer Science Instructor"
                                 required
                             />
                             <FormField
@@ -115,6 +153,7 @@ const AddJobModal = ({ isOpen, onClose }) => {
                                 value={formData.summary}
                                 onChange={handleChange}
                                 placeholder="Summary"
+                                exampleText="e.g., Responsible for teaching programming, algorithms, and data structures."
                                 required
                             />
                             <FormField
@@ -123,6 +162,7 @@ const AddJobModal = ({ isOpen, onClose }) => {
                                 value={formData.keyDuties}
                                 onChange={handleChange}
                                 placeholder="Key Duties"
+                                exampleText="e.g., Teach programming, Prepare lesson plans, Conduct assessments, Grade students"
                             />
                             <FormField
                                 type="textarea"
@@ -130,6 +170,7 @@ const AddJobModal = ({ isOpen, onClose }) => {
                                 value={formData.essentialSkills}
                                 onChange={handleChange}
                                 placeholder="Essential Skills"
+                                exampleText="e.g., Python, Java, or C++, Strong understanding of algorithms, Strong understanding of database systems"
                             />
                             <FormField
                                 type="textarea"
@@ -137,6 +178,7 @@ const AddJobModal = ({ isOpen, onClose }) => {
                                 value={formData.qualifications}
                                 onChange={handleChange}
                                 placeholder="Qualifications"
+                                exampleText="e.g., Bachelor’s in CS, Teaching experience preferred, Programming experience preferred"
                             />
                         </div>
 
@@ -147,7 +189,8 @@ const AddJobModal = ({ isOpen, onClose }) => {
                                 name="salary"
                                 value={formData.salary}
                                 onChange={handleChange}
-                                placeholder="Salary (e.g., Up to 20k)"
+                                placeholder="Salary"
+                                exampleText="e.g., Up to 20k"
                                 required
                             />
                             <FormField
@@ -169,11 +212,11 @@ const AddJobModal = ({ isOpen, onClose }) => {
                                 min="1"
                             />
                         </div>
+
+                        {/* Buttons */}
+                        <ActionButtons />
                     </form>
                 </div>
-
-                {/* Buttons */}
-                <ActionButtons onSubmit={handleSubmit} onReset={handleReset} />
             </div>
         </div>
     );

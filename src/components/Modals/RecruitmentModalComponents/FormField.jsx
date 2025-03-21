@@ -6,6 +6,7 @@ const FormField = ({
     value,
     onChange,
     placeholder,
+    exampleText = "", // New prop for example text
     required = false,
     options = [],
     min,
@@ -69,6 +70,11 @@ const FormField = ({
             >
                 {placeholder}
             </label>
+
+            {/* Display example text as a hint below the input */}
+            {exampleText && value === "" && (
+                <p className="text-sm text-gray-400 mt-1">{exampleText}</p>
+            )}
 
             {/* Display error message if present */}
             {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
