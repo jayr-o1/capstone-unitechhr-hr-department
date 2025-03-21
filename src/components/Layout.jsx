@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "./Layouts/Header";
-import Sidebar from "./Layouts/Sidebar"; // Fixed typo
+import Sidebar from "./Layouts/Sidebar";
 import PageLoader from "./PageLoader";
-import jobDetailsData from "../data/jobDetailsData"; // Import job details
+import useFetchJobs from "../hooks/useFetchJobs"; // Import the useFetchJobs hook
 
 const Layout = () => {
     const [isLoading, setIsLoading] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
-    const { jobId, applicantId } = useParams(); // Get jobId and applicantId from URL
+    const { jobId, applicantId } = useParams();
+
+    // Fetch jobs using the useFetchJobs hook
+    const { jobs, loading: jobsLoading, error: jobsError } = useFetchJobs();
 
     // Define a mapping of paths to page titles
     const pageTitles = {
@@ -22,15 +25,15 @@ const Layout = () => {
 
     // Get the job title if on a job details page
     const getJobTitle = (jobId) => {
-        const job = jobDetailsData.find((job) => job.id === Number(jobId));
+        const job = jobs.find((job) => job.id === jobId); // Find job by ID
         return job ? job.title : "Job Details";
     };
 
     // Get the applicant name if on an applicant details page
     const getApplicantName = (jobId, applicantId) => {
-        const job = jobDetailsData.find((job) => job.id === Number(jobId));
+        const job = jobs.find((job) => job.id === jobId); // Find job by ID
         if (job) {
-            const applicant = job.applicants.find((app) => app.id === Number(applicantId));
+            const applicant = job.applicants.find((app) => app.id === applicantId); // Find applicant by ID
             return applicant ? applicant.name : "Applicant Details";
         }
         return "Applicant Details";
@@ -105,6 +108,16 @@ const Layout = () => {
             navigate(path); // Navigate to the clicked path
         }
     };
+
+    // Show a loading state while jobs are being fetched
+    if (jobsLoading) {
+        return <PageLoader isLoading={true} />;
+    }
+
+    // Show an error message if jobs fail to load
+    if (jobsError) {
+        return <div className="text-red-500 p-4">{jobsError}</div>;
+    }
 
     return (
         <div className="flex h-screen">

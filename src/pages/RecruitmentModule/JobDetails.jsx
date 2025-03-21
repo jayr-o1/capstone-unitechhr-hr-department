@@ -1,4 +1,3 @@
-// JobDetails.js
 import React, { useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import EditJobModal from "../../components/Modals/EditJobModal";
@@ -10,8 +9,8 @@ import ApplicantsList from "../../components/RecruitmentComponents/ApplicantDeta
 
 const JobDetails = () => {
   const { jobId } = useParams();
-  const { jobs, handleUpdateJob, setJobs } = useContext(JobContext); // Use JobContext
-  const jobDetails = jobs.find((job) => job.id === parseInt(jobId)); // Find the job by ID
+  const { jobs, loading, error } = useContext(JobContext);
+  const jobDetails = jobs.find((job) => job.id === jobId); // Find the job by ID (no need for parseInt)
   const navigate = useNavigate();
 
   // State to manage modal visibility
@@ -179,11 +178,15 @@ const JobDetails = () => {
                 <hr className="border-t border-gray-300 mb-6" />
                 <div>
                   <h4 className="text-black font-semibold">Date Posted</h4>
-                  <p className="text-gray-600">1 day ago</p>
+                  <p className="text-gray-600">
+                    {jobDetails.datePosted || "N/A"}
+                  </p>
                 </div>
                 <div>
                   <h4 className="text-black font-semibold">Salary</h4>
-                  <p className="text-green-600 font-semibold">Up to 20k</p>
+                  <p className="text-green-600 font-semibold">
+                    {jobDetails.salary}
+                  </p>
                 </div>
                 <div>
                   <h4 className="text-black font-semibold">Work Set-up</h4>
@@ -246,7 +249,12 @@ const JobDetails = () => {
             {/* Horizontal Divider */}
             <hr className="border-t border-gray-300 mb-6" />
             {/* Pass jobId to ApplicantsList */}
-            <ApplicantsList applicants={jobDetails.applicants} jobId={jobId} />
+            <ApplicantsList
+              applicants={jobDetails.applicants}
+              jobId={jobId}
+              loading={loading}
+              error={error}
+            />{" "}
           </div>
         </div>
       </div>
