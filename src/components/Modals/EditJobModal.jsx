@@ -6,7 +6,7 @@ import departments from "../../data/departments";
 import FormField from "./RecruitmentModalComponents/FormField"; // Reuse FormField
 import ActionButtons from "./RecruitmentModalComponents/ActionButtons"; // Reuse ActionButtons
 
-const EditJobModal = ({ isOpen, onClose, initialData }) => {
+const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated }) => {
     const [formData, setFormData] = useState({
         title: "",
         department: "",
@@ -51,7 +51,12 @@ const EditJobModal = ({ isOpen, onClose, initialData }) => {
                 // Simulate successful update
                 showSuccessAlert("Job updated successfully!");
                 setTimeout(() => {
-                    onClose(); // Close modal after 2 seconds
+                    onClose(); // Close modal
+                    
+                    // Call the callback to refresh jobs without page reload
+                    if (typeof onJobUpdated === 'function') {
+                        onJobUpdated();
+                    }
                 }, 2000);
             },
             "Update",

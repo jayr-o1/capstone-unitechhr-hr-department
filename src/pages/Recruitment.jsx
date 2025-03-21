@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import JobList from "../components/RecruitmentComponents/JobList";
 import Filters from "../components/RecruitmentComponents/Filters";
 import PaginationControls from "../components/RecruitmentComponents/PaginationControls";
@@ -7,10 +7,14 @@ import AddJobModal from "../components/Modals/AddJobModal";
 import EditJobModal from "../components/Modals/EditJobModal";
 import useFetchJobs from "../hooks/useFetchJobs"; // Import the useFetchJobs hook
 import PageLoader from "../components/PageLoader";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
+import showErrorAlert from "../components/Alerts/ErrorAlert";
 
 const Recruitment = () => {
   // Fetch jobs from Firestore
-  const { jobs, loading, error } = useFetchJobs();
+  const { jobs, loading, error, setJobs, refreshJobs } = useFetchJobs();
+  const [refreshCounter, setRefreshCounter] = useState(0);
 
   // State for pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,9 +31,25 @@ const Recruitment = () => {
 
   // Pagination settings
   const jobsPerPage = 5;
+  
+  // Force refresh the job list when jobs change
+  useEffect(() => {
+    setRefreshCounter(prev => prev + 1);
+    
+    // Reset to first page if we're on a page that no longer exists
+    if (currentPage > Math.ceil(jobs.length / jobsPerPage) && currentPage > 1) {
+      setCurrentPage(Math.max(1, Math.ceil(jobs.length / jobsPerPage)));
+    }
+  }, [jobs]); // Using jobs object instead of just length for deeper tracking
+
+  // Function to handle job list refresh without page reload
+  const refreshJobList = async () => {
+    await refreshJobs(); // Fetch fresh data from Firestore
+    setRefreshCounter(prev => prev + 1); // Force JobList to re-render
+  };
 
   // Filter jobs based on selected filters
-  const filteredJobs = jobs
+  const filteredJobs = [...jobs] // Create a copy to avoid mutation issues
     .filter((job) => {
       const matchesDepartment =
         selectedDepartments.length === 0 ||
@@ -75,22 +95,58 @@ const Recruitment = () => {
     setIsEditModalOpen(false);
   };
 
+  // Force refresh from Firestore after operations
+  const handleJobAction = async () => {
+    await refreshJobs(); // Fetch fresh data from Firestore
+    setRefreshCounter(prev => prev + 1);
+  };
+
   // Function to handle closing a job
-  const handleCloseJob = (jobId) => {
-    // Update the job status in Firestore (you'll need to implement this)
-    console.log("Close job:", jobId);
+  const handleCloseJob = async (jobId) => {
+    try {
+      // Update the job status in Firestore
+      const jobRef = doc(db, "jobs", jobId);
+      await updateDoc(jobRef, { status: "Closed" });
+      
+      // Update the job in the local state
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === jobId ? { ...job, status: "Closed" } : job
+        )
+      );
+
+      // Refresh jobs from Firestore
+      handleJobAction();
+      
+    } catch (error) {
+      showErrorAlert("Failed to close job. Please try again.");
+    }
   };
 
   // Function to handle opening a job
-  const handleOpenJob = (jobId) => {
-    // Update the job status in Firestore (you'll need to implement this)
-    console.log("Open job:", jobId);
+  const handleOpenJob = async (jobId) => {
+    try {
+      // Update the job status in Firestore
+      const jobRef = doc(db, "jobs", jobId);
+      await updateDoc(jobRef, { status: "Open" });
+      
+      // Update the job in the local state
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === jobId ? { ...job, status: "Open" } : job
+        )
+      );
+
+      // Refresh jobs from Firestore
+      handleJobAction();
+      
+    } catch (error) {
+      showErrorAlert("Failed to open job. Please try again.");
+    }
   };
 
   // Function to handle updating a job
   const handleUpdateJob = (updatedJob) => {
-    // Update the job in Firestore (you'll need to implement this)
-    console.log("Update job:", updatedJob);
     handleCloseEditModal(); // Close the modal after updating
   };
 
@@ -102,10 +158,12 @@ const Recruitment = () => {
       {/* Left Side (Job Posts & Pagination) */}
       <div className="w-2/3 flex flex-col justify-between">
         <JobList
+          key={`job-list-main-${refreshCounter}`}
           jobs={currentJobs}
           onCloseJob={handleCloseJob}
           onOpenJob={handleOpenJob}
-          onEditJob={handleOpenEditModal} // Pass the edit function
+          onEditJob={handleOpenEditModal}
+          onDelete={refreshJobList} // Pass the refresh function to JobList
         />
         <PaginationControls
           currentPage={currentPage}
@@ -131,6 +189,12 @@ const Recruitment = () => {
                 <AddJobButton
                   onOpenModal={handleOpenAddModal}
                 />
+                <button
+                  onClick={refreshJobList}
+                  className="cursor-pointer w-full px-5 py-3 bg-[#9AADEA] text-white text-lg font-semibold rounded-lg hover:bg-[#7b8edc] transition duration-200"
+                >
+                  Refresh Jobs
+                </button>
               </div>
             </div>
           </div>
@@ -158,6 +222,7 @@ const Recruitment = () => {
       <AddJobModal
         isOpen={isAddModalOpen}
         onClose={handleCloseAddModal}
+        onJobAdded={refreshJobList} // Pass the refresh function
       />
 
       {/* Edit Job Modal */}
@@ -165,7 +230,8 @@ const Recruitment = () => {
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
         initialData={selectedJob}
-        onUpdateJob={handleUpdateJob} // Pass the update function
+        onUpdateJob={handleUpdateJob}
+        onJobUpdated={refreshJobList} // Pass the refresh function
       />
     </div>
   );

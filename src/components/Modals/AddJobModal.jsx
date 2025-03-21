@@ -8,7 +8,7 @@ import ActionButtons from "./RecruitmentModalComponents/ActionButtons";
 import { db } from "../../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-const AddJobModal = ({ isOpen, onClose }) => {
+const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
     const [formData, setFormData] = useState({
         title: "",
         department: "",
@@ -41,10 +41,10 @@ const AddJobModal = ({ isOpen, onClose }) => {
                     workSetup: "",
                     availableSlots: 1,
                 });
+                showSuccessAlert("Fields have been successfully reset!");
             },
             "Yes, reset it!",
-            "Cancel",
-            "Fields have been successfully reset!"
+            "Cancel"
         );
     };
 
@@ -81,15 +81,19 @@ const AddJobModal = ({ isOpen, onClose }) => {
 
             const docRef = await addDoc(collection(db, "jobs"), jobData);
 
-            console.log("Job added with ID: ", docRef.id);
-
             showSuccessAlert("Job added successfully!");
             handleReset(); // Reset the form fields
+            
+            // Close the modal after a delay
             setTimeout(() => {
                 onClose();
+                
+                // Call the callback to refresh jobs without page reload
+                if (typeof onJobAdded === 'function') {
+                    onJobAdded();
+                }
             }, 2000);
         } catch (error) {
-            console.error("Error adding job: ", error);
             showErrorAlert("Failed to add job. Please try again.");
         }
     };
@@ -178,7 +182,7 @@ const AddJobModal = ({ isOpen, onClose }) => {
                                 value={formData.qualifications}
                                 onChange={handleChange}
                                 placeholder="Qualifications"
-                                exampleText="e.g., Bachelor’s in CS, Teaching experience preferred, Programming experience preferred"
+                                exampleText="e.g., Bachelor's in CS, Teaching experience preferred, Programming experience preferred"
                             />
                         </div>
 
@@ -214,7 +218,10 @@ const AddJobModal = ({ isOpen, onClose }) => {
                         </div>
 
                         {/* Buttons */}
-                        <ActionButtons />
+                        <ActionButtons 
+                            onSubmit={handleSubmit}
+                            onReset={handleReset}
+                        />
                     </form>
                 </div>
             </div>
