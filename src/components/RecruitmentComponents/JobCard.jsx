@@ -1,16 +1,21 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { db } from "../../firebase";
+import { doc, deleteDoc, collection, getDocs, deleteDoc as deleteDocument } from "firebase/firestore";
+import { JobContext } from "../../contexts/JobContext";
 import MoreOptionsIcon from "../../assets/icons/RecruitmentIcons/MoreOptionsIcon";
 import CloseJobIcon from "../../assets/icons/RecruitmentIcons/CloseJobIcon";
 import DeleteJobIcon from "../../assets/icons/RecruitmentIcons/DeleteJobIcon";
 import showWarningAlert from "../Alerts/WarningAlert";
 import showSuccessAlert from "../Alerts/SuccessAlert";
 import showDeleteConfirmation from "../Alerts/DeleteAlert";
+import showErrorAlert from "../Alerts/ErrorAlert";
 
-const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob }) => {
+const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob, onDelete }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
+    const { removeJob, lastUpdate } = useContext(JobContext);
 
     // Toggle dropdown visibility
     const toggleDropdown = () => {
@@ -22,38 +27,66 @@ const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob }) => {
         const isOpening = job.status === "Closed"; // If job is closed, we are opening it
         const action = isOpening ? "open" : "close";
         const pastTenseAction = isOpening ? "opened" : "closed"; // Manually define past tense
+        const newStatus = isOpening ? "Open" : "Closed";
 
         showWarningAlert(
             `Are you sure you want to ${action} this job?`,
             () => {
+                // Call the appropriate function based on current status
                 if (isOpening) {
                     onOpenJob(job.id); // Call onOpenJob if the job is closed
                 } else {
                     onCloseJob(job.id); // Call onCloseJob if the job is open
                 }
+                
+                // Close dropdown menu
                 setIsDropdownOpen(false);
+                
+                // Show success message to user
                 showSuccessAlert(
                     `The job has been successfully ${pastTenseAction}!`
                 );
             },
             `Yes, ${action} it!`,
-            "Cancel",
-            `The job has been successfully ${pastTenseAction}!` // Success message passed to showWarningAlert
+            "Cancel"
         );
     };
 
     // Handle delete action
-    const handleDelete = () => {
-        showDeleteConfirmation(
-            job.title,
-            () => {
-                console.log("Deleting job:", job.title);
-                setIsDropdownOpen(false);
-                // Add delete logic here
-            },
-            "Job title does not match!", // Custom error message
-            "The job has been successfully deleted!" // Success message
-        );
+    const handleDelete = async () => {
+        try {
+            showDeleteConfirmation(
+                job.title,
+                async () => {
+                    try {
+                        // Delete the job from Firestore
+                        const jobRef = doc(db, "jobs", job.id);
+                        await deleteDoc(jobRef);
+                        
+                        // Show success message
+                        showSuccessAlert("The job has been successfully deleted!");
+                        
+                        // Close the dropdown
+                        setIsDropdownOpen(false);
+                        
+                        // First call the onDelete prop to refresh the job list from Firestore
+                        if (typeof onDelete === 'function') {
+                            onDelete(job.id);
+                        }
+                        
+                        // Then update the local context state
+                        removeJob(job.id);
+                        
+                    } catch (error) {
+                        showErrorAlert(`Failed to delete job: ${error.message}`);
+                    }
+                },
+                "Job title does not match!", // Custom error message
+                "" // Empty success message since we'll show it manually
+            );
+        } catch (outerError) {
+            showErrorAlert("An error occurred. Please try again.");
+        }
     };
 
     // Handle view action
@@ -84,7 +117,7 @@ const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob }) => {
     }, []);
 
     return (
-        <div className="bg-white rounded-lg p-5 shadow-md flex justify-between items-center gap-4">
+        <div id={`job-${job.id}`} className="bg-white rounded-lg p-5 shadow-md flex justify-between items-center gap-4">
             <div className="flex-1">
                 <div className="flex items-center gap-2">
                     <h3 className="font-bold text-lg">{job.title}</h3>
@@ -149,3 +182,4 @@ const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob }) => {
 };
 
 export default JobCard;
+

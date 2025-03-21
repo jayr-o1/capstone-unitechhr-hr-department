@@ -4,11 +4,10 @@ import showWarningAlert from "../Alerts/WarningAlert";
 import showErrorAlert from "../Alerts/ErrorAlert";
 import departments from "../../data/departments";
 import FormField from "./RecruitmentModalComponents/FormField";
-import ActionButtons from "./RecruitmentModalComponents/ActionButtons";
 import { db } from "../../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
-const AddJobModal = ({ isOpen, onClose }) => {
+const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
     const [formData, setFormData] = useState({
         title: "",
         department: "",
@@ -30,22 +29,27 @@ const AddJobModal = ({ isOpen, onClose }) => {
         showWarningAlert(
             "Are you sure you want to reset all fields?",
             () => {
-                setFormData({
-                    title: "",
-                    department: "",
-                    summary: "",
-                    keyDuties: "",
-                    essentialSkills: "",
-                    qualifications: "",
-                    salary: "",
-                    workSetup: "",
-                    availableSlots: 1,
-                });
+                resetFormFields();
+                showSuccessAlert("Fields have been successfully reset!");
             },
             "Yes, reset it!",
-            "Cancel",
-            "Fields have been successfully reset!"
+            "Cancel"
         );
+    };
+
+    // New function to reset form fields without confirmation
+    const resetFormFields = () => {
+        setFormData({
+            title: "",
+            department: "",
+            summary: "",
+            keyDuties: "",
+            essentialSkills: "",
+            qualifications: "",
+            salary: "",
+            workSetup: "",
+            availableSlots: 1,
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -81,15 +85,20 @@ const AddJobModal = ({ isOpen, onClose }) => {
 
             const docRef = await addDoc(collection(db, "jobs"), jobData);
 
-            console.log("Job added with ID: ", docRef.id);
-
+            // Show success alert
             showSuccessAlert("Job added successfully!");
-            handleReset(); // Reset the form fields
+            
+            // Wait for the success alert to complete before closing modal and resetting
             setTimeout(() => {
-                onClose();
-            }, 2000);
+                resetFormFields(); // Reset form fields
+                onClose(); // Close the modal
+                
+                // Call the callback to refresh jobs without page reload
+                if (typeof onJobAdded === 'function') {
+                    onJobAdded();
+                }
+            }, 2500); // Wait a bit longer than the success alert timer (2000ms)
         } catch (error) {
-            console.error("Error adding job: ", error);
             showErrorAlert("Failed to add job. Please try again.");
         }
     };
@@ -178,7 +187,7 @@ const AddJobModal = ({ isOpen, onClose }) => {
                                 value={formData.qualifications}
                                 onChange={handleChange}
                                 placeholder="Qualifications"
-                                exampleText="e.g., Bachelor’s in CS, Teaching experience preferred, Programming experience preferred"
+                                exampleText="e.g., Bachelor's in CS, Teaching experience preferred, Programming experience preferred"
                             />
                         </div>
 
@@ -214,7 +223,21 @@ const AddJobModal = ({ isOpen, onClose }) => {
                         </div>
 
                         {/* Buttons */}
-                        <ActionButtons />
+                        <div className="flex justify-center space-x-4 mt-6">
+                            <button
+                                type="submit"
+                                className="cursor-pointer px-6 py-3 bg-[#9AADEA] text-white font-semibold rounded-lg hover:bg-[#7b8edc] transition"
+                            >
+                                Add Job Post
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleReset}
+                                className="cursor-pointer px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
+                            >
+                                Reset Fields
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

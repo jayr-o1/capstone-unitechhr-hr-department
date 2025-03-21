@@ -4,9 +4,10 @@ import showWarningAlert from "../Alerts/WarningAlert";
 import showErrorAlert from "../Alerts/ErrorAlert";
 import departments from "../../data/departments";
 import FormField from "./RecruitmentModalComponents/FormField"; // Reuse FormField
-import ActionButtons from "./RecruitmentModalComponents/ActionButtons"; // Reuse ActionButtons
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
-const EditJobModal = ({ isOpen, onClose, initialData }) => {
+const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated }) => {
     const [formData, setFormData] = useState({
         title: "",
         department: "",
@@ -47,16 +48,47 @@ const EditJobModal = ({ isOpen, onClose, initialData }) => {
         // Show warning before updating
         showWarningAlert(
             "Are you sure you want to update this job post?",
-            () => {
-                // Simulate successful update
-                showSuccessAlert("Job updated successfully!");
-                setTimeout(() => {
-                    onClose(); // Close modal after 2 seconds
-                }, 2000);
+            async () => {
+                try {
+                    // Get a reference to the job document
+                    const jobRef = doc(db, "jobs", initialData.id);
+                    
+                    // Create updated job object with ID
+                    const updatedJobData = {
+                        ...formData,
+                        id: initialData.id,
+                        lastUpdated: new Date()
+                    };
+                    
+                    // Update the job in Firestore
+                    await updateDoc(jobRef, {
+                        ...formData,
+                        lastUpdated: new Date()
+                    });
+                    
+                    // Show success alert
+                    showSuccessAlert("Job updated successfully!");
+                    
+                    // Call the parent's onUpdateJob function with the updated job data
+                    if (typeof onUpdateJob === 'function') {
+                        onUpdateJob(updatedJobData);
+                    } else {
+                        // Wait for the success alert to complete before closing modal
+                        setTimeout(() => {
+                            onClose(); // Close modal
+                            
+                            // Call the callback to refresh jobs without page reload
+                            if (typeof onJobUpdated === 'function') {
+                                onJobUpdated();
+                            }
+                        }, 2500); // Wait a bit longer than the success alert timer (2000ms)
+                    }
+                } catch (error) {
+                    showErrorAlert(`Failed to update job: ${error.message}`);
+                }
             },
             "Update",
-            "Cancel",
-            "Job post updated successfully!"
+            "Cancel"
         );
     };
     
@@ -170,15 +202,25 @@ const EditJobModal = ({ isOpen, onClose, initialData }) => {
                                 min="1"
                             />
                         </div>
+                        
+                        {/* Buttons */}
+                        <div className="flex justify-center space-x-4 mt-6">
+                            <button
+                                type="submit"
+                                className="cursor-pointer px-6 py-3 bg-[#9AADEA] text-white font-semibold rounded-lg hover:bg-[#7b8edc] transition"
+                            >
+                                Update Job Post
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleReset}
+                                className="cursor-pointer px-6 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition"
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </form>
                 </div>
-
-                {/* Buttons */}
-                <ActionButtons
-                    onSubmit={handleSubmit}
-                    onReset={handleReset}
-                    isEditing={true}
-                />
             </div>
         </div>
     );

@@ -111,7 +111,9 @@ const Layout = () => {
 
     // Show a loading state while jobs are being fetched
     if (jobsLoading) {
-        return <PageLoader isLoading={true} />;
+        // Check if this is a page refresh (Ctrl+R)
+        const isPageRefresh = sessionStorage.getItem('isPageRefresh') === 'true';
+        return <PageLoader isLoading={true} fullscreen={isPageRefresh} />;
     }
 
     // Show an error message if jobs fail to load
@@ -136,7 +138,7 @@ const Layout = () => {
                 {/* Page Content (Only this part gets the loader) */}
                 <div className="relative flex-1 h-[calc(100vh-4rem)] p-4 bg-gray-100 overflow-y-auto">
                     {/* PageLoader positioned relative to the Outlet container */}
-                    <PageLoader isLoading={isLoading} />
+                    <PageLoader isLoading={isLoading} fullscreen={false} />
 
                     {/* Outlet with conditional opacity and pointer-events */}
                     <div

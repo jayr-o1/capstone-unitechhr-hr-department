@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -11,6 +11,38 @@ import Clusters from "./pages/Clusters";
 import { JobProvider } from "./contexts/JobContext"; // Import JobProvider
 
 function App() {
+    useEffect(() => {
+        // More reliable way to detect page refresh
+        try {
+            // First, always mark the refresh flag for immediate availability
+            sessionStorage.setItem('isPageRefresh', 'true');
+            
+            // Then check if it's a genuine page refresh using Performance API
+            if (window.performance) {
+                const navEntry = performance.getEntriesByType && 
+                               performance.getEntriesByType('navigation')[0];
+                
+                if (navEntry) {
+                    // If it's not a reload, clear the flag
+                    if (navEntry.type !== 'reload') {
+                        sessionStorage.removeItem('isPageRefresh');
+                    } else {
+                        // If it is a reload, keep the flag for 3 seconds
+                        setTimeout(() => {
+                            sessionStorage.removeItem('isPageRefresh');
+                        }, 3000);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error in refresh detection:", error);
+            // If any error, default to keeping the flag
+            setTimeout(() => {
+                sessionStorage.removeItem('isPageRefresh');
+            }, 3000);
+        }
+    }, []);
+
     return (
         <Router>
             <Routes>
