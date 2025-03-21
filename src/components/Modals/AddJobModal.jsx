@@ -4,7 +4,6 @@ import showWarningAlert from "../Alerts/WarningAlert";
 import showErrorAlert from "../Alerts/ErrorAlert";
 import departments from "../../data/departments";
 import FormField from "./RecruitmentModalComponents/FormField";
-import ActionButtons from "./RecruitmentModalComponents/ActionButtons";
 import { db } from "../../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
@@ -30,22 +29,27 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
         showWarningAlert(
             "Are you sure you want to reset all fields?",
             () => {
-                setFormData({
-                    title: "",
-                    department: "",
-                    summary: "",
-                    keyDuties: "",
-                    essentialSkills: "",
-                    qualifications: "",
-                    salary: "",
-                    workSetup: "",
-                    availableSlots: 1,
-                });
+                resetFormFields();
                 showSuccessAlert("Fields have been successfully reset!");
             },
             "Yes, reset it!",
             "Cancel"
         );
+    };
+
+    // New function to reset form fields without confirmation
+    const resetFormFields = () => {
+        setFormData({
+            title: "",
+            department: "",
+            summary: "",
+            keyDuties: "",
+            essentialSkills: "",
+            qualifications: "",
+            salary: "",
+            workSetup: "",
+            availableSlots: 1,
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -81,18 +85,19 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
 
             const docRef = await addDoc(collection(db, "jobs"), jobData);
 
+            // Show success alert
             showSuccessAlert("Job added successfully!");
-            handleReset(); // Reset the form fields
             
-            // Close the modal after a delay
+            // Wait for the success alert to complete before closing modal and resetting
             setTimeout(() => {
-                onClose();
+                resetFormFields(); // Reset form fields
+                onClose(); // Close the modal
                 
                 // Call the callback to refresh jobs without page reload
                 if (typeof onJobAdded === 'function') {
                     onJobAdded();
                 }
-            }, 2000);
+            }, 2500); // Wait a bit longer than the success alert timer (2000ms)
         } catch (error) {
             showErrorAlert("Failed to add job. Please try again.");
         }
@@ -218,10 +223,21 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
                         </div>
 
                         {/* Buttons */}
-                        <ActionButtons 
-                            onSubmit={handleSubmit}
-                            onReset={handleReset}
-                        />
+                        <div className="flex justify-center space-x-4 mt-6">
+                            <button
+                                type="submit"
+                                className="cursor-pointer px-6 py-3 bg-[#9AADEA] text-white font-semibold rounded-lg hover:bg-[#7b8edc] transition"
+                            >
+                                Add Job Post
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleReset}
+                                className="cursor-pointer px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
+                            >
+                                Reset Fields
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

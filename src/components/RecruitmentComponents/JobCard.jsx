@@ -53,29 +53,30 @@ const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob, onDelete }) => {
                 job.title,
                 async () => {
                     try {
+                        // Delete the job from Firestore
                         const jobRef = doc(db, "jobs", job.id);
                         await deleteDoc(jobRef);
                         
-                        // Show success message first
+                        // Show success message
                         showSuccessAlert("The job has been successfully deleted!");
                         
-                        // Update local state
-                        removeJob(job.id);
+                        // Close the dropdown
+                        setIsDropdownOpen(false);
                         
-                        // Call the onDelete callback to refresh the job list
+                        // First call the onDelete prop to refresh the job list from Firestore
                         if (typeof onDelete === 'function') {
                             onDelete(job.id);
                         }
                         
-                        // Close the dropdown
-                        setIsDropdownOpen(false);
+                        // Then update the local context state
+                        removeJob(job.id);
                         
                     } catch (error) {
                         showErrorAlert(`Failed to delete job: ${error.message}`);
                     }
                 },
                 "Job title does not match!", // Custom error message
-                "" // Empty success message since we'll show it manually before reload
+                "" // Empty success message since we'll show it manually
             );
         } catch (outerError) {
             showErrorAlert("An error occurred. Please try again.");

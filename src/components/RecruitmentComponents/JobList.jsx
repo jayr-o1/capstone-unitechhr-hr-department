@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import JobCard from "./JobCard";
 import { JobContext } from "../../contexts/JobContext";
 
-const JobList = ({ jobs, onCloseJob, onOpenJob, onEditJob }) => {
+const JobList = ({ jobs, onCloseJob, onOpenJob, onEditJob, onDelete }) => {
     const [refreshCounter, setRefreshCounter] = useState(0);
     const { jobs: contextJobs, lastUpdate } = useContext(JobContext);
     
@@ -14,6 +14,11 @@ const JobList = ({ jobs, onCloseJob, onOpenJob, onEditJob }) => {
     // Function to handle job deletion and force a refresh of the list
     const handleJobDeleted = (jobId) => {
         setRefreshCounter(prev => prev + 1);
+        
+        // Also call the parent's onDelete function if provided
+        if (typeof onDelete === 'function') {
+            onDelete(jobId);
+        }
     };
 
     return (
@@ -30,7 +35,7 @@ const JobList = ({ jobs, onCloseJob, onOpenJob, onEditJob }) => {
                         onCloseJob={onCloseJob}
                         onOpenJob={onOpenJob}
                         onEditJob={onEditJob}
-                        onDelete={handleJobDeleted}
+                        onDelete={onDelete || handleJobDeleted} // Pass the parent's onDelete if provided, otherwise use local handler
                     />
                 ))
             )}

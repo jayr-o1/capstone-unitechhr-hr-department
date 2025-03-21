@@ -4,7 +4,6 @@ import showWarningAlert from "../Alerts/WarningAlert";
 import showErrorAlert from "../Alerts/ErrorAlert";
 import departments from "../../data/departments";
 import FormField from "./RecruitmentModalComponents/FormField"; // Reuse FormField
-import ActionButtons from "./RecruitmentModalComponents/ActionButtons"; // Reuse ActionButtons
 
 const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated }) => {
     const [formData, setFormData] = useState({
@@ -48,8 +47,10 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
         showWarningAlert(
             "Are you sure you want to update this job post?",
             () => {
-                // Simulate successful update
+                // Show success alert
                 showSuccessAlert("Job updated successfully!");
+                
+                // Wait for the success alert to complete before closing modal
                 setTimeout(() => {
                     onClose(); // Close modal
                     
@@ -57,11 +58,10 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
                     if (typeof onJobUpdated === 'function') {
                         onJobUpdated();
                     }
-                }, 2000);
+                }, 2500); // Wait a bit longer than the success alert timer (2000ms)
             },
             "Update",
-            "Cancel",
-            "Job post updated successfully!"
+            "Cancel"
         );
     };
     
@@ -175,15 +175,25 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
                                 min="1"
                             />
                         </div>
+                        
+                        {/* Buttons */}
+                        <div className="flex justify-center space-x-4 mt-6">
+                            <button
+                                type="submit"
+                                className="cursor-pointer px-6 py-3 bg-[#9AADEA] text-white font-semibold rounded-lg hover:bg-[#7b8edc] transition"
+                            >
+                                Update Job Post
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleReset}
+                                className="cursor-pointer px-6 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition"
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </form>
                 </div>
-
-                {/* Buttons */}
-                <ActionButtons
-                    onSubmit={handleSubmit}
-                    onReset={handleReset}
-                    isEditing={true}
-                />
             </div>
         </div>
     );
