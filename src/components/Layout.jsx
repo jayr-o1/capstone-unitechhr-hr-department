@@ -21,6 +21,8 @@ const Layout = () => {
         "/onboarding": "Onboarding",
         "/employees": "Employees",
         "/clusters": "Clusters",
+        "/profile": "User Profile",
+        "/subscription": "Subscription",
     };
 
     // Get the job title if on a job details page

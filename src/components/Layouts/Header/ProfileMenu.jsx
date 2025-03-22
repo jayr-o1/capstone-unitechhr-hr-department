@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import ProfileIcon from "../../../assets/icons/HeaderIcons/ProfileIcon";
 import SignOutIcon from "../../../assets/icons/HeaderIcons/SignOutIcon";
 import SubscriptionIcon from "../../../assets/icons/HeaderIcons/SubscriptionIcon";
@@ -33,28 +34,28 @@ const ProfileMenu = ({ onClose }) => {
                 </div>
             </li>
             <li>
-                <a
-                    href="users-profile.html"
+                <Link
+                    to="/profile"
                     className="flex items-center px-4 py-3 hover:bg-gray-100"
                     onClick={onClose}
                 >
                     <ProfileIcon />
                     <span className="ml-2">Profile</span>
-                </a>
+                </Link>
             </li>
             <li>
-                <a
-                    href="subscription.html"
+                <Link
+                    to="/subscription"
                     className="flex items-center px-4 py-3 hover:bg-gray-100"
                     onClick={onClose}
                 >
                     <SubscriptionIcon />
                     <span className="ml-2">&nbsp;Subscription</span>
-                </a>
+                </Link>
             </li>
             <li className="border-t border-gray-400">
                 <a
-                    href="auth-boxed-signin.html"
+                    href="/signin"
                     className="flex items-center px-4 py-4 text-red-600 hover:bg-gray-100"
                     onClick={onClose}
                 >

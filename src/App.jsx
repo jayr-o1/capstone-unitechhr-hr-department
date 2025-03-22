@@ -8,6 +8,8 @@ import ApplicantDetails from "./pages/RecruitmentModule/ApplicantDetails"; // Im
 import Onboarding from "./pages/Onboarding";
 import Employees from "./pages/Employees";
 import Clusters from "./pages/Clusters";
+import Profile from "./pages/Profile"; // Import the Profile component
+import Subscription from "./pages/Subscription"; // Import the Subscription component
 import { JobProvider } from "./contexts/JobContext"; // Import JobProvider
 
 function App() {
@@ -70,6 +72,8 @@ function App() {
                     <Route path="onboarding" element={<Onboarding />} />
                     <Route path="employees" element={<Employees />} />
                     <Route path="clusters" element={<Clusters />} />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="subscription" element={<Subscription />} />
                     {/* Add more routes here */}
                 </Route>
             </Routes>
