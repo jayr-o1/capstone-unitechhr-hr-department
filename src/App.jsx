@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
+import AccountLayout from "./components/AccountLayout"; // Import the new AccountLayout
 import Dashboard from "./pages/Dashboard";
 import Recruitment from "./pages/Recruitment";
 import JobDetails from "./pages/RecruitmentModule/JobDetails"; // Import the JobDetails component
@@ -10,11 +11,32 @@ import Employees from "./pages/Employees";
 import Clusters from "./pages/Clusters";
 import Profile from "./pages/Profile"; // Import the Profile component
 import Subscription from "./pages/Subscription"; // Import the Subscription component
+import LoginPage from "./pages/LoginPage";
+import SignUpPage from "./pages/SignUpPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { JobProvider } from "./contexts/JobContext"; // Import JobProvider
+import AuthProvider, { useAuth } from "./contexts/AuthProvider";
 
-function App() {
+// Protected Route component
+const ProtectedRoute = ({ children }) => {
+    const { user, loading } = useAuth();
+    
+    // If still loading auth state, show nothing (or a loader)
+    if (loading) return null;
+    
+    // If user is not authenticated, redirect to login
+    if (!user) return <Navigate to="/" />;
+    
+    // If authenticated, render the children components
+    return children;
+};
+
+function AppContent() {
+    const { user } = useAuth();
+
     useEffect(() => {
-        // More reliable way to detect page refresh
+        // Page refresh detection
         try {
             // First, always mark the refresh flag for immediate availability
             sessionStorage.setItem('isPageRefresh', 'true');
@@ -48,36 +70,64 @@ function App() {
     return (
         <Router>
             <Routes>
-                {/* Wrap all routes with the Layout component */}
-                <Route path="/" element={<Layout />}>
-                    <Route index element={<Dashboard />} />
-                    <Route path="dashboard" element={<Dashboard />} />
+                {/* Authentication Routes */}
+                {!user ? (
+                    <>
+                        <Route path="/" element={<AccountLayout />}>
+                            <Route index element={<LoginPage />} />
+                            <Route path="/signup" element={<SignUpPage />} />
+                            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                            <Route path="/reset-password" element={<ResetPasswordPage />} />
+                            {/* Redirect to login for any other route if not authenticated */}
+                            <Route path="*" element={<Navigate to="/" />} />
+                        </Route>
+                    </>
+                ) : (
+                    <>
+                        {/* Protected Application Routes */}
+                        <Route path="/" element={
+                            <ProtectedRoute>
+                                <Layout />
+                            </ProtectedRoute>
+                        }>
+                            <Route index element={<Navigate to="/dashboard" />} />
+                            <Route path="dashboard" element={<Dashboard />} />
 
-                    {/* Wrap Recruitment and its nested routes with JobProvider */}
-                    <Route
-                        path="recruitment/*"
-                        element={
-                            <JobProvider> {/* Wrap only Recruitment and its children */}
-                                <Routes>
-                                    <Route index element={<Recruitment />} />
-                                    <Route path=":jobId" element={<JobDetails />} />{" "}
-                                    {/* Nested route for JobDetails */}
-                                    <Route path=":jobId/:applicantId" element={<ApplicantDetails />} />{" "}
-                                    {/* Nested route for ApplicantDetails */}
-                                </Routes>
-                            </JobProvider>
-                        }
-                    />
+                            {/* Wrap Recruitment and its nested routes with JobProvider */}
+                            <Route
+                                path="recruitment/*"
+                                element={
+                                    <JobProvider> {/* Wrap only Recruitment and its children */}
+                                        <Routes>
+                                            <Route index element={<Recruitment />} />
+                                            <Route path=":jobId" element={<JobDetails />} />{" "}
+                                            {/* Nested route for JobDetails */}
+                                            <Route path=":jobId/:applicantId" element={<ApplicantDetails />} />{" "}
+                                            {/* Nested route for ApplicantDetails */}
+                                        </Routes>
+                                    </JobProvider>
+                                }
+                            />
 
-                    <Route path="onboarding" element={<Onboarding />} />
-                    <Route path="employees" element={<Employees />} />
-                    <Route path="clusters" element={<Clusters />} />
-                    <Route path="profile" element={<Profile />} />
-                    <Route path="subscription" element={<Subscription />} />
-                    {/* Add more routes here */}
-                </Route>
+                            <Route path="onboarding" element={<Onboarding />} />
+                            <Route path="employees" element={<Employees />} />
+                            <Route path="clusters" element={<Clusters />} />
+                            <Route path="profile" element={<Profile />} />
+                            <Route path="subscription" element={<Subscription />} />
+                            {/* Add more routes here */}
+                        </Route>
+                    </>
+                )}
             </Routes>
         </Router>
+    );
+}
+
+function App() {
+    return (
+        <AuthProvider>
+            <AppContent />
+        </AuthProvider>
     );
 }
 

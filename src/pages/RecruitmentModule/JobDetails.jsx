@@ -169,8 +169,8 @@ const JobDetails = () => {
                 {jobDetails.title}
               </h1>
 
-              {/* Horizontal Divider */}
-              <hr className="border-t border-gray-300 mb-6" />
+                {/* Horizontal Divider */}
+                <hr className="border-t border-gray-300 mb-6" />
 
               <p className="text-gray-800 mb-4">
                 <strong>Job Title:</strong> {jobDetails.title}

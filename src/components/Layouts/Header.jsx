@@ -60,7 +60,7 @@ const Header = ({ title, breadcrumb = [], onBreadcrumbClick }) => {
                 </h1>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
                 <NotificationDropdown
                     notifications={notificationsState}
                     markAsRead={markAsRead}
