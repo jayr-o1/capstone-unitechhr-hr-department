@@ -102,14 +102,47 @@ const Recruitment = () => {
     setIsEditModalOpen(false);
   };
 
+  // Function to handle updating a job
+  const handleUpdateJob = async (updatedJob) => {
+    try {
+      // Remove applicants before updating Firestore
+      const { applicants, ...jobDataWithoutApplicants } = updatedJob;
+      
+      // First, update the job in Firestore
+      const jobRef = doc(db, "jobs", updatedJob.id);
+      await updateDoc(jobRef, {
+        ...jobDataWithoutApplicants,
+        lastUpdated: new Date()
+      });
+      
+      // Then update the job in the local state (keep applicants in state)
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === updatedJob.id ? { ...job, ...updatedJob } : job
+        )
+      );
+      
+      // Then refresh from Firestore to ensure we have the latest data
+      await refreshJobs();
+      
+      // Increment the refresh counter to force JobList to re-render
+      setRefreshCounter(prev => prev + 1);
+      
+      // Close the modal
+      handleCloseEditModal();
+    } catch (error) {
+      showErrorAlert(`Failed to update job: ${error.message}`);
+    }
+  };
+
   // Function to handle closing a job
   const handleCloseJob = async (jobId) => {
     try {
-      // Update the job status in Firestore
+      // Update only the status and lastUpdated fields in Firestore
       const jobRef = doc(db, "jobs", jobId);
       await updateDoc(jobRef, { 
         status: "Closed",
-        lastUpdated: new Date() // Add a timestamp for when it was updated
+        lastUpdated: new Date()
       });
       
       // Update the job in the local state
@@ -134,11 +167,11 @@ const Recruitment = () => {
   // Function to handle opening a job
   const handleOpenJob = async (jobId) => {
     try {
-      // Update the job status in Firestore
+      // Update only the status and lastUpdated fields in Firestore
       const jobRef = doc(db, "jobs", jobId);
       await updateDoc(jobRef, { 
         status: "Open",
-        lastUpdated: new Date() // Add a timestamp for when it was updated
+        lastUpdated: new Date()
       });
       
       // Update the job in the local state
@@ -157,29 +190,6 @@ const Recruitment = () => {
     } catch (error) {
       console.error("Error opening job:", error);
       showErrorAlert(`Failed to open job: ${error.message}`);
-    }
-  };
-
-  // Function to handle updating a job
-  const handleUpdateJob = async (updatedJob) => {
-    try {
-      // First, update the job in the local state
-      setJobs((prevJobs) =>
-        prevJobs.map((job) =>
-          job.id === updatedJob.id ? { ...job, ...updatedJob } : job
-        )
-      );
-      
-      // Then refresh from Firestore to ensure we have the latest data
-      await refreshJobs();
-      
-      // Increment the refresh counter to force JobList to re-render
-      setRefreshCounter(prev => prev + 1);
-      
-      // Close the modal
-      handleCloseEditModal();
-    } catch (error) {
-      showErrorAlert(`Failed to update job: ${error.message}`);
     }
   };
 

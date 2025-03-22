@@ -5,12 +5,15 @@ import { JobContext } from "../../contexts/JobContext"; // Import JobContext
 import showWarningAlert from "../../components/Alerts/WarningAlert"; // Import WarningAlert
 import showSuccessAlert from "../../components/Alerts/SuccessAlert"; // Import SuccessAlert
 import showDeleteConfirmation from "../../components/Alerts/DeleteAlert"; // Import DeleteAlert
+import showErrorAlert from "../../components/Alerts/ErrorAlert"; // Import ErrorAlert
 import ApplicantsList from "../../components/RecruitmentComponents/ApplicantDetailsComponents/ApplicantsList"; // Import ApplicantsList
+import { doc, updateDoc, deleteDoc } from "firebase/firestore"; // Import Firestore functions
+import { db } from "../../firebase"; // Import Firebase database
 
 const JobDetails = () => {
   const { jobId } = useParams();
-  const { jobs, loading, error } = useContext(JobContext);
-  const jobDetails = jobs.find((job) => job.id === jobId); // Find the job by ID (no need for parseInt)
+  const { jobs, handleUpdateJob: updateJobInContext, removeJob, loading, error } = useContext(JobContext);
+  const jobDetails = jobs.find((job) => job.id === jobId); // Find the job by ID
   const navigate = useNavigate();
 
   // State to manage modal visibility
@@ -24,6 +27,101 @@ const JobDetails = () => {
   // Function to close the edit modal
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
+  };
+
+  // Function to update a job in Firestore
+  const handleUpdateJob = async (updatedJob) => {
+    try {
+      const jobRef = doc(db, "jobs", jobId);
+      
+      // Remove applicants before updating Firestore
+      const { applicants, ...jobDataWithoutApplicants } = updatedJob;
+      
+      // Update the job in Firestore
+      await updateDoc(jobRef, {
+        ...jobDataWithoutApplicants,
+        lastUpdated: new Date()
+      });
+      
+      // Update the job in context (keep applicants in context)
+      updateJobInContext(updatedJob);
+      
+      // Close the modal if it's open
+      setIsEditModalOpen(false);
+      
+      return true; // Return success
+    } catch (error) {
+      showErrorAlert(`Failed to update job: ${error.message}`);
+      return false; // Return failure
+    }
+  };
+
+  // Handle close/open action
+  const handleCloseOrOpen = async () => {
+    const isOpening = jobDetails.status === "Closed"; // If job is closed, we are opening it
+    const action = isOpening ? "open" : "close";
+    const pastTenseAction = isOpening ? "opened" : "closed"; // Manually define past tense
+    const newStatus = isOpening ? "Open" : "Closed";
+
+    showWarningAlert(
+      `Are you sure you want to ${action} this job?`,
+      async () => {
+        try {
+          // Update the job status in Firestore - only update the status field
+          const jobRef = doc(db, "jobs", jobId);
+          await updateDoc(jobRef, { 
+            status: newStatus,
+            lastUpdated: new Date()
+          });
+          
+          // Create updated job object for context (keep applicants in the context object)
+          const updatedJob = {
+            ...jobDetails,
+            status: newStatus,
+            lastUpdated: new Date()
+          };
+          
+          // Update job in context
+          updateJobInContext(updatedJob);
+          
+          // Show success message
+          showSuccessAlert(`The job has been successfully ${pastTenseAction}!`);
+        } catch (error) {
+          showErrorAlert(`Failed to ${action} job: ${error.message}`);
+        }
+      },
+      `Yes, ${action} it!`,
+      "Cancel"
+    );
+  };
+
+  // Handle delete action
+  const handleDelete = () => {
+    showDeleteConfirmation(
+      jobDetails.title,
+      async () => {
+        try {
+          // Delete the job from Firestore
+          const jobRef = doc(db, "jobs", jobId);
+          await deleteDoc(jobRef);
+          
+          // Remove the job from context
+          removeJob(jobId);
+          
+          // Show success message
+          showSuccessAlert("The job has been successfully deleted!");
+          
+          // Redirect to the recruitment page after deletion
+          setTimeout(() => {
+            navigate("/recruitment");
+          }, 1500);
+        } catch (error) {
+          showErrorAlert(`Failed to delete job: ${error.message}`);
+        }
+      },
+      "Job title does not match!", // Custom error message
+      "" // Empty success message since we'll show it manually
+    );
   };
 
   // Handle case where job is not found
@@ -57,45 +155,6 @@ const JobDetails = () => {
       </div>
     );
   }
-
-  // Handle close/open action
-  const handleCloseOrOpen = () => {
-    const isOpening = jobDetails.status === "Closed"; // If job is closed, we are opening it
-    const action = isOpening ? "open" : "close";
-    const pastTenseAction = isOpening ? "opened" : "closed"; // Manually define past tense
-
-    showWarningAlert(
-      `Are you sure you want to ${action} this job?`,
-      () => {
-        const updatedJob = {
-          ...jobDetails,
-          status: isOpening ? "Open" : "Closed",
-        };
-        handleUpdateJob(updatedJob); // Update the job status
-        showSuccessAlert(`The job has been successfully ${pastTenseAction}!`);
-      },
-      `Yes, ${action} it!`,
-      "Cancel",
-      `The job has been successfully ${pastTenseAction}!` // Success message passed to showWarningAlert
-    );
-  };
-
-  // Handle delete action
-  const handleDelete = () => {
-    showDeleteConfirmation(
-      jobDetails.title,
-      () => {
-        // Remove the job from the jobs array
-        setJobs((prevJobs) =>
-          prevJobs.filter((job) => job.id !== jobDetails.id)
-        );
-        showSuccessAlert("The job has been successfully deleted!");
-        navigate("/recruitment"); // Redirect to the recruitment page after deletion
-      },
-      "Job title does not match!", // Custom error message
-      "The job has been successfully deleted!" // Success message
-    );
-  };
 
   return (
     <>

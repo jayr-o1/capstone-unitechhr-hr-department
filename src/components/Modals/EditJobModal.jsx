@@ -24,8 +24,11 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
     useEffect(() => {
         if (initialData) {
             // Convert arrays to strings for the form display
+            // Remove the applicants array to avoid it being included in the form data
+            const { applicants, ...dataWithoutApplicants } = initialData;
+            
             const processedData = {
-                ...initialData,
+                ...dataWithoutApplicants,
                 keyDuties: Array.isArray(initialData.keyDuties) 
                     ? initialData.keyDuties.join('\n') 
                     : initialData.keyDuties || '',
@@ -52,8 +55,11 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
     // Helper function to process the form data for Firestore
     const prepareDataForFirestore = (data) => {
         // Convert string fields to arrays by splitting on newlines and filtering empty items
+        // Create a new object without the applicants property
+        const { applicants, ...dataWithoutApplicants } = data;
+        
         return {
-            ...data,
+            ...dataWithoutApplicants,
             keyDuties: data.keyDuties ? data.keyDuties.split('\n').filter(item => item.trim()) : [],
             essentialSkills: data.essentialSkills ? data.essentialSkills.split('\n').filter(item => item.trim()) : [],
             qualifications: data.qualifications ? data.qualifications.split('\n').filter(item => item.trim()) : [],

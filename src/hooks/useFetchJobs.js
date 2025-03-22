@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { db } from "../firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 
 const useFetchJobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -20,6 +20,29 @@ const useFetchJobs = () => {
       return "1 day ago";
     } else {
       return `${daysDifference} days ago`;
+    }
+  };
+
+  // Helper function to check for pending applicants and update newApplicants flag
+  const checkForPendingApplicants = async (jobId, applicants, currentNewApplicantsStatus) => {
+    try {
+      // Check if there are any pending applicants
+      const hasPendingApplicants = applicants.some(applicant => applicant.status === "Pending");
+      
+      // If the newApplicants status needs to be updated
+      if (hasPendingApplicants !== currentNewApplicantsStatus) {
+        const jobRef = doc(db, "jobs", jobId);
+        // Only update the newApplicants field, DO NOT include the applicants array
+        await updateDoc(jobRef, {
+          newApplicants: hasPendingApplicants
+        });
+        return hasPendingApplicants;
+      }
+      
+      return currentNewApplicantsStatus;
+    } catch (error) {
+      console.error("Error updating newApplicants flag:", error);
+      return currentNewApplicantsStatus;
     }
   };
 
@@ -47,8 +70,20 @@ const useFetchJobs = () => {
           ...applicantDoc.data(),
           dateApplied: applicantDoc.data().dateApplied?.toDate() || null, // Convert Timestamp to Date
         }));
+        
+        // Check for pending applicants and update the flag if needed
+        const newApplicantsStatus = await checkForPendingApplicants(
+          doc.id, 
+          applicants, 
+          job.newApplicants || false
+        );
 
-        jobsData.push({ id: doc.id, ...job, applicants });
+        jobsData.push({ 
+          id: doc.id, 
+          ...job, 
+          applicants,
+          newApplicants: newApplicantsStatus
+        });
       }
 
       setJobs([...jobsData]); // Create a new array reference to ensure React detects the change
@@ -82,8 +117,20 @@ const useFetchJobs = () => {
           ...applicantDoc.data(),
           dateApplied: applicantDoc.data().dateApplied?.toDate() || null, 
         }));
+        
+        // Check for pending applicants and update the flag if needed
+        const newApplicantsStatus = await checkForPendingApplicants(
+          doc.id, 
+          applicants, 
+          job.newApplicants || false
+        );
 
-        jobsData.push({ id: doc.id, ...job, applicants });
+        jobsData.push({ 
+          id: doc.id, 
+          ...job, 
+          applicants,
+          newApplicants: newApplicantsStatus
+        });
       }
 
       setJobs([...jobsData]); 
