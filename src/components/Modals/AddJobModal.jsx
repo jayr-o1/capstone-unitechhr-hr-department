@@ -67,14 +67,14 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
                 summary: formData.summary,
                 department: formData.department,
                 keyDuties: formData.keyDuties
-                    .split(",")
-                    .map((duty) => duty.trim()),
+                    ? formData.keyDuties.split('\n').filter(item => item.trim())
+                    : [],
                 essentialSkills: formData.essentialSkills
-                    .split(",")
-                    .map((skill) => skill.trim()),
+                    ? formData.essentialSkills.split('\n').filter(item => item.trim())
+                    : [],
                 qualifications: formData.qualifications
-                    .split(",")
-                    .map((qual) => qual.trim()),
+                    ? formData.qualifications.split('\n').filter(item => item.trim())
+                    : [],
                 salary: formData.salary,
                 workSetup: formData.workSetup,
                 availableSlots: parseInt(formData.availableSlots, 10),
@@ -171,7 +171,7 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
                                 value={formData.keyDuties}
                                 onChange={handleChange}
                                 placeholder="Key Duties"
-                                exampleText="e.g., Teach programming, Prepare lesson plans, Conduct assessments, Grade students"
+                                exampleText="IMPORTANT: Enter each item on a separate line."
                             />
                             <FormField
                                 type="textarea"
@@ -179,7 +179,7 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
                                 value={formData.essentialSkills}
                                 onChange={handleChange}
                                 placeholder="Essential Skills"
-                                exampleText="e.g., Python, Java, or C++, Strong understanding of algorithms, Strong understanding of database systems"
+                                exampleText="IMPORTANT: Enter each item on a separate line."
                             />
                             <FormField
                                 type="textarea"
@@ -187,7 +187,7 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
                                 value={formData.qualifications}
                                 onChange={handleChange}
                                 placeholder="Qualifications"
-                                exampleText="e.g., Bachelor's in CS, Teaching experience preferred, Programming experience preferred"
+                                exampleText="IMPORTANT: Enter each item on a separate line."
                             />
                         </div>
 

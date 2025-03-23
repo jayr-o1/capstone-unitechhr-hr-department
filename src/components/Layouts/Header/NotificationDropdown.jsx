@@ -31,14 +31,16 @@ const NotificationDropdown = ({
         <div className="relative" ref={dropdownRef}>
             <button
                 type="button"
-                className="p-2 rounded-full bg-gray-100 focus:outline-none cursor-pointer"
+                className="p-3 rounded-full bg-gray-100 focus:outline-none cursor-pointer hover:bg-gray-200"
                 onClick={toggleDropdown}
             >
-                <NotificationIcon />
+                <div className="h-6 w-6">
+                    <NotificationIcon />
+                </div>
                 {notifications.some((n) => !n.read) && (
-                    <span className="absolute left-5 top-0 right-0 flex h-3.5 w-3.5">
+                    <span className="absolute left-7 top-0 right-0 flex h-4 w-4">
                         <span className="absolute inset-0 h-full w-full animate-ping rounded-full bg-green-500/50 opacity-75"></span>
-                        <span className="relative m-1 top-0 right-0 h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                        <span className="relative m-1 top-0 right-0 h-2 w-2 rounded-full bg-green-500"></span>
                     </span>
                 )}
             </button>
