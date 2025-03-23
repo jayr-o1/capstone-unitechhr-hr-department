@@ -31,29 +31,54 @@ const ApplicantsList = ({ applicants, jobId, loading, error }) => {
                 <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
                     <thead>
                         <tr className="bg-gray-100">
-                            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Applicant Name</th>
-                            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Email</th>
-                            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Application Date</th>
-                            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Status</th>
-                            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Action</th>
+                            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">
+                                Applicant Name
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">
+                                Email
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">
+                                Application Date
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">
+                                Status
+                            </th>
+                            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">
+                                Action
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         {applicants.map((applicant) => (
-                            <tr key={applicant.id} className="border-b border-gray-200 hover:bg-gray-50 transition duration-200">
-                                <td className="py-3 px-4 text-sm text-gray-800">{applicant.name}</td>
-                                <td className="py-3 px-4 text-sm text-gray-600">{applicant.email}</td>
+                            <tr
+                                key={applicant.id}
+                                className="border-b border-gray-200 hover:bg-gray-50 transition duration-200"
+                            >
+                                <td className="py-3 px-4 text-sm text-gray-800">
+                                    {applicant.name}
+                                </td>
                                 <td className="py-3 px-4 text-sm text-gray-600">
-                                    {applicant.dateApplied?.toLocaleDateString?.() || "N/A"}
+                                    {applicant.email}
+                                </td>
+                                <td className="py-3 px-4 text-sm text-gray-600">
+                                    {applicant.dateApplied?.toLocaleDateString?.() ||
+                                        "N/A"}
                                 </td>
                                 <td className="py-3 px-4 text-sm text-gray-600">
                                     <span
                                         className={`px-2 py-1 rounded-full text-xs font-semibold ${
                                             applicant.status === "Pending"
                                                 ? "bg-yellow-100 text-yellow-800"
-                                                : applicant.status === "Approved"
+                                                : applicant.status ===
+                                                      "Approved" ||
+                                                  applicant.status === "Hired"
                                                 ? "bg-green-100 text-green-800"
-                                                : "bg-red-100 text-red-800"
+                                                : applicant.status === "Failed"
+                                                ? "bg-red-100 text-red-800"
+                                                : applicant.status ===
+                                                  "Interviewing"
+                                                ? "bg-blue-100 text-blue-800"
+                                                : "bg-gray-100 text-gray-800"
                                         }`}
                                     >
                                         {applicant.status}

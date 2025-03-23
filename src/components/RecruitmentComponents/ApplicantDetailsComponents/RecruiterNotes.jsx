@@ -1,62 +1,77 @@
-import React, { useState } from "react";
-import MoreOptionsIcon from "../../../assets/icons/RecruitmentIcons/MoreOptionsIcon";
-import {
-    EditScheduleIcon,
-    EditNoteIcon,
-} from "../../../assets/icons/RecruitmentIcons/DropdownIcons";
-import ViewInterviewModal from "./ViewInterviewModal"; // Import the new modal component
-import AddNotesModal from "./AddNotesModal"; // Import the new modal component
+import React, { useState, useEffect } from "react";
+import ViewInterviewModal from "./ViewInterviewModal"; // Import the modal component
 
 const RecruiterNotes = ({
-    scheduledInterviews,
+    scheduledInterviews = [],
+    addNotesHandler,
+    saveNotesHandler,
     onAddNotes,
     onEditInterview,
-    selectedInterviewId,
-    notes,
-    onSaveNotes,
-    onNotesChange,
-    onEditSchedule,
-    onEditNote,
 }) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isAddNotesModalOpen, setIsAddNotesModalOpen] = useState(false);
+    const [isAddNoteModalOpen, setIsAddNoteModalOpen] = useState(false);
     const [selectedInterview, setSelectedInterview] = useState(null);
-    const [dropdownOpenId, setDropdownOpenId] = useState(null);
     const [newNote, setNewNote] = useState("");
     const [newStatus, setNewStatus] = useState("");
 
-    const capitalizeFirstLetter = (str) => {
-        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-    };
+    // Set first interview as selected by default if available
+    useEffect(() => {
+        if (scheduledInterviews && scheduledInterviews.length > 0) {
+            setSelectedInterview(scheduledInterviews[0]);
+        } else {
+            setSelectedInterview(null);
+        }
+    }, [scheduledInterviews]);
 
-    const handleViewClick = (interview) => {
-        setSelectedInterview(interview);
-        setIsModalOpen(true);
-    };
-
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setSelectedInterview(null);
-    };
-
-    const toggleDropdown = (id) => {
-        setDropdownOpenId(dropdownOpenId === id ? null : id);
-    };
-
+    // Handle adding notes to an interview
     const handleAddNotesClick = (interview) => {
         setSelectedInterview(interview);
-        setIsAddNotesModalOpen(true);
+
+        // Pre-populate the note field if there are existing notes
+        if (hasNotes(interview)) {
+            if (Array.isArray(interview.notes) && interview.notes.length > 0) {
+                // Get the most recent note if it's an array
+                const latestNote = interview.notes[interview.notes.length - 1];
+                setNewNote(latestNote.content || "");
+            } else if (typeof interview.notes === "string") {
+                // If notes is a string, use it directly
+                setNewNote(interview.notes);
+            }
+        } else {
+            // Clear the note field if there are no existing notes
+            setNewNote("");
+        }
+
+        // Set the current status if available
+        setNewStatus(interview.status || "");
+
+        // Open the modal
+        setIsAddNoteModalOpen(true);
+
+        // Call the handler function if it exists
+        if (typeof addNotesHandler === "function") {
+            addNotesHandler(interview.id);
+        }
     };
 
+    // Handle saving notes and status
     const handleSaveNotesAndStatus = () => {
-        onAddNotes(selectedInterview.id, newNote, newStatus);
-        setIsAddNotesModalOpen(false);
+        if (!selectedInterview) return;
+
+        if (typeof saveNotesHandler === "function") {
+            saveNotesHandler(selectedInterview.id, newNote, newStatus);
+        } else if (typeof onAddNotes === "function") {
+            onAddNotes(selectedInterview.id, newNote, newStatus);
+        }
+
+        // Reset modal state
+        setIsAddNoteModalOpen(false);
         setNewNote("");
         setNewStatus("");
     };
 
     // Format date and time for display
     const formatDateTime = (dateTimeString) => {
+        if (!dateTimeString) return "N/A";
         try {
             // If it's a timestamp or date object
             const date =
@@ -86,6 +101,8 @@ const RecruiterNotes = ({
 
     // Get status color based on status
     const getStatusColor = (status) => {
+        if (!status) return "bg-gray-100 text-gray-800";
+
         const statusMap = {
             Scheduled: "bg-blue-100 text-blue-800", // Upcoming interview
             Completed: "bg-green-100 text-green-800", // Completed interview
@@ -99,6 +116,8 @@ const RecruiterNotes = ({
 
     // Get human-readable status
     const getStatusText = (status) => {
+        if (!status) return "Unknown";
+
         const statusMap = {
             Scheduled: "Scheduled",
             Completed: "Completed",
@@ -110,14 +129,25 @@ const RecruiterNotes = ({
         return statusMap[status] || status;
     };
 
+    // Check if interview has notes
+    const hasNotes = (interview) => {
+        return (
+            interview &&
+            interview.notes &&
+            ((Array.isArray(interview.notes) && interview.notes.length > 0) ||
+                (typeof interview.notes === "string" &&
+                    interview.notes.trim() !== ""))
+        );
+    };
+
     return (
-        <div className="mt-8 border border-gray-300 rounded-lg p-6 bg-white shadow-md">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Interviews & Notes
+        <div className="w-full border border-gray-300 rounded-lg p-6 bg-white shadow-md">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Scheduled Interviews
             </h2>
 
             {/* No Scheduled Interviews Yet */}
-            {scheduledInterviews.length === 0 && (
+            {(!scheduledInterviews || scheduledInterviews.length === 0) && (
                 <div className="text-gray-600 text-center py-10 border border-dashed border-gray-300 rounded-lg">
                     <p className="mb-4">No interviews scheduled yet.</p>
                     <p>
@@ -127,7 +157,7 @@ const RecruiterNotes = ({
             )}
 
             {/* Scheduled Interviews */}
-            {scheduledInterviews.length > 0 && (
+            {scheduledInterviews && scheduledInterviews.length > 0 && (
                 <div className="grid grid-cols-1 gap-6">
                     {scheduledInterviews.map((interview) => (
                         <div
@@ -157,7 +187,8 @@ const RecruiterNotes = ({
                                             </svg>
                                             <span>
                                                 {formatDateTime(
-                                                    interview.dateTime
+                                                    interview.dateTime ||
+                                                        interview.date
                                                 )}
                                             </span>
                                         </div>
@@ -188,27 +219,65 @@ const RecruiterNotes = ({
                                     >
                                         {getStatusText(interview.status)}
                                     </span>
-                                    <ViewInterviewModal interview={interview} />
+                                    {interview && (
+                                        <ViewInterviewModal
+                                            interview={interview}
+                                        />
+                                    )}
+                                    {onEditInterview && (
+                                        <button
+                                            onClick={() =>
+                                                onEditInterview(interview)
+                                            }
+                                            className="px-3 py-1 text-sm text-blue-500 border border-blue-500 rounded hover:bg-blue-500 hover:text-white transition-all"
+                                        >
+                                            Edit
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() =>
                                             handleAddNotesClick(interview)
                                         }
                                         className="px-3 py-1 text-sm bg-[#9AADEA] text-white rounded-lg hover:bg-[#7b8edc] transition-all"
                                     >
-                                        Add Notes
+                                        {hasNotes(interview)
+                                            ? "View Notes"
+                                            : "Add Notes"}
                                     </button>
                                 </div>
                             </div>
 
                             {/* Interview Notes (if available) */}
-                            {interview.notes && (
+                            {hasNotes(interview) && (
                                 <div className="mt-4 bg-gray-50 p-4 rounded border border-gray-200">
                                     <h4 className="font-medium text-gray-700 mb-2">
                                         Notes:
                                     </h4>
-                                    <p className="text-gray-600 whitespace-pre-line">
-                                        {interview.notes}
-                                    </p>
+                                    <div className="space-y-2">
+                                        {Array.isArray(interview.notes) ? (
+                                            interview.notes.map(
+                                                (note, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="text-gray-600 whitespace-pre-line"
+                                                    >
+                                                        <p>{note.content}</p>
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            {note.timestamp
+                                                                ? formatDateTime(
+                                                                      note.timestamp
+                                                                  )
+                                                                : ""}
+                                                        </p>
+                                                    </div>
+                                                )
+                                            )
+                                        ) : (
+                                            <p className="text-gray-600 whitespace-pre-line">
+                                                {interview.notes}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -216,15 +285,62 @@ const RecruiterNotes = ({
                 </div>
             )}
 
-            {/* Modal for Adding Notes (using a custom component) */}
-            {selectedInterviewId && (
-                <AddNotesModal
-                    isOpen={!!selectedInterviewId}
-                    onClose={() => onAddNotes(null)}
-                    notes={notes}
-                    onNotesChange={onNotesChange}
-                    onSave={onSaveNotes}
-                />
+            {/* Add/View Note Modal */}
+            {isAddNoteModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                        <h3 className="text-lg font-semibold mb-4">
+                            {hasNotes(selectedInterview)
+                                ? "View/Edit Notes"
+                                : "Add Note"}
+                        </h3>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium mb-1">
+                                Note:
+                            </label>
+                            <textarea
+                                className="w-full border border-gray-300 rounded p-2"
+                                rows="3"
+                                value={newNote}
+                                onChange={(e) => setNewNote(e.target.value)}
+                            ></textarea>
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium mb-1">
+                                Update Status:
+                            </label>
+                            <select
+                                className="w-full border border-gray-300 rounded p-2"
+                                value={newStatus}
+                                onChange={(e) => setNewStatus(e.target.value)}
+                            >
+                                <option value="">No change</option>
+                                <option value="Scheduled">Scheduled</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Canceled">Canceled</option>
+                            </select>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <button
+                                className="px-4 py-2 bg-gray-200 rounded"
+                                onClick={() => {
+                                    setIsAddNoteModalOpen(false);
+                                    setNewNote("");
+                                    setNewStatus("");
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="px-4 py-2 bg-blue-500 text-white rounded"
+                                onClick={handleSaveNotesAndStatus}
+                                disabled={!newNote.trim()}
+                            >
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

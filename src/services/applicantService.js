@@ -133,3 +133,35 @@ export const updateApplicantNotes = async (jobId, applicantId, notes) => {
         return { success: false, message: error.message };
     }
 };
+
+// Update an existing interview
+export const updateInterview = async (
+    jobId,
+    applicantId,
+    interviewId,
+    interviewData
+) => {
+    try {
+        // Reference to the interview document
+        const interviewRef = doc(
+            db,
+            "jobs",
+            jobId,
+            "applicants",
+            applicantId,
+            "interviews",
+            interviewId
+        );
+
+        // Update the interview data
+        await updateDoc(interviewRef, {
+            ...interviewData,
+            lastUpdated: serverTimestamp(),
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating interview:", error);
+        return { success: false, message: error.message };
+    }
+};

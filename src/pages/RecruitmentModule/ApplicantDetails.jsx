@@ -8,21 +8,25 @@ import ApplicantInfo from "../../components/RecruitmentComponents/ApplicantDetai
 import AIInsights from "../../components/RecruitmentComponents/ApplicantDetailsComponents/AIInsights";
 import RecruiterNotes from "../../components/RecruitmentComponents/ApplicantDetailsComponents/RecruiterNotes";
 import ScheduleInterviewModal from "../../components/Modals/ScheduleInterviewModal";
+import EditInterviewModal from "../../components/Modals/EditInterviewModal";
 import {
     updateApplicantStatus,
     scheduleInterview,
     getApplicantInterviews,
     updateApplicantNotes,
+    updateInterview,
 } from "../../services/applicantService";
 
 const ApplicantDetails = () => {
     const { jobId, applicantId } = useParams(); // Get jobId and applicantId from URL
     const { jobs, refreshJobs } = useContext(JobContext); // Use JobContext to access jobs and refreshJobs
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [interviewDateTime, setInterviewDateTime] = useState("");
     const [scheduledInterviews, setScheduledInterviews] = useState([]);
     const [notes, setNotes] = useState("");
     const [selectedInterviewId, setSelectedInterviewId] = useState(null);
+    const [selectedInterview, setSelectedInterview] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -108,9 +112,9 @@ const ApplicantDetails = () => {
                         // Refresh jobs data to update UI
                         await refreshJobs();
 
-                        // Navigate to employees page after a brief delay
+                        // Navigate to onboarding page after a brief delay
                         setTimeout(() => {
-                            navigate("/employees");
+                            navigate("/onboarding");
                         }, 2000);
                     } else {
                         showErrorAlert(
@@ -186,6 +190,9 @@ const ApplicantDetails = () => {
 
         setIsLoading(true);
         try {
+            // First close the modal to prevent background becoming black
+            handleCloseModal();
+
             const result = await scheduleInterview(jobId, applicantId, {
                 dateTime: data.dateTime,
                 title: data.title,
@@ -205,8 +212,8 @@ const ApplicantDetails = () => {
                 // Refresh jobs data to update UI
                 await refreshJobs();
 
+                // Show success message
                 showSuccessAlert("Interview scheduled successfully!");
-                handleCloseModal();
             } else {
                 showErrorAlert(
                     `Failed to schedule interview: ${result.message}`
@@ -260,10 +267,60 @@ const ApplicantDetails = () => {
         setNotes(e.target.value);
     };
 
-    // Handle Edit Interview
-    const handleEditInterview = (interviewId) => {
-        // For future implementation
-        console.log("Editing interview with ID:", interviewId);
+    // Function to handle editing an interview
+    const handleEditInterview = (interview) => {
+        setSelectedInterview(interview);
+        setIsEditModalOpen(true);
+    };
+
+    // Handle updating an interview
+    const handleUpdateInterview = async (data) => {
+        if (!data.dateTime || !data.title || !data.interviewer || !data.id) {
+            showErrorAlert("Please fill all fields.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            // First close the modal to prevent background becoming black
+            setIsEditModalOpen(false);
+
+            const result = await updateInterview(jobId, applicantId, data.id, {
+                dateTime: data.dateTime,
+                title: data.title,
+                interviewer: data.interviewer,
+            });
+
+            if (result.success) {
+                // Refresh interviews list
+                const interviewsResult = await getApplicantInterviews(
+                    jobId,
+                    applicantId
+                );
+                if (interviewsResult.success) {
+                    setScheduledInterviews(interviewsResult.interviews || []);
+                }
+
+                // Refresh jobs data to update UI
+                await refreshJobs();
+
+                // Show success message
+                showSuccessAlert("Interview updated successfully!");
+            } else {
+                showErrorAlert(`Failed to update interview: ${result.message}`);
+            }
+        } catch (error) {
+            showErrorAlert(`Error: ${error.message}`);
+        } finally {
+            setIsLoading(false);
+            setSelectedInterview(null);
+        }
+    };
+
+    // Handle closing the edit modal
+    const handleCloseEditModal = () => {
+        setIsEditModalOpen(false);
+        setSelectedInterview(null);
     };
 
     // Get current date and time in the required format (YYYY-MM-DDTHH:MM)
@@ -279,44 +336,50 @@ const ApplicantDetails = () => {
 
     return (
         <div className="p-6 bg-white shadow-md rounded-lg">
-            {isLoading && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-                </div>
-            )}
-
-            {/* Two-column layout */}
             <div className="flex flex-col md:flex-row gap-6">
-                {/* Left Section (70% width) */}
-                <ApplicantInfo applicant={applicant} />
+                {/* Left Column - Applicant Info (70%) */}
+                <div className="w-full md:w-[70%]">
+                    <ApplicantInfo applicant={applicant} />
+                </div>
 
-                {/* Right Section (30% width) */}
-                <AIInsights
-                    onScheduleInterview={handleScheduleInterview}
-                    onHire={handleHireApplicant}
-                    onFail={handleFailApplicant}
-                    applicantStatus={applicant.status || "Pending"}
+                {/* Right Column - AI Insights (30%) */}
+                <div className="w-full md:w-[30%]">
+                    <AIInsights
+                        applicant={applicant}
+                        onScheduleInterview={handleScheduleInterview}
+                        onHireApplicant={handleHireApplicant}
+                        onFailApplicant={handleFailApplicant}
+                        isLoading={isLoading}
+                    />
+                </div>
+            </div>
+
+            {/* Bottom Row - Scheduled Interviews (Full Width) */}
+            <div className="mt-6">
+                <RecruiterNotes
+                    scheduledInterviews={scheduledInterviews}
+                    addNotesHandler={handleAddNotes}
+                    saveNotesHandler={handleSaveNotes}
+                    onAddNotes={handleAddNotes}
+                    onEditInterview={handleEditInterview}
                 />
             </div>
 
-            {/* Recruiter's Notes Section */}
-            <RecruiterNotes
-                scheduledInterviews={scheduledInterviews}
-                onAddNotes={handleAddNotes}
-                onEditInterview={handleEditInterview}
-                selectedInterviewId={selectedInterviewId}
-                notes={notes}
-                onSaveNotes={handleSaveNotes}
-                onNotesChange={handleNotesChange}
-            />
-
-            {/* Modal for Scheduling Interview */}
+            {/* Modals */}
             <ScheduleInterviewModal
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 onSubmit={handleSubmitInterview}
                 interviewDateTime={interviewDateTime}
                 onDateTimeChange={(e) => setInterviewDateTime(e.target.value)}
+                getCurrentDateTime={getCurrentDateTime}
+            />
+
+            <EditInterviewModal
+                isOpen={isEditModalOpen}
+                onClose={handleCloseEditModal}
+                onSubmit={handleUpdateInterview}
+                initialData={selectedInterview}
                 getCurrentDateTime={getCurrentDateTime}
             />
         </div>
