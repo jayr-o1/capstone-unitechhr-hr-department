@@ -222,7 +222,7 @@ const Recruitment = () => {
     if (error) return <p>{error}</p>;
 
     return (
-        <div className="flex-1 flex">
+        <div className="flex-1 flex relative">
             {/* Left Side (Job Posts & Pagination) */}
             <div className="w-2/3 flex flex-col justify-between">
                 <JobList

@@ -15,26 +15,6 @@ const AIInsights = ({
                         AI Insights
                     </h2>
 
-                    {/* Current Status */}
-                    <div className="flex items-center">
-                        <span className="text-gray-600 w-40">
-                            Current Status:
-                        </span>
-                        <span
-                            className={`font-medium ${
-                                applicantStatus === "Hired"
-                                    ? "text-green-600"
-                                    : applicantStatus === "Failed"
-                                    ? "text-red-600"
-                                    : applicantStatus === "Interviewing"
-                                    ? "text-blue-600"
-                                    : "text-gray-800"
-                            }`}
-                        >
-                            {applicantStatus}
-                        </span>
-                    </div>
-
                     {/* Horizontal Divider */}
                     <hr className="border-t border-gray-300" />
 
