@@ -7,6 +7,7 @@ import useFetchJobs from "../hooks/useFetchJobs"; // Import the useFetchJobs hoo
 
 const Layout = () => {
     const [isLoading, setIsLoading] = useState(false);
+    const [isPanelOpen, setIsPanelOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
     const { jobId, applicantId } = useParams();
@@ -35,7 +36,9 @@ const Layout = () => {
     const getApplicantName = (jobId, applicantId) => {
         const job = jobs.find((job) => job.id === jobId); // Find job by ID
         if (job) {
-            const applicant = job.applicants.find((app) => app.id === applicantId); // Find applicant by ID
+            const applicant = job.applicants.find(
+                (app) => app.id === applicantId
+            ); // Find applicant by ID
             return applicant ? applicant.name : "Applicant Details";
         }
         return "Applicant Details";
@@ -114,7 +117,8 @@ const Layout = () => {
     // Show a loading state while jobs are being fetched
     if (jobsLoading) {
         // Check if this is a page refresh (Ctrl+R)
-        const isPageRefresh = sessionStorage.getItem('isPageRefresh') === 'true';
+        const isPageRefresh =
+            sessionStorage.getItem("isPageRefresh") === "true";
         return <PageLoader isLoading={true} fullscreen={isPageRefresh} />;
     }
 
@@ -149,6 +153,94 @@ const Layout = () => {
                         }
                     >
                         <Outlet />
+                    </div>
+                </div>
+            </div>
+
+            {/* Ribbon button on the right edge */}
+            <button
+                onClick={() => setIsPanelOpen(!isPanelOpen)}
+                className="fixed top-1/2 right-0 transform -translate-y-1/2 bg-blue-600 text-white rounded-l-md shadow-lg hover:bg-blue-700 transition-all duration-300 z-50 flex flex-col items-center justify-center"
+                style={{
+                    width: "40px",
+                    height: "120px",
+                    boxShadow: "-3px 0px 10px rgba(0, 0, 0, 0.1)",
+                }}
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`h-6 w-6 ${
+                        isPanelOpen ? "rotate-180" : ""
+                    } transition-transform duration-700 animate-spin-slow`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                    />
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                </svg>
+                <div
+                    className="writing-mode-vertical mt-2 text-xs font-semibold"
+                    style={{
+                        writingMode: "vertical-rl",
+                        textOrientation: "mixed",
+                        transform: "rotate(180deg)",
+                    }}
+                >
+                    Settings
+                </div>
+            </button>
+
+            {/* Collapsible Side Panel */}
+            <div
+                className={`fixed top-0 right-0 h-full w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-40 overflow-y-auto ${
+                    isPanelOpen ? "translate-x-0" : "translate-x-full"
+                }`}
+                style={{ borderLeft: "1px solid #e2e8f0" }}
+            >
+                <div className="p-6 h-full flex flex-col">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-semibold">
+                            TEMPLATE CUSTOMIZER
+                        </h2>
+                        <button
+                            onClick={() => setIsPanelOpen(false)}
+                            className="text-gray-500 hover:text-gray-700"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-6 w-6"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                    <p className="text-sm text-gray-500 mb-6">
+                        Set preferences that will be cooked for your live
+                        preview demonstration.
+                    </p>
+
+                    {/* Panel Content Container (Empty for now as requested) */}
+                    <div className="space-y-6 border-t pt-6 flex-grow">
+                        {/* Content will be added later as needed */}
                     </div>
                 </div>
             </div>

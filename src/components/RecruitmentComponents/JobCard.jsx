@@ -1,7 +1,13 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../firebase";
-import { doc, deleteDoc, collection, getDocs, deleteDoc as deleteDocument } from "firebase/firestore";
+import {
+    doc,
+    deleteDoc,
+    collection,
+    getDocs,
+    deleteDoc as deleteDocument,
+} from "firebase/firestore";
 import { JobContext } from "../../contexts/JobContext";
 import MoreOptionsIcon from "../../assets/icons/RecruitmentIcons/MoreOptionsIcon";
 import CloseJobIcon from "../../assets/icons/RecruitmentIcons/CloseJobIcon";
@@ -10,6 +16,7 @@ import showWarningAlert from "../Alerts/WarningAlert";
 import showSuccessAlert from "../Alerts/SuccessAlert";
 import showDeleteConfirmation from "../Alerts/DeleteAlert";
 import showErrorAlert from "../Alerts/ErrorAlert";
+import { softDeleteJob } from "../../services/jobService";
 
 const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob, onDelete }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -38,10 +45,10 @@ const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob, onDelete }) => {
                 } else {
                     onCloseJob(job.id); // Call onCloseJob if the job is open
                 }
-                
+
                 // Close dropdown menu
                 setIsDropdownOpen(false);
-                
+
                 // Show success message to user
                 showSuccessAlert(
                     `The job has been successfully ${pastTenseAction}!`
@@ -59,26 +66,34 @@ const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob, onDelete }) => {
                 job.title,
                 async () => {
                     try {
-                        // Delete the job from Firestore
-                        const jobRef = doc(db, "jobs", job.id);
-                        await deleteDoc(jobRef);
-                        
-                        // Show success message
-                        showSuccessAlert("The job has been successfully deleted!");
-                        
-                        // Close the dropdown
-                        setIsDropdownOpen(false);
-                        
-                        // First call the onDelete prop to refresh the job list from Firestore
-                        if (typeof onDelete === 'function') {
-                            onDelete(job.id);
+                        // Use soft delete instead of hard delete
+                        const result = await softDeleteJob(job.id);
+
+                        if (result.success) {
+                            // Show success message
+                            showSuccessAlert(
+                                "The job has been successfully moved to trash!"
+                            );
+
+                            // Close the dropdown
+                            setIsDropdownOpen(false);
+
+                            // First call the onDelete prop to refresh the job list from Firestore
+                            if (typeof onDelete === "function") {
+                                onDelete(job.id);
+                            }
+
+                            // Then update the local context state
+                            removeJob(job.id);
+                        } else {
+                            throw new Error(
+                                result.message || "Failed to delete job"
+                            );
                         }
-                        
-                        // Then update the local context state
-                        removeJob(job.id);
-                        
                     } catch (error) {
-                        showErrorAlert(`Failed to delete job: ${error.message}`);
+                        showErrorAlert(
+                            `Failed to delete job: ${error.message}`
+                        );
                     }
                 },
                 "Job title does not match!", // Custom error message
@@ -117,7 +132,10 @@ const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob, onDelete }) => {
     }, []);
 
     return (
-        <div id={`job-${job.id}`} className="bg-white rounded-lg p-5 shadow-md flex justify-between items-center gap-4">
+        <div
+            id={`job-${job.id}`}
+            className="bg-white rounded-lg p-5 shadow-md flex justify-between items-center gap-4"
+        >
             <div className="flex-1">
                 <div className="flex items-center gap-2">
                     <h3 className="font-bold text-lg">{job.title}</h3>
@@ -182,4 +200,3 @@ const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob, onDelete }) => {
 };
 
 export default JobCard;
-

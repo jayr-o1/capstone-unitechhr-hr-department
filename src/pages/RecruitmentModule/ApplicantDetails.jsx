@@ -1,42 +1,61 @@
-import React, { useState, useContext } from "react";
-import { useParams } from "react-router-dom"; // Import useParams
+import React, { useState, useContext, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom"; // Import useParams and useNavigate
 import { JobContext } from "../../contexts/JobContext"; // Import JobContext
 import showWarningAlert from "../../components/Alerts/WarningAlert";
 import showSuccessAlert from "../../components/Alerts/SuccessAlert";
+import showErrorAlert from "../../components/Alerts/ErrorAlert";
 import ApplicantInfo from "../../components/RecruitmentComponents/ApplicantDetailsComponents/ApplicantInfo";
 import AIInsights from "../../components/RecruitmentComponents/ApplicantDetailsComponents/AIInsights";
 import RecruiterNotes from "../../components/RecruitmentComponents/ApplicantDetailsComponents/RecruiterNotes";
 import ScheduleInterviewModal from "../../components/Modals/ScheduleInterviewModal";
+import EditInterviewModal from "../../components/Modals/EditInterviewModal";
+import {
+    updateApplicantStatus,
+    scheduleInterview,
+    getApplicantInterviews,
+    updateApplicantNotes,
+    updateInterview,
+} from "../../services/applicantService";
 
 const ApplicantDetails = () => {
     const { jobId, applicantId } = useParams(); // Get jobId and applicantId from URL
-    const { jobs } = useContext(JobContext); // Use JobContext to access jobs
+    const { jobs, refreshJobs } = useContext(JobContext); // Use JobContext to access jobs and refreshJobs
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [interviewDateTime, setInterviewDateTime] = useState("");
-    const [scheduledInterviews, setScheduledInterviews] = useState([
-        {
-            id: 1,
-            dateTime: "2023-10-25T10:00:00",
-            title: "Initial Interview",
-            interviewer: "John Doe",
-            status: "pending",
-        },
-        {
-            id: 2,
-            dateTime: "2023-10-26T14:00:00",
-            title: "Final Interview",
-            interviewer: "Jane Smith",
-            status: "success",
-        },
-    ]);
+    const [scheduledInterviews, setScheduledInterviews] = useState([]);
     const [notes, setNotes] = useState("");
     const [selectedInterviewId, setSelectedInterviewId] = useState(null);
+    const [selectedInterview, setSelectedInterview] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
     // Find the job and applicant
     const job = jobs.find((job) => job.id === jobId); // Find job by ID
     const applicant = job?.applicants.find(
         (app) => app.id === applicantId // Find applicant by ID
     );
+
+    // Fetch applicant interviews on component mount
+    useEffect(() => {
+        const fetchInterviews = async () => {
+            if (jobId && applicantId) {
+                try {
+                    const result = await getApplicantInterviews(
+                        jobId,
+                        applicantId
+                    );
+                    if (result.success) {
+                        setScheduledInterviews(result.interviews || []);
+                    }
+                } catch (error) {
+                    console.error("Error fetching interviews:", error);
+                }
+            }
+        };
+
+        fetchInterviews();
+    }, [jobId, applicantId]);
 
     if (!job || !applicant) {
         return (
@@ -55,9 +74,12 @@ const ApplicantDetails = () => {
                         d="M12 9v2m0 4h.01m-6.938 4.5a9 9 0 1112.765 0M9.75 9h4.5m-2.25-3v6"
                     />
                 </svg>
-                <h2 className="text-xl font-semibold text-gray-700">Applicant Not Found</h2>
+                <h2 className="text-xl font-semibold text-gray-700">
+                    Applicant Not Found
+                </h2>
                 <p className="text-gray-500 mt-2">
-                    Sorry, the applicant you're looking for doesn't exist or has been removed.
+                    Sorry, the applicant you're looking for doesn't exist or has
+                    been removed.
                 </p>
                 <button
                     onClick={() => navigate(-1)} // Go back to the previous page
@@ -73,8 +95,37 @@ const ApplicantDetails = () => {
     const handleHireApplicant = () => {
         showWarningAlert(
             "Are you sure you want to hire this applicant?",
-            () => {
-                showSuccessAlert("The applicant has been successfully hired!");
+            async () => {
+                setIsLoading(true);
+                try {
+                    const result = await updateApplicantStatus(
+                        jobId,
+                        applicantId,
+                        "Hired"
+                    );
+
+                    if (result.success) {
+                        showSuccessAlert(
+                            "The applicant has been successfully hired!"
+                        );
+
+                        // Refresh jobs data to update UI
+                        await refreshJobs();
+
+                        // Navigate to onboarding page after a brief delay
+                        setTimeout(() => {
+                            navigate("/onboarding");
+                        }, 2000);
+                    } else {
+                        showErrorAlert(
+                            `Failed to hire applicant: ${result.message}`
+                        );
+                    }
+                } catch (error) {
+                    showErrorAlert(`Error: ${error.message}`);
+                } finally {
+                    setIsLoading(false);
+                }
             },
             "Yes, hire them!",
             "Cancel",
@@ -86,10 +137,32 @@ const ApplicantDetails = () => {
     const handleFailApplicant = () => {
         showWarningAlert(
             "Are you sure you want to fail this applicant?",
-            () => {
-                showSuccessAlert(
-                    "The applicant has been successfully marked as failed!"
-                );
+            async () => {
+                setIsLoading(true);
+                try {
+                    const result = await updateApplicantStatus(
+                        jobId,
+                        applicantId,
+                        "Failed"
+                    );
+
+                    if (result.success) {
+                        showSuccessAlert(
+                            "The applicant has been successfully marked as failed!"
+                        );
+
+                        // Refresh jobs data to update UI
+                        await refreshJobs();
+                    } else {
+                        showErrorAlert(
+                            `Failed to update applicant: ${result.message}`
+                        );
+                    }
+                } catch (error) {
+                    showErrorAlert(`Error: ${error.message}`);
+                } finally {
+                    setIsLoading(false);
+                }
             },
             "Yes, fail them!",
             "Cancel",
@@ -109,45 +182,84 @@ const ApplicantDetails = () => {
     };
 
     // Handle Form Submission
-    const handleSubmitInterview = (data) => {
+    const handleSubmitInterview = async (data) => {
         if (!data.dateTime || !data.title || !data.interviewer) {
-            alert("Please fill all fields.");
+            showErrorAlert("Please fill all fields.");
             return;
         }
 
-        // Add the scheduled interview to the list
-        const newInterview = {
-            id: Date.now(),
-            dateTime: data.dateTime,
-            title: data.title,
-            interviewer: data.interviewer,
-            status: "pending",
-            notes: "",
-        };
-        setScheduledInterviews([...scheduledInterviews, newInterview]);
+        setIsLoading(true);
+        try {
+            // First close the modal to prevent background becoming black
+            handleCloseModal();
 
-        // Show success message
-        showSuccessAlert("Interview scheduled successfully!");
-        handleCloseModal();
+            const result = await scheduleInterview(jobId, applicantId, {
+                dateTime: data.dateTime,
+                title: data.title,
+                interviewer: data.interviewer,
+            });
+
+            if (result.success) {
+                // Refresh interviews list
+                const interviewsResult = await getApplicantInterviews(
+                    jobId,
+                    applicantId
+                );
+                if (interviewsResult.success) {
+                    setScheduledInterviews(interviewsResult.interviews || []);
+                }
+
+                // Refresh jobs data to update UI
+                await refreshJobs();
+
+                // Show success message
+                showSuccessAlert("Interview scheduled successfully!");
+            } else {
+                showErrorAlert(
+                    `Failed to schedule interview: ${result.message}`
+                );
+            }
+        } catch (error) {
+            showErrorAlert(`Error: ${error.message}`);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // Handle Add Notes
     const handleAddNotes = (interviewId) => {
         setSelectedInterviewId(interviewId);
         const interview = scheduledInterviews.find((i) => i.id === interviewId);
-        setNotes(interview.notes);
+        setNotes(interview?.notes || "");
     };
 
     // Handle Save Notes
-    const handleSaveNotes = () => {
-        const updatedInterviews = scheduledInterviews.map((interview) =>
-            interview.id === selectedInterviewId
-                ? { ...interview, notes }
-                : interview
-        );
-        setScheduledInterviews(updatedInterviews);
-        setSelectedInterviewId(null);
-        setNotes("");
+    const handleSaveNotes = async () => {
+        if (!selectedInterviewId) return;
+
+        setIsLoading(true);
+        try {
+            // Update notes in the database
+            await updateApplicantNotes(jobId, applicantId, notes);
+
+            // Update the local state
+            const updatedInterviews = scheduledInterviews.map((interview) =>
+                interview.id === selectedInterviewId
+                    ? { ...interview, notes }
+                    : interview
+            );
+            setScheduledInterviews(updatedInterviews);
+
+            // Clear the selected interview
+            setSelectedInterviewId(null);
+            setNotes("");
+
+            showSuccessAlert("Notes saved successfully!");
+        } catch (error) {
+            showErrorAlert(`Error saving notes: ${error.message}`);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // Handle Notes Change
@@ -155,10 +267,60 @@ const ApplicantDetails = () => {
         setNotes(e.target.value);
     };
 
-    // Handle Edit Interview
-    const handleEditInterview = (interviewId) => {
-        console.log("Editing interview with ID:", interviewId);
-        // You can open a modal or navigate to an edit page here
+    // Function to handle editing an interview
+    const handleEditInterview = (interview) => {
+        setSelectedInterview(interview);
+        setIsEditModalOpen(true);
+    };
+
+    // Handle updating an interview
+    const handleUpdateInterview = async (data) => {
+        if (!data.dateTime || !data.title || !data.interviewer || !data.id) {
+            showErrorAlert("Please fill all fields.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            // First close the modal to prevent background becoming black
+            setIsEditModalOpen(false);
+
+            const result = await updateInterview(jobId, applicantId, data.id, {
+                dateTime: data.dateTime,
+                title: data.title,
+                interviewer: data.interviewer,
+            });
+
+            if (result.success) {
+                // Refresh interviews list
+                const interviewsResult = await getApplicantInterviews(
+                    jobId,
+                    applicantId
+                );
+                if (interviewsResult.success) {
+                    setScheduledInterviews(interviewsResult.interviews || []);
+                }
+
+                // Refresh jobs data to update UI
+                await refreshJobs();
+
+                // Show success message
+                showSuccessAlert("Interview updated successfully!");
+            } else {
+                showErrorAlert(`Failed to update interview: ${result.message}`);
+            }
+        } catch (error) {
+            showErrorAlert(`Error: ${error.message}`);
+        } finally {
+            setIsLoading(false);
+            setSelectedInterview(null);
+        }
+    };
+
+    // Handle closing the edit modal
+    const handleCloseEditModal = () => {
+        setIsEditModalOpen(false);
+        setSelectedInterview(null);
     };
 
     // Get current date and time in the required format (YYYY-MM-DDTHH:MM)
@@ -174,37 +336,50 @@ const ApplicantDetails = () => {
 
     return (
         <div className="p-6 bg-white shadow-md rounded-lg">
-            {/* Two-column layout */}
             <div className="flex flex-col md:flex-row gap-6">
-                {/* Left Section (70% width) */}
-                <ApplicantInfo applicant={applicant} />
+                {/* Left Column - Applicant Info (70%) */}
+                <div className="w-full md:w-[70%]">
+                    <ApplicantInfo applicant={applicant} />
+                </div>
 
-                {/* Right Section (30% width) */}
-                <AIInsights
-                    onScheduleInterview={handleScheduleInterview}
-                    onHire={handleHireApplicant}
-                    onFail={handleFailApplicant}
+                {/* Right Column - AI Insights (30%) */}
+                <div className="w-full md:w-[30%]">
+                    <AIInsights
+                        applicant={applicant}
+                        onScheduleInterview={handleScheduleInterview}
+                        onHireApplicant={handleHireApplicant}
+                        onFailApplicant={handleFailApplicant}
+                        isLoading={isLoading}
+                    />
+                </div>
+            </div>
+
+            {/* Bottom Row - Scheduled Interviews (Full Width) */}
+            <div className="mt-6">
+                <RecruiterNotes
+                    scheduledInterviews={scheduledInterviews}
+                    addNotesHandler={handleAddNotes}
+                    saveNotesHandler={handleSaveNotes}
+                    onAddNotes={handleAddNotes}
+                    onEditInterview={handleEditInterview}
                 />
             </div>
 
-            {/* Recruiter's Notes Section */}
-            <RecruiterNotes
-                scheduledInterviews={scheduledInterviews}
-                onAddNotes={handleAddNotes}
-                onEditInterview={handleEditInterview} // Pass the edit handler
-                selectedInterviewId={selectedInterviewId}
-                notes={notes}
-                onSaveNotes={handleSaveNotes}
-                onNotesChange={handleNotesChange}
-            />
-
-            {/* Modal for Scheduling Interview */}
+            {/* Modals */}
             <ScheduleInterviewModal
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
                 onSubmit={handleSubmitInterview}
                 interviewDateTime={interviewDateTime}
                 onDateTimeChange={(e) => setInterviewDateTime(e.target.value)}
+                getCurrentDateTime={getCurrentDateTime}
+            />
+
+            <EditInterviewModal
+                isOpen={isEditModalOpen}
+                onClose={handleCloseEditModal}
+                onSubmit={handleUpdateInterview}
+                initialData={selectedInterview}
                 getCurrentDateTime={getCurrentDateTime}
             />
         </div>
