@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthProvider";
 
@@ -11,7 +11,6 @@ import AdminIcon from "../../assets/icons/SidebarIcons/AdminIcon";
 
 const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(true);
-    const [isMobile, setIsMobile] = useState(false);
     const location = useLocation();
     const { user } = useAuth(); // Get current user to check admin status
 
@@ -23,35 +22,8 @@ const Sidebar = () => {
         setIsOpen(!isOpen);
     };
 
-    // Handle window resize
-    useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth <= 768) {
-                setIsMobile(true);
-                setIsOpen(false); // Close sidebar on mobile
-            } else {
-                setIsMobile(false);
-                setIsOpen(true); // Open sidebar on larger screens
-            }
-        };
-
-        handleResize(); // Initial check
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
-
     return (
         <>
-            {/* Hamburger Button (Mobile Only) */}
-            {isMobile && (
-                <button
-                    onClick={toggleSidebar}
-                    className="fixed top-4 left-4 z-50 p-2 bg-gray-800 text-white rounded-md hover:bg-gray-700"
-                >
-                    ☰
-                </button>
-            )}
-
             {/* Sidebar */}
             <div
                 className={`fixed top-0 left-0 h-screen w-64 bg-white shadow-lg transition-transform duration-300 z-50 ${
