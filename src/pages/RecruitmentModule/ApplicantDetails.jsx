@@ -37,6 +37,55 @@ const ApplicantDetails = () => {
         (app) => app.id === applicantId // Find applicant by ID
     );
 
+    // Handle Add Notes
+    const handleAddNotes = (interviewId) => {
+        setSelectedInterviewId(interviewId);
+        const interview = scheduledInterviews.find((i) => i.id === interviewId);
+        setNotes(interview?.notes || "");
+    };
+
+    // Handle Save Notes
+    const handleSaveNotes = async (interviewId, notes, status) => {
+        if (!interviewId) return;
+
+        setIsLoading(true);
+        try {
+            // Update notes in the interview document
+            const result = await updateInterviewNotes(
+                jobId,
+                applicantId,
+                interviewId,
+                notes,
+                status
+            );
+
+            if (result.success) {
+                // Refresh interviews list to get updated data from Firestore
+                const interviewsResult = await getApplicantInterviews(
+                    jobId,
+                    applicantId
+                );
+
+                if (interviewsResult.success) {
+                    setScheduledInterviews(interviewsResult.interviews || []);
+                    showSuccessAlert("Notes saved successfully!");
+                }
+            } else {
+                throw new Error(result.message || "Failed to save notes");
+            }
+        } catch (error) {
+            showErrorAlert(`Error saving notes: ${error.message}`);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Function to handle editing an interview
+    const handleEditInterview = (interview) => {
+        setSelectedInterview(interview);
+        setIsEditModalOpen(true);
+    };
+
     // Fetch applicant interviews on component mount
     useEffect(() => {
         const fetchInterviews = async () => {
@@ -239,58 +288,9 @@ const ApplicantDetails = () => {
         }
     };
 
-    // Handle Add Notes
-    const handleAddNotes = (interviewId) => {
-        setSelectedInterviewId(interviewId);
-        const interview = scheduledInterviews.find((i) => i.id === interviewId);
-        setNotes(interview?.notes || "");
-    };
-
-    // Handle Save Notes
-    const handleSaveNotes = async (interviewId, notes, status) => {
-        if (!interviewId) return;
-
-        setIsLoading(true);
-        try {
-            // Update notes in the interview document
-            const result = await updateInterviewNotes(
-                jobId,
-                applicantId,
-                interviewId,
-                notes,
-                status
-            );
-
-            if (result.success) {
-                // Refresh interviews list to get updated data from Firestore
-                const interviewsResult = await getApplicantInterviews(
-                    jobId,
-                    applicantId
-                );
-
-                if (interviewsResult.success) {
-                    setScheduledInterviews(interviewsResult.interviews || []);
-                    showSuccessAlert("Notes saved successfully!");
-                }
-            } else {
-                throw new Error(result.message || "Failed to save notes");
-            }
-        } catch (error) {
-            showErrorAlert(`Error saving notes: ${error.message}`);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     // Handle Notes Change
     const handleNotesChange = (e) => {
         setNotes(e.target.value);
-    };
-
-    // Function to handle editing an interview
-    const handleEditInterview = (interview) => {
-        setSelectedInterview(interview);
-        setIsEditModalOpen(true);
     };
 
     // Handle updating an interview
@@ -381,7 +381,7 @@ const ApplicantDetails = () => {
                 <div className="mt-6">
                     <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-md">
                         <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                            Scheduled Interviews
+                            Interview History
                         </h2>
                         {/* Horizontal Divider */}
                         <hr className="border-t border-gray-300 mb-6" />
@@ -396,23 +396,28 @@ const ApplicantDetails = () => {
                 </div>
             </div>
 
-            {/* Modals */}
-            <ScheduleInterviewModal
-                isOpen={isModalOpen}
-                onClose={handleCloseModal}
-                onSubmit={handleSubmitInterview}
-                interviewDateTime={interviewDateTime}
-                onDateTimeChange={(e) => setInterviewDateTime(e.target.value)}
-                getCurrentDateTime={getCurrentDateTime}
-            />
+            {/* Schedule Interview Modal */}
+            {isModalOpen && (
+                <ScheduleInterviewModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSchedule={handleSubmitInterview}
+                    dateTime={interviewDateTime}
+                    setDateTime={(e) => setInterviewDateTime(e.target.value)}
+                    getCurrentDateTime={getCurrentDateTime}
+                />
+            )}
 
-            <EditInterviewModal
-                isOpen={isEditModalOpen}
-                onClose={handleCloseEditModal}
-                onSubmit={handleUpdateInterview}
-                initialData={selectedInterview}
-                getCurrentDateTime={getCurrentDateTime}
-            />
+            {/* Edit Interview Modal */}
+            {isEditModalOpen && selectedInterview && (
+                <EditInterviewModal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    onSubmit={handleUpdateInterview}
+                    initialData={selectedInterview}
+                    getCurrentDateTime={getCurrentDateTime}
+                />
+            )}
         </>
     );
 };

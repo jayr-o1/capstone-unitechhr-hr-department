@@ -70,38 +70,54 @@ const AIInsights = ({
                     <h2 className="text-lg font-semibold text-gray-800 my-3">
                         Actions
                     </h2>
-                    {status !== "Hired" && status !== "Failed" && (
-                        <div className="space-y-2">
-                            <button
-                                onClick={onScheduleInterview}
-                                className="w-full px-5 py-3 bg-blue-500 text-white text-lg font-semibold rounded-lg hover:bg-blue-600 transition duration-200 cursor-pointer"
-                                disabled={isLoading}
-                            >
-                                Schedule Interview
-                            </button>
-                            <button
-                                onClick={onHireApplicant}
-                                className="w-full px-5 py-3 bg-green-500 text-white text-lg font-semibold rounded-lg hover:bg-green-600 transition duration-200 cursor-pointer"
-                                disabled={isLoading}
-                            >
-                                Hire Applicant
-                            </button>
-                            <button
-                                onClick={onFailApplicant}
-                                className="w-full px-5 py-3 bg-red-500 text-white text-lg font-semibold rounded-lg hover:bg-red-600 transition duration-200 cursor-pointer"
-                                disabled={isLoading}
-                            >
-                                Fail Applicant
-                            </button>
+                    {status === "In Onboarding" && (
+                        <div className="bg-[#ecfdf5] rounded-lg p-4">
+                            <p className="flex items-center text-[#065f46] font-medium mb-2">
+                                <span className="mr-2">✅</span>
+                                Applicant in Onboarding
+                            </p>
+                            <p className="text-[#065f46] text-sm">
+                                This applicant has been hired and is currently
+                                in the onboarding process.
+                            </p>
                         </div>
                     )}
 
+                    {status !== "Hired" &&
+                        status !== "Failed" &&
+                        status !== "In Onboarding" && (
+                            <div className="space-y-2">
+                                <button
+                                    onClick={onScheduleInterview}
+                                    className="w-full px-5 py-3 bg-blue-500 text-white text-lg font-semibold rounded-lg hover:bg-blue-600 transition duration-200 cursor-pointer"
+                                    disabled={isLoading}
+                                >
+                                    Schedule Interview
+                                </button>
+                                <button
+                                    onClick={onHireApplicant}
+                                    className="w-full px-5 py-3 bg-green-500 text-white text-lg font-semibold rounded-lg hover:bg-green-600 transition duration-200 cursor-pointer"
+                                    disabled={isLoading}
+                                >
+                                    Hire Applicant
+                                </button>
+                                <button
+                                    onClick={onFailApplicant}
+                                    className="w-full px-5 py-3 bg-red-500 text-white text-lg font-semibold rounded-lg hover:bg-red-600 transition duration-200 cursor-pointer"
+                                    disabled={isLoading}
+                                >
+                                    Fail Applicant
+                                </button>
+                            </div>
+                        )}
+
                     {status === "Hired" && (
-                        <div className="p-4 bg-green-100 border border-green-300 rounded-lg text-green-800">
-                            <p className="font-medium mb-2">
-                                ✅ Applicant has been hired
+                        <div className="bg-[#ecfdf5] rounded-lg p-4">
+                            <p className="flex items-center text-[#065f46] font-medium mb-2">
+                                <span className="mr-2">✅</span>
+                                Applicant has been hired
                             </p>
-                            <p className="text-sm">
+                            <p className="text-[#065f46] text-sm">
                                 This applicant has been moved to the Employees
                                 section for onboarding.
                             </p>
@@ -114,8 +130,8 @@ const AIInsights = ({
                                 ❌ Applicant has been rejected
                             </p>
                             <p className="text-sm">
-                                This applicant has been marked as failed and will
-                                not proceed further.
+                                This applicant has been marked as failed and
+                                will not proceed further.
                             </p>
                         </div>
                     )}
