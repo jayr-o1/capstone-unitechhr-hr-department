@@ -335,34 +335,45 @@ const ApplicantDetails = () => {
     };
 
     return (
-        <div className="p-6 bg-white shadow-md rounded-lg">
-            <div className="flex flex-col md:flex-row gap-6">
-                {/* Left Column - Applicant Info (70%) */}
-                <div className="w-full md:w-[70%]">
-                    <ApplicantInfo applicant={applicant} />
+        <>
+            {/* Main Container */}
+            <div className="p-6 bg-white shadow-md rounded-lg">
+                {/* Applicant Details and Insights in a Single Container */}
+                <div className="flex flex-col md:flex-row gap-6">
+                    {/* Left Column - Applicant Info */}
+                    <div className="w-full md:w-2/3">
+                        <ApplicantInfo applicant={applicant} />
+                    </div>
+
+                    {/* Right Column - AI Insights */}
+                    <div className="w-full md:w-1/3">
+                        <AIInsights
+                            applicant={applicant}
+                            onScheduleInterview={handleScheduleInterview}
+                            onHireApplicant={handleHireApplicant}
+                            onFailApplicant={handleFailApplicant}
+                            isLoading={isLoading}
+                        />
+                    </div>
                 </div>
 
-                {/* Right Column - AI Insights (30%) */}
-                <div className="w-full md:w-[30%]">
-                    <AIInsights
-                        applicant={applicant}
-                        onScheduleInterview={handleScheduleInterview}
-                        onHireApplicant={handleHireApplicant}
-                        onFailApplicant={handleFailApplicant}
-                        isLoading={isLoading}
-                    />
+                {/* Recruiter Notes Section */}
+                <div className="mt-6">
+                    <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-md">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                            Scheduled Interviews
+                        </h2>
+                        {/* Horizontal Divider */}
+                        <hr className="border-t border-gray-300 mb-6" />
+                        <RecruiterNotes
+                            scheduledInterviews={scheduledInterviews}
+                            addNotesHandler={handleAddNotes}
+                            saveNotesHandler={handleSaveNotes}
+                            onAddNotes={handleAddNotes}
+                            onEditInterview={handleEditInterview}
+                        />
+                    </div>
                 </div>
-            </div>
-
-            {/* Bottom Row - Scheduled Interviews (Full Width) */}
-            <div className="mt-6">
-                <RecruiterNotes
-                    scheduledInterviews={scheduledInterviews}
-                    addNotesHandler={handleAddNotes}
-                    saveNotesHandler={handleSaveNotes}
-                    onAddNotes={handleAddNotes}
-                    onEditInterview={handleEditInterview}
-                />
             </div>
 
             {/* Modals */}
@@ -382,7 +393,7 @@ const ApplicantDetails = () => {
                 initialData={selectedInterview}
                 getCurrentDateTime={getCurrentDateTime}
             />
-        </div>
+        </>
     );
 };
 
