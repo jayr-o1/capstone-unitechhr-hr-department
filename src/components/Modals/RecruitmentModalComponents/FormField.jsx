@@ -45,6 +45,32 @@ const FormField = ({
                     placeholder=" " // Add a space to ensure the placeholder is "shown"
                     required={required}
                 ></textarea>
+            ) : type === "date" ? (
+                <div className="relative">
+                    <input
+                        type={type}
+                        name={name}
+                        value={value}
+                        onChange={onChange}
+                        className={`w-full p-3 border ${
+                            error ? "border-red-500" : "border-gray-300"
+                        } rounded-md focus:outline-none focus:border-[#9AADEA] peer ${inputClassName}`}
+                        required={required}
+                        min={min}
+                        max={
+                            type === "date"
+                                ? new Date().toISOString().split("T")[0]
+                                : undefined
+                        }
+                    />
+                    <label
+                        className={`absolute left-3 -top-2 transition-all duration-200 pointer-events-none bg-white px-1 z-10 text-sm ${
+                            value ? "text-[#9AADEA]" : "text-gray-500"
+                        }`}
+                    >
+                        {placeholder}
+                    </label>
+                </div>
             ) : (
                 <input
                     type={type}
@@ -59,17 +85,19 @@ const FormField = ({
                     min={min}
                 />
             )}
-            <label
-                className={`absolute left-3 transition-all duration-200 pointer-events-none bg-white px-1 z-10 
-                ${
-                    value !== "" || (type === "select" && value !== "") // Check if the input has a value or if it's a select with a value
-                        ? "-top-2 text-sm text-[#9AADEA]"
-                        : "top-3 text-gray-500"
-                } 
-                peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA] ${labelClassName}`}
-            >
-                {placeholder}
-            </label>
+            {type !== "date" && (
+                <label
+                    className={`absolute left-3 transition-all duration-200 pointer-events-none bg-white px-1 z-10 
+                    ${
+                        value !== "" || (type === "select" && value !== "") // Check if the input has a value or if it's a select with a value
+                            ? "-top-2 text-sm text-[#9AADEA]"
+                            : "top-3 text-gray-500"
+                    } 
+                    peer-focus:-top-2 peer-focus:text-sm peer-focus:text-[#9AADEA] ${labelClassName}`}
+                >
+                    {placeholder}
+                </label>
+            )}
 
             {/* Display example text as a hint below the input */}
             {exampleText && value === "" && (

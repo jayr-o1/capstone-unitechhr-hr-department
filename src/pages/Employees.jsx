@@ -2,38 +2,43 @@ import React, { useState, useEffect } from "react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
 import PageLoader from "../components/PageLoader";
+import AddEmployeeModal from "../components/Modals/AddEmployeeModal";
+import { exportEmployees, importEmployees } from "../services/employeeService";
+import showSuccessAlert from "../components/Alerts/SuccessAlert";
+import showErrorAlert from "../components/Alerts/ErrorAlert";
 
 const Employees = () => {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filter, setFilter] = useState("all"); // "all", "newHires", "active", "inactive"
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     // Fetch employees from Firestore
+    const fetchEmployees = async () => {
+        try {
+            const q = query(
+                collection(db, "employees"),
+                orderBy("dateHired", "desc")
+            );
+            const querySnapshot = await getDocs(q);
+
+            const employeeData = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+                dateHired: doc.data().dateHired?.toDate?.() || new Date(),
+            }));
+
+            setEmployees(employeeData);
+            setLoading(false);
+        } catch (err) {
+            console.error("Error fetching employees:", err);
+            setError("Failed to load employees. Please try again later.");
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchEmployees = async () => {
-            try {
-                const q = query(
-                    collection(db, "employees"),
-                    orderBy("dateHired", "desc")
-                );
-                const querySnapshot = await getDocs(q);
-
-                const employeeData = querySnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                    dateHired: doc.data().dateHired?.toDate?.() || new Date(),
-                }));
-
-                setEmployees(employeeData);
-                setLoading(false);
-            } catch (err) {
-                console.error("Error fetching employees:", err);
-                setError("Failed to load employees. Please try again later.");
-                setLoading(false);
-            }
-        };
-
         fetchEmployees();
     }, []);
 
@@ -53,6 +58,38 @@ const Employees = () => {
             month: "short",
             day: "numeric",
         });
+    };
+
+    // Handle file import
+    const handleImport = async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            try {
+                const result = await importEmployees(file);
+                if (result.success) {
+                    showSuccessAlert(result.message);
+                    fetchEmployees(); // Refresh the employee list
+                } else {
+                    showErrorAlert("Import failed: " + result.error);
+                }
+            } catch (error) {
+                showErrorAlert("Import failed: " + error.message);
+            }
+        }
+    };
+
+    // Handle export
+    const handleExport = async () => {
+        try {
+            const result = await exportEmployees();
+            if (result.success) {
+                showSuccessAlert("Employees exported successfully!");
+            } else {
+                showErrorAlert("Export failed: " + result.error);
+            }
+        } catch (error) {
+            showErrorAlert("Export failed: " + error.message);
+        }
     };
 
     if (loading) {
@@ -75,9 +112,39 @@ const Employees = () => {
 
     return (
         <div className="container mx-auto p-6">
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">
-                Employee Management
-            </h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold text-gray-800">
+                    Employee Management
+                </h1>
+                <div className="flex gap-4">
+                    {/* Import Button */}
+                    <label className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                        Import Employees
+                        <input
+                            type="file"
+                            accept=".xlsx,.xls"
+                            onChange={handleImport}
+                            className="hidden"
+                        />
+                    </label>
+
+                    {/* Export Button */}
+                    <button
+                        onClick={handleExport}
+                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                    >
+                        Export Employees
+                    </button>
+
+                    {/* Add Employee Button */}
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="px-4 py-2 bg-[#9AADEA] text-white rounded-lg hover:bg-[#7b8edc] transition"
+                    >
+                        Add Employee
+                    </button>
+                </div>
+            </div>
 
             {/* Filter Section */}
             <div className="flex flex-wrap gap-4 mb-6">
@@ -218,7 +285,7 @@ const Employees = () => {
                                             View
                                         </button>
                                         <button className="text-green-600 hover:text-green-900">
-                                            Onboard
+                                            Edit
                                         </button>
                                     </td>
                                 </tr>
@@ -233,6 +300,13 @@ const Employees = () => {
                     </p>
                 </div>
             )}
+
+            {/* Add Employee Modal */}
+            <AddEmployeeModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onEmployeeAdded={fetchEmployees}
+            />
         </div>
     );
 };
