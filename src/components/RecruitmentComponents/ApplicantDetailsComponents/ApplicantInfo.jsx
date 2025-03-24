@@ -31,7 +31,7 @@ const ApplicantInfo = ({ applicant }) => {
                 <div className="space-y-3">
                     {/* Email */}
                     <div className="flex items-center">
-                        <span className="text-gray-600 w-24 font-medium">Email:</span>
+                        <span className="text-gray-600 w-24">Email:</span>
                         <span className="text-gray-800 font-medium">
                             {applicant.email}
                         </span>
@@ -40,7 +40,7 @@ const ApplicantInfo = ({ applicant }) => {
                     {/* Applied On with View Resume Button */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                            <span className="text-gray-600 w-24 font-medium">
+                            <span className="text-gray-600 w-24">
                                 Applied On:
                             </span>
                             <span className="text-gray-800 font-medium">
@@ -60,7 +60,7 @@ const ApplicantInfo = ({ applicant }) => {
 
                     {/* Status */}
                     <div className="flex items-center">
-                        <span className="text-gray-600 w-24 font-medium">Status:</span>
+                        <span className="text-gray-600 w-24">Status:</span>
                         <span
                             className={`px-2 py-1 rounded-full text-xs font-semibold ${
                                 applicant.status === "Pending"
@@ -96,8 +96,8 @@ const ApplicantInfo = ({ applicant }) => {
                                         className="w-full h-80 border border-gray-300 rounded-lg"
                                     >
                                         <p>
-                                            It appears your browser doesn't support
-                                            embedded PDFs. You can{" "}
+                                            It appears your browser doesn't
+                                            support embedded PDFs. You can{" "}
                                             <a
                                                 href={applicant.resumeUrl}
                                                 target="_blank"

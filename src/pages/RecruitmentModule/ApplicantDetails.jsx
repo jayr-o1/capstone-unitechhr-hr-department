@@ -15,6 +15,7 @@ import {
     getApplicantInterviews,
     updateApplicantNotes,
     updateInterview,
+    updateInterviewNotes,
 } from "../../services/applicantService";
 
 const ApplicantDetails = () => {
@@ -105,8 +106,11 @@ const ApplicantDetails = () => {
                     );
 
                     if (result.success) {
+                        // Set page refresh flag to show fullscreen loader on redirect
+                        sessionStorage.setItem("isPageRefresh", "true");
+
                         showSuccessAlert(
-                            "The applicant has been successfully hired!"
+                            "The applicant has been moved to onboarding!"
                         );
 
                         // Refresh jobs data to update UI
@@ -114,22 +118,31 @@ const ApplicantDetails = () => {
 
                         // Navigate to onboarding page after a brief delay
                         setTimeout(() => {
-                            navigate("/onboarding");
+                            // Navigate to onboarding page with the applicant's data
+                            navigate("/onboarding", {
+                                state: {
+                                    newOnboarding: true,
+                                    jobId: jobId,
+                                    applicantId: applicantId,
+                                    applicantData: result.applicantData,
+                                },
+                            });
                         }, 2000);
                     } else {
+                        setIsLoading(false);
                         showErrorAlert(
-                            `Failed to hire applicant: ${result.message}`
+                            `Failed to move applicant to onboarding: ${result.message}`
                         );
                     }
                 } catch (error) {
-                    showErrorAlert(`Error: ${error.message}`);
-                } finally {
                     setIsLoading(false);
+                    showErrorAlert(`Error: ${error.message}`);
                 }
+                // Don't set isLoading to false here, it will stay loading during the transition
             },
-            "Yes, hire them!",
+            "Yes, move to onboarding!",
             "Cancel",
-            "The applicant has been successfully hired!"
+            "The applicant has been moved to onboarding!"
         );
     };
 
@@ -234,27 +247,34 @@ const ApplicantDetails = () => {
     };
 
     // Handle Save Notes
-    const handleSaveNotes = async () => {
-        if (!selectedInterviewId) return;
+    const handleSaveNotes = async (interviewId, notes, status) => {
+        if (!interviewId) return;
 
         setIsLoading(true);
         try {
-            // Update notes in the database
-            await updateApplicantNotes(jobId, applicantId, notes);
-
-            // Update the local state
-            const updatedInterviews = scheduledInterviews.map((interview) =>
-                interview.id === selectedInterviewId
-                    ? { ...interview, notes }
-                    : interview
+            // Update notes in the interview document
+            const result = await updateInterviewNotes(
+                jobId,
+                applicantId,
+                interviewId,
+                notes,
+                status
             );
-            setScheduledInterviews(updatedInterviews);
 
-            // Clear the selected interview
-            setSelectedInterviewId(null);
-            setNotes("");
+            if (result.success) {
+                // Refresh interviews list to get updated data from Firestore
+                const interviewsResult = await getApplicantInterviews(
+                    jobId,
+                    applicantId
+                );
 
-            showSuccessAlert("Notes saved successfully!");
+                if (interviewsResult.success) {
+                    setScheduledInterviews(interviewsResult.interviews || []);
+                    showSuccessAlert("Notes saved successfully!");
+                }
+            } else {
+                throw new Error(result.message || "Failed to save notes");
+            }
         } catch (error) {
             showErrorAlert(`Error saving notes: ${error.message}`);
         } finally {

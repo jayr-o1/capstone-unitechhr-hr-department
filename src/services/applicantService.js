@@ -15,37 +15,39 @@ export const updateApplicantStatus = async (jobId, applicantId, status) => {
         // Reference to the applicant document
         const applicantRef = doc(db, "jobs", jobId, "applicants", applicantId);
 
-        // Update the status
-        await updateDoc(applicantRef, {
-            status: status,
-            statusUpdatedAt: serverTimestamp(),
-        });
-
-        // If the applicant is hired, update any related collections or fields
-        if (status === "Hired") {
-            // Get the applicant data
-            const applicantDoc = await getDoc(applicantRef);
-            if (applicantDoc.exists()) {
-                const applicantData = applicantDoc.data();
-
-                // Create a new employee record in the 'employees' collection
-                await addDoc(collection(db, "employees"), {
-                    name: applicantData.name,
-                    email: applicantData.email,
-                    phone: applicantData.phone || "",
-                    position: applicantData.applyingFor || "",
-                    department: applicantData.department || "",
-                    dateHired: serverTimestamp(),
-                    formerApplicant: true,
-                    jobId: jobId,
-                    applicantId: applicantId,
-                    status: "New Hire",
-                    onboardingStatus: "Pending",
-                });
-            }
+        // Get the applicant data for potential onboarding
+        const applicantDoc = await getDoc(applicantRef);
+        if (!applicantDoc.exists()) {
+            return { success: false, message: "Applicant not found" };
         }
 
-        return { success: true };
+        const applicantData = applicantDoc.data();
+        const updatedStatus = status === "Hired" ? "In Onboarding" : status;
+
+        // Update the status
+        await updateDoc(applicantRef, {
+            status: updatedStatus,
+            statusUpdatedAt: serverTimestamp(),
+            // For onboarding applicants, add onboarding metadata
+            ...(updatedStatus === "In Onboarding" && {
+                onboardingStartedAt: serverTimestamp(),
+                onboardingStatus: "Not Started",
+            }),
+        });
+
+        // Return success with the applicant ID and job info for navigation
+        return {
+            success: true,
+            applicantId: applicantId,
+            applicantData: {
+                name: applicantData.name,
+                email: applicantData.email,
+                phone: applicantData.phone || "",
+                position: applicantData.applyingFor || "",
+                department: applicantData.department || "",
+                dateStarted: new Date(),
+            },
+        };
     } catch (error) {
         console.error("Error updating applicant status:", error);
         return { success: false, message: error.message };
@@ -162,6 +164,47 @@ export const updateInterview = async (
         return { success: true };
     } catch (error) {
         console.error("Error updating interview:", error);
+        return { success: false, message: error.message };
+    }
+};
+
+// Update interview notes
+export const updateInterviewNotes = async (
+    jobId,
+    applicantId,
+    interviewId,
+    notes,
+    status
+) => {
+    try {
+        // Reference to the interview document
+        const interviewRef = doc(
+            db,
+            "jobs",
+            jobId,
+            "applicants",
+            applicantId,
+            "interviews",
+            interviewId
+        );
+
+        // Create update data object
+        const updateData = {
+            notes: notes,
+            notesUpdatedAt: serverTimestamp(),
+        };
+
+        // Only include status if it's provided
+        if (status) {
+            updateData.status = status;
+        }
+
+        // Update the interview document
+        await updateDoc(interviewRef, updateData);
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating interview notes:", error);
         return { success: false, message: error.message };
     }
 };
