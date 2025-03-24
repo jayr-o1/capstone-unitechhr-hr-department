@@ -31,7 +31,7 @@ const ApplicantInfo = ({ applicant }) => {
                 <div className="space-y-4">
                     {/* Email */}
                     <div className="flex items-center">
-                        <span className="text-gray-600 w-32">Email:</span>
+                        <span className="text-gray-600 w-32 font-medium">Email:</span>
                         <span className="text-gray-800 font-medium">
                             {applicant.email}
                         </span>
@@ -40,7 +40,7 @@ const ApplicantInfo = ({ applicant }) => {
                     {/* Applied On with View Resume Button */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                            <span className="text-gray-600 w-32">
+                            <span className="text-gray-600 w-32 font-medium">
                                 Applied On:
                             </span>
                             <span className="text-gray-800 font-medium">
@@ -60,7 +60,7 @@ const ApplicantInfo = ({ applicant }) => {
 
                     {/* Status */}
                     <div className="flex items-center">
-                        <span className="text-gray-600 w-32">Status:</span>
+                        <span className="text-gray-600 w-32 font-medium">Status:</span>
                         <span
                             className={`px-2 py-1 rounded-full text-xs font-semibold ${
                                 applicant.status === "Pending"
