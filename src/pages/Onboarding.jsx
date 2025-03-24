@@ -11,6 +11,8 @@ import {
     where,
     orderBy,
     serverTimestamp,
+    setDoc,
+    addDoc,
 } from "firebase/firestore";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import showSuccessAlert from "../components/Alerts/SuccessAlert";
@@ -208,12 +210,55 @@ const Onboarding = () => {
                 "applicants",
                 applicantId
             );
+            const applicantDoc = await getDoc(applicantRef);
 
+            if (!applicantDoc.exists()) {
+                throw new Error("Applicant not found");
+            }
+
+            const applicantData = applicantDoc.data();
+
+            // Create employee document in employees collection
+            const employeesRef = collection(db, "employees");
+            const employeeData = {
+                name: applicantData.name,
+                email: applicantData.email,
+                phone: applicantData.phone || "",
+                position:
+                    applicantData.applyingFor || applicantData.jobTitle || "",
+                department: applicantData.department || "",
+                dateHired: serverTimestamp(),
+                status: "New Hire",
+                employeeId: `EMP${Date.now()}`, // Generate unique employee ID
+                salary: applicantData.offeredSalary || "",
+                onboardingCompletedAt: serverTimestamp(),
+                // Include checklist completion data
+                onboardingChecklist: applicantData.onboardingChecklist || [],
+                onboardingProgress: 100,
+                // Additional employee information
+                emergencyContact: applicantData.emergencyContact || {},
+                documents: applicantData.documents || [],
+                bankDetails: applicantData.bankDetails || {},
+                // Track the original application
+                originalApplication: {
+                    jobId: jobId,
+                    applicantId: applicantId,
+                    applicationDate:
+                        applicantData.appliedAt || serverTimestamp(),
+                },
+            };
+
+            // Add to employees collection
+            const newEmployeeRef = await addDoc(employeesRef, employeeData);
+
+            // Update applicant document
             await updateDoc(applicantRef, {
                 status: "Hired",
                 onboardingStatus: "Completed",
                 onboardingCompletedAt: serverTimestamp(),
                 isEmployee: true,
+                employeeId: employeeData.employeeId,
+                employeeDocId: newEmployeeRef.id,
             });
 
             // Update the local state
@@ -227,10 +272,19 @@ const Onboarding = () => {
                 )
             );
 
-            showSuccessAlert("Applicant successfully hired as employee!");
+            showSuccessAlert(
+                "Applicant successfully hired and added to employees!"
+            );
+
+            // Optional: Navigate to the employees page
+            setTimeout(() => {
+                navigate("/employees");
+            }, 2000);
         } catch (error) {
             console.error("Error completing onboarding:", error);
-            showErrorAlert("Failed to complete onboarding process");
+            showErrorAlert(
+                "Failed to complete onboarding process: " + error.message
+            );
         }
     };
 
