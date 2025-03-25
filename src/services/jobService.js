@@ -118,23 +118,49 @@ export const updateJob = async (jobId, jobData) => {
 export const getAllJobs = async (includeDeleted = false) => {
     try {
         let jobsQuery;
+        let jobs = [];
 
         if (!includeDeleted) {
-            // Only get jobs that are not deleted or where isDeleted doesn't exist
-            jobsQuery = query(
+            // First, get jobs where isDeleted is explicitly false
+            const explicitlyNotDeletedQuery = query(
                 collection(db, "jobs"),
-                where("isDeleted", "!=", true)
+                where("isDeleted", "==", false)
             );
+            const explicitlyNotDeletedSnapshot = await getDocs(explicitlyNotDeletedQuery);
+            
+            // Then, get jobs where isDeleted field doesn't exist
+            const allJobsSnapshot = await getDocs(collection(db, "jobs"));
+            
+            // Combine both results, avoiding duplicates
+            const explicitlyNotDeletedIds = new Set();
+            
+            // Add explicitly not deleted jobs
+            explicitlyNotDeletedSnapshot.forEach(doc => {
+                jobs.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+                explicitlyNotDeletedIds.add(doc.id);
+            });
+            
+            // Add jobs where isDeleted doesn't exist or is not true
+            allJobsSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (!explicitlyNotDeletedIds.has(doc.id) && data.isDeleted !== true) {
+                    jobs.push({
+                        id: doc.id,
+                        ...data
+                    });
+                }
+            });
         } else {
             // Get all jobs
-            jobsQuery = collection(db, "jobs");
+            const querySnapshot = await getDocs(collection(db, "jobs"));
+            jobs = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
         }
-
-        const querySnapshot = await getDocs(jobsQuery);
-        const jobs = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-        }));
 
         return { success: true, jobs };
     } catch (error) {

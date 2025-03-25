@@ -22,6 +22,13 @@ const Recruitment = () => {
     // DEBUG: Log jobs to see what's being retrieved from Firestore
     useEffect(() => {
         console.log("Jobs fetched from Firestore:", jobs);
+        console.log("Total jobs count:", jobs.length);
+        
+        // Log individual jobs for more clarity
+        jobs.forEach((job, index) => {
+            console.log(`Job ${index + 1}: ID=${job.id}, Title=${job.title}, Status=${job.status}, isDeleted=${job.isDeleted}`);
+        });
+        
         // Check if any deleted jobs still appear in the list
         const deletedJobs = jobs.filter((job) => job.isDeleted);
         if (deletedJobs.length > 0) {
@@ -97,6 +104,12 @@ const Recruitment = () => {
     // Updated filteredJobs logic to handle scheduled interviews
     const filteredJobs = [...jobs]
         .filter((job) => {
+            // First, make sure the job is not deleted
+            if (job.isDeleted === true) {
+                console.log(`Filtering out deleted job: ${job.id} - ${job.title}`);
+                return false;
+            }
+            
             const matchesDepartment =
                 selectedDepartments.length === 0 ||
                 selectedDepartments.includes(job.department);
@@ -116,7 +129,13 @@ const Recruitment = () => {
                 );
             }
 
-            return matchesDepartment && matchesStatus && matchesNewApplicants;
+            const result = matchesDepartment && matchesStatus && matchesNewApplicants;
+            
+            if (!result) {
+                console.log(`Job ${job.id} filtered out - Department: ${matchesDepartment}, Status: ${matchesStatus}, New Applicants: ${matchesNewApplicants}`);
+            }
+            
+            return result;
         })
         .sort((a, b) => {
             // Sort jobs with new applicants first

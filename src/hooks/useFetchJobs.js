@@ -66,8 +66,11 @@ const useFetchJobs = () => {
     const fetchJobs = useCallback(async () => {
         setLoading(true);
         try {
+            console.log("Fetching jobs...");
             // Use the jobService to get jobs (excluding deleted ones)
             const result = await getAllJobs(false);
+
+            console.log("getAllJobs result:", result);
 
             if (!result.success) {
                 throw new Error(result.message || "Failed to fetch jobs");
@@ -77,7 +80,12 @@ const useFetchJobs = () => {
 
             for (const job of result.jobs) {
                 // Skip jobs that are marked as deleted
-                if (job.isDeleted) continue;
+                if (job.isDeleted) {
+                    console.log(`Skipping deleted job: ${job.id}`);
+                    continue;
+                }
+
+                console.log(`Processing job: ${job.id}, title: ${job.title}`);
 
                 // Convert Firestore Timestamps to JavaScript Date objects
                 if (
@@ -105,6 +113,8 @@ const useFetchJobs = () => {
                     })
                 );
 
+                console.log(`Job ${job.id} has ${applicants.length} applicants`);
+
                 // Check for pending applicants and update the flag if needed
                 const newApplicantsStatus = await checkForPendingApplicants(
                     job.id,
@@ -120,8 +130,10 @@ const useFetchJobs = () => {
                 });
             }
 
+            console.log(`Total jobs processed: ${jobsData.length}`);
             setJobs([...jobsData]); // Create a new array reference to ensure React detects the change
         } catch (error) {
+            console.error("Error in fetchJobs:", error);
             setError("Failed to fetch jobs. Please try again.");
         } finally {
             setLoading(false);
@@ -131,6 +143,7 @@ const useFetchJobs = () => {
     // More efficient refresh function - only updates the jobs without changing loading state
     const refreshJobs = useCallback(async () => {
         try {
+            console.log("Refreshing jobs...");
             // Use the jobService to get jobs (excluding deleted ones)
             const result = await getAllJobs(false);
 
@@ -185,9 +198,11 @@ const useFetchJobs = () => {
                 });
             }
 
+            console.log(`Refresh complete: ${jobsData.length} jobs loaded`);
             setJobs([...jobsData]);
             return jobsData;
         } catch (error) {
+            console.error("Error in refreshJobs:", error);
             return [];
         }
     }, []);
