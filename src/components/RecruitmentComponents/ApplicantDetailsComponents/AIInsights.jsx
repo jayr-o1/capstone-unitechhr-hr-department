@@ -115,11 +115,11 @@ const AIInsights = ({
                         <div className="bg-[#ecfdf5] rounded-lg p-4">
                             <p className="flex items-center text-[#065f46] font-medium mb-2">
                                 <span className="mr-2">✅</span>
-                                Applicant has been hired
+                                This applicant has been officially hired
                             </p>
                             <p className="text-[#065f46] text-sm">
-                                This applicant has been moved to the Employees
-                                section for onboarding.
+                                Congratulations! The applicant is now an
+                                official employee of the company.
                             </p>
                         </div>
                     )}
