@@ -22,7 +22,7 @@ const Dashboard = () => {
                     {/* Hired Applicants */}
                     <div className="bg-white p-6 rounded-xl shadow-lg flex flex-col items-center">
                         <h1 className="text-lg font-semibold text-center">
-                            Hired Applicants
+                            Recent Hires
                         </h1>
                         <HiredApplicants />
                     </div>

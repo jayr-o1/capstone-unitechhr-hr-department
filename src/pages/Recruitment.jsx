@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import JobList from "../components/RecruitmentComponents/JobList";
 import Filters from "../components/RecruitmentComponents/Filters";
 import PaginationControls from "../components/RecruitmentComponents/PaginationControls";
@@ -12,6 +13,7 @@ import { db } from "../firebase";
 import showErrorAlert from "../components/Alerts/ErrorAlert";
 
 const Recruitment = () => {
+    const location = useLocation();
     // Fetch jobs from Firestore
     const { jobs, loading, error, setJobs, refreshJobs } = useFetchJobs();
     const [refreshCounter, setRefreshCounter] = useState(0);
@@ -20,6 +22,13 @@ const Recruitment = () => {
     // DEBUG: Log jobs to see what's being retrieved from Firestore
     useEffect(() => {
         console.log("Jobs fetched from Firestore:", jobs);
+        console.log("Total jobs count:", jobs.length);
+        
+        // Log individual jobs for more clarity
+        jobs.forEach((job, index) => {
+            console.log(`Job ${index + 1}: ID=${job.id}, Title=${job.title}, Status=${job.status}, isDeleted=${job.isDeleted}`);
+        });
+        
         // Check if any deleted jobs still appear in the list
         const deletedJobs = jobs.filter((job) => job.isDeleted);
         if (deletedJobs.length > 0) {
@@ -46,6 +55,27 @@ const Recruitment = () => {
     // Pagination settings
     const jobsPerPage = 5;
 
+    // Handle incoming filter from RecruitmentMetrics
+    useEffect(() => {
+        if (location.state?.filter) {
+            switch (location.state.filter) {
+                case "open":
+                    setSelectedStatus("Open");
+                    break;
+                case "pending":
+                    setShowNewApplicants(true);
+                    break;
+                case "scheduled":
+                    // This will be handled in the filteredJobs logic
+                    break;
+                default:
+                    break;
+            }
+            // Reset to first page when filter changes
+            setCurrentPage(1);
+        }
+    }, [location.state]);
+
     // Force refresh the job list when jobs change
     useEffect(() => {
         setRefreshCounter((prev) => prev + 1);
@@ -71,25 +101,47 @@ const Recruitment = () => {
         }, 1000);
     };
 
-    // Filter jobs based on selected filters
-    const filteredJobs = [...jobs] // Create a copy to avoid mutation issues
+    // Updated filteredJobs logic to handle scheduled interviews
+    const filteredJobs = [...jobs]
         .filter((job) => {
+            // First, make sure the job is not deleted
+            if (job.isDeleted === true) {
+                console.log(`Filtering out deleted job: ${job.id} - ${job.title}`);
+                return false;
+            }
+            
             const matchesDepartment =
                 selectedDepartments.length === 0 ||
                 selectedDepartments.includes(job.department);
+            
             const matchesStatus =
                 selectedStatus === "All" ||
                 (selectedStatus === "Open" && job.status === "Open") ||
                 (selectedStatus === "Closed" && job.status === "Closed");
+            
             const matchesNewApplicants =
                 !showNewApplicants || job.newApplicants;
-            return matchesDepartment && matchesStatus && matchesNewApplicants;
+
+            // Special handling for scheduled interviews filter
+            if (location.state?.filter === "scheduled") {
+                return job.applicants?.some(
+                    (applicant) => applicant.status === "Interview Scheduled"
+                );
+            }
+
+            const result = matchesDepartment && matchesStatus && matchesNewApplicants;
+            
+            if (!result) {
+                console.log(`Job ${job.id} filtered out - Department: ${matchesDepartment}, Status: ${matchesStatus}, New Applicants: ${matchesNewApplicants}`);
+            }
+            
+            return result;
         })
         .sort((a, b) => {
             // Sort jobs with new applicants first
             if (a.newApplicants && !b.newApplicants) return -1;
             if (!a.newApplicants && b.newApplicants) return 1;
-            return 0; // Keep original order if both have or don't have new applicants
+            return 0;
         });
 
     // Pagination logic
