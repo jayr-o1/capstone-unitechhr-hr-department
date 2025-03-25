@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import JobList from "../components/RecruitmentComponents/JobList";
 import Filters from "../components/RecruitmentComponents/Filters";
 import PaginationControls from "../components/RecruitmentComponents/PaginationControls";
@@ -12,6 +13,7 @@ import { db } from "../firebase";
 import showErrorAlert from "../components/Alerts/ErrorAlert";
 
 const Recruitment = () => {
+    const location = useLocation();
     // Fetch jobs from Firestore
     const { jobs, loading, error, setJobs, refreshJobs } = useFetchJobs();
     const [refreshCounter, setRefreshCounter] = useState(0);
@@ -46,6 +48,27 @@ const Recruitment = () => {
     // Pagination settings
     const jobsPerPage = 5;
 
+    // Handle incoming filter from RecruitmentMetrics
+    useEffect(() => {
+        if (location.state?.filter) {
+            switch (location.state.filter) {
+                case "open":
+                    setSelectedStatus("Open");
+                    break;
+                case "pending":
+                    setShowNewApplicants(true);
+                    break;
+                case "scheduled":
+                    // This will be handled in the filteredJobs logic
+                    break;
+                default:
+                    break;
+            }
+            // Reset to first page when filter changes
+            setCurrentPage(1);
+        }
+    }, [location.state]);
+
     // Force refresh the job list when jobs change
     useEffect(() => {
         setRefreshCounter((prev) => prev + 1);
@@ -71,25 +94,35 @@ const Recruitment = () => {
         }, 1000);
     };
 
-    // Filter jobs based on selected filters
-    const filteredJobs = [...jobs] // Create a copy to avoid mutation issues
+    // Updated filteredJobs logic to handle scheduled interviews
+    const filteredJobs = [...jobs]
         .filter((job) => {
             const matchesDepartment =
                 selectedDepartments.length === 0 ||
                 selectedDepartments.includes(job.department);
+            
             const matchesStatus =
                 selectedStatus === "All" ||
                 (selectedStatus === "Open" && job.status === "Open") ||
                 (selectedStatus === "Closed" && job.status === "Closed");
+            
             const matchesNewApplicants =
                 !showNewApplicants || job.newApplicants;
+
+            // Special handling for scheduled interviews filter
+            if (location.state?.filter === "scheduled") {
+                return job.applicants?.some(
+                    (applicant) => applicant.status === "Interview Scheduled"
+                );
+            }
+
             return matchesDepartment && matchesStatus && matchesNewApplicants;
         })
         .sort((a, b) => {
             // Sort jobs with new applicants first
             if (a.newApplicants && !b.newApplicants) return -1;
             if (!a.newApplicants && b.newApplicants) return 1;
-            return 0; // Keep original order if both have or don't have new applicants
+            return 0;
         });
 
     // Pagination logic

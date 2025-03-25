@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, or } from "firebase/firestore";
 
 const HiredApplicants = () => {
     const [hiredApplicants, setHiredApplicants] = useState([]);
@@ -15,12 +15,15 @@ const HiredApplicants = () => {
                 // Get all jobs
                 const jobsSnapshot = await getDocs(collection(db, "jobs"));
 
-                // For each job, get applicants in onboarding
+                // For each job, get applicants in onboarding and hired status
                 for (const jobDoc of jobsSnapshot.docs) {
                     const jobId = jobDoc.id;
                     const applicantsQuery = query(
                         collection(db, "jobs", jobId, "applicants"),
-                        where("status", "==", "In Onboarding")
+                        or(
+                            where("status", "==", "In Onboarding"),
+                            where("status", "==", "Hired")
+                        )
                     );
 
                     const applicantsSnapshot = await getDocs(applicantsQuery);
@@ -76,7 +79,7 @@ const HiredApplicants = () => {
         return (
             <div className="w-full max-w-4xl mx-auto py-4">
                 <div className="text-center text-gray-500">
-                    No applicants in onboarding
+                    No recent hires found
                 </div>
             </div>
         );
@@ -101,6 +104,11 @@ const HiredApplicants = () => {
                             <span className="font-medium">
                                 {applicant.jobTitle}
                             </span>
+                            {applicant.status === "Hired" && 
+                                <span className="ml-1 text-xs bg-green-700 text-white px-1.5 py-0.5 rounded">
+                                    New Hire
+                                </span>
+                            }
                         </p>
                         <p className="text-xs text-[#059669]">
                             {applicant.hiredAt.toLocaleString()}
