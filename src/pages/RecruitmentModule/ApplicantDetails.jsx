@@ -400,10 +400,12 @@ const ApplicantDetails = () => {
             {isModalOpen && (
                 <ScheduleInterviewModal
                     isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
-                    onSchedule={handleSubmitInterview}
-                    dateTime={interviewDateTime}
-                    setDateTime={(e) => setInterviewDateTime(e.target.value)}
+                    onClose={handleCloseModal}
+                    onSubmit={handleSubmitInterview}
+                    interviewDateTime={interviewDateTime}
+                    onDateTimeChange={(e) =>
+                        setInterviewDateTime(e.target.value)
+                    }
                     getCurrentDateTime={getCurrentDateTime}
                 />
             )}
