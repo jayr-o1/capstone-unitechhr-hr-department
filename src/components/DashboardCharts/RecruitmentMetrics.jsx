@@ -28,17 +28,25 @@ const RecruitmentMetrics = () => {
                 // For each job, get applicants
                 for (const jobDoc of jobsSnapshot.docs) {
                     const jobId = jobDoc.id;
-                    const applicantsRef = collection(db, "jobs", jobId, "applicants");
+                    const applicantsRef = collection(
+                        db,
+                        "jobs",
+                        jobId,
+                        "applicants"
+                    );
 
-                    // Get pending applicants (status is "Applied")
+                    // Get pending applicants (status is "Pending")
                     const pendingSnapshot = await getDocs(
-                        query(applicantsRef, where("status", "==", "Applied"))
+                        query(applicantsRef, where("status", "==", "Pending"))
                     );
                     totalPendingApplicants += pendingSnapshot.size;
 
-                    // Get scheduled applicants (status is "Interview Scheduled")
+                    // Get scheduled applicants (status is "Interviewing")
                     const scheduledSnapshot = await getDocs(
-                        query(applicantsRef, where("status", "==", "Interview Scheduled"))
+                        query(
+                            applicantsRef,
+                            where("status", "==", "Interviewing")
+                        )
                     );
                     totalScheduledApplicants += scheduledSnapshot.size;
                 }
