@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import Header from "./Layouts/Header";
 import Sidebar from "./Layouts/Sidebar";
@@ -13,7 +13,7 @@ const Layout = () => {
     const { jobId, applicantId } = useParams();
 
     // Fetch jobs using the useFetchJobs hook
-    const { jobs, loading: jobsLoading, error: jobsError } = useFetchJobs();
+    const { jobs, loading: jobsLoading, error: jobsError, universityId } = useFetchJobs();
 
     // Define a mapping of paths to page titles
     const pageTitles = {
@@ -24,16 +24,17 @@ const Layout = () => {
         "/clusters": "Clusters",
         "/profile": "User Profile",
         "/subscription": "Subscription",
+        "/hr-management": "HR Management",
     };
 
-    // Get the job title if on a job details page
-    const getJobTitle = (jobId) => {
+    // Get the job title if on a job details page - memoized to prevent unnecessary calculations
+    const getJobTitle = useCallback((jobId) => {
         const job = jobs.find((job) => job.id === jobId); // Find job by ID
         return job ? job.title : "Job Details";
-    };
+    }, [jobs]);
 
-    // Get the applicant name if on an applicant details page
-    const getApplicantName = (jobId, applicantId) => {
+    // Get the applicant name if on an applicant details page - memoized to prevent unnecessary calculations
+    const getApplicantName = useCallback((jobId, applicantId) => {
         const job = jobs.find((job) => job.id === jobId); // Find job by ID
         if (job) {
             const applicant = job.applicants.find(
@@ -42,15 +43,31 @@ const Layout = () => {
             return applicant ? applicant.name : "Applicant Details";
         }
         return "Applicant Details";
-    };
+    }, [jobs]);
 
-    // Get the current page title
-    const currentPage =
-        location.pathname.startsWith("/recruitment/") && jobId
-            ? applicantId
-                ? getApplicantName(jobId, applicantId)
-                : getJobTitle(jobId)
-            : pageTitles[location.pathname] || "Dashboard";
+    // Get the current page title - memoized for performance
+    const getCurrentPageTitle = useCallback(() => {
+        // If on a job details page
+        if (location.pathname.startsWith("/recruitment/") && jobId) {
+            if (applicantId) {
+                return getApplicantName(jobId, applicantId);
+            } else {
+                return getJobTitle(jobId);
+            }
+        } 
+        
+        // For all other paths, check the path mapping
+        const paths = location.pathname.split("/").filter(path => path !== "");
+        if (paths.length === 0) {
+            return "Dashboard";
+        }
+        
+        const fullPath = `/${paths[0]}`;
+        return pageTitles[fullPath] || paths[0].charAt(0).toUpperCase() + paths[0].slice(1);
+    }, [location.pathname, jobId, applicantId, getJobTitle, getApplicantName, pageTitles]);
+    
+    // Current page is memoized to prevent unnecessary recalculations
+    const currentPage = useMemo(() => getCurrentPageTitle(), [getCurrentPageTitle]);
 
     // Update browser tab title when route changes
     useEffect(() => {
@@ -64,58 +81,149 @@ const Layout = () => {
         return () => clearTimeout(timer);
     }, [location.pathname]);
 
-    // Function to generate breadcrumb data
-    const generateBreadcrumb = () => {
+    // Function to generate breadcrumb data - memoized to prevent recalculation on every render
+    const generateBreadcrumb = useCallback(() => {
+        // Skip generation if no jobs are loaded yet and we're on a job-related page
+        if (jobs.length === 0 && location.pathname.includes('/recruitment/')) {
+            return []; // Return empty breadcrumb until jobs are loaded
+        }
+        
+        // Split the path into segments and filter out empty strings
         const paths = location.pathname
             .split("/")
-            .filter((path) => path !== ""); // Split the path into segments
+            .filter((path) => path !== "");
+        
+        // If there are no path segments, return empty array (at root)
+        if (paths.length === 0) {
+            return [];
+        }
+        
         const breadcrumb = [];
-
-        // Add the "Recruitment" root path
-        if (paths[0] === "recruitment") {
-            breadcrumb.push({
-                title: "Recruitment",
-                path: "/recruitment",
-            });
-
-            // If a job is opened, use job title instead of ID
-            if (paths.length > 1) {
-                const jobTitle = getJobTitle(paths[1]);
+        let currentPath = "";
+        
+        // Handle each path segment
+        for (let i = 0; i < paths.length; i++) {
+            const segment = paths[i];
+            currentPath += `/${segment}`;
+            
+            if (segment === "recruitment") {
+                // Add the "Recruitment" root path
                 breadcrumb.push({
-                    title: jobTitle,
-                    path: `/recruitment/${paths[1]}`,
+                    title: "Recruitment",
+                    path: "/recruitment",
                 });
-
-                // If an applicant is opened, add applicant name
-                if (paths.length > 2) {
-                    const applicantName = getApplicantName(paths[1], paths[2]);
+                
+                // If a job is opened, use job title instead of ID
+                if (i + 1 < paths.length) {
+                    const jobId = paths[i + 1];
+                    const jobTitle = getJobTitle(jobId);
                     breadcrumb.push({
-                        title: applicantName,
+                        title: jobTitle,
+                        path: `/recruitment/${jobId}`,
+                    });
+                    
+                    // If an applicant is opened, add applicant name
+                    if (i + 2 < paths.length) {
+                        const applicantId = paths[i + 2];
+                        const applicantName = getApplicantName(jobId, applicantId);
+                        breadcrumb.push({
+                            title: applicantName,
+                            path: null, // No path for the last segment
+                        });
+                        break; // Break after processing 3 levels of recruitment path
+                    }
+                    break; // Break after processing 2 levels of recruitment path if no applicant
+                }
+            } else if (segment === "onboarding") {
+                breadcrumb.push({
+                    title: "Onboarding",
+                    path: "/onboarding",
+                });
+                
+                // If an employee is opened in onboarding
+                if (i + 1 < paths.length) {
+                    breadcrumb.push({
+                        title: "Employee Details",
                         path: null, // No path for the last segment
                     });
+                    break;
                 }
+            } else if (segment === "employees") {
+                breadcrumb.push({
+                    title: "Employees",
+                    path: "/employees",
+                });
+                
+                // If an employee is opened
+                if (i + 1 < paths.length) {
+                    breadcrumb.push({
+                        title: "Employee Details",
+                        path: null, // No path for the last segment
+                    });
+                    break;
+                }
+            } else if (segment === "clusters") {
+                breadcrumb.push({
+                    title: "Clusters",
+                    path: "/clusters",
+                });
+                
+                // If a cluster is opened
+                if (i + 1 < paths.length) {
+                    breadcrumb.push({
+                        title: "Cluster Details",
+                        path: null, // No path for the last segment
+                    });
+                    break;
+                }
+            } else if (segment === "hr-management") {
+                breadcrumb.push({
+                    title: "HR Management",
+                    path: "/hr-management",
+                });
+                
+                // If a subsection is opened
+                if (i + 1 < paths.length) {
+                    // Capitalize and replace dashes with spaces
+                    const formattedTitle = paths[i + 1]
+                        .split("-")
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(" ");
+                        
+                    breadcrumb.push({
+                        title: formattedTitle,
+                        path: null, // No path for the last segment
+                    });
+                    break;
+                }
+            } else {
+                // For other paths like dashboard, profile, subscription
+                const pageName = pageTitles[currentPath] || 
+                    segment.charAt(0).toUpperCase() + segment.slice(1);
+                
+                breadcrumb.push({
+                    title: pageName,
+                    path: i === paths.length - 1 ? null : currentPath, // No path for the last segment
+                });
             }
-        } else {
-            // Add other pages
-            const rootPath = `/${paths[0]}`;
-            breadcrumb.push({
-                title: pageTitles[rootPath] || paths[0],
-                path: rootPath,
-            });
         }
-
+        
         return breadcrumb;
-    };
+    }, [location.pathname, jobs, getJobTitle, getApplicantName, pageTitles]);
+
+    // Memoize the breadcrumb data to prevent unnecessary recalculation
+    const breadcrumbData = useMemo(() => generateBreadcrumb(), [generateBreadcrumb]);
 
     // Handle click on breadcrumb items
-    const handleBreadcrumbClick = (path) => {
+    const handleBreadcrumbClick = useCallback((path) => {
         if (path) {
             navigate(path); // Navigate to the clicked path
         }
-    };
+    }, [navigate]);
 
     // Show a loading state while jobs are being fetched
-    if (jobsLoading) {
+    if (jobsLoading && !universityId) {
+        // Only show full loader when university ID isn't available yet
         // Check if this is a page refresh (Ctrl+R)
         const isPageRefresh =
             sessionStorage.getItem("isPageRefresh") === "true";
@@ -137,19 +245,21 @@ const Layout = () => {
                 {/* Header (Full Width) */}
                 <Header
                     title={currentPage}
-                    breadcrumb={generateBreadcrumb()}
+                    breadcrumb={breadcrumbData}
                     onBreadcrumbClick={handleBreadcrumbClick}
                 />
 
                 {/* Page Content (Only this part gets the loader) */}
                 <div className="relative flex-1 h-[calc(100vh-4rem)] p-4 bg-gray-100 overflow-y-auto">
                     {/* PageLoader positioned relative to the Outlet container */}
-                    <PageLoader isLoading={isLoading} fullscreen={false} />
+                    <PageLoader isLoading={isLoading || (jobsLoading && location.pathname.includes('/recruitment/'))} fullscreen={false} />
 
                     {/* Outlet with conditional opacity and pointer-events */}
                     <div
                         className={
-                            isLoading ? "opacity-50 pointer-events-none" : ""
+                            isLoading || (jobsLoading && location.pathname.includes('/recruitment/')) 
+                            ? "opacity-50 pointer-events-none" 
+                            : ""
                         }
                     >
                         <Outlet />

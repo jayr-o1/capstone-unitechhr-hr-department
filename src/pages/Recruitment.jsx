@@ -19,29 +19,13 @@ const Recruitment = () => {
     const [refreshCounter, setRefreshCounter] = useState(0);
     const [isManuallyRefreshing, setIsManuallyRefreshing] = useState(false);
 
-    // DEBUG: Log jobs to see what's being retrieved from Firestore
+    // DEBUG: Log jobs to see what's being retrieved from Firestore - only log when count changes
     useEffect(() => {
-        console.log("Jobs fetched from Firestore:", jobs);
-        console.log("Total jobs count:", jobs.length);
-
-        // Log individual jobs for more clarity
-        jobs.forEach((job, index) => {
-            console.log(
-                `Job ${index + 1}: ID=${job.id}, Title=${job.title}, Status=${
-                    job.status
-                }, isDeleted=${job.isDeleted}`
-            );
-        });
-
-        // Check if any deleted jobs still appear in the list
-        const deletedJobs = jobs.filter((job) => job.isDeleted);
-        if (deletedJobs.length > 0) {
-            console.warn(
-                "Warning: Found deleted jobs in the job list:",
-                deletedJobs
-            );
+        const jobCount = jobs.length;
+        if (jobCount > 0) {
+            console.log(`Jobs count: ${jobCount}`);
         }
-    }, [jobs]);
+    }, [jobs.length]);
 
     // State for pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -96,13 +80,15 @@ const Recruitment = () => {
     // Function to handle job list refresh without page reload
     const refreshJobList = async () => {
         setIsManuallyRefreshing(true);
-        await refreshJobs(); // Fetch fresh data from Firestore
-        setRefreshCounter((prev) => prev + 1); // Force JobList to re-render
-
-        // Reset the loading state after a short delay
-        setTimeout(() => {
-            setIsManuallyRefreshing(false);
-        }, 1000);
+        try {
+            await refreshJobs(true); // Use the showLoading parameter to true in refreshJobs
+            setRefreshCounter((prev) => prev + 1); // Force JobList to re-render
+        } finally {
+            // Reset the loading state after a short delay
+            setTimeout(() => {
+                setIsManuallyRefreshing(false);
+            }, 1000);
+        }
     };
 
     // Updated filteredJobs logic to handle scheduled interviews
