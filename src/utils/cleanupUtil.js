@@ -6,12 +6,17 @@ import showErrorAlert from "../components/Alerts/ErrorAlert";
  * Utility to clean up expired soft-deleted jobs
  * This function can be called manually or scheduled to run periodically
  *
+ * @param {string} universityId - The ID of the university to clean up jobs for
  * @returns {Promise<Object>} Result of the cleanup operation
  */
-export const runJobsCleanup = async () => {
+export const runJobsCleanup = async (universityId) => {
     try {
-        // Show loading message
-        const result = await cleanupExpiredJobs();
+        if (!universityId) {
+            throw new Error("University ID is required to clean up expired jobs");
+        }
+        
+        // Run the cleanup with the specific university ID
+        const result = await cleanupExpiredJobs(universityId);
 
         if (result.success) {
             if (result.deletedCount > 0) {
@@ -43,17 +48,24 @@ export const runJobsCleanup = async () => {
  * This is typically called once when the application starts
  *
  * @param {number} intervalMinutes Interval in minutes between cleanup runs
+ * @param {string} universityId The ID of the university to clean up jobs for
  * @returns {function} Function to stop the scheduled cleanup
  */
-export const scheduleJobsCleanup = (intervalMinutes = 1440) => {
+export const scheduleJobsCleanup = (intervalMinutes = 1440, universityId = null) => {
+    // Don't schedule if no universityId is provided
+    if (!universityId) {
+        console.warn("No university ID provided. Cleanup will not be scheduled.");
+        return () => {};
+    }
+    
     // Default: once a day
     // Convert minutes to milliseconds
     const interval = intervalMinutes * 60 * 1000;
 
     // Set up interval for cleanup
     const timerId = setInterval(async () => {
-        console.log("Running scheduled job cleanup...");
-        await runJobsCleanup();
+        console.log(`Running scheduled job cleanup for university: ${universityId}...`);
+        await runJobsCleanup(universityId);
     }, interval);
 
     // Return function to stop the scheduled cleanup

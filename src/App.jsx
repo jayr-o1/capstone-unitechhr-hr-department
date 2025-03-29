@@ -20,10 +20,11 @@ import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import AdminPanel from "./pages/AdminPanel"; // Import the AdminPanel component
+import HRHeadPanel from "./pages/HRHeadPanel"; // Import the HR Head Panel component
 import { JobProvider } from "./contexts/JobContext"; // Import JobProvider
 import AuthProvider, { useAuth } from "./contexts/AuthProvider";
 import { scheduleJobsCleanup } from "./utils/cleanupUtil";
+import { getUserData } from "./services/userService";
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -77,14 +78,33 @@ function AppContent() {
 
     // Initialize scheduled cleanup for deleted jobs
     useEffect(() => {
-        // Only admins or when authenticated
+        // Only when authenticated
         if (user) {
-            // Schedule cleanup to run once per day (1440 minutes)
-            const stopCleanup = scheduleJobsCleanup(1440);
-
+            const getUserUniversity = async () => {
+                try {
+                    // Get user data to find university ID
+                    const userDataResult = await getUserData(user.uid);
+                    if (userDataResult.success && userDataResult.data.universityId) {
+                        // Schedule cleanup to run once per day (1440 minutes) with the university ID
+                        const stopCleanup = scheduleJobsCleanup(1440, userDataResult.data.universityId);
+                        
+                        // Store the cleanup function to be called on unmount
+                        return stopCleanup;
+                    }
+                } catch (error) {
+                    console.error("Error getting user's university:", error);
+                }
+                
+                // Return no-op function if we couldn't get the universityId
+                return () => {};
+            };
+            
+            // Start the process and get the cleanup function
+            const cleanupPromise = getUserUniversity();
+            
             // Clean up function when component unmounts
             return () => {
-                stopCleanup();
+                cleanupPromise.then(stopCleanup => stopCleanup());
             };
         }
     }, [user]);
@@ -162,7 +182,7 @@ function AppContent() {
                                 path="subscription"
                                 element={<Subscription />}
                             />
-                            <Route path="admin" element={<AdminPanel />} />
+                            <Route path="hr-management" element={<HRHeadPanel />} />
                             {/* Add more routes here */}
                         </Route>
                     </>

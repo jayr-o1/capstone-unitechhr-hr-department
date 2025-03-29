@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Briefcase, Users, CalendarCheck } from "lucide-react";
-import { db } from "../../firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { db, auth } from "../../firebase";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { getUserData } from "../../services/userService";
 
 const RecruitmentMetrics = () => {
     const [metrics, setMetrics] = useState({
@@ -11,60 +12,118 @@ const RecruitmentMetrics = () => {
         scheduledApplicants: 0,
     });
     const [loading, setLoading] = useState(true);
+    const [universityId, setUniversityId] = useState(null);
     const navigate = useNavigate();
 
+    // Get current user's university ID
     useEffect(() => {
-        const fetchMetrics = async () => {
+        const getCurrentUserUniversity = async () => {
             try {
-                // Get all jobs
-                const jobsSnapshot = await getDocs(
-                    query(collection(db, "jobs"), where("status", "==", "Open"))
-                );
-                const openPositions = jobsSnapshot.size;
-
-                let totalPendingApplicants = 0;
-                let totalScheduledApplicants = 0;
-
-                // For each job, get applicants
-                for (const jobDoc of jobsSnapshot.docs) {
-                    const jobId = jobDoc.id;
-                    const applicantsRef = collection(
-                        db,
-                        "jobs",
-                        jobId,
-                        "applicants"
-                    );
-
-                    // Get pending applicants (status is "Pending")
-                    const pendingSnapshot = await getDocs(
-                        query(applicantsRef, where("status", "==", "Pending"))
-                    );
-                    totalPendingApplicants += pendingSnapshot.size;
-
-                    // Get scheduled applicants (status is "Interviewing")
-                    const scheduledSnapshot = await getDocs(
-                        query(
-                            applicantsRef,
-                            where("status", "==", "Interviewing")
-                        )
-                    );
-                    totalScheduledApplicants += scheduledSnapshot.size;
+                const user = auth.currentUser;
+                if (!user) {
+                    console.error("No authenticated user found");
+                    setLoading(false);
+                    return;
                 }
-
-                setMetrics({
-                    openPositions,
-                    pendingApplicants: totalPendingApplicants,
-                    scheduledApplicants: totalScheduledApplicants,
-                });
-                setLoading(false);
+                
+                // Get user data to find university ID
+                const userDataResult = await getUserData(user.uid);
+                if (userDataResult.success && userDataResult.data.universityId) {
+                    setUniversityId(userDataResult.data.universityId);
+                } else {
+                    console.error("User doesn't have a university association");
+                    setLoading(false);
+                }
             } catch (error) {
-                console.error("Error fetching recruitment metrics:", error);
+                console.error("Error getting user's university:", error);
                 setLoading(false);
             }
         };
-
-        fetchMetrics();
+        
+        getCurrentUserUniversity();
     }, []);
+
+    // Fetch metrics when universityId changes
+    useEffect(() => {
+        if (universityId) {
+            fetchMetrics();
+        }
+    }, [universityId]);
+
+    const fetchMetrics = async () => {
+        try {
+            console.log("Fetching metrics with universityId:", universityId);
+            
+            // Get all jobs from university's collection without filtering by status
+            const jobsRef = collection(db, "universities", universityId, "jobs");
+            const jobsQuery = query(
+                jobsRef,
+                where("isDeleted", "!=", true) // Only exclude deleted jobs
+            );
+            
+            console.log("Executing jobs query...");
+            const jobsSnapshot = await getDocs(jobsQuery);
+            console.log(`Found ${jobsSnapshot.size} total jobs`);
+            
+            // Filter open jobs client-side to be more flexible
+            const openJobs = jobsSnapshot.docs.filter(doc => {
+                const data = doc.data();
+                // Consider a job "open" if it has status "Open" or doesn't have a status field
+                return !data.status || data.status === "Open" || data.status === "open";
+            });
+            
+            const openPositions = openJobs.length;
+            console.log(`Found ${openPositions} open jobs`);
+
+            let totalPendingApplicants = 0;
+            let totalScheduledApplicants = 0;
+
+            // For each job, get applicants from university's collection
+            for (const jobDoc of jobsSnapshot.docs) {
+                const jobId = jobDoc.id;
+                const jobData = jobDoc.data();
+                console.log(`Processing job: ${jobId}, title: ${jobData.title || 'Unknown'}`);
+                
+                const applicantsRef = collection(
+                    db,
+                    "universities",
+                    universityId,
+                    "jobs",
+                    jobId,
+                    "applicants"
+                );
+
+                // Get pending applicants (status is "Pending")
+                const pendingSnapshot = await getDocs(
+                    query(applicantsRef, where("status", "==", "Pending"))
+                );
+                console.log(`Job ${jobId} has ${pendingSnapshot.size} pending applicants`);
+                totalPendingApplicants += pendingSnapshot.size;
+
+                // Get scheduled applicants (status is "Interviewing")
+                const scheduledSnapshot = await getDocs(
+                    query(
+                        applicantsRef,
+                        where("status", "==", "Interviewing")
+                    )
+                );
+                console.log(`Job ${jobId} has ${scheduledSnapshot.size} scheduled applicants`);
+                totalScheduledApplicants += scheduledSnapshot.size;
+            }
+
+            console.log(`Total metrics - Open: ${openPositions}, Pending: ${totalPendingApplicants}, Scheduled: ${totalScheduledApplicants}`);
+            
+            setMetrics({
+                openPositions,
+                pendingApplicants: totalPendingApplicants,
+                scheduledApplicants: totalScheduledApplicants,
+            });
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching recruitment metrics:", error);
+            setLoading(false);
+        }
+    };
 
     const handleMetricClick = (metricType) => {
         switch (metricType) {

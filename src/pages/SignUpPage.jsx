@@ -5,7 +5,7 @@ import loginBg from "../assets/login_bg.png";
 import splashArt from "../assets/splash_art.png";
 import logo from "../assets/logo.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faEyeSlash, faCheckCircle, faIdCard, faUserTie } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faEyeSlash, faCheckCircle, faIdCard, faUserTie, faUniversity } from "@fortawesome/free-solid-svg-icons";
 
 const SignUpPage = () => {
   const [fullName, setFullName] = useState("");
@@ -14,6 +14,7 @@ const SignUpPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [employeeId, setEmployeeId] = useState("");
   const [position, setPosition] = useState("HR Head");
+  const [universityName, setUniversityName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validationError, setValidationError] = useState("");
@@ -52,6 +53,12 @@ const SignUpPage = () => {
       setValidationError("Please enter your employee ID");
       return false;
     }
+    
+    // Check university name
+    if (!universityName.trim()) {
+      setValidationError("Please enter your university name");
+      return false;
+    }
 
     // Clear any previous validation errors
     setValidationError("");
@@ -71,7 +78,8 @@ const SignUpPage = () => {
     const userMetadata = {
       fullName,
       employeeId,
-      position
+      position,
+      universityName
     };
 
     const result = await register(email, password, displayName, userMetadata);
@@ -177,6 +185,29 @@ const SignUpPage = () => {
                   </div>
                 )}
 
+                {/* University Name - Full Width */}
+                <div>
+                  <label
+                    htmlFor="universityName"
+                    className="block mb-2 text-sm font-medium text-gray-900"
+                  >
+                    University Name
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="universityName"
+                      id="universityName"
+                      value={universityName}
+                      onChange={(e) => setUniversityName(e.target.value)}
+                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pl-10"
+                      placeholder="State University of Technology"
+                      required
+                    />
+                    <FontAwesomeIcon icon={faUniversity} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Full Name */}
                   <div>
@@ -237,7 +268,7 @@ const SignUpPage = () => {
                         value={employeeId}
                         onChange={(e) => setEmployeeId(e.target.value)}
                         className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pl-10"
-                        placeholder="EMP-12345"
+                        placeholder="EMP12345"
                         required
                       />
                       <FontAwesomeIcon icon={faIdCard} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

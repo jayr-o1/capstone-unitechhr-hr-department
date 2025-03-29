@@ -2,6 +2,7 @@ import { auth } from '../firebase'; // Import Firebase auth
 import { db } from '../firebase'; // Import Firestore
 import { signInWithEmailAndPassword, sendPasswordResetEmail, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 // Handle login
 export const loginUser = async (email, password) => {
@@ -10,39 +11,52 @@ export const loginUser = async (email, password) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
     
-    // Get user document from Firestore to check status
-    const userDoc = await getDoc(doc(db, "users", uid));
+    // Get auth mapping to find the user's university
+    const authMappingRef = doc(db, "authMappings", uid);
+    const authMappingDoc = await getDoc(authMappingRef);
     
-    if (userDoc.exists()) {
-      const userData = userDoc.data();
+    if (authMappingDoc.exists()) {
+      const authData = authMappingDoc.data();
+      const universityId = authData.universityId;
       
-      // If account is pending approval
-      if (userData.status === 'pending') {
+      if (!universityId) {
         return { 
           success: false, 
-          message: "Your account is pending administrator approval. Please check back later."
+          message: "User record is incomplete. Please contact administrator." 
         };
       }
       
-      // Update last login time
-      await updateDoc(doc(db, "users", uid), {
-        lastLogin: new Date().toISOString()
-      });
+      // Get the full user record from the university collection
+      const universityUserRef = doc(db, "universities", universityId, "users", uid);
+      const universityUserDoc = await getDoc(universityUserRef);
       
-      return { success: true };
+      if (universityUserDoc.exists()) {
+        const userData = universityUserDoc.data();
+        
+        // If account is pending approval
+        if (userData.status === 'pending') {
+          return { 
+            success: false, 
+            message: "Your account is pending administrator approval. Please check back later."
+          };
+        }
+        
+        // Update the last login time
+        await updateDoc(universityUserRef, {
+          lastLogin: new Date().toISOString()
+        });
+        
+        return { success: true, universityId };
+      } else {
+        // If user has mapping but no university record, something is wrong
+        return { 
+          success: false, 
+          message: "User record is incomplete. Please contact administrator." 
+        };
+      }
     } else {
-      // If user has no document in Firestore, create one
-      await setDoc(doc(db, "users", uid), {
-        uid,
-        email,
-        displayName: userCredential.user.displayName || '',
-        status: 'active',
-        role: 'user',
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString()
-      });
-      
-      return { success: true };
+      // No auth mapping found, user doesn't exist
+      return { success: false, message: "User not found. Please register first." };
     }
   } catch (error) {
     return { success: false, message: error.message };
@@ -73,6 +87,31 @@ export const registerUser = async (email, password, displayName, userData = {}) 
     // Extract user ID
     const uid = userCredential.user.uid;
     
+    // Check if university exists, if not create it
+    let universityId = userData.universityId || '';
+    let universityName = userData.universityName || '';
+    
+    if (universityName && !universityId) {
+      // Create a new university document
+      const universitiesRef = collection(db, "universities");
+      const universityQuery = query(universitiesRef, where("name", "==", universityName));
+      const universitySnapshot = await getDocs(universityQuery);
+      
+      if (universitySnapshot.empty) {
+        // Create a new university doc
+        const newUniversityRef = doc(collection(db, "universities"));
+        await setDoc(newUniversityRef, {
+          name: universityName,
+          createdAt: new Date().toISOString(),
+          createdBy: uid
+        });
+        universityId = newUniversityRef.id;
+      } else {
+        // University already exists, use its ID
+        universityId = universitySnapshot.docs[0].id;
+      }
+    }
+    
     // Create user document in Firestore with additional metadata
     // Default to "pending" status for admin approval
     const userDoc = {
@@ -81,14 +120,30 @@ export const registerUser = async (email, password, displayName, userData = {}) 
       displayName,
       employeeId: userData.employeeId || '',
       position: userData.position || '',
+      universityId,
+      universityName,
       status: 'pending', // Require admin approval
       role: 'hr_admin',
       createdAt: new Date().toISOString(),
       lastLogin: new Date().toISOString()
     };
     
-    // Save to Firestore
-    await setDoc(doc(db, "users", uid), userDoc);
+    if (universityId) {
+      // Add user to university's users subcollection - this is the primary user record
+      await setDoc(doc(db, "universities", universityId, "users", uid), userDoc);
+      
+      // Instead of creating a user in the root collection, only store auth mapping data
+      // This will only contain the minimum data needed for auth purposes
+      await setDoc(doc(db, "authMappings", uid), {
+        uid,
+        email,
+        universityId,
+        role: 'hr_admin'
+      });
+    } else {
+      // If no university, raise an error - all users must belong to a university
+      throw new Error("University name is required for registration");
+    }
     
     return { success: true };
   } catch (error) {

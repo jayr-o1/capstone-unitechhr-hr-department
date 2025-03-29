@@ -1,6 +1,6 @@
 import React from "react";
 
-const AdminIcon = ({ className }) => (
+const HRManagementIcon = ({ className }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
@@ -22,4 +22,4 @@ const AdminIcon = ({ className }) => (
     </svg>
 );
 
-export default AdminIcon;
+export default HRManagementIcon;

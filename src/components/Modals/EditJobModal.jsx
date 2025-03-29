@@ -4,8 +4,7 @@ import showWarningAlert from "../Alerts/WarningAlert";
 import showErrorAlert from "../Alerts/ErrorAlert";
 import departments from "../../data/departments";
 import FormField from "./RecruitmentModalComponents/FormField"; // Reuse FormField
-import { doc, updateDoc } from "firebase/firestore";
-import { db } from "../../firebase";
+import { updateJob } from "../../services/jobService";
 
 const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated }) => {
     const [formData, setFormData] = useState({
@@ -19,6 +18,7 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
         workSetup: "",
         availableSlots: 1,
     });
+    const [loading, setLoading] = useState(false);
 
     // Pre-fill the form with initial data when the modal opens
     useEffect(() => {
@@ -79,45 +79,48 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
         showWarningAlert(
             "Are you sure you want to update this job post?",
             async () => {
+                setLoading(true);
                 try {
-                    // Get a reference to the job document
-                    const jobRef = doc(db, "jobs", initialData.id);
-                    
                     // Prepare the data for Firestore (convert strings to arrays)
                     const processedData = prepareDataForFirestore(formData);
                     
-                    // Create updated job object with ID
-                    const updatedJobData = {
-                        ...processedData,
-                        id: initialData.id,
-                        lastUpdated: new Date()
-                    };
+                    // Use the updateJob service to update the job in both collections
+                    const result = await updateJob(initialData.id, processedData);
                     
-                    // Update the job in Firestore
-                    await updateDoc(jobRef, {
-                        ...processedData,
-                        lastUpdated: new Date()
-                    });
-                    
-                    // Show success alert
-                    showSuccessAlert("Job updated successfully!");
-                    
-                    // Call the parent's onUpdateJob function with the updated job data
-                    if (typeof onUpdateJob === 'function') {
-                        onUpdateJob(updatedJobData);
+                    if (result.success) {
+                        // Create updated job object with ID for the context
+                        const updatedJobData = {
+                            ...processedData,
+                            id: initialData.id,
+                            // Keep the existing universityId
+                            universityId: initialData.universityId
+                        };
+                        
+                        // Show success alert
+                        showSuccessAlert("Job updated successfully!");
+                        
+                        // Call the parent's onUpdateJob function with the updated job data
+                        if (typeof onUpdateJob === 'function') {
+                            onUpdateJob(updatedJobData);
+                        
+                            // Wait for the success alert to complete before closing modal
+                            setTimeout(() => {
+                                onClose(); // Close modal
+                                
+                                // Call the callback to refresh jobs without page reload
+                                if (typeof onJobUpdated === 'function') {
+                                    onJobUpdated();
+                                }
+                            }, 2500); // Wait a bit longer than the success alert timer (2000ms)
+                        }
                     } else {
-                        // Wait for the success alert to complete before closing modal
-                        setTimeout(() => {
-                            onClose(); // Close modal
-                            
-                            // Call the callback to refresh jobs without page reload
-                            if (typeof onJobUpdated === 'function') {
-                                onJobUpdated();
-                            }
-                        }, 2500); // Wait a bit longer than the success alert timer (2000ms)
+                        showErrorAlert(`Failed to update job: ${result.message}`);
                     }
                 } catch (error) {
+                    console.error("Error updating job:", error);
                     showErrorAlert(`Failed to update job: ${error.message}`);
+                } finally {
+                    setLoading(false);
                 }
             },
             "Update",
@@ -243,14 +246,16 @@ const EditJobModal = ({ isOpen, onClose, initialData, onUpdateJob, onJobUpdated 
                         <div className="flex justify-center space-x-4 mt-6">
                             <button
                                 type="submit"
-                                className="cursor-pointer px-6 py-3 bg-[#9AADEA] text-white font-semibold rounded-lg hover:bg-[#7b8edc] transition"
+                                className={`cursor-pointer px-6 py-3 bg-[#9AADEA] text-white font-semibold rounded-lg hover:bg-[#7b8edc] transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={loading}
                             >
-                                Update Job Post
+                                {loading ? "Updating..." : "Update Job Post"}
                             </button>
                             <button
                                 type="button"
                                 onClick={handleReset}
                                 className="cursor-pointer px-6 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition"
+                                disabled={loading}
                             >
                                 Cancel
                             </button>

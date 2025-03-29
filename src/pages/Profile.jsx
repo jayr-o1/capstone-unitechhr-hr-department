@@ -7,7 +7,7 @@ import { FiEdit, FiSave, FiX } from "react-icons/fi";
 import WarningAlert from "../components/Alerts/WarningAlert";
 
 const Profile = () => {
-    const { user } = useAuth();
+    const { user, userDetails, university, refreshUserData } = useAuth();
     const [saving, setSaving] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [profilePicture, setProfilePicture] = useState(profileImage);
@@ -21,44 +21,74 @@ const Profile = () => {
         contactNumber: "",
         position: "",
         employeeId: "",
+        universityName: "",
     });
 
     useEffect(() => {
-        const fetchUserData = async () => {
-            if (user?.uid) {
-                const result = await getUserData(user.uid);
-                if (result.success) {
-                    const userData = result.data;
+        if (userDetails) {
+            // Split displayName into firstName and lastName if available
+            let firstName = "";
+            let lastName = "";
 
-                    // Split displayName into firstName and lastName if available
-                    let firstName = "";
-                    let lastName = "";
+            if (userDetails.displayName) {
+                const nameParts = userDetails.displayName.split(" ");
+                firstName = nameParts[0] || "";
+                lastName = nameParts.slice(1).join(" ") || "";
+            }
 
-                    if (userData.displayName) {
-                        const nameParts = userData.displayName.split(" ");
-                        firstName = nameParts[0] || "";
-                        lastName = nameParts.slice(1).join(" ") || "";
-                    }
+            setProfileData({
+                firstName: userDetails.firstName || firstName,
+                lastName: userDetails.lastName || lastName,
+                email: userDetails.email || user?.email || "",
+                contactNumber: userDetails.contactNumber || "",
+                position: userDetails.position || "HR Personnel",
+                employeeId: userDetails.employeeId || "",
+                universityName: userDetails.universityName || (university?.name || ""),
+            });
 
-                    setProfileData({
-                        firstName: userData.firstName || firstName,
-                        lastName: userData.lastName || lastName,
-                        email: userData.email || user.email || "",
-                        contactNumber: userData.contactNumber || "",
-                        position: userData.position || "HR Personnel",
-                        employeeId: userData.employeeId || "",
-                    });
+            // Set profile picture if available
+            if (userDetails.profilePicture) {
+                setProfilePicture(userDetails.profilePicture);
+            }
+        } else {
+            // Fallback to manual fetch if not available through context
+            fetchUserData();
+        }
+    }, [user, userDetails, university]);
 
-                    // Set profile picture if available
-                    if (userData.profilePicture) {
-                        setProfilePicture(userData.profilePicture);
-                    }
+    const fetchUserData = async () => {
+        if (user?.uid) {
+            const result = await getUserData(user.uid);
+            if (result.success) {
+                const userData = result.data;
+
+                // Split displayName into firstName and lastName if available
+                let firstName = "";
+                let lastName = "";
+
+                if (userData.displayName) {
+                    const nameParts = userData.displayName.split(" ");
+                    firstName = nameParts[0] || "";
+                    lastName = nameParts.slice(1).join(" ") || "";
+                }
+
+                setProfileData({
+                    firstName: userData.firstName || firstName,
+                    lastName: userData.lastName || lastName,
+                    email: userData.email || user.email || "",
+                    contactNumber: userData.contactNumber || "",
+                    position: userData.position || "HR Personnel",
+                    employeeId: userData.employeeId || "",
+                    universityName: userData.universityName || "",
+                });
+
+                // Set profile picture if available
+                if (userData.profilePicture) {
+                    setProfilePicture(userData.profilePicture);
                 }
             }
-        };
-
-        fetchUserData();
-    }, [user]);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -112,6 +142,9 @@ const Profile = () => {
         setEditMode(false);
 
         if (result.success) {
+            // Refresh user data in the auth context
+            await refreshUserData();
+            
             Swal.fire({
                 icon: "success",
                 title: "Success",
@@ -154,7 +187,22 @@ const Profile = () => {
     const cancelEdit = () => {
         setEditMode(false);
         // Reset profile picture if it was changed but not saved
-        fetchUserData();
+        if (userDetails) {
+            // Revert to data from context
+            const nameParts = userDetails.displayName?.split(" ") || ["", ""];
+            setProfileData({
+                firstName: userDetails.firstName || nameParts[0] || "",
+                lastName: userDetails.lastName || nameParts.slice(1).join(" ") || "",
+                email: userDetails.email || user?.email || "",
+                contactNumber: userDetails.contactNumber || "",
+                position: userDetails.position || "HR Personnel",
+                employeeId: userDetails.employeeId || "",
+                universityName: userDetails.universityName || (university?.name || ""),
+            });
+            setProfilePicture(userDetails.profilePicture || profileImage);
+        } else {
+            fetchUserData();
+        }
     };
 
     return (
@@ -201,231 +249,171 @@ const Profile = () => {
                             </button>
                         </div>
                     )}
+                    {!editMode && (
+                        <button
+                            onClick={toggleEditMode}
+                            className="flex items-center text-blue-600 bg-blue-100 px-4 py-2 rounded-md hover:bg-blue-200 transition"
+                        >
+                            <FiEdit className="mr-2" /> Edit Profile
+                        </button>
+                    )}
                 </div>
-                {/* Horizontal Divider */}
-                <hr className="w-full border-t border-gray-300 mb-6" />
 
-                <div className="w-full flex flex-col md:flex-row">
-                    <div className="md:w-1/3 flex justify-center mb-6 md:mb-0">
-                        <div className="flex flex-col items-center">
-                            <div
-                                className={`w-60 h-60 rounded-lg overflow-hidden bg-gray-200 mb-4 border-2 ${
-                                    editMode
-                                        ? "border-blue-500 cursor-pointer"
-                                        : "border-gray-300"
-                                } relative group`}
-                                onClick={handleProfilePictureClick}
-                            >
-                                <img
-                                    src={profilePicture}
-                                    alt="Profile"
-                                    className="w-full h-full object-cover"
-                                />
-                                {editMode && (
-                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span className="text-white text-sm font-medium px-2 py-1 rounded">
-                                            Click to change photo
-                                        </span>
-                                    </div>
-                                )}
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleFileChange}
-                                    accept="image/*"
-                                    className="hidden"
-                                />
-                            </div>
-                            <div className="text-center mb-2">
-                                <h3 className="text-lg font-semibold">
-                                    {profileData.firstName}{" "}
-                                    {profileData.lastName}
-                                </h3>
-                            </div>
-                            <div className="w-36 flex justify-center">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="180"
-                                    height="55"
-                                    viewBox="0 0 180 55"
-                                >
-                                    <rect
-                                        width="180"
-                                        height="55"
-                                        rx="10"
-                                        fill="#e8eaf6"
-                                    />
-                                    <text
-                                        x="90"
-                                        y="36"
-                                        textAnchor="middle"
-                                        fill="#3949ab"
-                                        fontFamily="Arial"
-                                        fontSize="16"
-                                        fontWeight="bold"
-                                    >
-                                        {profileData.position || "UNITECH HR"}
-                                    </text>
-                                </svg>
-                            </div>
+                {/* University Information */}
+                <div className="w-full mb-4 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <h2 className="text-xl font-semibold text-blue-800 mb-2">University Information</h2>
+                    <p className="text-lg font-medium text-blue-700">
+                        {profileData.universityName || "Not assigned to a university"}
+                    </p>
+                </div>
+
+                <div className="flex flex-col md:flex-row w-full gap-6">
+                    {/* Left Column - Profile Picture */}
+                    <div className="md:w-1/3 flex flex-col items-center justify-start">
+                        <div
+                            className={`relative rounded-full w-48 h-48 overflow-hidden mb-4 border-4 ${
+                                editMode
+                                    ? "border-blue-400 cursor-pointer"
+                                    : "border-gray-200"
+                            }`}
+                            onClick={handleProfilePictureClick}
+                        >
+                            <img
+                                src={profilePicture}
+                                alt="Profile"
+                                className="w-full h-full object-cover"
+                            />
+                            {editMode && (
+                                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                    <span className="text-white text-sm font-medium">
+                                        Change Picture
+                                    </span>
+                                </div>
+                            )}
                         </div>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept="image/*"
+                            className="hidden"
+                        />
                     </div>
 
+                    {/* Right Column - Form Fields */}
                     <div className="md:w-2/3">
-                        <form className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="relative">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <form className="space-y-4 w-full">
+                            {/* First Name and Last Name */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        htmlFor="firstName"
+                                        className="block text-sm font-medium text-gray-700 mb-1"
+                                    >
                                         First Name
                                     </label>
-                                    <div className="relative flex">
-                                        <input
-                                            type="text"
-                                            name="firstName"
-                                            value={profileData.firstName}
-                                            onChange={handleChange}
-                                            className={`w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 ${
-                                                !editMode ? "bg-gray-100" : ""
-                                            }`}
-                                            required
-                                            disabled={!editMode}
-                                        />
-                                        {!editMode && (
-                                            <div
-                                                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                                                onClick={toggleEditMode}
-                                            >
-                                                <FiEdit className="text-gray-500 hover:text-blue-500" />
-                                            </div>
-                                        )}
-                                    </div>
+                                    <input
+                                        type="text"
+                                        id="firstName"
+                                        name="firstName"
+                                        value={profileData.firstName}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        disabled={!editMode}
+                                    />
                                 </div>
-
-                                <div className="relative">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <div>
+                                    <label
+                                        htmlFor="lastName"
+                                        className="block text-sm font-medium text-gray-700 mb-1"
+                                    >
                                         Last Name
                                     </label>
-                                    <div className="relative flex">
-                                        <input
-                                            type="text"
-                                            name="lastName"
-                                            value={profileData.lastName}
-                                            onChange={handleChange}
-                                            className={`w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 ${
-                                                !editMode ? "bg-gray-100" : ""
-                                            }`}
-                                            required
-                                            disabled={!editMode}
-                                        />
-                                        {!editMode && (
-                                            <div
-                                                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                                                onClick={toggleEditMode}
-                                            >
-                                                <FiEdit className="text-gray-500 hover:text-blue-500" />
-                                            </div>
-                                        )}
-                                    </div>
+                                    <input
+                                        type="text"
+                                        id="lastName"
+                                        name="lastName"
+                                        value={profileData.lastName}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        disabled={!editMode}
+                                    />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="relative">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Email
+                            {/* Email and Contact Number */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        htmlFor="email"
+                                        className="block text-sm font-medium text-gray-700 mb-1"
+                                    >
+                                        Email Address
                                     </label>
                                     <input
                                         type="email"
+                                        id="email"
                                         name="email"
                                         value={profileData.email}
                                         onChange={handleChange}
-                                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 bg-gray-100"
-                                        required
-                                        readOnly
+                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        disabled={true} // Email is always disabled
                                     />
                                 </div>
-
-                                <div className="relative">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <div>
+                                    <label
+                                        htmlFor="contactNumber"
+                                        className="block text-sm font-medium text-gray-700 mb-1"
+                                    >
                                         Contact Number
                                     </label>
-                                    <div className="relative flex">
-                                        <input
-                                            type="text"
-                                            name="contactNumber"
-                                            value={profileData.contactNumber}
-                                            onChange={handleChange}
-                                            className={`w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 ${
-                                                !editMode ? "bg-gray-100" : ""
-                                            }`}
-                                            required
-                                            disabled={!editMode}
-                                        />
-                                        {!editMode && (
-                                            <div
-                                                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                                                onClick={toggleEditMode}
-                                            >
-                                                <FiEdit className="text-gray-500 hover:text-blue-500" />
-                                            </div>
-                                        )}
-                                    </div>
+                                    <input
+                                        type="text"
+                                        id="contactNumber"
+                                        name="contactNumber"
+                                        value={profileData.contactNumber}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        disabled={!editMode}
+                                    />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="relative">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {/* Position and Employee ID */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        htmlFor="position"
+                                        className="block text-sm font-medium text-gray-700 mb-1"
+                                    >
                                         Position
                                     </label>
-                                    <div className="relative flex">
-                                        <input
-                                            type="text"
-                                            name="position"
-                                            value={profileData.position}
-                                            onChange={handleChange}
-                                            className={`w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 ${
-                                                !editMode ? "bg-gray-100" : ""
-                                            }`}
-                                            required
-                                            disabled={!editMode}
-                                        />
-                                        {!editMode && (
-                                            <div
-                                                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                                                onClick={toggleEditMode}
-                                            >
-                                                <FiEdit className="text-gray-500 hover:text-blue-500" />
-                                            </div>
-                                        )}
-                                    </div>
+                                    <input
+                                        type="text"
+                                        id="position"
+                                        name="position"
+                                        value={profileData.position}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        disabled={!editMode}
+                                    />
                                 </div>
-
-                                <div className="relative">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <div>
+                                    <label
+                                        htmlFor="employeeId"
+                                        className="block text-sm font-medium text-gray-700 mb-1"
+                                    >
                                         Employee ID
                                     </label>
-                                    <div className="relative flex">
-                                        <input
-                                            type="text"
-                                            name="employeeId"
-                                            value={profileData.employeeId}
-                                            onChange={handleChange}
-                                            className={`w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 ${
-                                                !editMode ? "bg-gray-100" : ""
-                                            }`}
-                                            required
-                                            disabled={!editMode}
-                                        />
-                                        {!editMode && (
-                                            <div
-                                                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                                                onClick={toggleEditMode}
-                                            >
-                                                <FiEdit className="text-gray-500 hover:text-blue-500" />
-                                            </div>
-                                        )}
-                                    </div>
+                                    <input
+                                        type="text"
+                                        id="employeeId"
+                                        name="employeeId"
+                                        value={profileData.employeeId}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        disabled={!editMode}
+                                    />
                                 </div>
                             </div>
                         </form>
