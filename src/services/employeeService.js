@@ -4,23 +4,35 @@ import {
     addDoc,
     getDocs,
     serverTimestamp,
+    doc,
+    query,
+    where,
+    setDoc,
 } from "firebase/firestore";
 import * as XLSX from "xlsx";
 
 // Function to export employees to Excel
-export const exportEmployees = async () => {
+export const exportEmployees = async (universityId) => {
     try {
-        const employeesSnapshot = await getDocs(collection(db, "employees"));
+        if (!universityId) {
+            return { success: false, message: "Missing university ID" };
+        }
+        
+        // Get employees from the university's employees subcollection
+        const employeesSnapshot = await getDocs(collection(db, "universities", universityId, "employees"));
         const employees = employeesSnapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
             // Format dates for Excel
             dateHired:
-                doc.data().dateHired?.toDate()?.toLocaleDateString() || "",
+                doc.data().dateHired?.toDate?.() || 
+                (doc.data().dateHired ? new Date(doc.data().dateHired).toLocaleDateString() : ""),
             createdAt:
-                doc.data().createdAt?.toDate()?.toLocaleDateString() || "",
+                doc.data().createdAt?.toDate?.() || 
+                (doc.data().createdAt ? new Date(doc.data().createdAt).toLocaleDateString() : ""),
             updatedAt:
-                doc.data().updatedAt?.toDate()?.toLocaleDateString() || "",
+                doc.data().updatedAt?.toDate?.() || 
+                (doc.data().updatedAt ? new Date(doc.data().updatedAt).toLocaleDateString() : ""),
         }));
 
         // Prepare data for export
@@ -61,8 +73,12 @@ export const exportEmployees = async () => {
 };
 
 // Function to import employees from Excel
-export const importEmployees = async (file) => {
+export const importEmployees = async (file, universityId) => {
     try {
+        if (!universityId) {
+            return { success: false, message: "Missing university ID" };
+        }
+        
         const reader = new FileReader();
 
         return new Promise((resolve, reject) => {
@@ -75,7 +91,7 @@ export const importEmployees = async (file) => {
                     const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
                     // Process and validate each row
-                    const employeesRef = collection(db, "employees");
+                    const employeesRef = collection(db, "universities", universityId, "employees");
                     let successCount = 0;
                     let errorCount = 0;
 
@@ -83,6 +99,7 @@ export const importEmployees = async (file) => {
                         try {
                             // Transform Excel data to match your Firestore structure
                             const employeeData = {
+                                universityId,
                                 employeeId: row["Employee ID"],
                                 name: row["Name"],
                                 email: row["Email"],
@@ -119,7 +136,16 @@ export const importEmployees = async (file) => {
                                 throw new Error("Missing required fields");
                             }
 
-                            await addDoc(employeesRef, employeeData);
+                            // Add to university's employees subcollection
+                            const employeeDocRef = doc(collection(db, "universities", universityId, "employees"));
+                            await setDoc(employeeDocRef, employeeData);
+                            
+                            // Also add to main employees collection (for backwards compatibility)
+                            await setDoc(doc(db, "employees", employeeDocRef.id), {
+                                ...employeeData,
+                                id: employeeDocRef.id
+                            });
+                            
                             successCount++;
                         } catch (error) {
                             console.error("Error importing row:", error);
@@ -145,5 +171,27 @@ export const importEmployees = async (file) => {
     } catch (error) {
         console.error("Error in import process:", error);
         return { success: false, error: error.message };
+    }
+};
+
+// Get employees for a specific university
+export const getUniversityEmployees = async (universityId) => {
+    try {
+        if (!universityId) {
+            return { success: false, message: "Missing university ID", employees: [] };
+        }
+        
+        const employeesRef = collection(db, "universities", universityId, "employees");
+        const querySnapshot = await getDocs(employeesRef);
+        
+        const employees = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        
+        return { success: true, employees };
+    } catch (error) {
+        console.error("Error getting university employees:", error);
+        return { success: false, message: error.message, employees: [] };
     }
 };

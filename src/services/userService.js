@@ -8,18 +8,43 @@ export const getUserData = async (userId) => {
       return { success: false, message: 'No user ID provided' };
     }
 
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
+    // First check in the authMappings collection
+    const authMappingRef = doc(db, 'authMappings', userId);
+    const authMappingDoc = await getDoc(authMappingRef);
 
-    if (userDoc.exists()) {
-      return { 
-        success: true, 
-        data: userDoc.data() 
-      };
+    if (authMappingDoc.exists()) {
+      const authMapping = authMappingDoc.data();
+      
+      // If we have a universityId, get the full user data from university collection
+      if (authMapping.universityId) {
+        const universityUserRef = doc(db, 'universities', authMapping.universityId, 'users', userId);
+        const universityUserDoc = await getDoc(universityUserRef);
+        
+        if (universityUserDoc.exists()) {
+          // Return full user data from university
+          return { 
+            success: true, 
+            data: {
+              ...universityUserDoc.data(),
+              universityId: authMapping.universityId  // Ensure universityId is included
+            }
+          };
+        } else {
+          return { 
+            success: false, 
+            message: 'University user record not found' 
+          };
+        }
+      } else {
+        return { 
+          success: false, 
+          message: 'User is not associated with any university' 
+        };
+      }
     } else {
       return { 
         success: false, 
-        message: 'User document not found' 
+        message: 'User not found in auth mappings' 
       };
     }
   } catch (error) {
@@ -38,11 +63,44 @@ export const updateUserData = async (userId, userData) => {
       return { success: false, message: 'No user ID provided' };
     }
 
-    const userDocRef = doc(db, 'users', userId);
-    await updateDoc(userDocRef, {
+    // First get the auth mapping to find the university
+    const authMappingRef = doc(db, 'authMappings', userId);
+    const authMappingDoc = await getDoc(authMappingRef);
+    
+    if (!authMappingDoc.exists()) {
+      return { success: false, message: 'User not found in auth mappings' };
+    }
+    
+    const authMapping = authMappingDoc.data();
+    const universityId = authMapping.universityId;
+    
+    if (!universityId) {
+      return { success: false, message: 'User is not associated with any university' };
+    }
+    
+    // Update the user data in the university collection
+    const universityUserRef = doc(db, 'universities', universityId, 'users', userId);
+    const universityUserDoc = await getDoc(universityUserRef);
+    
+    if (!universityUserDoc.exists()) {
+      return { success: false, message: 'University user record not found' };
+    }
+    
+    // Update with timestamp
+    const updateTimestamp = { updatedAt: new Date().toISOString() };
+    
+    // Update the user data
+    await updateDoc(universityUserRef, {
       ...userData,
-      updatedAt: new Date().toISOString()
+      ...updateTimestamp
     });
+    
+    // If email was updated, also update in authMappings
+    if (userData.email) {
+      await updateDoc(authMappingRef, {
+        email: userData.email
+      });
+    }
 
     return { success: true };
   } catch (error) {

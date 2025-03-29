@@ -7,15 +7,15 @@ import RecruitmentIcon from "../../assets/icons/SidebarIcons/RecruitmentIcon";
 import OnboardingIcon from "../../assets/icons/SidebarIcons/OnboardingIcon";
 import EmployeesIcon from "../../assets/icons/SidebarIcons/EmployeesIcon";
 import ClustersIcon from "../../assets/icons/SidebarIcons/ClustersIcon";
-import AdminIcon from "../../assets/icons/SidebarIcons/AdminIcon";
+import HRManagementIcon from "../../assets/icons/SidebarIcons/HRManagementIcon";
 
 const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(true);
     const location = useLocation();
     const { user } = useAuth(); // Get current user to check admin status
 
-    // Check if user is admin (for now we'll show admin panel to all authenticated users)
-    const isAdmin = true; // For simplicity, we'll show it to everyone; you can replace with your own logic
+    // Check if user is an HR Head (department manager)
+    const isHRHead = true; // For simplicity, we'll show it to everyone; you can replace with your own logic later
 
     // Toggle sidebar visibility
     const toggleSidebar = () => {
@@ -74,14 +74,14 @@ const Sidebar = () => {
                                     <ClustersIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
                                 ),
                             },
-                            // Add Admin link to the sidebar
-                            ...(isAdmin
+                            // Add HR Management link to the sidebar
+                            ...(isHRHead
                                 ? [
                                       {
-                                          name: "Admin",
-                                          path: "/admin",
+                                          name: "HR Management",
+                                          path: "/hr-management",
                                           icon: (
-                                              <AdminIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
+                                              <HRManagementIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
                                           ),
                                       },
                                   ]

@@ -6,44 +6,83 @@ import {
     where,
     updateDoc,
     doc,
+    getDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
-import { getAllJobs, hardDeleteJob, updateJob } from "../services/jobService";
+import { hardDeleteJob, updateJob, getUniversityJobs } from "../services/jobService";
 import { runJobsCleanup } from "../utils/cleanupUtil";
 import showSuccessAlert from "../components/Alerts/SuccessAlert";
 import showErrorAlert from "../components/Alerts/ErrorAlert";
 import showWarningAlert from "../components/Alerts/WarningAlert";
 import PageLoader from "../components/PageLoader";
+import { auth } from "../firebase";
+import { getUserData } from "../services/userService";
 
-const AdminPanel = () => {
+const HRHeadPanel = () => {
     const [deletedJobs, setDeletedJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [cleanupRunning, setCleanupRunning] = useState(false);
+    const [universityId, setUniversityId] = useState(null);
+    const [universityName, setUniversityName] = useState("");
 
-    // Fetch deleted jobs
+    // Get current user's university ID
+    useEffect(() => {
+        const getCurrentUserUniversity = async () => {
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    setError("You must be logged in to access this page");
+                    return;
+                }
+                
+                // Get user data to find university ID
+                const userDataResult = await getUserData(user.uid);
+                if (userDataResult.success && userDataResult.data.universityId) {
+                    setUniversityId(userDataResult.data.universityId);
+                    
+                    // Get university name
+                    const universityRef = doc(db, "universities", userDataResult.data.universityId);
+                    const universityDoc = await getDoc(universityRef);
+                    if (universityDoc.exists()) {
+                        setUniversityName(universityDoc.data().name || "My University");
+                    }
+                    
+                } else {
+                    setError("You don't have permission to access this page");
+                }
+            } catch (error) {
+                console.error("Error getting user's university:", error);
+                setError("Failed to verify your permissions");
+            }
+        };
+        
+        getCurrentUserUniversity();
+    }, []);
+
+    // Fetch deleted jobs for the current university
     const fetchDeletedJobs = async () => {
+        if (!universityId) return;
+        
         setLoading(true);
         try {
-            // Use the jobService to get all jobs including deleted ones
-            const result = await getAllJobs(true);
-
+            // Get all jobs for this university including deleted ones
+            const result = await getUniversityJobs(universityId, true);
+            
             if (!result.success) {
                 throw new Error(result.message || "Failed to fetch jobs");
             }
-
+            
             // Filter to only include deleted jobs
-            const deletedJobsList = result.jobs.filter(
-                (job) => job.isDeleted === true
-            );
-
+            const deletedJobsList = result.jobs.filter(job => job.isDeleted === true);
+            
             // Sort by deletion date (most recent first)
             deletedJobsList.sort((a, b) => {
                 const dateA = a.deletedAt?.toDate?.() || new Date(0);
                 const dateB = b.deletedAt?.toDate?.() || new Date(0);
                 return dateB - dateA;
             });
-
+            
             setDeletedJobs(deletedJobsList);
         } catch (err) {
             console.error("Error fetching deleted jobs:", err);
@@ -53,10 +92,12 @@ const AdminPanel = () => {
         }
     };
 
-    // Load deleted jobs on component mount
+    // Load data when universityId changes
     useEffect(() => {
-        fetchDeletedJobs();
-    }, []);
+        if (universityId) {
+            fetchDeletedJobs();
+        }
+    }, [universityId]);
 
     // Format date for display
     const formatDate = (timestamp) => {
@@ -142,12 +183,13 @@ const AdminPanel = () => {
         );
     };
 
-    // Run manual cleanup
+    // Run manual cleanup for this university's jobs
     const handleRunCleanup = async () => {
         setCleanupRunning(true);
         try {
-            const result = await runJobsCleanup();
-
+            // Call the utility function with the university ID
+            const result = await runJobsCleanup(universityId);
+            
             if (result.success) {
                 // Refresh the deleted jobs list
                 fetchDeletedJobs();
@@ -167,21 +209,26 @@ const AdminPanel = () => {
         return (
             <div className="p-8 text-center">
                 <h2 className="text-red-500 text-xl font-bold mb-4">{error}</h2>
-                <button
-                    onClick={() => fetchDeletedJobs()}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
-                >
-                    Retry
-                </button>
+                {universityId && (
+                    <button
+                        onClick={fetchDeletedJobs}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                    >
+                        Retry
+                    </button>
+                )}
             </div>
         );
     }
 
     return (
         <div className="container mx-auto p-6">
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">
-                Admin Panel - Deleted Jobs
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                HR Department Management
             </h1>
+            <h2 className="text-xl text-gray-600 mb-6">
+                {universityName}
+            </h2>
 
             <div className="mb-6 flex justify-between items-center">
                 <p className="text-gray-600">
@@ -198,59 +245,76 @@ const AdminPanel = () => {
                 </button>
             </div>
 
-            {deletedJobs.length > 0 ? (
-                <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+            {deletedJobs.length === 0 ? (
+                <div className="bg-gray-50 p-8 rounded-lg text-center">
+                    <p className="text-gray-600">No deleted jobs found.</p>
+                </div>
+            ) : (
+                <div className="bg-white shadow overflow-hidden rounded-lg">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    scope="col"
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
                                     Job Title
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Department
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    scope="col"
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
                                     Deleted On
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Expires In
+                                <th
+                                    scope="col"
+                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Permanent Deletion In
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    scope="col"
+                                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
                                     Actions
                                 </th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {deletedJobs.map((job) => (
-                                <tr key={job.id} className="hover:bg-gray-50">
+                                <tr key={job.id}>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm font-medium text-gray-900">
                                             {job.title}
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm text-gray-500">
                                             {job.department}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-500">
-                                            {formatDate(job.deletedAt)}
-                                        </div>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {formatDate(job.deletedAt)}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-500">
+                                        <span
+                                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                getDaysRemaining(
+                                                    job.scheduledForDeletion
+                                                ) === "Expiring soon"
+                                                    ? "bg-red-100 text-red-800"
+                                                    : "bg-yellow-100 text-yellow-800"
+                                            }`}
+                                        >
                                             {getDaysRemaining(
                                                 job.scheduledForDeletion
                                             )}
-                                        </div>
+                                        </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button
                                             onClick={() =>
                                                 handleRestoreJob(job)
                                             }
-                                            className="text-blue-600 hover:text-blue-900 mr-3"
+                                            className="text-blue-600 hover:text-blue-900 mr-4"
                                         >
                                             Restore
                                         </button>
@@ -268,15 +332,9 @@ const AdminPanel = () => {
                         </tbody>
                     </table>
                 </div>
-            ) : (
-                <div className="bg-white p-8 rounded-lg shadow text-center">
-                    <p className="text-gray-500">
-                        No deleted jobs found in trash.
-                    </p>
-                </div>
             )}
         </div>
     );
 };
 
-export default AdminPanel;
+export default HRHeadPanel;

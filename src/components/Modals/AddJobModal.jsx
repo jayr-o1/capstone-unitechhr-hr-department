@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import showSuccessAlert from "../Alerts/SuccessAlert";
 import showWarningAlert from "../Alerts/WarningAlert";
 import showErrorAlert from "../Alerts/ErrorAlert";
 import departments from "../../data/departments";
 import FormField from "./RecruitmentModalComponents/FormField";
-import { db } from "../../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { auth } from "../../firebase";
+import { serverTimestamp } from "firebase/firestore";
+import { createJob } from "../../services/jobService";
+import { getUserData } from "../../services/userService";
 
 const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
     const [formData, setFormData] = useState({
@@ -19,6 +21,36 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
         workSetup: "",
         availableSlots: 1,
     });
+    const [universityId, setUniversityId] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    // Get current user's university ID
+    useEffect(() => {
+        const getCurrentUserUniversity = async () => {
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    console.error("No authenticated user found");
+                    return;
+                }
+                
+                // Get user data to find university ID
+                const userDataResult = await getUserData(user.uid);
+                if (userDataResult.success && userDataResult.data.universityId) {
+                    setUniversityId(userDataResult.data.universityId);
+                    console.log("User belongs to university:", userDataResult.data.universityId);
+                } else {
+                    console.error("User doesn't have a university association");
+                    showErrorAlert("Unable to determine your university. Please contact support.");
+                }
+            } catch (error) {
+                console.error("Error getting user's university:", error);
+                showErrorAlert("Error retrieving your university information");
+            }
+        };
+        
+        getCurrentUserUniversity();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -60,6 +92,13 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
             return;
         }
 
+        if (!universityId) {
+            showErrorAlert("No university associated with your account. Cannot create job post.");
+            return;
+        }
+
+        setLoading(true);
+        
         try {
             // Convert keyDuties, essentialSkills, and qualifications to arrays
             const jobData = {
@@ -83,23 +122,34 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
                 status: "Open",
             };
 
-            const docRef = await addDoc(collection(db, "jobs"), jobData);
+            console.log("Creating job with universityId:", universityId);
+            console.log("Job data:", jobData);
 
-            // Show success alert
-            showSuccessAlert("Job added successfully!");
-            
-            // Wait for the success alert to complete before closing modal and resetting
-            setTimeout(() => {
-                resetFormFields(); // Reset form fields
-                onClose(); // Close the modal
+            // Use the createJob function from jobService
+            const result = await createJob(jobData, universityId);
+
+            if (result.success) {
+                // Show success alert
+                showSuccessAlert("Job added successfully!");
                 
-                // Call the callback to refresh jobs without page reload
-                if (typeof onJobAdded === 'function') {
-                    onJobAdded();
-                }
-            }, 2500); // Wait a bit longer than the success alert timer (2000ms)
+                // Wait for the success alert to complete before closing modal and resetting
+                setTimeout(() => {
+                    resetFormFields(); // Reset form fields
+                    onClose(); // Close the modal
+                    
+                    // Call the callback to refresh jobs without page reload
+                    if (typeof onJobAdded === 'function') {
+                        onJobAdded();
+                    }
+                }, 2500); // Wait a bit longer than the success alert timer (2000ms)
+            } else {
+                showErrorAlert(`Failed to add job: ${result.message}`);
+            }
         } catch (error) {
+            console.error("Error adding job:", error);
             showErrorAlert("Failed to add job. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -226,14 +276,16 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
                         <div className="flex justify-center space-x-4 mt-6">
                             <button
                                 type="submit"
-                                className="cursor-pointer px-6 py-3 bg-[#9AADEA] text-white font-semibold rounded-lg hover:bg-[#7b8edc] transition"
+                                className={`cursor-pointer px-6 py-3 bg-[#9AADEA] text-white font-semibold rounded-lg hover:bg-[#7b8edc] transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={loading}
                             >
-                                Add Job Post
+                                {loading ? "Adding..." : "Add Job Post"}
                             </button>
                             <button
                                 type="button"
                                 onClick={handleReset}
                                 className="cursor-pointer px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
+                                disabled={loading}
                             >
                                 Reset Fields
                             </button>
