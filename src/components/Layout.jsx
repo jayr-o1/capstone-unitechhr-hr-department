@@ -329,18 +329,21 @@ const Layout = () => {
             {/* Ribbon button on the right edge */}
             <button
                 onClick={() => setIsPanelOpen(!isPanelOpen)}
-                className="fixed top-1/2 right-0 transform -translate-y-1/2 bg-blue-600 text-white rounded-l-md shadow-lg hover:bg-blue-700 transition-all duration-300 z-50 flex flex-col items-center justify-center"
+                className={`fixed top-1/2 transform -translate-y-1/2 text-white rounded-l-md shadow-lg transition-all duration-300 z-50 flex items-center justify-center ${
+                    isPanelOpen 
+                    ? "right-80 bg-gray-500 hover:bg-gray-600" 
+                    : "right-0 bg-blue-600 hover:bg-blue-700"
+                }`}
                 style={{
                     width: "40px",
-                    height: "120px",
+                    height: "40px",
                     boxShadow: "-3px 0px 10px rgba(0, 0, 0, 0.1)",
                 }}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className={`h-6 w-6 ${
-                        isPanelOpen ? "rotate-180" : ""
-                    } transition-transform duration-700 animate-spin-slow`}
+                    className={`h-6 w-6 ${isPanelOpen ? "animate-spin-reverse" : "animate-spin"}`}
+                    style={{ animationDuration: '3s' }}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -358,16 +361,6 @@ const Layout = () => {
                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                     />
                 </svg>
-                <div
-                    className="writing-mode-vertical mt-2 text-xs font-semibold"
-                    style={{
-                        writingMode: "vertical-rl",
-                        textOrientation: "mixed",
-                        transform: "rotate(180deg)",
-                    }}
-                >
-                    Settings
-                </div>
             </button>
 
             {/* Collapsible Side Panel */}
@@ -375,7 +368,9 @@ const Layout = () => {
                 className={`fixed top-0 right-0 h-full w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-40 overflow-y-auto ${
                     isPanelOpen ? "translate-x-0" : "translate-x-full"
                 }`}
-                style={{ borderLeft: "1px solid #e2e8f0" }}
+                style={{ 
+                    borderLeft: "1px solid #e2e8f0"
+                }}
             >
                 <div className="p-6 h-full flex flex-col">
                     <div className="flex justify-between items-center mb-4">
