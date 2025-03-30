@@ -74,10 +74,32 @@ const Layout = () => {
         document.title = `Unitech HR | ${currentPage}`;
     }, [currentPage]);
 
+    // Flag to identify browser/page refresh vs internal navigation
+    useEffect(() => {
+        // Check if this is the initial load
+        const isInitialLoad = sessionStorage.getItem("hasLoaded") !== "true";
+        
+        // Set a flag in the session storage
+        if (isInitialLoad) {
+            sessionStorage.setItem("hasLoaded", "true");
+            // Flag this as a page refresh
+            sessionStorage.setItem("isPageRefresh", "true");
+        } else {
+            // This is just internal navigation, not a full page refresh
+            sessionStorage.setItem("isPageRefresh", "false");
+        }
+        
+        // Cleanup on unmount
+        return () => {
+            // We don't clean up hasLoaded as it should persist across the session
+        };
+    }, []);
+
     // Show loader when route changes
     useEffect(() => {
         setIsLoading(true);
-        const timer = setTimeout(() => setIsLoading(false), 500);
+        // Set a shorter timeout for better UX
+        const timer = setTimeout(() => setIsLoading(false), 300);
         return () => clearTimeout(timer);
     }, [location.pathname]);
 
@@ -221,12 +243,11 @@ const Layout = () => {
         }
     }, [navigate]);
 
-    // Show a loading state while jobs are being fetched
+    // Show a loading state while jobs are being fetched on initial load
     if (jobsLoading && !universityId) {
-        // Only show full loader when university ID isn't available yet
-        // Check if this is a page refresh (Ctrl+R)
-        const isPageRefresh =
-            sessionStorage.getItem("isPageRefresh") === "true";
+        // Only show full loader when university ID isn't available yet 
+        // and this is a page refresh (not internal navigation)
+        const isPageRefresh = sessionStorage.getItem("isPageRefresh") === "true";
         return <PageLoader isLoading={true} fullscreen={isPageRefresh} />;
     }
 
@@ -251,8 +272,12 @@ const Layout = () => {
 
                 {/* Page Content (Only this part gets the loader) */}
                 <div className="relative flex-1 h-[calc(100vh-4rem)] p-4 bg-gray-100 overflow-y-auto">
-                    {/* PageLoader positioned relative to the Outlet container */}
-                    <PageLoader isLoading={isLoading || (jobsLoading && location.pathname.includes('/recruitment/'))} fullscreen={false} />
+                    {/* PageLoader positioned relative to the content container only */}
+                    <PageLoader 
+                        isLoading={isLoading || (jobsLoading && location.pathname.includes('/recruitment/'))} 
+                        fullscreen={false}
+                        contentOnly={true}
+                    />
 
                     {/* Outlet with conditional opacity and pointer-events */}
                     <div

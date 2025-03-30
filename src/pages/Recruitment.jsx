@@ -263,6 +263,7 @@ const Recruitment = () => {
             <PageLoader
                 isLoading={true}
                 fullscreen={isPageRefresh || isManuallyRefreshing}
+                contentOnly={!isPageRefresh && !isManuallyRefreshing}
             />
         );
     }

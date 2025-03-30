@@ -105,7 +105,9 @@ const Employees = () => {
     };
 
     if (loading) {
-        return <PageLoader message="Loading employees..." />;
+        // Check if this is a page refresh
+        const isPageRefresh = sessionStorage.getItem("isPageRefresh") === "true";
+        return <PageLoader message="Loading employees..." contentOnly={!isPageRefresh} fullscreen={isPageRefresh} />;
     }
 
     if (error) {

@@ -642,7 +642,7 @@ const Onboarding = () => {
 
     // Show PageLoader during loading state
     if (loading) {
-        return <PageLoader isLoading={true} fullscreen={isPageRefresh} />;
+        return <PageLoader isLoading={true} fullscreen={isPageRefresh} contentOnly={!isPageRefresh} />;
     }
 
     if (error)
