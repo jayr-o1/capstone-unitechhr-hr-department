@@ -91,7 +91,11 @@ const ViewInterviewModal = ({ interview }) => {
             {isModalOpen && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center min-h-screen"
-                    style={{ backdropFilter: "blur(8px)" }}
+                    style={{ 
+                        background: "rgba(0, 0, 0, 0.6)",
+                        backdropFilter: "blur(8px)",
+                        zIndex: 1000 
+                    }}
                 >
                     <div className="bg-white rounded-lg w-full max-w-2xl shadow-2xl transform transition-all duration-300 ease-in-out">
                         <div className="p-6">

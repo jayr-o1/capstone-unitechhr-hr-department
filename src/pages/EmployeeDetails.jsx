@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { db, storage } from "../firebase";
+import { db, storage, auth } from "../firebase";
+import { getUserData } from "../services/userService";
 import PageLoader from "../components/PageLoader";
 import showSuccessAlert from "../components/Alerts/SuccessAlert";
 import showErrorAlert from "../components/Alerts/ErrorAlert";
@@ -18,6 +19,7 @@ const EmployeeDetails = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAddingNote, setIsAddingNote] = useState(false);
     const [newNote, setNewNote] = useState("");
+    const [universityId, setUniversityId] = useState(null);
     
     // Document upload states
     const [isUploading, setIsUploading] = useState(false);
@@ -28,12 +30,44 @@ const EmployeeDetails = () => {
     const [isDocumentFormOpen, setIsDocumentFormOpen] = useState(false);
     const [downloadLoading, setDownloadLoading] = useState(false);
 
+    // Get current user's university ID
+    useEffect(() => {
+        const getCurrentUserUniversity = async () => {
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    setError("You must be logged in to access this page");
+                    setLoading(false);
+                    return;
+                }
+                
+                // Get user data to find university ID
+                const userDataResult = await getUserData(user.uid);
+                if (userDataResult.success && userDataResult.data.universityId) {
+                    setUniversityId(userDataResult.data.universityId);
+                    console.log("User belongs to university:", userDataResult.data.universityId);
+                } else {
+                    setError("You don't have permission to access this page");
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error("Error getting user's university:", error);
+                setError("Failed to verify your permissions");
+                setLoading(false);
+            }
+        };
+        
+        getCurrentUserUniversity();
+    }, []);
+
     // Fetch employee data
     useEffect(() => {
         const fetchEmployee = async () => {
+            if (!universityId) return;
+
             try {
                 setLoading(true);
-                const employeeRef = doc(db, "employees", employeeId);
+                const employeeRef = doc(db, "universities", universityId, "employees", employeeId);
                 const employeeDoc = await getDoc(employeeRef);
 
                 if (employeeDoc.exists()) {
@@ -43,7 +77,7 @@ const EmployeeDetails = () => {
                         dateHired: employeeDoc.data().dateHired?.toDate?.() || new Date(),
                     });
                 } else {
-                    setError("Employee not found");
+                    setError("Employee not found in your university");
                 }
             } catch (err) {
                 console.error("Error fetching employee:", err);
@@ -53,8 +87,10 @@ const EmployeeDetails = () => {
             }
         };
 
-        fetchEmployee();
-    }, [employeeId]);
+        if (universityId && employeeId) {
+            fetchEmployee();
+        }
+    }, [employeeId, universityId]);
 
     // Handle status change
     const handleStatusChange = (newStatus) => {
@@ -62,7 +98,7 @@ const EmployeeDetails = () => {
             `Are you sure you want to change the status to ${newStatus}?`,
             async () => {
                 try {
-                    const employeeRef = doc(db, "employees", employeeId);
+                    const employeeRef = doc(db, "universities", universityId, "employees", employeeId);
                     await updateDoc(employeeRef, {
                         status: newStatus,
                         lastUpdated: new Date(),
@@ -87,10 +123,10 @@ const EmployeeDetails = () => {
 
     // Handle adding a note
     const handleAddNote = async () => {
-        if (!newNote.trim()) return;
+        if (!newNote.trim() || !universityId) return;
 
         try {
-            const employeeRef = doc(db, "employees", employeeId);
+            const employeeRef = doc(db, "universities", universityId, "employees", employeeId);
             const notes = employee.notes || [];
             const updatedNotes = [
                 ...notes,
@@ -140,8 +176,8 @@ const EmployeeDetails = () => {
 
     // Handle document upload
     const handleDocumentUpload = async () => {
-        if (!selectedFile) {
-            showErrorAlert("Please select a file to upload");
+        if (!selectedFile || !universityId) {
+            showErrorAlert(!selectedFile ? "Please select a file to upload" : "University ID not found");
             return;
         }
 
@@ -154,11 +190,11 @@ const EmployeeDetails = () => {
             setIsUploading(true);
             setUploadProgress(0);
 
-            // Create a reference to the file in Firebase Storage
+            // Create a reference to the file in Firebase Storage - include university path
             const fileExtension = selectedFile.name.split('.').pop();
             const timestamp = Date.now();
             const fileName = `${documentType}_${timestamp}.${fileExtension}`;
-            const filePath = `employees/${employeeId}/documents/${fileName}`;
+            const filePath = `universities/${universityId}/employees/${employeeId}/documents/${fileName}`;
             const storageRef = ref(storage, filePath);
 
             // Upload the file
@@ -173,7 +209,7 @@ const EmployeeDetails = () => {
             setUploadProgress(75);
 
             // Add document metadata to Firestore
-            const employeeRef = doc(db, "employees", employeeId);
+            const employeeRef = doc(db, "universities", universityId, "employees", employeeId);
             
             const newDocument = {
                 id: `doc_${timestamp}`,
@@ -217,12 +253,13 @@ const EmployeeDetails = () => {
         }
     };
 
-    // Handle document download
+    // Handle document download - adjust storage path
     const handleDocumentDownload = async (downloadURL, fileName, documentObj) => {
         try {
             setDownloadLoading(true);
             // Get a fresh download URL directly from Firebase Storage to avoid CORS issues
-            const filePath = documentObj?.filePath || `employees/${employeeId}/documents/${fileName}`;
+            // Make sure we're getting from the university-specific path
+            const filePath = documentObj?.filePath || `universities/${universityId}/employees/${employeeId}/documents/${fileName}`;
             const storageRef = ref(storage, filePath);
             
             try {
@@ -260,8 +297,13 @@ const EmployeeDetails = () => {
         }
     };
 
-    // Handle document deletion
+    // Handle document deletion - adjust storage path
     const handleDocumentDelete = (document) => {
+        if (!universityId) {
+            showErrorAlert("Cannot delete document: University ID not found");
+            return;
+        }
+        
         showDeleteConfirmation(
             document.fileName,
             async () => {
@@ -271,7 +313,7 @@ const EmployeeDetails = () => {
                     await deleteObject(storageRef);
 
                     // Update Firestore to remove the document reference
-                    const employeeRef = doc(db, "employees", employeeId);
+                    const employeeRef = doc(db, "universities", universityId, "employees", employeeId);
                     const updatedDocuments = employee.documents.filter(doc => doc.id !== document.id);
                     
                     await updateDoc(employeeRef, {

@@ -4,10 +4,11 @@ import showWarningAlert from "../Alerts/WarningAlert";
 import showErrorAlert from "../Alerts/ErrorAlert";
 import departments from "../../data/departments";
 import FormField from "./RecruitmentModalComponents/FormField";
-import { db } from "../../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db, auth } from "../../firebase";
+import { collection, addDoc, serverTimestamp, doc } from "firebase/firestore";
+import { getUserData } from "../../services/userService";
 
-const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded }) => {
+const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, universityId }) => {
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -96,9 +97,33 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded }) => {
             return;
         }
 
+        // Verify we have a university ID
+        let employeeUniversityId = universityId;
+        
+        // If universityId not provided as prop, try to get from current user
+        if (!employeeUniversityId) {
+            try {
+                const user = auth.currentUser;
+                if (user) {
+                    const userDataResult = await getUserData(user.uid);
+                    if (userDataResult.success && userDataResult.data.universityId) {
+                        employeeUniversityId = userDataResult.data.universityId;
+                    }
+                }
+            } catch (error) {
+                console.error("Error getting university ID:", error);
+            }
+        }
+        
+        if (!employeeUniversityId) {
+            showErrorAlert("Failed to add employee: University ID not found. Please try again later.");
+            return;
+        }
+
         try {
             const employeeData = {
                 ...formData,
+                universityId: employeeUniversityId, // Store which university this employee belongs to
                 dateHired: formData.dateHired
                     ? new Date(formData.dateHired)
                     : serverTimestamp(),
@@ -106,8 +131,9 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded }) => {
                 updatedAt: serverTimestamp(),
             };
 
+            // Add to university's employees subcollection instead of global collection
             const docRef = await addDoc(
-                collection(db, "employees"),
+                collection(db, "universities", employeeUniversityId, "employees"),
                 employeeData
             );
 
@@ -122,6 +148,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded }) => {
                 }
             }, 2500);
         } catch (error) {
+            console.error("Error adding employee:", error);
             showErrorAlert("Failed to add employee. Please try again.");
         }
     };
