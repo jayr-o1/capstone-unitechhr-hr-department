@@ -18,6 +18,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import showSuccessAlert from "../components/Alerts/SuccessAlert";
 import showErrorAlert from "../components/Alerts/ErrorAlert";
 import PageLoader from "../components/PageLoader";
+import { auth } from "../firebase";
+import { getUserData } from "../services/userService";
 
 // Default onboarding checklist items
 const defaultChecklist = [
@@ -48,26 +50,49 @@ const Onboarding = () => {
     };
 
     // Handle checklist item toggle
-    const handleChecklistToggle = async (jobId, applicantId, taskId) => {
+    const handleChecklistToggle = async (jobId, applicantId, taskId, universityId = null) => {
         try {
-            const applicantRef = doc(
-                db,
-                "jobs",
-                jobId,
-                "applicants",
-                applicantId
-            );
+            let applicantRef;
+            
+            // Determine which collection to update based on universityId
+            if (universityId) {
+                applicantRef = doc(
+                    db,
+                    "universities",
+                    universityId,
+                    "jobs",
+                    jobId,
+                    "applicants",
+                    applicantId
+                );
+                console.log(`Toggling checklist for university applicant: ${applicantId} in job ${jobId}`);
+            } else {
+                applicantRef = doc(
+                    db,
+                    "jobs",
+                    jobId,
+                    "applicants",
+                    applicantId
+                );
+                console.log(`Toggling checklist for global applicant: ${applicantId} in job ${jobId}`);
+            }
+            
             const applicantDoc = await getDoc(applicantRef);
+            if (!applicantDoc.exists()) {
+                throw new Error("Applicant not found");
+            }
 
-            if (!applicantDoc.exists()) return;
-
-            const currentChecklist =
+            // Get current checklist or use default if not exists
+            const checklist =
                 applicantDoc.data().onboardingChecklist || defaultChecklist;
-            const updatedChecklist = currentChecklist.map((item) =>
-                item.id === taskId
-                    ? { ...item, completed: !item.completed }
-                    : item
-            );
+
+            // Find and toggle task
+            const updatedChecklist = checklist.map((task) => {
+                if (task.id === taskId) {
+                    return { ...task, completed: !task.completed };
+                }
+                return task;
+            });
 
             await updateDoc(applicantRef, {
                 onboardingChecklist: updatedChecklist,
@@ -75,8 +100,8 @@ const Onboarding = () => {
             });
 
             // Update local state
-            setApplicants((prevApplicants) =>
-                prevApplicants.map((applicant) =>
+            setApplicants((prev) =>
+                prev.map((applicant) =>
                     applicant.id === applicantId && applicant.jobId === jobId
                         ? {
                               ...applicant,
@@ -101,8 +126,20 @@ const Onboarding = () => {
             try {
                 setLoading(true);
                 const onboardingApplicants = [];
+                const user = auth.currentUser;
+                let userUniversityId = null;
 
-                // Get all jobs
+                // Get the current user's university ID if available
+                if (user) {
+                    const userDataResult = await getUserData(user.uid);
+                    if (userDataResult.success && userDataResult.data.universityId) {
+                        userUniversityId = userDataResult.data.universityId;
+                        console.log("User belongs to university:", userUniversityId);
+                    }
+                }
+
+                // First get applicants from global jobs collection
+                console.log("Fetching onboarding applicants from global collection...");
                 const jobsSnapshot = await getDocs(collection(db, "jobs"));
 
                 // For each job, get applicants in onboarding
@@ -114,12 +151,14 @@ const Onboarding = () => {
                     );
 
                     const applicantsSnapshot = await getDocs(applicantsQuery);
+                    console.log(`Found ${applicantsSnapshot.size} onboarding applicants in global job ${jobId}`);
 
                     applicantsSnapshot.docs.forEach((doc) => {
                         onboardingApplicants.push({
                             id: doc.id,
                             jobId: jobId,
                             jobTitle: jobDoc.data().title,
+                            universityId: jobDoc.data().universityId || null,
                             ...doc.data(),
                             onboardingStartedAt:
                                 doc.data().onboardingStartedAt?.toDate() ||
@@ -127,6 +166,48 @@ const Onboarding = () => {
                         });
                     });
                 }
+
+                // If user has a university ID, also check university-specific jobs
+                if (userUniversityId) {
+                    console.log(`Fetching onboarding applicants from university ${userUniversityId} collection...`);
+                    const universityJobsSnapshot = await getDocs(
+                        collection(db, "universities", userUniversityId, "jobs")
+                    );
+
+                    // For each university job, get applicants in onboarding
+                    for (const jobDoc of universityJobsSnapshot.docs) {
+                        const jobId = jobDoc.id;
+                        const applicantsQuery = query(
+                            collection(db, "universities", userUniversityId, "jobs", jobId, "applicants"),
+                            where("status", "==", "In Onboarding")
+                        );
+
+                        const applicantsSnapshot = await getDocs(applicantsQuery);
+                        console.log(`Found ${applicantsSnapshot.size} onboarding applicants in university job ${jobId}`);
+
+                        applicantsSnapshot.docs.forEach((doc) => {
+                            // Check if this applicant is already in the list (avoid duplicates)
+                            const existingIndex = onboardingApplicants.findIndex(
+                                app => app.id === doc.id && app.jobId === jobId
+                            );
+                            
+                            if (existingIndex === -1) {
+                                onboardingApplicants.push({
+                                    id: doc.id,
+                                    jobId: jobId,
+                                    jobTitle: jobDoc.data().title,
+                                    universityId: userUniversityId,
+                                    ...doc.data(),
+                                    onboardingStartedAt:
+                                        doc.data().onboardingStartedAt?.toDate() ||
+                                        new Date(),
+                                });
+                            }
+                        });
+                    }
+                }
+
+                console.log(`Total onboarding applicants found: ${onboardingApplicants.length}`);
 
                 // Sort by onboarding start date (newest first)
                 onboardingApplicants.sort(
@@ -169,15 +250,32 @@ const Onboarding = () => {
     }, [location]);
 
     // Handle starting the onboarding process for an applicant
-    const handleStartOnboarding = async (jobId, applicantId) => {
+    const handleStartOnboarding = async (jobId, applicantId, universityId = null) => {
         try {
-            const applicantRef = doc(
-                db,
-                "jobs",
-                jobId,
-                "applicants",
-                applicantId
-            );
+            let applicantRef;
+            
+            // Determine which collection to update based on universityId
+            if (universityId) {
+                applicantRef = doc(
+                    db,
+                    "universities",
+                    universityId,
+                    "jobs",
+                    jobId,
+                    "applicants",
+                    applicantId
+                );
+                console.log(`Starting onboarding for university applicant: ${applicantId} in job ${jobId}`);
+            } else {
+                applicantRef = doc(
+                    db,
+                    "jobs",
+                    jobId,
+                    "applicants",
+                    applicantId
+                );
+                console.log(`Starting onboarding for global applicant: ${applicantId} in job ${jobId}`);
+            }
 
             await updateDoc(applicantRef, {
                 onboardingStatus: "In Progress",
@@ -201,15 +299,33 @@ const Onboarding = () => {
     };
 
     // Complete onboarding and make applicant an employee
-    const handleCompleteOnboarding = async (jobId, applicantId) => {
+    const handleCompleteOnboarding = async (jobId, applicantId, universityId = null) => {
         try {
-            const applicantRef = doc(
-                db,
-                "jobs",
-                jobId,
-                "applicants",
-                applicantId
-            );
+            let applicantRef;
+            
+            // Determine which collection to update based on universityId
+            if (universityId) {
+                applicantRef = doc(
+                    db,
+                    "universities",
+                    universityId,
+                    "jobs",
+                    jobId,
+                    "applicants",
+                    applicantId
+                );
+                console.log(`Completing onboarding for university applicant: ${applicantId} in job ${jobId}`);
+            } else {
+                applicantRef = doc(
+                    db,
+                    "jobs",
+                    jobId,
+                    "applicants",
+                    applicantId
+                );
+                console.log(`Completing onboarding for global applicant: ${applicantId} in job ${jobId}`);
+            }
+            
             const applicantDoc = await getDoc(applicantRef);
 
             if (!applicantDoc.exists()) {
@@ -243,6 +359,7 @@ const Onboarding = () => {
                 originalApplication: {
                     jobId: jobId,
                     applicantId: applicantId,
+                    universityId: universityId,
                     applicationDate:
                         applicantData.appliedAt || serverTimestamp(),
                 },
@@ -303,73 +420,120 @@ const Onboarding = () => {
         sessionStorage.getItem("isPageRefresh") === "true";
 
     // Add new task to checklist
-    const handleAddTask = async (jobId, applicantId) => {
-        if (!newTaskText.trim()) return;
-
+    const handleAddTask = async (jobId, applicantId, universityId = null) => {
         try {
-            const applicantRef = doc(
-                db,
-                "jobs",
-                jobId,
-                "applicants",
-                applicantId
-            );
+            const taskText = prompt("Enter task description:");
+            if (!taskText || taskText.trim() === "") return;
+
+            let applicantRef;
+            
+            // Determine which collection to update based on universityId
+            if (universityId) {
+                applicantRef = doc(
+                    db,
+                    "universities",
+                    universityId,
+                    "jobs",
+                    jobId,
+                    "applicants",
+                    applicantId
+                );
+                console.log(`Adding task for university applicant: ${applicantId} in job ${jobId}`);
+            } else {
+                applicantRef = doc(
+                    db,
+                    "jobs",
+                    jobId,
+                    "applicants",
+                    applicantId
+                );
+                console.log(`Adding task for global applicant: ${applicantId} in job ${jobId}`);
+            }
+            
             const applicantDoc = await getDoc(applicantRef);
+            if (!applicantDoc.exists()) {
+                throw new Error("Applicant not found");
+            }
 
-            if (!applicantDoc.exists()) return;
-
-            const currentChecklist =
+            // Get current checklist or use default if not exists
+            const checklist =
                 applicantDoc.data().onboardingChecklist || defaultChecklist;
+
+            // Add new task
             const newTask = {
-                id: Date.now(), // Use timestamp as unique ID
-                task: newTaskText.trim(),
+                id: Date.now().toString(),
+                title: taskText,
                 completed: false,
             };
 
-            const updatedChecklist = [...currentChecklist, newTask];
+            const updatedChecklist = [...checklist, newTask];
 
             await updateDoc(applicantRef, {
                 onboardingChecklist: updatedChecklist,
+                onboardingProgress: calculateProgress(updatedChecklist),
             });
 
             // Update local state
-            setApplicants((prevApplicants) =>
-                prevApplicants.map((applicant) =>
+            setApplicants((prev) =>
+                prev.map((applicant) =>
                     applicant.id === applicantId && applicant.jobId === jobId
                         ? {
                               ...applicant,
                               onboardingChecklist: updatedChecklist,
+                              onboardingProgress:
+                                  calculateProgress(updatedChecklist),
                           }
                         : applicant
                 )
             );
 
-            setNewTaskText("");
-            showSuccessAlert("New task added successfully!");
+            showSuccessAlert("Task added successfully!");
         } catch (error) {
             console.error("Error adding task:", error);
-            showErrorAlert("Failed to add new task");
+            showErrorAlert("Failed to add task");
         }
     };
 
     // Delete task from checklist
-    const handleDeleteTask = async (jobId, applicantId, taskId) => {
+    const handleDeleteTask = async (jobId, applicantId, taskId, universityId = null) => {
         try {
-            const applicantRef = doc(
-                db,
-                "jobs",
-                jobId,
-                "applicants",
-                applicantId
-            );
+            let applicantRef;
+            
+            // Determine which collection to update based on universityId
+            if (universityId) {
+                applicantRef = doc(
+                    db,
+                    "universities",
+                    universityId,
+                    "jobs",
+                    jobId,
+                    "applicants",
+                    applicantId
+                );
+                console.log(`Deleting task for university applicant: ${applicantId} in job ${jobId}`);
+            } else {
+                applicantRef = doc(
+                    db,
+                    "jobs",
+                    jobId,
+                    "applicants",
+                    applicantId
+                );
+                console.log(`Deleting task for global applicant: ${applicantId} in job ${jobId}`);
+            }
+            
             const applicantDoc = await getDoc(applicantRef);
+            if (!applicantDoc.exists()) {
+                throw new Error("Applicant not found");
+            }
 
-            if (!applicantDoc.exists()) return;
-
-            const currentChecklist =
+            // Get current checklist
+            const checklist =
                 applicantDoc.data().onboardingChecklist || defaultChecklist;
-            const updatedChecklist = currentChecklist.filter(
-                (item) => item.id !== taskId
+
+            // Remove the task
+            const updatedChecklist = checklist.filter(
+                (task) => task.id !== taskId
             );
 
             await updateDoc(applicantRef, {
@@ -378,8 +542,8 @@ const Onboarding = () => {
             });
 
             // Update local state
-            setApplicants((prevApplicants) =>
-                prevApplicants.map((applicant) =>
+            setApplicants((prev) =>
+                prev.map((applicant) =>
                     applicant.id === applicantId && applicant.jobId === jobId
                         ? {
                               ...applicant,
@@ -399,42 +563,68 @@ const Onboarding = () => {
     };
 
     // Edit task in checklist
-    const handleEditTask = async (jobId, applicantId, taskId, newText) => {
+    const handleEditTask = async (jobId, applicantId, taskId, newText, universityId = null) => {
+        if (!newText || newText.trim() === "") return;
+
         try {
-            const applicantRef = doc(
-                db,
-                "jobs",
-                jobId,
-                "applicants",
-                applicantId
-            );
+            let applicantRef;
+            
+            // Determine which collection to update based on universityId
+            if (universityId) {
+                applicantRef = doc(
+                    db,
+                    "universities",
+                    universityId,
+                    "jobs",
+                    jobId,
+                    "applicants",
+                    applicantId
+                );
+                console.log(`Editing task for university applicant: ${applicantId} in job ${jobId}`);
+            } else {
+                applicantRef = doc(
+                    db,
+                    "jobs",
+                    jobId,
+                    "applicants",
+                    applicantId
+                );
+                console.log(`Editing task for global applicant: ${applicantId} in job ${jobId}`);
+            }
+            
             const applicantDoc = await getDoc(applicantRef);
+            if (!applicantDoc.exists()) {
+                throw new Error("Applicant not found");
+            }
 
-            if (!applicantDoc.exists()) return;
-
-            const currentChecklist =
+            // Get current checklist
+            const checklist =
                 applicantDoc.data().onboardingChecklist || defaultChecklist;
-            const updatedChecklist = currentChecklist.map((item) =>
-                item.id === taskId ? { ...item, task: newText } : item
+
+            // Update the task text
+            const updatedChecklist = checklist.map((task) =>
+                task.id === taskId ? { ...task, title: newText.trim() } : task
             );
 
             await updateDoc(applicantRef, {
                 onboardingChecklist: updatedChecklist,
+                onboardingProgress: calculateProgress(updatedChecklist),
             });
 
             // Update local state
-            setApplicants((prevApplicants) =>
-                prevApplicants.map((applicant) =>
+            setApplicants((prev) =>
+                prev.map((applicant) =>
                     applicant.id === applicantId && applicant.jobId === jobId
                         ? {
                               ...applicant,
                               onboardingChecklist: updatedChecklist,
+                              onboardingProgress:
+                                  calculateProgress(updatedChecklist),
                           }
                         : applicant
                 )
             );
 
-            setEditingTask(null);
             showSuccessAlert("Task updated successfully!");
         } catch (error) {
             console.error("Error updating task:", error);
@@ -697,7 +887,8 @@ const Onboarding = () => {
                                                     onClick={() =>
                                                         handleAddTask(
                                                             applicant.jobId,
-                                                            applicant.id
+                                                            applicant.id,
+                                                            applicant.universityId
                                                         )
                                                     }
                                                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
@@ -727,7 +918,8 @@ const Onboarding = () => {
                                                                 handleChecklistToggle(
                                                                     applicant.jobId,
                                                                     applicant.id,
-                                                                    item.id
+                                                                    item.id,
+                                                                    applicant.universityId
                                                                 )
                                                             }
                                                             className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
@@ -746,7 +938,8 @@ const Onboarding = () => {
                                                                         applicant.id,
                                                                         item.id,
                                                                         e.target
-                                                                            .value
+                                                                            .value,
+                                                                        applicant.universityId
                                                                     );
                                                                 }}
                                                                 onKeyDown={(
@@ -762,7 +955,8 @@ const Onboarding = () => {
                                                                             item.id,
                                                                             e
                                                                                 .target
-                                                                                .value
+                                                                                .value,
+                                                                            applicant.universityId
                                                                         );
                                                                     }
                                                                 }}
@@ -810,7 +1004,8 @@ const Onboarding = () => {
                                                                             handleDeleteTask(
                                                                                 applicant.jobId,
                                                                                 applicant.id,
-                                                                                item.id
+                                                                                item.id,
+                                                                                applicant.universityId
                                                                             )
                                                                         }
                                                                         className="p-1 text-gray-600 hover:text-red-600"
@@ -879,7 +1074,8 @@ const Onboarding = () => {
                                                 onClick={() =>
                                                     handleStartOnboarding(
                                                         applicant.jobId,
-                                                        applicant.id
+                                                        applicant.id,
+                                                        applicant.universityId
                                                     )
                                                 }
                                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
@@ -891,7 +1087,8 @@ const Onboarding = () => {
                                                 onClick={() =>
                                                     handleCompleteOnboarding(
                                                         applicant.jobId,
-                                                        applicant.id
+                                                        applicant.id,
+                                                        applicant.universityId
                                                     )
                                                 }
                                                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"

@@ -92,17 +92,46 @@ const Employees = () => {
         }
     };
 
+    // Handle view employee details
+    const handleViewEmployee = (employeeId) => {
+        // Navigate to employee details page (to be implemented)
+        console.log("View employee:", employeeId);
+    };
+
+    // Handle edit employee
+    const handleEditEmployee = (employee) => {
+        // Open edit employee modal (to be implemented)
+        console.log("Edit employee:", employee.id);
+    };
+
     if (loading) {
         return <PageLoader message="Loading employees..." />;
     }
 
     if (error) {
         return (
-            <div className="p-8 text-center">
-                <h2 className="text-red-500 text-xl font-bold mb-4">{error}</h2>
+            <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-6 text-gray-600">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-16 h-16 text-gray-400 mb-4"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v2m0 4h.01m-6.938 4.5a9 9 0 1112.765 0M9.75 9h4.5m-2.25-3v6"
+                    />
+                </svg>
+                <h2 className="text-xl font-semibold text-gray-700">
+                    Error Loading Employees
+                </h2>
+                <p className="text-gray-500 mt-2">{error}</p>
                 <button
                     onClick={() => window.location.reload()}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                    className="mt-4 px-4 py-2 bg-[#9AADEA] text-white rounded-lg hover:bg-[#7b8edc] transition"
                 >
                     Retry
                 </button>
@@ -111,15 +140,16 @@ const Employees = () => {
     }
 
     return (
-        <div className="flex-1 p-6 bg-gray-50 overflow-y-auto">
-            <div className="max-w-7xl mx-auto">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800">
+        <div className="p-6">
+            {/* Main Container */}
+            <div className="bg-white shadow-md rounded-lg p-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <h1 className="text-3xl font-bold text-gray-900">
                         Employee Management
                     </h1>
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-3">
                         {/* Import Button */}
-                        <label className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                        <label className="cursor-pointer px-4 py-2 border border-[#9AADEA] text-[#9AADEA] rounded-lg hover:bg-gray-50 transition">
                             Import Employees
                             <input
                                 type="file"
@@ -132,7 +162,7 @@ const Employees = () => {
                         {/* Export Button */}
                         <button
                             onClick={handleExport}
-                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+                            className="px-4 py-2 border border-[#9AADEA] text-[#9AADEA] rounded-lg hover:bg-gray-50 transition"
                         >
                             Export Employees
                         </button>
@@ -147,64 +177,66 @@ const Employees = () => {
                     </div>
                 </div>
 
-                {/* Main Content Container */}
-                <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                    {/* Filter Section */}
-                    <div className="flex flex-wrap gap-4 mb-6">
-                        <button
-                            onClick={() => setFilter("all")}
-                            className={`px-4 py-2 rounded-lg ${
-                                filter === "all"
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                            } transition`}
-                        >
-                            All Employees
-                        </button>
-                        <button
-                            onClick={() => setFilter("newHires")}
-                            className={`px-4 py-2 rounded-lg ${
-                                filter === "newHires"
-                                    ? "bg-green-600 text-white"
-                                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                            } transition`}
-                        >
-                            New Hires
-                        </button>
-                        <button
-                            onClick={() => setFilter("active")}
-                            className={`px-4 py-2 rounded-lg ${
-                                filter === "active"
-                                    ? "bg-purple-600 text-white"
-                                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                            } transition`}
-                        >
-                            Active
-                        </button>
-                        <button
-                            onClick={() => setFilter("inactive")}
-                            className={`px-4 py-2 rounded-lg ${
-                                filter === "inactive"
-                                    ? "bg-red-600 text-white"
-                                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                            } transition`}
-                        >
-                            Inactive
-                        </button>
-                    </div>
+                {/* Horizontal Divider */}
+                <hr className="border-t border-gray-300 mb-6" />
 
-                    {/* Employee Count */}
-                    <div className="mb-6">
-                        <p className="text-gray-600">
-                            Showing {filteredEmployees.length}{" "}
-                            {filter !== "all" ? `(${filter})` : ""} out of{" "}
-                            {employees.length} employees
-                        </p>
-                    </div>
+                {/* Filter Section */}
+                <div className="flex flex-wrap gap-3 mb-6">
+                    <button
+                        onClick={() => setFilter("all")}
+                        className={`px-4 py-2 rounded-lg transition ${
+                            filter === "all"
+                                ? "bg-[#9AADEA] text-white"
+                                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                        }`}
+                    >
+                        All Employees
+                    </button>
+                    <button
+                        onClick={() => setFilter("newHires")}
+                        className={`px-4 py-2 rounded-lg transition ${
+                            filter === "newHires"
+                                ? "bg-[#9AADEA] text-white"
+                                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                        }`}
+                    >
+                        New Hires
+                    </button>
+                    <button
+                        onClick={() => setFilter("active")}
+                        className={`px-4 py-2 rounded-lg transition ${
+                            filter === "active"
+                                ? "bg-[#9AADEA] text-white"
+                                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                        }`}
+                    >
+                        Active
+                    </button>
+                    <button
+                        onClick={() => setFilter("inactive")}
+                        className={`px-4 py-2 rounded-lg transition ${
+                            filter === "inactive"
+                                ? "bg-[#9AADEA] text-white"
+                                : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                        }`}
+                    >
+                        Inactive
+                    </button>
+                </div>
 
-                    {/* Employees Table */}
+                {/* Employee Count */}
+                <div className="mb-6">
+                    <p className="text-gray-600">
+                        Showing {filteredEmployees.length}{" "}
+                        {filter !== "all" ? `(${filter})` : ""} out of{" "}
+                        {employees.length} employees
+                    </p>
+                </div>
+
+                {/* Employees Section */}
+                <div className="border border-gray-300 rounded-lg overflow-hidden">
                     {filteredEmployees.length > 0 ? (
-                        <div className="overflow-x-auto rounded-lg border border-gray-200">
+                        <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
@@ -223,7 +255,7 @@ const Employees = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Actions
                                         </th>
                                     </tr>
@@ -253,43 +285,56 @@ const Employees = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">
-                                                    {employee.position}
-                                                </div>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {employee.position}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">
-                                                    {employee.department}
-                                                </div>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {employee.department}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">
-                                                    {formatDate(employee.dateHired)}
-                                                </div>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {formatDate(
+                                                    employee.dateHired
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span
-                                                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                    className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
                                                     ${
-                                                        employee.status === "New Hire"
-                                                            ? "bg-green-100 text-green-800"
-                                                            : employee.status ===
-                                                            "Active"
+                                                        employee.status ===
+                                                        "New Hire"
                                                             ? "bg-blue-100 text-blue-800"
+                                                            : employee.status ===
+                                                              "Active"
+                                                            ? "bg-green-100 text-green-800"
                                                             : "bg-red-100 text-red-800"
                                                     }`}
                                                 >
                                                     {employee.status}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <button className="text-indigo-600 hover:text-indigo-900 mr-3">
-                                                    View
-                                                </button>
-                                                <button className="text-green-600 hover:text-green-900">
-                                                    Edit
-                                                </button>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <div className="flex justify-end space-x-2">
+                                                    <button
+                                                        onClick={() =>
+                                                            handleViewEmployee(
+                                                                employee.id
+                                                            )
+                                                        }
+                                                        className="text-[#9AADEA] hover:text-[#7b8edc] transition border border-[#9AADEA] px-3 py-1 rounded-lg"
+                                                    >
+                                                        View
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleEditEmployee(
+                                                                employee
+                                                            )
+                                                        }
+                                                        className="bg-[#9AADEA] text-white hover:bg-[#7b8edc] transition px-3 py-1 rounded-lg"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -297,9 +342,9 @@ const Employees = () => {
                             </table>
                         </div>
                     ) : (
-                        <div className="p-8 rounded-lg text-center">
+                        <div className="p-8 text-center">
                             <p className="text-gray-500">
-                                No employees found with the selected filter.
+                                No employees found matching the selected filter.
                             </p>
                         </div>
                     )}
@@ -307,11 +352,16 @@ const Employees = () => {
             </div>
 
             {/* Add Employee Modal */}
-            <AddEmployeeModal
-                isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
-                onEmployeeAdded={fetchEmployees}
-            />
+            {isAddModalOpen && (
+                <AddEmployeeModal
+                    isOpen={isAddModalOpen}
+                    onClose={() => setIsAddModalOpen(false)}
+                    onEmployeeAdded={() => {
+                        fetchEmployees(); // Refresh employees list after adding a new one
+                        setIsAddModalOpen(false); // Close the modal
+                    }}
+                />
+            )}
         </div>
     );
 };
