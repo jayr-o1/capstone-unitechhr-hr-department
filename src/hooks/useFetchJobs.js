@@ -87,9 +87,13 @@ const useFetchJobs = () => {
             const hasPendingApplicants = applicants.some(
                 (applicant) => applicant.status === "Pending"
             );
+            
+            console.log(`Job ${jobId}: Has pending applicants? ${hasPendingApplicants}`);
 
             // If the newApplicants status needs to be updated
             if (hasPendingApplicants !== currentNewApplicantsStatus) {
+                console.log(`Updating newApplicants for job ${jobId} from ${currentNewApplicantsStatus} to ${hasPendingApplicants}`);
+                
                 // Update in main collection
                 const jobRef = doc(db, "jobs", jobId);
                 await updateDoc(jobRef, {
@@ -102,15 +106,16 @@ const useFetchJobs = () => {
                     await updateDoc(universityJobRef, {
                         newApplicants: hasPendingApplicants,
                     });
+                    console.log(`Updated newApplicants flag in university collection for job ${jobId}`);
                 }
-                
-                return hasPendingApplicants;
             }
 
-            return currentNewApplicantsStatus;
+            // Always return the actual status based on pending applicants
+            return hasPendingApplicants;
         } catch (error) {
-            console.error("Error updating newApplicants flag:", error);
-            return currentNewApplicantsStatus;
+            console.error(`Error updating newApplicants flag for job ${jobId}:`, error);
+            // Return the actual status even if update fails
+            return applicants.some((applicant) => applicant.status === "Pending");
         }
     };
 
@@ -209,6 +214,10 @@ const useFetchJobs = () => {
                 );
 
                 console.log(`Job ${job.id} has ${applicants.length} applicants`);
+                
+                // Log pending applicants count
+                const pendingApplicants = applicants.filter(applicant => applicant.status === "Pending");
+                console.log(`Job ${job.id} has ${pendingApplicants.length} pending applicants`);
 
                 // Check for pending applicants and update the flag if needed
                 const newApplicantsStatus = await checkForPendingApplicants(
@@ -217,6 +226,8 @@ const useFetchJobs = () => {
                     job.newApplicants || false,
                     job.universityId
                 );
+                
+                console.log(`Job ${job.id} newApplicants flag set to: ${newApplicantsStatus}`);
 
                 jobsData.push({
                     id: job.id,
@@ -248,20 +259,41 @@ const useFetchJobs = () => {
 
     // More efficient refresh function - only updates the jobs without changing loading state
     // unless specifically requested
-    const refreshJobs = useCallback(async (showLoading = false) => {
-        if (showLoading) {
+    const refreshJobs = useCallback(async (forceRefresh = false) => {
+        console.log("Refreshing jobs, force refresh:", forceRefresh);
+        
+        // Set loading state if requested or if it's a forced refresh
+        if (forceRefresh) {
             setLoading(true);
+            // Clear the cache when forcing a refresh
+            lastFetchTimeRef.current = 0;
+            jobsCacheRef.current = null;
         }
         
         try {
-            const jobsData = await fetchJobs(true); // Force refetch
+            // Always force the fetch when refreshing
+            const jobsData = await fetchJobs(true); 
+            console.log(`Refreshed ${jobsData.length} jobs`);
+            
+            // Log applicant status for debugging
+            if (forceRefresh) {
+                jobsData.forEach(job => {
+                    if (job.applicants && job.applicants.length > 0) {
+                        console.log(`Job ${job.id} (${job.title}) has ${job.applicants.length} applicants:`);
+                        job.applicants.forEach(app => 
+                            console.log(`  - ${app.name}: ${app.status}`)
+                        );
+                    }
+                });
+            }
+            
             return jobsData.length > 0;
         } catch (error) {
             console.error("Error refreshing jobs:", error);
             setError("Failed to refresh jobs. Please try again.");
             return false;
         } finally {
-            if (showLoading) {
+            if (forceRefresh) {
                 setLoading(false);
             }
         }

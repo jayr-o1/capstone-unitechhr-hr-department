@@ -17,6 +17,8 @@ import {
     updateInterview,
     updateInterviewNotes,
 } from "../../services/applicantService";
+import { auth } from "../../firebase";
+import { getUserData } from "../../services/userService";
 
 const ApplicantDetails = () => {
     const { jobId, applicantId } = useParams(); // Get jobId and applicantId from URL
@@ -29,6 +31,7 @@ const ApplicantDetails = () => {
     const [selectedInterviewId, setSelectedInterviewId] = useState(null);
     const [selectedInterview, setSelectedInterview] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [universityId, setUniversityId] = useState(null);
     const navigate = useNavigate();
 
     // Find the job and applicant
@@ -36,6 +39,39 @@ const ApplicantDetails = () => {
     const applicant = job?.applicants.find(
         (app) => app.id === applicantId // Find applicant by ID
     );
+    
+    // Get university ID - either from job or from user data
+    useEffect(() => {
+        const getUniversityId = async () => {
+            // First check if we can get it from the job
+            if (job && job.universityId) {
+                setUniversityId(job.universityId);
+                console.log("Using university ID from job:", job.universityId);
+                return;
+            }
+            
+            // If not available from job, try to get from current user
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    console.error("No authenticated user found");
+                    return;
+                }
+                
+                const userDataResult = await getUserData(user.uid);
+                if (userDataResult.success && userDataResult.data.universityId) {
+                    setUniversityId(userDataResult.data.universityId);
+                    console.log("Using university ID from user:", userDataResult.data.universityId);
+                } else {
+                    console.error("User doesn't have a university association");
+                }
+            } catch (error) {
+                console.error("Error getting user's university:", error);
+            }
+        };
+        
+        getUniversityId();
+    }, [job]);
 
     // Handle Add Notes
     const handleAddNotes = (interviewId) => {
@@ -56,14 +92,16 @@ const ApplicantDetails = () => {
                 applicantId,
                 interviewId,
                 notes,
-                status
+                status,
+                universityId
             );
 
             if (result.success) {
                 // Refresh interviews list to get updated data from Firestore
                 const interviewsResult = await getApplicantInterviews(
                     jobId,
-                    applicantId
+                    applicantId,
+                    universityId
                 );
 
                 if (interviewsResult.success) {
@@ -93,7 +131,8 @@ const ApplicantDetails = () => {
                 try {
                     const result = await getApplicantInterviews(
                         jobId,
-                        applicantId
+                        applicantId,
+                        universityId
                     );
                     if (result.success) {
                         setScheduledInterviews(result.interviews || []);
@@ -104,8 +143,10 @@ const ApplicantDetails = () => {
             }
         };
 
-        fetchInterviews();
-    }, [jobId, applicantId]);
+        if (universityId) {
+            fetchInterviews();
+        }
+    }, [jobId, applicantId, universityId]);
 
     if (!job || !applicant) {
         return (
@@ -151,7 +192,8 @@ const ApplicantDetails = () => {
                     const result = await updateApplicantStatus(
                         jobId,
                         applicantId,
-                        "Hired"
+                        "Hired",
+                        universityId
                     );
 
                     if (result.success) {
@@ -174,6 +216,7 @@ const ApplicantDetails = () => {
                                     jobId: jobId,
                                     applicantId: applicantId,
                                     applicantData: result.applicantData,
+                                    universityId: universityId
                                 },
                             });
                         }, 2000);
@@ -198,26 +241,28 @@ const ApplicantDetails = () => {
     // Handle Fail Applicant
     const handleFailApplicant = () => {
         showWarningAlert(
-            "Are you sure you want to fail this applicant?",
+            "Are you sure you want to reject this applicant?",
             async () => {
                 setIsLoading(true);
                 try {
                     const result = await updateApplicantStatus(
                         jobId,
                         applicantId,
-                        "Failed"
+                        "Failed",
+                        universityId
                     );
 
                     if (result.success) {
-                        showSuccessAlert(
-                            "The applicant has been successfully marked as failed!"
-                        );
-
                         // Refresh jobs data to update UI
                         await refreshJobs();
+
+                        // Show success message
+                        showSuccessAlert(
+                            "Applicant has been marked as rejected."
+                        );
                     } else {
-                        showErrorAlert(
-                            `Failed to update applicant: ${result.message}`
+                        throw new Error(
+                            result.message || "Failed to update applicant status"
                         );
                     }
                 } catch (error) {
@@ -226,9 +271,8 @@ const ApplicantDetails = () => {
                     setIsLoading(false);
                 }
             },
-            "Yes, fail them!",
-            "Cancel",
-            "The applicant has been successfully marked as failed!"
+            "Yes, reject applicant",
+            "Cancel"
         );
     };
 
@@ -255,17 +299,29 @@ const ApplicantDetails = () => {
             // First close the modal to prevent background becoming black
             handleCloseModal();
 
-            const result = await scheduleInterview(jobId, applicantId, {
-                dateTime: data.dateTime,
-                title: data.title,
-                interviewer: data.interviewer,
-            });
+            console.log("Scheduling interview with university ID:", universityId);
+            
+            // Use job.universityId or the universityId state to pass to the function
+            const result = await scheduleInterview(
+                jobId, 
+                applicantId, 
+                {
+                    dateTime: data.dateTime,
+                    title: data.title,
+                    interviewer: data.interviewer,
+                }, 
+                universityId
+            );
 
             if (result.success) {
+                // The scheduleInterview function now always updates the status to "Interviewing"
+                // No need for a separate call to updateApplicantStatus
+
                 // Refresh interviews list
                 const interviewsResult = await getApplicantInterviews(
                     jobId,
-                    applicantId
+                    applicantId,
+                    universityId
                 );
                 if (interviewsResult.success) {
                     setScheduledInterviews(interviewsResult.interviews || []);
@@ -282,6 +338,7 @@ const ApplicantDetails = () => {
                 );
             }
         } catch (error) {
+            console.error("Error scheduling interview:", error);
             showErrorAlert(`Error: ${error.message}`);
         } finally {
             setIsLoading(false);
@@ -305,17 +362,24 @@ const ApplicantDetails = () => {
             // First close the modal to prevent background becoming black
             setIsEditModalOpen(false);
 
-            const result = await updateInterview(jobId, applicantId, data.id, {
-                dateTime: data.dateTime,
-                title: data.title,
-                interviewer: data.interviewer,
-            });
+            const result = await updateInterview(
+                jobId, 
+                applicantId, 
+                data.id, 
+                {
+                    dateTime: data.dateTime,
+                    title: data.title,
+                    interviewer: data.interviewer,
+                },
+                universityId
+            );
 
             if (result.success) {
                 // Refresh interviews list
                 const interviewsResult = await getApplicantInterviews(
                     jobId,
-                    applicantId
+                    applicantId,
+                    universityId
                 );
                 if (interviewsResult.success) {
                     setScheduledInterviews(interviewsResult.interviews || []);
