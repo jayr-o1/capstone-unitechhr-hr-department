@@ -9,6 +9,8 @@ import AIInsights from "../../components/RecruitmentComponents/ApplicantDetailsC
 import RecruiterNotes from "../../components/RecruitmentComponents/ApplicantDetailsComponents/RecruiterNotes";
 import ScheduleInterviewModal from "../../components/Modals/ScheduleInterviewModal";
 import EditInterviewModal from "../../components/Modals/EditInterviewModal";
+import AddInterviewNotesModal from "../../components/Modals/AddInterviewNotesModal";
+import InterviewNotesRequiredModal from "../../components/Modals/InterviewNotesRequiredModal";
 import {
     updateApplicantStatus,
     scheduleInterview,
@@ -32,6 +34,13 @@ const ApplicantDetails = () => {
     const [selectedInterview, setSelectedInterview] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [universityId, setUniversityId] = useState(null);
+    
+    // New state for the modals
+    const [isAddNotesModalOpen, setIsAddNotesModalOpen] = useState(false);
+    const [isNotesRequiredModalOpen, setIsNotesRequiredModalOpen] = useState(false);
+    const [interviewsWithoutNotes, setInterviewsWithoutNotes] = useState([]);
+    const [currentActionType, setCurrentActionType] = useState(null); // 'hire' or 'fail'
+    
     const navigate = useNavigate();
 
     // Find the job and applicant
@@ -107,6 +116,25 @@ const ApplicantDetails = () => {
                 if (interviewsResult.success) {
                     setScheduledInterviews(interviewsResult.interviews || []);
                     showSuccessAlert("Notes saved successfully!");
+                    
+                    // After adding notes, continue with the original action if applicable
+                    if (currentActionType) {
+                        // Check if there are still interviews without notes
+                        const remainingInterviewsWithoutNotes = filterInterviewsWithoutNotes(interviewsResult.interviews);
+                        
+                        if (remainingInterviewsWithoutNotes.length === 0) {
+                            // All interviews now have notes, proceed with the original action
+                            if (currentActionType === 'hire') {
+                                executeHireApplicant();
+                            } else if (currentActionType === 'fail') {
+                                executeFailApplicant();
+                            }
+                            setCurrentActionType(null);
+                        } else {
+                            // There are still interviews without notes
+                            setInterviewsWithoutNotes(remainingInterviewsWithoutNotes);
+                        }
+                    }
                 }
             } else {
                 throw new Error(result.message || "Failed to save notes");
@@ -115,6 +143,7 @@ const ApplicantDetails = () => {
             showErrorAlert(`Error saving notes: ${error.message}`);
         } finally {
             setIsLoading(false);
+            setIsAddNotesModalOpen(false);
         }
     };
 
@@ -182,8 +211,44 @@ const ApplicantDetails = () => {
         );
     }
 
-    // Handle Hire Applicant
-    const handleHireApplicant = () => {
+    // Helper function to filter interviews without notes
+    const filterInterviewsWithoutNotes = (interviews) => {
+        return interviews.filter(interview => {
+            return !interview.notes || 
+                  (typeof interview.notes === 'string' && interview.notes.trim() === '') ||
+                  (Array.isArray(interview.notes) && interview.notes.length === 0);
+        });
+    };
+
+    // Helper function to check if all interviews have notes and open modal if needed
+    const checkInterviewNotes = (actionType) => {
+        // Check if there are any interviews
+        if (!scheduledInterviews || scheduledInterviews.length === 0) {
+            showErrorAlert("At least one interview must be scheduled and completed before hiring or rejecting an applicant.");
+            return false;
+        }
+
+        // Filter interviews without notes
+        const missingNotesInterviews = filterInterviewsWithoutNotes(scheduledInterviews);
+
+        if (missingNotesInterviews.length > 0) {
+            // Set state for which interviews need notes
+            setInterviewsWithoutNotes(missingNotesInterviews);
+            
+            // Remember which action we're trying to perform
+            setCurrentActionType(actionType);
+            
+            // Open the notes required modal
+            setIsNotesRequiredModalOpen(true);
+            
+            return false;
+        }
+
+        return true;
+    };
+
+    // Execute hire applicant after all checks are passed
+    const executeHireApplicant = () => {
         showWarningAlert(
             "Are you sure you want to hire this applicant?",
             async () => {
@@ -238,8 +303,8 @@ const ApplicantDetails = () => {
         );
     };
 
-    // Handle Fail Applicant
-    const handleFailApplicant = () => {
+    // Execute fail applicant after all checks are passed
+    const executeFailApplicant = () => {
         showWarningAlert(
             "Are you sure you want to reject this applicant?",
             async () => {
@@ -276,7 +341,30 @@ const ApplicantDetails = () => {
         );
     };
 
-    // Handle Schedule Interview
+    // Handle Hire Applicant
+    const handleHireApplicant = () => {
+        // First check if all interviews have notes
+        if (checkInterviewNotes('hire')) {
+            executeHireApplicant();
+        }
+    };
+
+    // Handle Fail Applicant
+    const handleFailApplicant = () => {
+        // First check if all interviews have notes
+        if (checkInterviewNotes('fail')) {
+            executeFailApplicant();
+        }
+    };
+
+    // Handle opening add notes modal from the notes required modal
+    const handleOpenAddNotesModal = (interview) => {
+        setSelectedInterview(interview);
+        setIsAddNotesModalOpen(true);
+        setIsNotesRequiredModalOpen(false);
+    };
+
+    // Schedule Interview
     const handleScheduleInterview = () => {
         setIsModalOpen(true);
     };
@@ -482,6 +570,40 @@ const ApplicantDetails = () => {
                     onSubmit={handleUpdateInterview}
                     initialData={selectedInterview}
                     getCurrentDateTime={getCurrentDateTime}
+                />
+            )}
+
+            {/* Interview Notes Required Modal */}
+            <InterviewNotesRequiredModal
+                isOpen={isNotesRequiredModalOpen}
+                onClose={() => {
+                    setIsNotesRequiredModalOpen(false);
+                    setCurrentActionType(null);
+                }}
+                interviews={interviewsWithoutNotes}
+                onAddNotes={handleOpenAddNotesModal}
+            />
+
+            {/* Add Interview Notes Modal */}
+            {isAddNotesModalOpen && selectedInterview && (
+                <AddInterviewNotesModal
+                    isOpen={isAddNotesModalOpen}
+                    onClose={() => {
+                        setIsAddNotesModalOpen(false);
+                        // If there are more interviews needing notes, reopen the notes required modal
+                        if (interviewsWithoutNotes.length > 1) {
+                            // Remove the one we just edited
+                            const updatedInterviews = interviewsWithoutNotes.filter(
+                                interview => interview.id !== selectedInterview.id
+                            );
+                            if (updatedInterviews.length > 0) {
+                                setInterviewsWithoutNotes(updatedInterviews);
+                                setIsNotesRequiredModalOpen(true);
+                            }
+                        }
+                    }}
+                    interview={selectedInterview}
+                    onSave={handleSaveNotes}
                 />
             )}
         </>
