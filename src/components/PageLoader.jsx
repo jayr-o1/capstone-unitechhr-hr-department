@@ -1,26 +1,47 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const PageLoader = ({ isLoading, fullscreen }) => {
+const PageLoader = ({ isLoading, fullscreen, contentOnly }) => {
+    const getLoaderStyles = () => {
+        if (contentOnly) {
+            // Only cover the content area with absolute positioning
+            return {
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 10 // Lower z-index to stay below fixed header/sidebar
+            };
+        } else if (fullscreen) {
+            // Cover the entire screen
+            return {
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 9999 // Higher z-index to cover everything
+            };
+        } else {
+            // Cover everything except header and sidebar
+            return {
+                position: 'fixed',
+                top: "4rem", // Adjust this to match the height of your Header
+                left: "16rem", // Adjust this to match the width of your Sidebar
+                right: 0,
+                bottom: 0,
+                zIndex: 50
+            };
+        }
+    };
+    
     return (
         <AnimatePresence>
             {isLoading && (
                 <motion.div
-                    className="fixed z-50 flex justify-center items-center bg-white bg-opacity-70"
-                    style={fullscreen ? 
-                        {
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0
-                        } : 
-                        {
-                            top: "4rem", // Adjust this to match the height of your Header
-                            left: "16rem", // Adjust this to match the width of your Sidebar
-                            right: 0,
-                            bottom: 0,
-                        }
-                    }
+                    className={`flex justify-center items-center bg-white bg-opacity-70`}
+                    style={getLoaderStyles()}
                     initial={{ opacity: 1 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -98,7 +119,8 @@ const PageLoader = ({ isLoading, fullscreen }) => {
 // Set default props
 PageLoader.defaultProps = {
     isLoading: false,
-    fullscreen: false
+    fullscreen: false,
+    contentOnly: false
 };
 
 export default PageLoader;

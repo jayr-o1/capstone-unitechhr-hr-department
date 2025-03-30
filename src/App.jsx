@@ -13,6 +13,7 @@ import JobDetails from "./pages/RecruitmentModule/JobDetails"; // Import the Job
 import ApplicantDetails from "./pages/RecruitmentModule/ApplicantDetails"; // Import the ApplicantDetails component
 import Onboarding from "./pages/Onboarding";
 import Employees from "./pages/Employees";
+import EmployeeDetails from "./pages/EmployeeDetails"; // Import the EmployeeDetails component
 import Clusters from "./pages/Clusters";
 import Profile from "./pages/Profile"; // Import the Profile component
 import Subscription from "./pages/Subscription"; // Import the Subscription component
@@ -176,6 +177,7 @@ function AppContent() {
 
                             <Route path="onboarding" element={<Onboarding />} />
                             <Route path="employees" element={<Employees />} />
+                            <Route path="employees/:employeeId" element={<EmployeeDetails />} />
                             <Route path="clusters" element={<Clusters />} />
                             <Route path="profile" element={<Profile />} />
                             <Route

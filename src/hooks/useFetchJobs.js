@@ -7,6 +7,7 @@ import {
     updateDoc,
     query,
     where,
+    getDoc,
 } from "firebase/firestore";
 import { getAllJobs, getUniversityJobs } from "../services/jobService";
 import { auth } from "../firebase";
@@ -94,27 +95,46 @@ const useFetchJobs = () => {
             if (hasPendingApplicants !== currentNewApplicantsStatus) {
                 console.log(`Updating newApplicants for job ${jobId} from ${currentNewApplicantsStatus} to ${hasPendingApplicants}`);
                 
-                // Update in main collection
-                const jobRef = doc(db, "jobs", jobId);
-                await updateDoc(jobRef, {
-                    newApplicants: hasPendingApplicants,
-                });
-                
-                // If job belongs to a university, also update in university's subcollection
-                if (jobUniversityId) {
-                    const universityJobRef = doc(db, "universities", jobUniversityId, "jobs", jobId);
-                    await updateDoc(universityJobRef, {
-                        newApplicants: hasPendingApplicants,
-                    });
-                    console.log(`Updated newApplicants flag in university collection for job ${jobId}`);
+                // First check if the document exists
+                try {
+                    // Update in main collection
+                    const jobRef = doc(db, "jobs", jobId);
+                    const jobDoc = await getDoc(jobRef);
+                    
+                    if (jobDoc.exists()) {
+                        await updateDoc(jobRef, {
+                            newApplicants: hasPendingApplicants,
+                        });
+                    } else {
+                        console.log(`Job ${jobId} not found in main collection, skipping update`);
+                    }
+                    
+                    // If job belongs to a university, also update in university's subcollection
+                    if (jobUniversityId) {
+                        const universityJobRef = doc(db, "universities", jobUniversityId, "jobs", jobId);
+                        const universityJobDoc = await getDoc(universityJobRef);
+                        
+                        if (universityJobDoc.exists()) {
+                            await updateDoc(universityJobRef, {
+                                newApplicants: hasPendingApplicants,
+                            });
+                            console.log(`Updated newApplicants flag in university collection for job ${jobId}`);
+                        } else {
+                            console.log(`Job ${jobId} not found in university ${jobUniversityId} collection, skipping update`);
+                        }
+                    }
+                } catch (updateError) {
+                    // Just log and continue - don't throw
+                    console.log(`Could not update newApplicants for job ${jobId}: ${updateError.message}`);
                 }
             }
 
             // Always return the actual status based on pending applicants
             return hasPendingApplicants;
         } catch (error) {
-            console.error(`Error updating newApplicants flag for job ${jobId}:`, error);
-            // Return the actual status even if update fails
+            // This is just a fallback for any other errors - log but don't disrupt the app
+            console.log(`Non-critical error checking pending applicants for job ${jobId}: ${error.message}`);
+            // Return the actual status even if check fails
             return applicants.some((applicant) => applicant.status === "Pending");
         }
     };

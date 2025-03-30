@@ -334,8 +334,18 @@ const Onboarding = () => {
 
             const applicantData = applicantDoc.data();
 
-            // Create employee document in employees collection
-            const employeesRef = collection(db, "employees");
+            // Create employee document in the appropriate collection based on universityId
+            let employeesRef;
+            if (universityId) {
+                // For university-specific applicants, add to university's employees subcollection
+                employeesRef = collection(db, "universities", universityId, "employees");
+                console.log(`Adding employee to university ${universityId} collection`);
+            } else {
+                // For global applicants, add to global employees collection
+                employeesRef = collection(db, "employees");
+                console.log(`Adding employee to global collection`);
+            }
+            
             const employeeData = {
                 name: applicantData.name,
                 email: applicantData.email,
@@ -363,10 +373,15 @@ const Onboarding = () => {
                     applicationDate:
                         applicantData.appliedAt || serverTimestamp(),
                 },
+                // Save the universityId for university-specific employees
+                universityId: universityId || null,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
             };
 
-            // Add to employees collection
+            // Add to appropriate employees collection
             const newEmployeeRef = await addDoc(employeesRef, employeeData);
+            console.log(`New employee created with ID: ${newEmployeeRef.id} in ${universityId ? 'university' : 'global'} collection`);
 
             // Update applicant document
             await updateDoc(applicantRef, {
@@ -642,7 +657,7 @@ const Onboarding = () => {
 
     // Show PageLoader during loading state
     if (loading) {
-        return <PageLoader isLoading={true} fullscreen={isPageRefresh} />;
+        return <PageLoader isLoading={true} fullscreen={isPageRefresh} contentOnly={!isPageRefresh} />;
     }
 
     if (error)
@@ -655,7 +670,7 @@ const Onboarding = () => {
     return (
         <div className="p-6 bg-white shadow-md rounded-lg">
             {/* Header Section */}
-            <div className="p-6 border-b border-gray-300">
+            <div className="pb-4 border-b border-gray-300">
                 <h1 className="text-3xl font-bold text-gray-900">
                     Applicant Onboarding
                 </h1>

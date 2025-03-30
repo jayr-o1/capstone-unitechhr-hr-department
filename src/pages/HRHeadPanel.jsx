@@ -202,7 +202,9 @@ const HRHeadPanel = () => {
     };
 
     if (loading) {
-        return <PageLoader message="Loading deleted jobs..." />;
+        // Check if this is a page refresh
+        const isPageRefresh = sessionStorage.getItem("isPageRefresh") === "true";
+        return <PageLoader message="Loading deleted jobs..." contentOnly={!isPageRefresh} fullscreen={isPageRefresh} />;
     }
 
     if (error) {
