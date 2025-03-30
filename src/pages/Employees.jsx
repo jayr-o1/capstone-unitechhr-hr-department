@@ -6,6 +6,7 @@ import AddEmployeeModal from "../components/Modals/AddEmployeeModal";
 import { exportEmployees, importEmployees } from "../services/employeeService";
 import showSuccessAlert from "../components/Alerts/SuccessAlert";
 import showErrorAlert from "../components/Alerts/ErrorAlert";
+import { useNavigate } from "react-router-dom";
 
 const Employees = () => {
     const [employees, setEmployees] = useState([]);
@@ -13,6 +14,7 @@ const Employees = () => {
     const [error, setError] = useState(null);
     const [filter, setFilter] = useState("all"); // "all", "newHires", "active", "inactive"
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const navigate = useNavigate();
 
     // Fetch employees from Firestore
     const fetchEmployees = async () => {
@@ -94,8 +96,8 @@ const Employees = () => {
 
     // Handle view employee details
     const handleViewEmployee = (employeeId) => {
-        // Navigate to employee details page (to be implemented)
-        console.log("View employee:", employeeId);
+        // Navigate to employee details page
+        navigate(`/employees/${employeeId}`);
     };
 
     // Handle edit employee
