@@ -171,13 +171,27 @@ const Sidebar = ({ userRole, userPermissions }) => {
                 {!isHRHead && (
                     <div className="mt-auto mb-4">
                         <hr className="border-t border-gray-300 mx-4 mb-4" />
-                        <div className="mx-4 bg-gray-100 rounded-xl shadow-md hover:bg-gray-200 transition-colors duration-200">
+                        <div className="mx-4 bg-gray-100 rounded-xl shadow-md hover:bg-gray-200 transition-colors duration-200 cursor-pointer">
                             <button
                                 onClick={handleLogout}
-                                className="w-full flex flex-col items-center justify-center py-3 md:py-4 lg:py-6"
+                                className="w-full flex flex-col items-center justify-center py-3 md:py-4 lg:py-6 cursor-pointer"
                             >
                                 <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10">
-                                    <SignOutIcon className="text-red-600" />
+                                    {/* Custom logout icon in red */}
+                                    <svg 
+                                        xmlns="http://www.w3.org/2000/svg" 
+                                        fill="none" 
+                                        viewBox="0 0 24 24" 
+                                        strokeWidth={1.5} 
+                                        stroke="currentColor" 
+                                        className="w-full h-full text-red-600"
+                                    >
+                                        <path 
+                                            strokeLinecap="round" 
+                                            strokeLinejoin="round" 
+                                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" 
+                                        />
+                                    </svg>
                                 </div>
                                 <span className="text-xs md:text-sm font-medium text-red-600">
                                     Sign Out
