@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthProvider";
 
 import DashboardIcon from "../../assets/icons/SidebarIcons/DashboardIcon";
@@ -8,18 +8,54 @@ import OnboardingIcon from "../../assets/icons/SidebarIcons/OnboardingIcon";
 import EmployeesIcon from "../../assets/icons/SidebarIcons/EmployeesIcon";
 import ClustersIcon from "../../assets/icons/SidebarIcons/ClustersIcon";
 import HRManagementIcon from "../../assets/icons/SidebarIcons/HRManagementIcon";
+import SignOutIcon from "../../assets/icons/HeaderIcons/SignOutIcon";
 
-const Sidebar = () => {
+const Sidebar = ({ userRole, userPermissions }) => {
     const [isOpen, setIsOpen] = useState(true);
     const location = useLocation();
-    const { user } = useAuth(); // Get current user to check admin status
+    const navigate = useNavigate();
+    const { user, logout } = useAuth(); // Get current user and logout function
 
     // Check if user is an HR Head (department manager)
-    const isHRHead = true; // For simplicity, we'll show it to everyone; you can replace with your own logic later
+    const isHRHead = userRole === "hr_head" || userRole === "admin";
+
+    // Check if a user has permission to access a specific route
+    const hasPermission = (path) => {
+        // HR Heads have access to everything
+        if (isHRHead) return true;
+        
+        // HR Personnel need specific permissions
+        if (userRole === "hr_personnel") {
+            // Dashboard is accessible to everyone
+            if (path === "/dashboard") return true;
+            
+            // Check specific module permissions
+            if (path === "/recruitment" && userPermissions?.recruitment) return true;
+            if (path === "/onboarding" && userPermissions?.onboarding) return true;
+            if (path === "/employees" && userPermissions?.employees) return true;
+            if (path === "/clusters" && userPermissions?.clusters) return true;
+            
+            // Any other path is restricted
+            return false;
+        }
+        
+        // Default allow for non-HR roles (shouldn't happen but just in case)
+        return true;
+    };
 
     // Toggle sidebar visibility
     const toggleSidebar = () => {
         setIsOpen(!isOpen);
+    };
+
+    // Handle logout
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate("/signin"); // Redirect to login page
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
     };
 
     return (
@@ -74,7 +110,7 @@ const Sidebar = () => {
                                     <ClustersIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
                                 ),
                             },
-                            // Add HR Management link to the sidebar
+                            // Show HR Management for HR Heads, Sign Out for HR Personnel
                             ...(isHRHead
                                 ? [
                                       {
@@ -85,29 +121,68 @@ const Sidebar = () => {
                                           ),
                                       },
                                   ]
-                                : []),
-                        ].map((item, index) => (
-                            <li
-                                key={index}
-                                className={`mx-4 bg-gray-100 rounded-xl shadow-md hover:bg-gray-200 transition-colors duration-200 ${
-                                    location.pathname === item.path
-                                        ? "bg-gray-200" // Active page styling
-                                        : "bg-gray-100 hover:bg-gray-200"
-                                }`}
-                            >
-                                <Link
-                                    to={item.path}
-                                    className="flex flex-col items-center justify-center py-3 md:py-4 lg:py-6"
+                                : [
+                                      {
+                                          name: "Sign Out",
+                                          path: null,
+                                          onClick: handleLogout,
+                                          icon: (
+                                              <SignOutIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 text-red-600" />
+                                          ),
+                                      },
+                                  ]),
+                        ].map((item, index) => {
+                            const itemHasPermission = item.path === null || hasPermission(item.path);
+                            return (
+                                <li
+                                    key={index}
+                                    className={`mx-4 ${
+                                        itemHasPermission 
+                                            ? "bg-gray-100 rounded-xl shadow-md hover:bg-gray-200 transition-colors duration-200" 
+                                            : "bg-gray-100 rounded-xl shadow-md opacity-50 cursor-not-allowed"
+                                    } ${
+                                        location.pathname === item.path && itemHasPermission
+                                            ? "bg-gray-200" // Active page styling
+                                            : "bg-gray-100"
+                                    }`}
                                 >
-                                    <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10">
-                                        {item.icon}
-                                    </div>
-                                    <span className="text-xs md:text-sm font-medium text-gray-900">
-                                        {item.name}
-                                    </span>
-                                </Link>
-                            </li>
-                        ))}
+                                    {item.path === null ? (
+                                        <button
+                                            onClick={item.onClick}
+                                            className="w-full flex flex-col items-center justify-center py-3 md:py-4 lg:py-6"
+                                        >
+                                            <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10">
+                                                {item.icon}
+                                            </div>
+                                            <span className="text-xs md:text-sm font-medium text-red-600">
+                                                {item.name}
+                                            </span>
+                                        </button>
+                                    ) : itemHasPermission ? (
+                                        <Link
+                                            to={item.path}
+                                            className="flex flex-col items-center justify-center py-3 md:py-4 lg:py-6"
+                                        >
+                                            <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10">
+                                                {item.icon}
+                                            </div>
+                                            <span className={`text-xs md:text-sm font-medium ${item.name === "Sign Out" ? "text-red-600" : "text-gray-900"}`}>
+                                                {item.name}
+                                            </span>
+                                        </Link>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-3 md:py-4 lg:py-6">
+                                            <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 text-gray-400">
+                                                {item.icon}
+                                            </div>
+                                            <span className="text-xs md:text-sm font-medium text-gray-400">
+                                                {item.name}
+                                            </span>
+                                        </div>
+                                    )}
+                                </li>
+                            );
+                        })}
                     </div>
 
                     {/* Optional: Add a footer or additional content here */}
