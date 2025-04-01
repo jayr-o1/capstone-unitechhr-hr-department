@@ -4,8 +4,11 @@ import Header from "./Layouts/Header";
 import Sidebar from "./Layouts/Sidebar";
 import PageLoader from "./PageLoader";
 import useFetchJobs from "../hooks/useFetchJobs"; // Import the useFetchJobs hook
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { doc, getDoc, collection, addDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore";
+import { db, auth } from "../firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import showSuccessAlert from "./Alerts/SuccessAlert";
+import showErrorAlert from "./Alerts/ErrorAlert";
 
 const Layout = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -14,9 +17,176 @@ const Layout = () => {
     const navigate = useNavigate();
     const { jobId, applicantId, employeeId } = useParams();
     const [employeeName, setEmployeeName] = useState("Employee Details");
+    const [userRole, setUserRole] = useState("user");
+    const [isHeadHR, setIsHeadHR] = useState(false);
+
+    // Form state for adding HR personnel
+    const [hrFormData, setHrFormData] = useState({
+        name: "",
+        email: "",
+        password: "",
+        permissions: {
+            recruitment: false,
+            onboarding: false,
+            employees: false,
+            clusters: false,
+        }
+    });
+    const [hrPersonnel, setHrPersonnel] = useState([]);
+    const [loadingPersonnel, setLoadingPersonnel] = useState(false);
 
     // Fetch jobs using the useFetchJobs hook
     const { jobs, loading: jobsLoading, error: jobsError, universityId } = useFetchJobs();
+
+    // Check if current user is HR Head
+    useEffect(() => {
+        const checkUserRole = async () => {
+            if (!auth.currentUser || !universityId) return;
+            
+            try {
+                const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    setUserRole(userData.role || "user");
+                    setIsHeadHR(userData.role === "hr_head" || userData.role === "admin");
+                }
+            } catch (error) {
+                console.error("Error checking user role:", error);
+            }
+        };
+        
+        checkUserRole();
+    }, [universityId]);
+
+    // Fetch HR personnel for the university
+    useEffect(() => {
+        const fetchHRPersonnel = async () => {
+            if (!universityId || !isHeadHR) return;
+            
+            try {
+                setLoadingPersonnel(true);
+                const hrQuery = query(
+                    collection(db, "universities", universityId, "hr_personnel")
+                );
+                const snapshot = await getDocs(hrQuery);
+                
+                const personnel = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                setHrPersonnel(personnel);
+            } catch (error) {
+                console.error("Error fetching HR personnel:", error);
+            } finally {
+                setLoadingPersonnel(false);
+            }
+        };
+        
+        if (isPanelOpen && isHeadHR) {
+            fetchHRPersonnel();
+        }
+    }, [universityId, isPanelOpen, isHeadHR]);
+
+    // Handle form input changes
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setHrFormData({
+            ...hrFormData,
+            [name]: value
+        });
+    };
+
+    // Handle permission checkbox changes
+    const handlePermissionChange = (e) => {
+        const { name, checked } = e.target;
+        setHrFormData({
+            ...hrFormData,
+            permissions: {
+                ...hrFormData.permissions,
+                [name]: checked
+            }
+        });
+    };
+
+    // Handle form submission to add new HR personnel
+    const handleAddHRPersonnel = async (e) => {
+        e.preventDefault();
+        
+        if (!universityId || !isHeadHR) {
+            showErrorAlert("You don't have permission to add HR personnel");
+            return;
+        }
+        
+        if (!hrFormData.name || !hrFormData.email || !hrFormData.password) {
+            showErrorAlert("Please fill all required fields");
+            return;
+        }
+        
+        try {
+            setIsLoading(true);
+            
+            // Create the user in Firebase Auth
+            const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                hrFormData.email,
+                hrFormData.password
+            );
+            
+            // Add user to users collection
+            await addDoc(collection(db, "users"), {
+                uid: userCredential.user.uid,
+                name: hrFormData.name,
+                email: hrFormData.email,
+                role: "hr_personnel",
+                universityId: universityId,
+                createdAt: serverTimestamp()
+            });
+            
+            // Add HR personnel to university's HR personnel subcollection
+            await addDoc(collection(db, "universities", universityId, "hr_personnel"), {
+                uid: userCredential.user.uid,
+                name: hrFormData.name,
+                email: hrFormData.email,
+                permissions: hrFormData.permissions,
+                createdAt: serverTimestamp(),
+                createdBy: auth.currentUser.uid
+            });
+            
+            // Reset form
+            setHrFormData({
+                name: "",
+                email: "",
+                password: "",
+                permissions: {
+                    recruitment: false,
+                    onboarding: false,
+                    employees: false,
+                    clusters: false
+                }
+            });
+            
+            // Refresh HR personnel list
+            const hrQuery = query(
+                collection(db, "universities", universityId, "hr_personnel")
+            );
+            const snapshot = await getDocs(hrQuery);
+            
+            const personnel = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
+            setHrPersonnel(personnel);
+            
+            showSuccessAlert("HR Personnel added successfully");
+        } catch (error) {
+            console.error("Error adding HR personnel:", error);
+            showErrorAlert(error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Define a mapping of paths to page titles
     const pageTitles = {
@@ -375,7 +545,7 @@ const Layout = () => {
                 <div className="p-6 h-full flex flex-col">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold">
-                            TEMPLATE CUSTOMIZER
+                            HR Administration
                         </h2>
                         <button
                             onClick={() => setIsPanelOpen(false)}
@@ -398,13 +568,188 @@ const Layout = () => {
                         </button>
                     </div>
                     <p className="text-sm text-gray-500 mb-6">
-                        Set preferences that will be cooked for your live
-                        preview demonstration.
+                        Manage HR personnel and assign module permissions for your university.
                     </p>
 
-                    {/* Panel Content Container (Empty for now as requested) */}
+                    {/* Panel Content Container */}
                     <div className="space-y-6 border-t pt-6 flex-grow">
-                        {/* Content will be added later as needed */}
+                        {isHeadHR ? (
+                            <>
+                                <div>
+                                    <h3 className="font-medium text-gray-900 mb-3">Add HR Personnel</h3>
+                                    <form onSubmit={handleAddHRPersonnel} className="space-y-4">
+                                        <div>
+                                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Full Name <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id="name"
+                                                name="name"
+                                                value={hrFormData.name}
+                                                onChange={handleInputChange}
+                                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Email Address <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="email"
+                                                id="email"
+                                                name="email"
+                                                value={hrFormData.email}
+                                                onChange={handleInputChange}
+                                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Password <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="password"
+                                                id="password"
+                                                name="password"
+                                                value={hrFormData.password}
+                                                onChange={handleInputChange}
+                                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Module Permissions
+                                            </label>
+                                            <div className="space-y-2">
+                                                <div className="flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="recruitment"
+                                                        name="recruitment"
+                                                        checked={hrFormData.permissions.recruitment}
+                                                        onChange={handlePermissionChange}
+                                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <label htmlFor="recruitment" className="ml-2 text-sm text-gray-700">
+                                                        Recruitment
+                                                    </label>
+                                                </div>
+                                                
+                                                <div className="flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="onboarding"
+                                                        name="onboarding"
+                                                        checked={hrFormData.permissions.onboarding}
+                                                        onChange={handlePermissionChange}
+                                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <label htmlFor="onboarding" className="ml-2 text-sm text-gray-700">
+                                                        Onboarding
+                                                    </label>
+                                                </div>
+                                                
+                                                <div className="flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="employees"
+                                                        name="employees"
+                                                        checked={hrFormData.permissions.employees}
+                                                        onChange={handlePermissionChange}
+                                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <label htmlFor="employees" className="ml-2 text-sm text-gray-700">
+                                                        Employees
+                                                    </label>
+                                                </div>
+                                                
+                                                <div className="flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="clusters"
+                                                        name="clusters"
+                                                        checked={hrFormData.permissions.clusters}
+                                                        onChange={handlePermissionChange}
+                                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <label htmlFor="clusters" className="ml-2 text-sm text-gray-700">
+                                                        Clusters
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <button
+                                            type="submit"
+                                            disabled={isLoading}
+                                            className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                                        >
+                                            {isLoading ? "Adding..." : "Add HR Personnel"}
+                                        </button>
+                                    </form>
+                                </div>
+                                
+                                <div className="border-t pt-6">
+                                    <h3 className="font-medium text-gray-900 mb-3">Existing HR Personnel</h3>
+                                    
+                                    {loadingPersonnel ? (
+                                        <p className="text-sm text-gray-500">Loading personnel...</p>
+                                    ) : hrPersonnel.length === 0 ? (
+                                        <p className="text-sm text-gray-500">No HR personnel found.</p>
+                                    ) : (
+                                        <div className="space-y-4 max-h-60 overflow-y-auto">
+                                            {hrPersonnel.map((person) => (
+                                                <div key={person.id} className="bg-gray-50 p-3 rounded-md">
+                                                    <p className="font-medium text-gray-900">{person.name}</p>
+                                                    <p className="text-sm text-gray-500">{person.email}</p>
+                                                    <div className="mt-2 flex flex-wrap gap-1">
+                                                        {person.permissions?.recruitment && (
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                                Recruitment
+                                                            </span>
+                                                        )}
+                                                        {person.permissions?.onboarding && (
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                                Onboarding
+                                                            </span>
+                                                        )}
+                                                        {person.permissions?.employees && (
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                                Employees
+                                                            </span>
+                                                        )}
+                                                        {person.permissions?.clusters && (
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                                Clusters
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex items-center justify-center h-full">
+                                <div className="text-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    <h3 className="text-lg font-medium text-gray-900">Access Restricted</h3>
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        Only HR Heads can manage HR personnel and permissions.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

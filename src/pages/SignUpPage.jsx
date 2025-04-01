@@ -84,7 +84,11 @@ const SignUpPage = () => {
 
     const result = await register(email, password, displayName, userMetadata);
     if (result.success) {
-      setSuccessMessage("Registration successful! Your account is pending approval from an administrator.");
+      if (result.isHRHead) {
+        setSuccessMessage("Registration successful! Your account has been created as the HR Head for " + universityName + ". You can now log in.");
+      } else {
+        setSuccessMessage("Registration submitted! Your account is pending approval from the HR Head.");
+      }
       
       // After 5 seconds, redirect to login
       setTimeout(() => {
@@ -225,7 +229,7 @@ const SignUpPage = () => {
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pl-10"
-                        placeholder="Dr. Jane Smith"
+                        placeholder="Jane Smith"
                         required
                       />
                       <FontAwesomeIcon icon={faUserTie} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -287,10 +291,9 @@ const SignUpPage = () => {
                       type="text"
                       name="position"
                       id="position"
-                      value={position}
-                      onChange={(e) => setPosition(e.target.value)}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                      required
+                      value="HR Head"
+                      readOnly
+                      className="bg-gray-100 border border-gray-300 text-gray-900 rounded-lg block w-full p-2.5 cursor-not-allowed"
                     />
                   </div>
 
@@ -346,7 +349,11 @@ const SignUpPage = () => {
                 </div>
 
                 <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800 border-l-4 border-blue-500 my-4">
-                  <p className="font-medium">Your account will require approval from a system administrator before activation.</p>
+                  <p className="font-medium">Important Registration Information:</p>
+                  <ul className="list-disc pl-5 mt-1">
+                    <li>The first user to register with a new university will automatically be activated as the HR Head.</li>
+                    <li>Subsequent users will require approval from the HR Head before activation.</li>
+                  </ul>
                 </div>
 
                 {/* Sign Up Button */}

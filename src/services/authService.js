@@ -90,6 +90,7 @@ export const registerUser = async (email, password, displayName, userData = {}) 
     // Check if university exists, if not create it
     let universityId = userData.universityId || '';
     let universityName = userData.universityName || '';
+    let isFirstUser = false;
     
     if (universityName && !universityId) {
       // Create a new university document
@@ -106,6 +107,7 @@ export const registerUser = async (email, password, displayName, userData = {}) 
           createdBy: uid
         });
         universityId = newUniversityRef.id;
+        isFirstUser = true; // This is the first user creating this university
       } else {
         // University already exists, use its ID
         universityId = universitySnapshot.docs[0].id;
@@ -113,7 +115,8 @@ export const registerUser = async (email, password, displayName, userData = {}) 
     }
     
     // Create user document in Firestore with additional metadata
-    // Default to "pending" status for admin approval
+    // If this is the first user for a university, make them HR Head with active status
+    // Otherwise set to "pending" status for admin approval
     const userDoc = {
       uid,
       email,
@@ -122,8 +125,8 @@ export const registerUser = async (email, password, displayName, userData = {}) 
       position: userData.position || '',
       universityId,
       universityName,
-      status: 'pending', // Require admin approval
-      role: 'hr_admin',
+      status: isFirstUser ? 'active' : 'pending', // First user is active, others require approval
+      role: isFirstUser ? 'hr_head' : 'hr_personnel', // First user is the HR Head
       createdAt: new Date().toISOString(),
       lastLogin: new Date().toISOString()
     };
@@ -138,14 +141,24 @@ export const registerUser = async (email, password, displayName, userData = {}) 
         uid,
         email,
         universityId,
-        role: 'hr_admin'
+        role: isFirstUser ? 'hr_head' : 'hr_personnel'
+      });
+
+      // If this is the first user (HR Head), add them to the users collection as well
+      await setDoc(doc(db, "users", uid), {
+        uid,
+        email,
+        displayName,
+        universityId,
+        role: isFirstUser ? 'hr_head' : 'hr_personnel',
+        createdAt: new Date().toISOString()
       });
     } else {
       // If no university, raise an error - all users must belong to a university
       throw new Error("University name is required for registration");
     }
     
-    return { success: true };
+    return { success: true, isHRHead: isFirstUser };
   } catch (error) {
     return { success: false, message: error.message };
   }
