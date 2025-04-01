@@ -31,6 +31,7 @@ const Layout = () => {
             onboarding: false,
             employees: false,
             clusters: false,
+            notifications: false
         }
     });
     const [hrPersonnel, setHrPersonnel] = useState([]);
@@ -63,21 +64,66 @@ const Layout = () => {
     // Fetch HR personnel for the university
     useEffect(() => {
         const fetchHRPersonnel = async () => {
-            if (!universityId || !isHeadHR) return;
+            if (!universityId || !auth.currentUser) return;
             
             try {
                 setLoadingPersonnel(true);
-                const hrQuery = query(
-                    collection(db, "universities", universityId, "hr_personnel")
-                );
-                const snapshot = await getDocs(hrQuery);
                 
-                const personnel = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                
-                setHrPersonnel(personnel);
+                // Always fetch the current user's data for permissions
+                if (userRole === "hr_personnel") {
+                    // For HR Personnel, fetch just their own data
+                    const personalDataRef = doc(db, "universities", universityId, "hr_personnel", auth.currentUser.uid);
+                    const personalDoc = await getDoc(personalDataRef);
+                    
+                    if (personalDoc.exists()) {
+                        const userData = {
+                            id: auth.currentUser.uid,
+                            ...personalDoc.data()
+                        };
+                        setHrPersonnel([userData]);
+                        console.log("Fetched HR personnel data:", userData);
+                    } else {
+                        console.log("No HR personnel data found for user:", auth.currentUser.uid);
+                    }
+                } else if (isHeadHR) {
+                    // For HR Head, fetch all personnel if the panel is open
+                    // or just their own data if the panel is closed
+                    if (isPanelOpen) {
+                        const hrQuery = query(
+                            collection(db, "universities", universityId, "hr_personnel")
+                        );
+                        const snapshot = await getDocs(hrQuery);
+                        
+                        const personnel = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data()
+                        }));
+                        
+                        setHrPersonnel(personnel);
+                        console.log("Fetched all HR personnel:", personnel);
+                    } else {
+                        // For HR Head when panel is closed, we should still have their own permissions data
+                        const headDataRef = doc(db, "universities", universityId, "hr_head", auth.currentUser.uid);
+                        const headDoc = await getDoc(headDataRef);
+                        
+                        if (headDoc.exists()) {
+                            // HR Heads have all permissions by default
+                            const userData = {
+                                id: auth.currentUser.uid,
+                                ...headDoc.data(),
+                                permissions: {
+                                    recruitment: true,
+                                    onboarding: true,
+                                    employees: true,
+                                    clusters: true,
+                                    notifications: true
+                                }
+                            };
+                            setHrPersonnel([userData]);
+                            console.log("Fetched HR head data:", userData);
+                        }
+                    }
+                }
             } catch (error) {
                 console.error("Error fetching HR personnel:", error);
             } finally {
@@ -85,10 +131,14 @@ const Layout = () => {
             }
         };
         
-        if (isPanelOpen && isHeadHR) {
-            fetchHRPersonnel();
-        }
-    }, [universityId, isPanelOpen, isHeadHR]);
+        fetchHRPersonnel();
+    }, [universityId, isPanelOpen, isHeadHR, auth.currentUser, userRole]);
+
+    // Add a debug effect to log when hrPersonnel changes
+    useEffect(() => {
+        console.log("Current hrPersonnel state:", hrPersonnel);
+        console.log("Current user permissions:", hrPersonnel.find(p => p.id === auth.currentUser?.uid)?.permissions);
+    }, [hrPersonnel]);
 
     // Handle form input changes
     const handleInputChange = (e) => {
@@ -174,7 +224,8 @@ const Layout = () => {
                     recruitment: false,
                     onboarding: false,
                     employees: false,
-                    clusters: false
+                    clusters: false,
+                    notifications: false
                 }
             });
             
@@ -475,7 +526,7 @@ const Layout = () => {
     return (
         <div className="flex h-screen">
             {/* Sidebar (Fixed Width) */}
-            <Sidebar />
+            <Sidebar userRole={userRole} />
 
             {/* Main Content Wrapper */}
             <div className="flex-1 flex flex-col ml-64">
@@ -484,6 +535,8 @@ const Layout = () => {
                     title={currentPage}
                     breadcrumb={breadcrumbData}
                     onBreadcrumbClick={handleBreadcrumbClick}
+                    userRole={userRole}
+                    userPermissions={hrPersonnel.find(p => p.id === auth.currentUser?.uid)?.permissions}
                 />
 
                 {/* Page Content (Only this part gets the loader) */}
@@ -693,6 +746,20 @@ const Layout = () => {
                                                     />
                                                     <label htmlFor="clusters" className="ml-2 text-sm text-gray-700">
                                                         Clusters
+                                                    </label>
+                                                </div>
+
+                                                <div className="flex items-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="notifications"
+                                                        name="notifications"
+                                                        checked={hrFormData.permissions.notifications}
+                                                        onChange={handlePermissionChange}
+                                                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <label htmlFor="notifications" className="ml-2 text-sm text-gray-700">
+                                                        Notifications
                                                     </label>
                                                 </div>
                                             </div>

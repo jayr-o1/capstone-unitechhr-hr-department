@@ -26,12 +26,29 @@ const BreadcrumbItem = memo(({ item, index, onBreadcrumbClick }) => {
 });
 
 // Make the entire Header component memoized for performance
-const Header = memo(({ title, breadcrumb = [], onBreadcrumbClick }) => {
+const Header = memo(({ title, breadcrumb = [], onBreadcrumbClick, userRole, userPermissions }) => {
     const [notificationsState, setNotificationsState] = useState([]);
     const navigate = useNavigate();
+    const isHRPersonnel = userRole === "hr_personnel";
+    
+    // HR Heads and admins always get notifications, HR personnel need the specific permission
+    const hasNotificationPermission = 
+        userRole === "hr_head" || 
+        userRole === "admin" || 
+        (isHRPersonnel && userPermissions?.notifications);
+    
+    // Debug logging
+    useEffect(() => {
+        console.log("Header userRole:", userRole);
+        console.log("Header userPermissions:", userPermissions);
+        console.log("Has notification permission:", hasNotificationPermission);
+    }, [userRole, userPermissions, hasNotificationPermission]);
 
     useEffect(() => {
         const loadNotifications = async () => {
+            // Only load notifications if user has permission
+            if (!hasNotificationPermission) return;
+            
             try {
                 const data = await fetchNotifications(); // Ensure this is working
                 console.log("Fetched notifications:", data); // Debugging step
@@ -41,7 +58,7 @@ const Header = memo(({ title, breadcrumb = [], onBreadcrumbClick }) => {
             }
         };
         loadNotifications();
-    }, []);
+    }, [hasNotificationPermission]);
 
     const markAsRead = useCallback((id) => {
         setNotificationsState((prevNotifications) =>
@@ -80,12 +97,17 @@ const Header = memo(({ title, breadcrumb = [], onBreadcrumbClick }) => {
             </div>
 
             <div className="flex items-center space-x-6">
-                <NotificationDropdown
-                    notifications={notificationsState}
-                    markAsRead={markAsRead}
-                    setNotifications={setNotificationsState}
-                />
-                <ProfileDropdown />
+                {hasNotificationPermission && (
+                    <NotificationDropdown
+                        notifications={notificationsState}
+                        markAsRead={markAsRead}
+                        setNotifications={setNotificationsState}
+                    />
+                )}
+                {/* Only show profile dropdown for HR Heads and users with profile access */}
+                {(!isHRPersonnel || userRole === "hr_head" || userRole === "admin") && (
+                    <ProfileDropdown />
+                )}
             </div>
         </header>
     );

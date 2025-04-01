@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthProvider";
 
 import DashboardIcon from "../../assets/icons/SidebarIcons/DashboardIcon";
@@ -8,18 +8,30 @@ import OnboardingIcon from "../../assets/icons/SidebarIcons/OnboardingIcon";
 import EmployeesIcon from "../../assets/icons/SidebarIcons/EmployeesIcon";
 import ClustersIcon from "../../assets/icons/SidebarIcons/ClustersIcon";
 import HRManagementIcon from "../../assets/icons/SidebarIcons/HRManagementIcon";
+import SignOutIcon from "../../assets/icons/HeaderIcons/SignOutIcon";
 
-const Sidebar = () => {
+const Sidebar = ({ userRole }) => {
     const [isOpen, setIsOpen] = useState(true);
     const location = useLocation();
-    const { user } = useAuth(); // Get current user to check admin status
+    const navigate = useNavigate();
+    const { user, logout } = useAuth(); // Get current user and logout function
 
     // Check if user is an HR Head (department manager)
-    const isHRHead = true; // For simplicity, we'll show it to everyone; you can replace with your own logic later
+    const isHRHead = userRole === "hr_head" || userRole === "admin";
 
     // Toggle sidebar visibility
     const toggleSidebar = () => {
         setIsOpen(!isOpen);
+    };
+
+    // Handle logout
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate("/signin"); // Redirect to login page
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
     };
 
     return (
@@ -74,7 +86,7 @@ const Sidebar = () => {
                                     <ClustersIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
                                 ),
                             },
-                            // Add HR Management link to the sidebar
+                            // Show HR Management for HR Heads, Sign Out for HR Personnel
                             ...(isHRHead
                                 ? [
                                       {
@@ -85,7 +97,16 @@ const Sidebar = () => {
                                           ),
                                       },
                                   ]
-                                : []),
+                                : [
+                                      {
+                                          name: "Sign Out",
+                                          path: null,
+                                          onClick: handleLogout,
+                                          icon: (
+                                              <SignOutIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 text-red-600" />
+                                          ),
+                                      },
+                                  ]),
                         ].map((item, index) => (
                             <li
                                 key={index}
@@ -95,25 +116,33 @@ const Sidebar = () => {
                                         : "bg-gray-100 hover:bg-gray-200"
                                 }`}
                             >
-                                <Link
-                                    to={item.path}
-                                    className="flex flex-col items-center justify-center py-3 md:py-4 lg:py-6"
-                                >
-                                    <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10">
-                                        {item.icon}
-                                    </div>
-                                    <span className="text-xs md:text-sm font-medium text-gray-900">
-                                        {item.name}
-                                    </span>
-                                </Link>
+                                {item.path ? (
+                                    <Link
+                                        to={item.path}
+                                        className="flex flex-col items-center justify-center py-3 md:py-4 lg:py-6"
+                                    >
+                                        <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10">
+                                            {item.icon}
+                                        </div>
+                                        <span className={`text-xs md:text-sm font-medium ${item.name === "Sign Out" ? "text-red-600" : "text-gray-900"}`}>
+                                            {item.name}
+                                        </span>
+                                    </Link>
+                                ) : (
+                                    <button
+                                        onClick={item.onClick}
+                                        className="w-full flex flex-col items-center justify-center py-3 md:py-4 lg:py-6"
+                                    >
+                                        <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10">
+                                            {item.icon}
+                                        </div>
+                                        <span className="text-xs md:text-sm font-medium text-red-600">
+                                            {item.name}
+                                        </span>
+                                    </button>
+                                )}
                             </li>
                         ))}
-                    </div>
-
-                    {/* Optional: Add a footer or additional content here */}
-                    <div className="p-4 text-center text-sm text-gray-400 border-t border-gray-700">
-                        {" "}
-                        © 2025 UNITECH HR
                     </div>
                 </ul>
             </div>

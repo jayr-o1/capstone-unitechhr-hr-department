@@ -50,7 +50,8 @@ const HRPersonnelCard = ({ person, universityId, refreshPersonnel }) => {
     recruitment: false,
     onboarding: false,
     employees: false,
-    clusters: false
+    clusters: false,
+    notifications: false
   });
   
   // Toggle dropdown visibility
@@ -224,6 +225,11 @@ const HRPersonnelCard = ({ person, universityId, refreshPersonnel }) => {
               Clusters
             </span>
           )}
+          {person.permissions?.notifications && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+              Notifications
+            </span>
+          )}
         </div>
       </div>
       
@@ -372,6 +378,20 @@ const HRPersonnelCard = ({ person, universityId, refreshPersonnel }) => {
                     />
                     <label htmlFor="clusters" className="ml-2 text-sm text-gray-700">
                       Clusters
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="notifications"
+                      name="notifications"
+                      checked={permissions.notifications}
+                      onChange={handlePermissionChange}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="notifications" className="ml-2 text-sm text-gray-700">
+                      Notifications
                     </label>
                   </div>
                 </div>
