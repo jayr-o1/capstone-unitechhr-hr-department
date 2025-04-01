@@ -4,11 +4,12 @@ import Header from "./Layouts/Header";
 import Sidebar from "./Layouts/Sidebar";
 import PageLoader from "./PageLoader";
 import useFetchJobs from "../hooks/useFetchJobs"; // Import the useFetchJobs hook
-import { doc, getDoc, collection, addDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, collection, addDoc, getDocs, query, where, serverTimestamp, setDoc } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import showSuccessAlert from "./Alerts/SuccessAlert";
 import showErrorAlert from "./Alerts/ErrorAlert";
+import HRPersonnelCard from "./HRComponents/HRPersonnelCard";
 
 const Layout = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -44,11 +45,12 @@ const Layout = () => {
             if (!auth.currentUser || !universityId) return;
             
             try {
-                const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    setUserRole(userData.role || "user");
-                    setIsHeadHR(userData.role === "hr_head" || userData.role === "admin");
+                // Get the user role from authMappings for authorization
+                const authMappingDoc = await getDoc(doc(db, "authMappings", auth.currentUser.uid));
+                if (authMappingDoc.exists()) {
+                    const authData = authMappingDoc.data();
+                    setUserRole(authData.role || "user");
+                    setIsHeadHR(authData.role === "hr_head" || authData.role === "admin");
                 }
             } catch (error) {
                 console.error("Error checking user role:", error);
@@ -133,24 +135,34 @@ const Layout = () => {
                 hrFormData.password
             );
             
-            // Add user to users collection
-            await addDoc(collection(db, "users"), {
-                uid: userCredential.user.uid,
+            const uid = userCredential.user.uid;
+            
+            // Create the user document with all details in the university subcollection
+            const userDoc = {
+                uid: uid,
                 name: hrFormData.name,
                 email: hrFormData.email,
                 role: "hr_personnel",
-                universityId: universityId,
-                createdAt: serverTimestamp()
-            });
-            
-            // Add HR personnel to university's HR personnel subcollection
-            await addDoc(collection(db, "universities", universityId, "hr_personnel"), {
-                uid: userCredential.user.uid,
-                name: hrFormData.name,
-                email: hrFormData.email,
+                status: "active", // Directly activated by HR Head
                 permissions: hrFormData.permissions,
                 createdAt: serverTimestamp(),
-                createdBy: auth.currentUser.uid
+                createdBy: auth.currentUser.uid,
+                lastLogin: serverTimestamp()
+            };
+            
+            // Store HR personnel data in personnel collection, NOT in hr_head
+            // HR personnel should only be in the hr_personnel subcollection
+            await setDoc(doc(db, "universities", universityId, "hr_personnel", uid), userDoc);
+            
+            // Create auth mapping for efficient login - include displayName
+            await setDoc(doc(db, "authMappings", uid), {
+                uid: uid,
+                email: hrFormData.email,
+                displayName: hrFormData.name, // Include name for better user experience
+                universityId: universityId,
+                role: "hr_personnel",
+                status: "active",
+                lastUpdated: serverTimestamp()
             });
             
             // Reset form
@@ -704,34 +716,38 @@ const Layout = () => {
                                     ) : hrPersonnel.length === 0 ? (
                                         <p className="text-sm text-gray-500">No HR personnel found.</p>
                                     ) : (
-                                        <div className="space-y-4 max-h-60 overflow-y-auto">
+                                        <div className="space-y-1 max-h-80 overflow-y-auto pr-1">
                                             {hrPersonnel.map((person) => (
-                                                <div key={person.id} className="bg-gray-50 p-3 rounded-md">
-                                                    <p className="font-medium text-gray-900">{person.name}</p>
-                                                    <p className="text-sm text-gray-500">{person.email}</p>
-                                                    <div className="mt-2 flex flex-wrap gap-1">
-                                                        {person.permissions?.recruitment && (
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                                Recruitment
-                                                            </span>
-                                                        )}
-                                                        {person.permissions?.onboarding && (
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                                Onboarding
-                                                            </span>
-                                                        )}
-                                                        {person.permissions?.employees && (
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                                                                Employees
-                                                            </span>
-                                                        )}
-                                                        {person.permissions?.clusters && (
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                                Clusters
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
+                                                <HRPersonnelCard 
+                                                    key={person.id} 
+                                                    person={person} 
+                                                    universityId={universityId}
+                                                    refreshPersonnel={() => {
+                                                        // Refresh HR personnel list
+                                                        const fetchPersonnel = async () => {
+                                                            try {
+                                                                setLoadingPersonnel(true);
+                                                                const hrQuery = query(
+                                                                    collection(db, "universities", universityId, "hr_personnel")
+                                                                );
+                                                                const snapshot = await getDocs(hrQuery);
+                                                                
+                                                                const personnel = snapshot.docs.map(doc => ({
+                                                                    id: doc.id,
+                                                                    ...doc.data()
+                                                                }));
+                                                                
+                                                                setHrPersonnel(personnel);
+                                                            } catch (error) {
+                                                                console.error("Error fetching HR personnel:", error);
+                                                            } finally {
+                                                                setLoadingPersonnel(false);
+                                                            }
+                                                        };
+                                                        
+                                                        fetchPersonnel();
+                                                    }}
+                                                />
                                             ))}
                                         </div>
                                     )}

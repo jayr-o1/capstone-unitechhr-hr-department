@@ -11,13 +11,15 @@ export const loginUser = async (email, password) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
     
-    // Get auth mapping to find the user's university
+    // Get user document directly from the authMappings collection
     const authMappingRef = doc(db, "authMappings", uid);
     const authMappingDoc = await getDoc(authMappingRef);
     
     if (authMappingDoc.exists()) {
       const authData = authMappingDoc.data();
       const universityId = authData.universityId;
+      const role = authData.role;
+      const status = authData.status;
       
       if (!universityId) {
         return { 
@@ -26,34 +28,28 @@ export const loginUser = async (email, password) => {
         };
       }
       
-      // Get the full user record from the university collection
-      const universityUserRef = doc(db, "universities", universityId, "users", uid);
-      const universityUserDoc = await getDoc(universityUserRef);
-      
-      if (universityUserDoc.exists()) {
-        const userData = universityUserDoc.data();
-        
-        // If account is pending approval
-        if (userData.status === 'pending') {
-          return { 
-            success: false, 
-            message: "Your account is pending administrator approval. Please check back later."
-          };
-        }
-        
-        // Update the last login time
-        await updateDoc(universityUserRef, {
-          lastLogin: new Date().toISOString()
-        });
-        
-        return { success: true, universityId };
-      } else {
-        // If user has mapping but no university record, something is wrong
+      // Check status from the auth mapping
+      if (status === 'pending') {
         return { 
           success: false, 
-          message: "User record is incomplete. Please contact administrator." 
+          message: "Your account is pending administrator approval. Please check back later."
         };
       }
+      
+      // Update the last login time in the appropriate collection based on role
+      if (role === 'hr_head') {
+        const hrHeadRef = doc(db, "universities", universityId, "hr_head", uid);
+        await updateDoc(hrHeadRef, {
+          lastLogin: new Date().toISOString()
+        });
+      } else {
+        const hrPersonnelRef = doc(db, "universities", universityId, "hr_personnel", uid);
+        await updateDoc(hrPersonnelRef, {
+          lastLogin: new Date().toISOString()
+        });
+      }
+      
+      return { success: true, universityId, role };
     } else {
       // No auth mapping found, user doesn't exist
       return { success: false, message: "User not found. Please register first." };
@@ -114,9 +110,11 @@ export const registerUser = async (email, password, displayName, userData = {}) 
       }
     }
     
-    // Create user document in Firestore with additional metadata
-    // If this is the first user for a university, make them HR Head with active status
-    // Otherwise set to "pending" status for admin approval
+    // Determine user status and role
+    const userStatus = isFirstUser ? 'active' : 'pending';
+    const userRole = isFirstUser ? 'hr_head' : 'hr_personnel';
+    
+    // Create detailed user document
     const userDoc = {
       uid,
       email,
@@ -125,34 +123,34 @@ export const registerUser = async (email, password, displayName, userData = {}) 
       position: userData.position || '',
       universityId,
       universityName,
-      status: isFirstUser ? 'active' : 'pending', // First user is active, others require approval
-      role: isFirstUser ? 'hr_head' : 'hr_personnel', // First user is the HR Head
+      status: userStatus,
+      role: userRole,
       createdAt: new Date().toISOString(),
       lastLogin: new Date().toISOString()
     };
     
     if (universityId) {
-      // Add user to university's users subcollection - this is the primary user record
-      await setDoc(doc(db, "universities", universityId, "users", uid), userDoc);
+      // Store user in the appropriate collection based on their role
+      if (userRole === 'hr_head') {
+        // HR Heads go in the hr_head subcollection
+        await setDoc(doc(db, "universities", universityId, "hr_head", uid), userDoc);
+      } else {
+        // HR Personnel go in the hr_personnel subcollection
+        await setDoc(doc(db, "universities", universityId, "hr_personnel", uid), userDoc);
+      }
       
-      // Instead of creating a user in the root collection, only store auth mapping data
-      // This will only contain the minimum data needed for auth purposes
+      // Create auth mapping document with essential authentication data
+      // This will be used for fast authentication lookups
       await setDoc(doc(db, "authMappings", uid), {
-        uid,
-        email,
-        universityId,
-        role: isFirstUser ? 'hr_head' : 'hr_personnel'
-      });
-
-      // If this is the first user (HR Head), add them to the users collection as well
-      await setDoc(doc(db, "users", uid), {
         uid,
         email,
         displayName,
         universityId,
-        role: isFirstUser ? 'hr_head' : 'hr_personnel',
-        createdAt: new Date().toISOString()
+        role: userRole,
+        status: userStatus,
+        lastUpdated: new Date().toISOString()
       });
+      
     } else {
       // If no university, raise an error - all users must belong to a university
       throw new Error("University name is required for registration");

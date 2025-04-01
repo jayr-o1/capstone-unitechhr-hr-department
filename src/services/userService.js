@@ -17,7 +17,9 @@ export const getUserData = async (userId) => {
       
       // If we have a universityId, get the full user data from university collection
       if (authMapping.universityId) {
-        const universityUserRef = doc(db, 'universities', authMapping.universityId, 'users', userId);
+        // Choose the appropriate collection based on user role
+        const collectionName = authMapping.role === 'hr_head' ? 'hr_head' : 'hr_personnel';
+        const universityUserRef = doc(db, 'universities', authMapping.universityId, collectionName, userId);
         const universityUserDoc = await getDoc(universityUserRef);
         
         if (universityUserDoc.exists()) {
@@ -73,13 +75,17 @@ export const updateUserData = async (userId, userData) => {
     
     const authMapping = authMappingDoc.data();
     const universityId = authMapping.universityId;
+    const role = authMapping.role;
     
     if (!universityId) {
       return { success: false, message: 'User is not associated with any university' };
     }
     
-    // Update the user data in the university collection
-    const universityUserRef = doc(db, 'universities', universityId, 'users', userId);
+    // Choose the appropriate collection based on user role
+    const collectionName = role === 'hr_head' ? 'hr_head' : 'hr_personnel';
+    
+    // Update the user data in the appropriate university collection
+    const universityUserRef = doc(db, 'universities', universityId, collectionName, userId);
     const universityUserDoc = await getDoc(universityUserRef);
     
     if (!universityUserDoc.exists()) {

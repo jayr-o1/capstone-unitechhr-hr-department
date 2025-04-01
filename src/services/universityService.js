@@ -45,7 +45,7 @@ export const getUniversityById = async (universityId) => {
     
     if (universityDoc.exists()) {
       // Get users count
-      const usersRef = collection(db, "universities", universityId, "users");
+      const usersRef = collection(db, "universities", universityId, "hr_head");
       const usersSnapshot = await getDocs(usersRef);
       
       // Get jobs count
@@ -77,7 +77,7 @@ export const getUniversityUsers = async (universityId) => {
       return { success: false, message: "No university ID provided" };
     }
     
-    const usersRef = collection(db, "universities", universityId, "users");
+    const usersRef = collection(db, "universities", universityId, "hr_head");
     const querySnapshot = await getDocs(usersRef);
     
     const users = [];
@@ -153,8 +153,8 @@ export const addUserToUniversity = async (universityId, userId, userData) => {
       return { success: false, message: "University not found" };
     }
     
-    // Add user to university's users subcollection
-    const userRef = doc(db, "universities", universityId, "users", userId);
+    // Add user to university's hr_head subcollection
+    const userRef = doc(db, "universities", universityId, "hr_head", userId);
     await setDoc(userRef, {
       ...userData,
       universityId,
@@ -175,8 +175,8 @@ export const removeUserFromUniversity = async (universityId, userId) => {
       return { success: false, message: "Missing university ID or user ID" };
     }
     
-    // Remove user from university's users subcollection
-    const userRef = doc(db, "universities", universityId, "users", userId);
+    // Remove user from university's hr_head subcollection
+    const userRef = doc(db, "universities", universityId, "hr_head", userId);
     await deleteDoc(userRef);
     
     return { success: true };
