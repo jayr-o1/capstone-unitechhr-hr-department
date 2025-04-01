@@ -61,35 +61,35 @@ const Sidebar = ({ userRole, userPermissions }) => {
     // Create menu items array
     const menuItems = [
         {
-            name: "Dashboard",
+            name: "HR Dashboard",
             path: "/dashboard",
             icon: (
                 <DashboardIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
             ),
         },
         {
-            name: "Recruitment",
+            name: "Job Recruitment",
             path: "/recruitment",
             icon: (
                 <RecruitmentIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
             ),
         },
         {
-            name: "Onboarding",
+            name: "Applicant Onboarding",
             path: "/onboarding",
             icon: (
                 <OnboardingIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
             ),
         },
         {
-            name: "Employees",
+            name: "Employee Profiling",
             path: "/employees",
             icon: (
                 <EmployeesIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
             ),
         },
         {
-            name: "Clusters",
+            name: "Development Clusters",
             path: "/clusters",
             icon: (
                 <ClustersIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />

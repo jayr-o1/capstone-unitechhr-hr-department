@@ -609,7 +609,10 @@ const Layout = () => {
                     isPanelOpen ? "translate-x-0" : "translate-x-full"
                 }`}
                 style={{ 
-                    borderLeft: "1px solid #e2e8f0"
+                    borderLeft: "1px solid #e2e8f0",
+                    background: "rgba(255, 255, 255, 0.95)",
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)"
                 }}
             >
                 <div className="p-6 h-full flex flex-col">
