@@ -6,43 +6,67 @@ import {
     Navigate,
 } from "react-router-dom";
 import Layout from "./components/Layout";
-import AccountLayout from "./components/AccountLayout"; // Import the new AccountLayout
+import AccountLayout from "./components/AccountLayout";
+import EmployeeLayout from "./components/employee/EmployeeLayout";
 import Dashboard from "./pages/Dashboard";
 import Recruitment from "./pages/Recruitment";
-import JobDetails from "./pages/RecruitmentModule/JobDetails"; // Import the JobDetails component
-import ApplicantDetails from "./pages/RecruitmentModule/ApplicantDetails"; // Import the ApplicantDetails component
+import JobDetails from "./pages/RecruitmentModule/JobDetails";
+import ApplicantDetails from "./pages/RecruitmentModule/ApplicantDetails";
 import Onboarding from "./pages/Onboarding";
 import Employees from "./pages/Employees";
-import EmployeeDetails from "./pages/EmployeeDetails"; // Import the EmployeeDetails component
+import EmployeeDetails from "./pages/EmployeeDetails";
 import Clusters from "./pages/Clusters";
-import Profile from "./pages/Profile"; // Import the Profile component
-import Subscription from "./pages/Subscription"; // Import the Subscription component
+import Profile from "./pages/Profile";
+import Subscription from "./pages/Subscription";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import HRHeadPanel from "./pages/HRHeadPanel"; // Import the HR Head Panel component
-import { JobProvider } from "./contexts/JobContext"; // Import JobProvider
+import HRHeadPanel from "./pages/HRHeadPanel";
+
+// Employee pages
+import EmployeeDashboard from "./pages/employee/Dashboard";
+import EmployeeProfile from "./pages/employee/Profile";
+import EmployeeDocuments from "./pages/employee/Documents";
+import CareerProgress from "./pages/employee/CareerProgress";
+
+import { JobProvider } from "./contexts/JobContext";
 import AuthProvider, { useAuth } from "./contexts/AuthProvider";
 import { scheduleJobsCleanup } from "./utils/cleanupUtil";
 import { getUserData } from "./services/userService";
+import { Toaster } from 'react-hot-toast';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
-    const { user, loading } = useAuth();
-
+    const auth = useAuth();
+    
+    console.log("ProtectedRoute: Auth state", {
+        user: auth?.user ? "exists" : "null",
+        loading: auth?.loading
+    });
+    
     // If still loading auth state, show nothing (or a loader)
-    if (loading) return null;
+    if (auth?.loading) return <div className="w-full h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+    </div>;
 
     // If user is not authenticated, redirect to login
-    if (!user) return <Navigate to="/" />;
+    if (!auth?.user) return <Navigate to="/" />;
 
     // If authenticated, render the children components
     return children;
 };
 
 function AppContent() {
-    const { user } = useAuth();
+    const auth = useAuth();
+    
+    console.log("AppContent: Auth context", { 
+        isObject: !!auth, 
+        hasUser: !!auth?.user,
+        loading: auth?.loading
+    });
+    
+    const { user, userDetails } = auth || {};
 
     useEffect(() => {
         // Page refresh detection
@@ -110,8 +134,14 @@ function AppContent() {
         }
     }, [user]);
 
+    // Check if user is an employee
+    const isEmployee = userDetails?.role === 'employee';
+
     return (
         <Router>
+            {/* Toast notifications */}
+            <Toaster position="top-right" />
+            
             <Routes>
                 {/* Authentication Routes */}
                 {!user ? (
@@ -131,9 +161,35 @@ function AppContent() {
                             <Route path="*" element={<Navigate to="/" />} />
                         </Route>
                     </>
+                ) : isEmployee ? (
+                    <>
+                        {/* Employee Routes */}
+                        <Route
+                            path="/employee"
+                            element={
+                                <ProtectedRoute>
+                                    <EmployeeLayout />
+                                </ProtectedRoute>
+                            }
+                        >
+                            <Route
+                                index
+                                element={<Navigate to="/employee/dashboard" />}
+                            />
+                            <Route path="dashboard" element={<EmployeeDashboard />} />
+                            <Route path="profile" element={<EmployeeProfile />} />
+                            <Route path="documents" element={<EmployeeDocuments />} />
+                            <Route path="career" element={<CareerProgress />} />
+                        </Route>
+                        {/* Redirect HR routes to employee dashboard if user is an employee */}
+                        <Route
+                            path="*"
+                            element={<Navigate to="/employee/dashboard" />}
+                        />
+                    </>
                 ) : (
                     <>
-                        {/* Protected Application Routes */}
+                        {/* HR Staff Routes */}
                         <Route
                             path="/"
                             element={
@@ -185,7 +241,12 @@ function AppContent() {
                                 element={<Subscription />}
                             />
                             <Route path="hr-management" element={<HRHeadPanel />} />
-                            {/* Add more routes here */}
+                            
+                            {/* Redirect employee routes to dashboard if user is HR */}
+                            <Route
+                                path="employee/*"
+                                element={<Navigate to="/dashboard" />}
+                            />
                         </Route>
                     </>
                 )}
@@ -195,6 +256,11 @@ function AppContent() {
 }
 
 function App() {
+    // Set up job cleanup when component mounts
+    useEffect(() => {
+        scheduleJobsCleanup();
+    }, []);
+
     return (
         <AuthProvider>
             <AppContent />

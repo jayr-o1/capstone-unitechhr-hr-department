@@ -4,7 +4,9 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 // Fetch user data from Firestore
 export const getUserData = async (userId) => {
   try {
+    console.log('getUserData called for userId:', userId);
     if (!userId) {
+      console.log('getUserData: No user ID provided');
       return { success: false, message: 'No user ID provided' };
     }
 
@@ -14,36 +16,54 @@ export const getUserData = async (userId) => {
 
     if (authMappingDoc.exists()) {
       const authMapping = authMappingDoc.data();
+      console.log('getUserData: Found auth mapping:', authMapping);
       
       // If we have a universityId, get the full user data from university collection
       if (authMapping.universityId) {
         // Choose the appropriate collection based on user role
-        const collectionName = authMapping.role === 'hr_head' ? 'hr_head' : 'hr_personnel';
+        let collectionName;
+        if (authMapping.role === 'hr_head') {
+          collectionName = 'hr_head';
+        } else if (authMapping.role === 'employee') {
+          collectionName = 'employees';
+        } else {
+          collectionName = 'hr_personnel';
+        }
+        
+        console.log(`getUserData: Looking in '${collectionName}' collection for this user`);
+        
         const universityUserRef = doc(db, 'universities', authMapping.universityId, collectionName, userId);
         const universityUserDoc = await getDoc(universityUserRef);
         
         if (universityUserDoc.exists()) {
           // Return full user data from university
+          const userData = {
+            ...universityUserDoc.data(),
+            universityId: authMapping.universityId,  // Ensure universityId is included
+            role: authMapping.role // Ensure role is included
+          };
+          
+          console.log('getUserData: Success, returning user data');
           return { 
             success: true, 
-            data: {
-              ...universityUserDoc.data(),
-              universityId: authMapping.universityId  // Ensure universityId is included
-            }
+            data: userData
           };
         } else {
+          console.log(`getUserData: University user record not found in ${collectionName}`);
           return { 
             success: false, 
             message: 'University user record not found' 
           };
         }
       } else {
+        console.log('getUserData: User is not associated with any university');
         return { 
           success: false, 
           message: 'User is not associated with any university' 
         };
       }
     } else {
+      console.log('getUserData: User not found in auth mappings');
       return { 
         success: false, 
         message: 'User not found in auth mappings' 
@@ -82,7 +102,14 @@ export const updateUserData = async (userId, userData) => {
     }
     
     // Choose the appropriate collection based on user role
-    const collectionName = role === 'hr_head' ? 'hr_head' : 'hr_personnel';
+    let collectionName;
+    if (role === 'hr_head') {
+      collectionName = 'hr_head';
+    } else if (role === 'employee') {
+      collectionName = 'employees';
+    } else {
+      collectionName = 'hr_personnel';
+    }
     
     // Update the user data in the appropriate university collection
     const universityUserRef = doc(db, 'universities', universityId, collectionName, userId);

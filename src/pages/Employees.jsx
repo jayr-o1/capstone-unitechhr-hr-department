@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
 import { auth } from "../firebase";
@@ -13,6 +13,10 @@ import { getUserData } from "../services/userService";
 import showSuccessAlert from "../components/Alerts/SuccessAlert";
 import showErrorAlert from "../components/Alerts/ErrorAlert";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthProvider";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlus, faSearch, faEllipsisV, faUser, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { formatDate } from "../utils/dateUtils";
 
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
@@ -58,34 +62,28 @@ const Employees = () => {
 
   // Fetch employees from Firestore
   const fetchEmployees = async () => {
-    if (!universityId) {
-      return; // Don't fetch if no universityId
-    }
-
+    setLoading(true);
     try {
-      setLoading(true);
-      console.log("Fetching employees for university:", universityId);
-
-      // Get employees from the university's subcollection
-      const result = await getUniversityEmployees(universityId);
-
-      if (result.success) {
-        const employeeData = result.employees.map((employee) => ({
-          ...employee,
-          dateHired:
-            employee.dateHired?.toDate?.() ||
-            new Date(employee.dateHired) ||
-            new Date(),
-        }));
-
-        setEmployees(employeeData);
-      } else {
-        console.error("Error fetching employees:", result.message);
-        setError("Failed to load employees. " + result.message);
+      if (!universityId) {
+        console.error("University ID not available");
+        return;
       }
-    } catch (err) {
-      console.error("Error fetching employees:", err);
-      setError("Failed to load employees. Please try again later.");
+
+      console.log("Fetching employees for university:", universityId);
+      
+      // Get employees from the university's employees subcollection
+      const employeesRef = collection(db, "universities", universityId, "employees");
+      const employeesSnapshot = await getDocs(employeesRef);
+      
+      const employeesList = employeesSnapshot.docs.map(doc => ({
+        id: doc.id,  // This is the document ID (employeeId)
+        ...doc.data()
+      }));
+      
+      console.log(`Found ${employeesList.length} employees`);
+      setEmployees(employeesList);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
     } finally {
       setLoading(false);
     }
@@ -312,13 +310,7 @@ const Employees = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Position
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Department
+                    ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Hire Date
@@ -338,29 +330,25 @@ const Employees = () => {
                       <div className="flex items-center">
                         <div className="h-10 w-10 flex-shrink-0 bg-gray-300 rounded-full flex items-center justify-center">
                           {employee.name
-                            .split(" ")
+                            ?.split(" ")
                             .map((n) => n[0])
                             .join("")
-                            .toUpperCase()}
+                            .toUpperCase() || employee.employeeId.slice(0, 3).toUpperCase()}
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {employee.name}
+                            {employee.name || employee.employeeId}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {employee.email}
+                            ID: {employee.employeeId}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {employee.position}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {employee.department}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(employee.dateHired)}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {formatDate(employee.createdAt)}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span

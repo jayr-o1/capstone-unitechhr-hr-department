@@ -1,20 +1,24 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { loginUser, resetPassword, registerUser } from "../services/authService";
-import { getUserData } from "../services/userService";
-import { getUniversityById } from "../services/universityService";
 import { auth } from "../firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { loginUser, registerUser, resetPassword } from "../services/authService";
+import { getUserData } from "../services/userService";
+import { getUniversityById } from "../services/universityService";
 
 // Create Context
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 // Custom Hook for accessing the context
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };
 
 // AuthProvider Component
-export const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
   const [university, setUniversity] = useState(null);
@@ -24,10 +28,12 @@ export const AuthProvider = ({ children }) => {
   // Fetch additional user details and university info
   const fetchUserDetails = async (userId) => {
     try {
+      console.log("Fetching user details for:", userId);
       // Get user data from Firestore
       const userData = await getUserData(userId);
       
       if (userData.success) {
+        console.log("User data fetched successfully:", userData.data);
         setUserDetails(userData.data);
         
         // If user has a university, fetch university details
@@ -47,10 +53,15 @@ export const AuthProvider = ({ children }) => {
 
   // Listen to the Firebase Auth state and set the local state.
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user);
-        await fetchUserDetails(user.uid);
+    console.log("Setting up auth state listener");
+    
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+      console.log("Auth state changed:", authUser ? "User logged in" : "No user");
+      
+      if (authUser) {
+        console.log("Setting user:", authUser.uid);
+        setUser(authUser);
+        await fetchUserDetails(authUser.uid);
       } else {
         setUser(null);
         setUserDetails(null);
@@ -67,14 +78,56 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     const result = await loginUser(email, password);
+    
     if (!result.success) {
       setError(result.message);
     } else {
-      // Fetch user details after successful login
-      if (auth.currentUser) {
+      // For employee logins, we need to set up user details differently
+      if (result.role === 'employee') {
+        console.log("Setting employee user details");
+        
+        // If employee login was successful but we didn't use Firebase Auth (debug mode)
+        if (!auth.currentUser) {
+          // Create a mock user object for the employee
+          const employeeUser = {
+            uid: `emp_${result.employeeData?.id || ""}_${result.universityId}`,
+            isEmployee: true,
+            universityId: result.universityId,
+            employeeId: result.employeeData?.id || "",
+            displayName: result.employeeData?.name || "",
+            email: `${result.employeeData?.id || ""}@${result.universityId}.com`
+          };
+          
+          console.log("Created mock employee user:", employeeUser);
+          setUser(employeeUser);
+          
+          // Set detailed user info
+          const userDetails = {
+            role: "employee",
+            universityId: result.universityId,
+            ...(result.employeeData || {})
+          };
+          console.log("Setting employee user details:", userDetails);
+          setUserDetails(userDetails);
+          
+          // Set university info
+          setUniversity({
+            id: result.universityId,
+            name: result.universityName,
+            code: result.universityCode
+          });
+          
+          console.log("Employee login successful - user object and details set");
+        } else {
+          // If Firebase Auth was used, fetch details as normal
+          await fetchUserDetails(auth.currentUser.uid);
+        }
+      } else if (auth.currentUser) {
+        // For HR logins, use Firebase Auth as before
         await fetchUserDetails(auth.currentUser.uid);
       }
     }
+    
     setLoading(false);
     return result;
   };
@@ -93,8 +146,17 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setLoading(true);
     try {
-      await signOut(auth);
-      // Auth state listener will update the user state
+      // For employee logins that didn't use Firebase Auth, just clear the state
+      if (userDetails?.role === 'employee' && user?.isEmployee) {
+        console.log("Logging out employee directly");
+        setUser(null);
+        setUserDetails(null);
+        setUniversity(null);
+      } else {
+        // For HR logins, sign out from Firebase Auth
+        await signOut(auth);
+        // Auth state listener will update the user state
+      }
     } catch (error) {
       setError(error.message);
     }
@@ -121,22 +183,20 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
-  return (
-    <AuthContext.Provider value={{ 
-      user, 
-      userDetails,
-      university,
-      login,
-      register, 
-      logout,
-      loading, 
-      error, 
-      resetPasswordHandler,
-      refreshUserData
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    userDetails,
+    university,
+    login,
+    register, 
+    logout,
+    loading, 
+    error, 
+    resetPasswordHandler,
+    refreshUserData
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export default AuthProvider; 

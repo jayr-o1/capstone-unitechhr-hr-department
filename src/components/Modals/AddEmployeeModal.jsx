@@ -2,50 +2,25 @@ import React, { useState } from "react";
 import showSuccessAlert from "../Alerts/SuccessAlert";
 import showWarningAlert from "../Alerts/WarningAlert";
 import showErrorAlert from "../Alerts/ErrorAlert";
-import departments from "../../data/departments";
 import FormField from "./RecruitmentModalComponents/FormField";
-import { db, auth } from "../../firebase";
-import { collection, addDoc, serverTimestamp, doc } from "firebase/firestore";
-import { getUserData } from "../../services/userService";
+import { db } from "../../firebase";
+import { collection, addDoc, serverTimestamp, doc, getDocs, query, where, getDoc, setDoc } from "firebase/firestore";
+import { hashPassword } from "../../utils/passwordUtilsFixed";
+import toast from "react-hot-toast";
 
 const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, universityId }) => {
     const [formData, setFormData] = useState({
         name: "",
-        email: "",
-        phone: "",
-        position: "",
-        department: "",
-        dateHired: "",
         employeeId: "",
-        salary: "",
+        password: "",
         status: "Active",
-        emergencyContact: {
-            name: "",
-            relationship: "",
-            phone: "",
-        },
-        bankDetails: {
-            bankName: "",
-            accountNumber: "",
-            accountName: "",
-        },
     });
+    const [formError, setFormError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if (name.includes(".")) {
-            // Handle nested objects (emergency contact and bank details)
-            const [parent, child] = name.split(".");
-            setFormData((prev) => ({
-                ...prev,
-                [parent]: {
-                    ...prev[parent],
-                    [child]: value,
-                },
-            }));
-        } else {
-            setFormData((prev) => ({ ...prev, [name]: value }));
-        }
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleReset = () => {
@@ -63,93 +38,71 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, universityId }) =>
     const resetFormFields = () => {
         setFormData({
             name: "",
-            email: "",
-            phone: "",
-            position: "",
-            department: "",
-            dateHired: "",
             employeeId: "",
-            salary: "",
+            password: "",
             status: "Active",
-            emergencyContact: {
-                name: "",
-                relationship: "",
-                phone: "",
-            },
-            bankDetails: {
-                bankName: "",
-                accountNumber: "",
-                accountName: "",
-            },
         });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (
-            !formData.name ||
-            !formData.email ||
-            !formData.department ||
-            !formData.position
-        ) {
-            showErrorAlert("Please fill all required fields!");
+        
+        // Make sure required fields are filled
+        if (!formData.name || !formData.employeeId || !formData.password) {
+            setFormError("Name, Employee ID, and password are required.");
             return;
         }
-
-        // Verify we have a university ID
-        let employeeUniversityId = universityId;
         
-        // If universityId not provided as prop, try to get from current user
-        if (!employeeUniversityId) {
-            try {
-                const user = auth.currentUser;
-                if (user) {
-                    const userDataResult = await getUserData(user.uid);
-                    if (userDataResult.success && userDataResult.data.universityId) {
-                        employeeUniversityId = userDataResult.data.universityId;
-                    }
-                }
-            } catch (error) {
-                console.error("Error getting university ID:", error);
-            }
-        }
-        
-        if (!employeeUniversityId) {
-            showErrorAlert("Failed to add employee: University ID not found. Please try again later.");
-            return;
-        }
-
         try {
+            setIsSubmitting(true);
+            
+            // Check if employee ID already exists in this university
+            const employeesRef = collection(db, `universities/${universityId}/employees`);
+            const employeeDoc = doc(employeesRef, formData.employeeId);
+            const employeeSnapshot = await getDoc(employeeDoc);
+            
+            if (employeeSnapshot.exists()) {
+                setFormError("An employee with this ID already exists.");
+                setIsSubmitting(false);
+                return;
+            }
+            
+            // Hash the password
+            const hashedPassword = await hashPassword(formData.password);
+            
+            // Prepare employee data
             const employeeData = {
-                ...formData,
-                universityId: employeeUniversityId, // Store which university this employee belongs to
-                dateHired: formData.dateHired
-                    ? new Date(formData.dateHired)
-                    : serverTimestamp(),
+                name: formData.name,
+                employeeId: formData.employeeId,
+                password: hashedPassword,
+                status: "active",
                 createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
             };
-
-            // Add to university's employees subcollection instead of global collection
-            const docRef = await addDoc(
-                collection(db, "universities", employeeUniversityId, "employees"),
-                employeeData
-            );
-
-            showSuccessAlert("Employee added successfully!");
-
-            setTimeout(() => {
-                resetFormFields();
-                onClose();
-
-                if (typeof onEmployeeAdded === "function") {
-                    onEmployeeAdded();
-                }
-            }, 2500);
+            
+            // Save the employee directly in the employees subcollection, using the employeeId as the document ID
+            await setDoc(doc(employeesRef, formData.employeeId), employeeData);
+            
+            console.log("Employee added successfully");
+            
+            // Reset form and close modal
+            resetFormFields();
+            onClose();
+            
+            // Show success message using react-hot-toast
+            toast.success("Employee added successfully!");
+            
+            // Call onEmployeeAdded if provided
+            if (typeof onEmployeeAdded === "function") {
+                onEmployeeAdded();
+            }
         } catch (error) {
             console.error("Error adding employee:", error);
-            showErrorAlert("Failed to add employee. Please try again.");
+            setFormError("Error adding employee. Please try again.");
+            // Show error message using react-hot-toast
+            toast.error("Failed to add employee. Please try again.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -157,14 +110,13 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, universityId }) =>
 
     return (
         <div
-            className="fixed inset-0 flex items-center justify-center z-50 min-h-screen"
+            className="fixed inset-0 flex items-center justify-center z-50"
             style={{
                 background: "rgba(0, 0, 0, 0.6)",
                 backdropFilter: "blur(8px)",
-                zIndex: 1000,
             }}
         >
-            <div className="bg-white rounded-lg p-8 w-3/5 max-w-5xl shadow-lg relative z-50 flex flex-col max-h-[90vh]">
+            <div className="bg-white rounded-lg p-8 w-full max-w-md shadow-lg">
                 {/* Modal Header */}
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-bold text-2xl">Add New Employee</h2>
@@ -177,161 +129,54 @@ const AddEmployeeModal = ({ isOpen, onClose, onEmployeeAdded, universityId }) =>
                 </div>
 
                 {/* Horizontal Divider */}
-                <hr className="border-t border-gray-300" />
+                <hr className="border-t border-gray-300 mb-6" />
 
-                {/* Scrollable Form Content */}
-                <div className="overflow-y-auto flex-1">
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Basic Information */}
-                        <div className="grid grid-cols-2 gap-4 pt-4">
-                            <FormField
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                placeholder="Full Name"
-                                required
-                            />
-                            <FormField
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                placeholder="Email Address"
-                                required
-                            />
-                        </div>
+                {/* Form Content */}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <FormField
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="Full Name"
+                        required
+                    />
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                type="tel"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                placeholder="Phone Number"
-                            />
-                            <FormField
-                                type="text"
-                                name="employeeId"
-                                value={formData.employeeId}
-                                onChange={handleChange}
-                                placeholder="Employee ID"
-                                required
-                            />
-                        </div>
+                    <FormField
+                        type="text"
+                        name="employeeId"
+                        value={formData.employeeId}
+                        onChange={handleChange}
+                        placeholder="Employee ID"
+                        required
+                    />
 
-                        {/* Job Information */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                type="text"
-                                name="position"
-                                value={formData.position}
-                                onChange={handleChange}
-                                placeholder="Position"
-                                required
-                            />
-                            <FormField
-                                type="select"
-                                name="department"
-                                value={formData.department}
-                                onChange={handleChange}
-                                placeholder="Department"
-                                options={departments}
-                                required
-                            />
-                        </div>
+                    <FormField
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder="Password"
+                        required
+                    />
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <FormField
-                                type="date"
-                                name="dateHired"
-                                value={formData.dateHired}
-                                onChange={handleChange}
-                                placeholder="Date  Hired"
-                            />
-                            <FormField
-                                type="text"
-                                name="salary"
-                                value={formData.salary}
-                                onChange={handleChange}
-                                placeholder="Salary"
-                            />
-                        </div>
-
-                        {/* Emergency Contact */}
-                        <h3 className="font-semibold text-gray-700 mt-6">
-                            Emergency Contact
-                        </h3>
-                        <div className="grid grid-cols-3 gap-4">
-                            <FormField
-                                type="text"
-                                name="emergencyContact.name"
-                                value={formData.emergencyContact.name}
-                                onChange={handleChange}
-                                placeholder="Contact Name"
-                            />
-                            <FormField
-                                type="text"
-                                name="emergencyContact.relationship"
-                                value={formData.emergencyContact.relationship}
-                                onChange={handleChange}
-                                placeholder="Relationship"
-                            />
-                            <FormField
-                                type="tel"
-                                name="emergencyContact.phone"
-                                value={formData.emergencyContact.phone}
-                                onChange={handleChange}
-                                placeholder="Contact Phone"
-                            />
-                        </div>
-
-                        {/* Bank Details */}
-                        <h3 className="font-semibold text-gray-700 mt-6">
-                            Bank Details
-                        </h3>
-                        <div className="grid grid-cols-3 gap-4">
-                            <FormField
-                                type="text"
-                                name="bankDetails.bankName"
-                                value={formData.bankDetails.bankName}
-                                onChange={handleChange}
-                                placeholder="Bank Name"
-                            />
-                            <FormField
-                                type="text"
-                                name="bankDetails.accountNumber"
-                                value={formData.bankDetails.accountNumber}
-                                onChange={handleChange}
-                                placeholder="Account Number"
-                            />
-                            <FormField
-                                type="text"
-                                name="bankDetails.accountName"
-                                value={formData.bankDetails.accountName}
-                                onChange={handleChange}
-                                placeholder="Account Name"
-                            />
-                        </div>
-
-                        {/* Buttons */}
-                        <div className="flex justify-center space-x-4 mt-6">
-                            <button
-                                type="submit"
-                                className="cursor-pointer px-6 py-3 bg-[#9AADEA] text-white font-semibold rounded-lg hover:bg-[#7b8edc] transition"
-                            >
-                                Add Employee
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleReset}
-                                className="cursor-pointer px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
-                            >
-                                Reset Fields
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    {/* Buttons */}
+                    <div className="flex justify-center space-x-4 mt-6">
+                        <button
+                            type="submit"
+                            className="cursor-pointer px-6 py-3 bg-[#9AADEA] text-white font-semibold rounded-lg hover:bg-[#7b8edc] transition"
+                        >
+                            Add Employee
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleReset}
+                            className="cursor-pointer px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition"
+                        >
+                            Reset Fields
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );
