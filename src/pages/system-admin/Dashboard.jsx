@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { getAllUniversities } from "../../services/universityService";
-import { Building, BarChart2, PieChart, ShieldCheck, Users, Briefcase } from "lucide-react";
+import { Building, BarChart2, PieChart, ShieldCheck, Users, Briefcase, Plus, Key } from "lucide-react";
 import PageLoader from "../../components/PageLoader";
 import { Link } from "react-router-dom";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, limit, Timestamp } from "firebase/firestore";
 import { db } from "../../firebase";
 import { getAllLicenses } from "../../services/licenseService";
 
@@ -17,11 +17,94 @@ const SystemAdminDashboard = () => {
     totalEmployees: 0,
     totalJobs: 0
   });
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [systemHealth, setSystemHealth] = useState({
+    database: { status: "operational", message: "No issues detected" },
+    auth: { status: "operational", message: "No issues detected" },
+    storage: { status: "operational", message: "No issues detected" }
+  });
 
   // Debug logging on component mount
   useEffect(() => {
     console.log("SystemAdminDashboard mounted");
   }, []);
+
+  // Function to fetch recent activities
+  const fetchRecentActivities = async () => {
+    try {
+      // Create a combined list of recent activities from different sources
+      const activities = [];
+
+      // Fetch recent university registrations
+      const universitiesRef = collection(db, "universities");
+      const universitiesQuery = query(universitiesRef, orderBy("createdAt", "desc"), limit(5));
+      const universitiesSnapshot = await getDocs(universitiesQuery);
+      
+      universitiesSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.createdAt) {
+          activities.push({
+            type: "university_added",
+            title: `New university added: ${data.name}`,
+            timestamp: data.createdAt,
+            icon: <Building className="w-4 h-4 text-blue-500" />
+          });
+        }
+      });
+
+      // Fetch recent license generations
+      const licensesRef = collection(db, "licenses");
+      const licensesQuery = query(licensesRef, orderBy("createdAt", "desc"), limit(5));
+      const licensesSnapshot = await getDocs(licensesQuery);
+      
+      licensesSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.createdAt) {
+          activities.push({
+            type: "license_generated",
+            title: `New license generated: ${data.licenseKey?.substring(0, 16)}${data.licenseKey?.length > 16 ? '...' : ''}`,
+            timestamp: data.createdAt,
+            icon: <Key className="w-4 h-4 text-purple-500" />
+          });
+        }
+      });
+
+      // Sort activities by timestamp
+      activities.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
+      
+      // Take the most recent 5
+      setRecentActivities(activities.slice(0, 5));
+    } catch (error) {
+      console.error("Error fetching recent activities:", error);
+      setRecentActivities([]);
+    }
+  };
+
+  // Function to check system health
+  const checkSystemHealth = async () => {
+    try {
+      // Check database health by attempting to fetch a document
+      let dbStatus = { status: "operational", message: "No issues detected" };
+      try {
+        const healthCheck = await getDocs(query(collection(db, "system_health"), limit(1)));
+        console.log("Database health check successful");
+      } catch (dbError) {
+        console.error("Database health check failed:", dbError);
+        dbStatus = { status: "issues", message: "Connection issues detected" };
+      }
+
+      // For auth and storage, we'll simulate health checks
+      // In a real application, you would implement proper health checks for these services
+      
+      setSystemHealth({
+        database: dbStatus,
+        auth: { status: "operational", message: "No issues detected" },
+        storage: { status: "operational", message: "No issues detected" }
+      });
+    } catch (error) {
+      console.error("Error checking system health:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,6 +174,12 @@ const SystemAdminDashboard = () => {
           totalEmployees,
           totalJobs
         });
+        
+        // Fetch recent activities
+        await fetchRecentActivities();
+        
+        // Check system health
+        await checkSystemHealth();
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -136,6 +225,29 @@ const SystemAdminDashboard = () => {
       link: "/system-admin/universities"
     }
   ];
+
+  // Helper function to format date
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return "Unknown date";
+    
+    const date = timestamp instanceof Timestamp ? 
+      timestamp.toDate() : 
+      (timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp));
+    
+    const now = new Date();
+    const diffMs = now - date;
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffSecs < 60) return "Just now";
+    if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    
+    return date.toLocaleDateString();
+  };
 
   return (
     <div className="container mx-auto">
@@ -201,19 +313,23 @@ const SystemAdminDashboard = () => {
           </h2>
           
           <ul className="divide-y divide-gray-200">
-            {/* These would be replaced with actual activity logs */}
-            <li className="py-3">
-              <p className="text-gray-800">New university added: <span className="font-medium">Stanford University</span></p>
-              <p className="text-sm text-gray-500">2 hours ago</p>
-            </li>
-            <li className="py-3">
-              <p className="text-gray-800">New license generated: <span className="font-medium">UNITECH-HR-AB12-CD34</span></p>
-              <p className="text-sm text-gray-500">Yesterday</p>
-            </li>
-            <li className="py-3">
-              <p className="text-gray-800">System update applied: <span className="font-medium">v1.2.5</span></p>
-              <p className="text-sm text-gray-500">3 days ago</p>
-            </li>
+            {recentActivities.length > 0 ? (
+              recentActivities.map((activity, index) => (
+                <li key={index} className="py-3">
+                  <div className="flex items-start">
+                    <div className="mr-2 mt-0.5">
+                      {activity.icon}
+                    </div>
+                    <div>
+                      <p className="text-gray-800">{activity.title}</p>
+                      <p className="text-sm text-gray-500">{formatTimestamp(activity.timestamp)}</p>
+                    </div>
+                  </div>
+                </li>
+              ))
+            ) : (
+              <li className="py-3 text-gray-500">No recent activities found</li>
+            )}
           </ul>
         </div>
 
@@ -224,26 +340,32 @@ const SystemAdminDashboard = () => {
             System Health
           </h2>
           <div className="space-y-4">
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h3 className="font-medium text-green-800 flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+            <div className={`${systemHealth.database.status === 'operational' ? 'bg-green-50' : 'bg-orange-50'} p-4 rounded-lg`}>
+              <h3 className={`font-medium ${systemHealth.database.status === 'operational' ? 'text-green-800' : 'text-orange-800'} flex items-center`}>
+                <div className={`w-3 h-3 rounded-full ${systemHealth.database.status === 'operational' ? 'bg-green-500' : 'bg-orange-500'} mr-2`}></div>
                 Database Status
               </h3>
-              <p className="text-green-700 mt-1">Operational - No issues detected</p>
+              <p className={`${systemHealth.database.status === 'operational' ? 'text-green-700' : 'text-orange-700'} mt-1`}>
+                {systemHealth.database.status === 'operational' ? 'Operational' : 'Degraded'} - {systemHealth.database.message}
+              </p>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h3 className="font-medium text-green-800 flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+            <div className={`${systemHealth.auth.status === 'operational' ? 'bg-green-50' : 'bg-orange-50'} p-4 rounded-lg`}>
+              <h3 className={`font-medium ${systemHealth.auth.status === 'operational' ? 'text-green-800' : 'text-orange-800'} flex items-center`}>
+                <div className={`w-3 h-3 rounded-full ${systemHealth.auth.status === 'operational' ? 'bg-green-500' : 'bg-orange-500'} mr-2`}></div>
                 Authentication Services
               </h3>
-              <p className="text-green-700 mt-1">Operational - No issues detected</p>
+              <p className={`${systemHealth.auth.status === 'operational' ? 'text-green-700' : 'text-orange-700'} mt-1`}>
+                {systemHealth.auth.status === 'operational' ? 'Operational' : 'Degraded'} - {systemHealth.auth.message}
+              </p>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h3 className="font-medium text-green-800 flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+            <div className={`${systemHealth.storage.status === 'operational' ? 'bg-green-50' : 'bg-orange-50'} p-4 rounded-lg`}>
+              <h3 className={`font-medium ${systemHealth.storage.status === 'operational' ? 'text-green-800' : 'text-orange-800'} flex items-center`}>
+                <div className={`w-3 h-3 rounded-full ${systemHealth.storage.status === 'operational' ? 'bg-green-500' : 'bg-orange-500'} mr-2`}></div>
                 Storage Services
               </h3>
-              <p className="text-green-700 mt-1">Operational - No issues detected</p>
+              <p className={`${systemHealth.storage.status === 'operational' ? 'text-green-700' : 'text-orange-700'} mt-1`}>
+                {systemHealth.storage.status === 'operational' ? 'Operational' : 'Degraded'} - {systemHealth.storage.message}
+              </p>
             </div>
           </div>
         </div>
