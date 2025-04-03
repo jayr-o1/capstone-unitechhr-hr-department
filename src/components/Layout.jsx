@@ -10,9 +10,10 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import showSuccessAlert from "./Alerts/SuccessAlert";
 import showErrorAlert from "./Alerts/ErrorAlert";
 import HRPersonnelCard from "./HRComponents/HRPersonnelCard";
+import { useAuth } from "../contexts/AuthProvider";
 
 const Layout = () => {
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [isPanelOpen, setIsPanelOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
@@ -20,6 +21,13 @@ const Layout = () => {
     const [employeeName, setEmployeeName] = useState("Employee Details");
     const [userRole, setUserRole] = useState("user");
     const [isHeadHR, setIsHeadHR] = useState(false);
+    const { loading: authLoading, userDetails } = useAuth();
+
+    console.log("Layout component mounting - Auth state:", {
+        authLoading,
+        userDetails: userDetails ? `${userDetails.role} found` : "not found",
+        currentLocation: location.pathname
+    });
 
     // Form state for adding HR personnel
     const [hrFormData, setHrFormData] = useState({
@@ -43,23 +51,36 @@ const Layout = () => {
     // Check if current user is HR Head
     useEffect(() => {
         const checkUserRole = async () => {
-            if (!auth.currentUser || !universityId) return;
+            console.log("Checking user role - Firebase Auth user:", auth.currentUser?.uid, "universityId:", universityId);
+            
+            if (!auth.currentUser || !universityId) {
+                console.log("Missing auth.currentUser or universityId, cannot check role");
+                return;
+            }
             
             try {
                 // Get the user role from authMappings for authorization
                 const authMappingDoc = await getDoc(doc(db, "authMappings", auth.currentUser.uid));
                 if (authMappingDoc.exists()) {
                     const authData = authMappingDoc.data();
+                    console.log("Auth mapping found for user:", authData);
                     setUserRole(authData.role || "user");
                     setIsHeadHR(authData.role === "hr_head" || authData.role === "admin");
+                    console.log("User role set to:", authData.role, "isHeadHR:", authData.role === "hr_head" || authData.role === "admin");
+                } else {
+                    console.warn("No auth mapping found for user:", auth.currentUser.uid);
                 }
+                setIsLoading(false);
             } catch (error) {
                 console.error("Error checking user role:", error);
+                setIsLoading(false);
             }
         };
         
-        checkUserRole();
-    }, [universityId]);
+        if (!authLoading) {
+            checkUserRole();
+        }
+    }, [universityId, authLoading]);
 
     // Fetch HR personnel for the university
     useEffect(() => {
@@ -510,18 +531,23 @@ const Layout = () => {
         }
     }, [navigate]);
 
-    // Show a loading state while jobs are being fetched on initial load
-    if (jobsLoading && !universityId) {
-        // Only show full loader when university ID isn't available yet 
-        // and this is a page refresh (not internal navigation)
-        const isPageRefresh = sessionStorage.getItem("isPageRefresh") === "true";
-        return <PageLoader isLoading={true} fullscreen={isPageRefresh} />;
+    // Combine all loading states for the main layout
+    const isPageLoading = authLoading || isLoading || jobsLoading;
+
+    // Only render layout content when user role and data are ready
+    if (isPageLoading) {
+        console.log("Layout is still loading. authLoading:", authLoading, "isLoading:", isLoading, "jobsLoading:", jobsLoading);
+        return <PageLoader message="Loading HR Portal..." />;
     }
 
-    // Show an error message if jobs fail to load
-    if (jobsError) {
-        return <div className="text-red-500 p-4">{jobsError}</div>;
+    // If no valid HR role, redirect to login
+    if (!userDetails || (userDetails.role !== 'hr_head' && userDetails.role !== 'hr_personnel' && userDetails.role !== 'admin')) {
+        console.error("Invalid HR role detected:", userDetails?.role, "- Redirecting to login");
+        navigate("/", { replace: true });
+        return null;
     }
+
+    console.log("Layout rendering with userRole:", userRole, "isHeadHR:", isHeadHR);
 
     return (
         <div className="flex h-screen">

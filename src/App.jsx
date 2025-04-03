@@ -43,7 +43,7 @@ import SystemAdminApprovals from "./pages/system-admin/Approvals";
 import SystemAdminLogin from "./pages/system-admin/Login";
 
 // Protected Route component
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     const auth = useAuth();
     
     console.log("ProtectedRoute: Auth state", {
@@ -51,18 +51,59 @@ const ProtectedRoute = ({ children }) => {
         userRole: auth?.userDetails?.role,
         loading: auth?.loading,
         isSystemAdmin: auth?.userDetails?.role === 'system_admin',
-        isEmployee: auth?.userDetails?.role === 'employee'
+        isEmployee: auth?.userDetails?.role === 'employee',
+        allowedRoles
     });
     
-    // If still loading auth state, show nothing (or a loader)
-    if (auth?.loading) return <div className="w-full h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
-    </div>;
+    // If still loading auth state, show a loader
+    if (auth?.loading) {
+        console.log("ProtectedRoute: Auth is still loading, showing loader");
+        return (
+            <div className="w-full h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+            </div>
+        );
+    }
 
     // If user is not authenticated, redirect to login
-    if (!auth?.user) return <Navigate to="/" />;
+    if (!auth?.user) {
+        console.log("ProtectedRoute: No user found, redirecting to login");
+        return <Navigate to="/" />;
+    }
 
-    // If authenticated, render the children components
+    // If user is authenticated but no userDetails or role, something is wrong
+    if (!auth?.userDetails?.role) {
+        console.log("ProtectedRoute: Missing userDetails or role, showing error");
+        return (
+            <div className="w-full h-screen flex flex-col items-center justify-center text-center px-4">
+                <h1 className="text-xl font-semibold text-red-600 mb-2">Authentication Error</h1>
+                <p className="text-gray-700 mb-4">There was a problem with your login session.</p>
+                <button 
+                    onClick={() => window.location.href = '/'}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                    Return to Login
+                </button>
+            </div>
+        );
+    }
+
+    // Check if the user's role is allowed for this route
+    if (allowedRoles.length > 0 && !allowedRoles.includes(auth.userDetails.role)) {
+        console.log(`ProtectedRoute: User role ${auth.userDetails.role} not allowed for this route`);
+        
+        // Redirect based on role
+        if (auth.userDetails.role === 'system_admin') {
+            return <Navigate to="/system-admin/dashboard" />;
+        } else if (auth.userDetails.role === 'employee') {
+            return <Navigate to="/employee/dashboard" />;
+        } else {
+            return <Navigate to="/dashboard" />;
+        }
+    }
+
+    // If authenticated with valid userDetails, render the children components
+    console.log("ProtectedRoute: Auth valid, rendering children");
     return children;
 };
 
@@ -182,7 +223,7 @@ function AppContent() {
                         <Route
                             path="/system-admin"
                             element={
-                                <ProtectedRoute>
+                                <ProtectedRoute allowedRoles={['system_admin']}>
                                     <SystemAdminLayout />
                                 </ProtectedRoute>
                             }
@@ -207,7 +248,7 @@ function AppContent() {
                         <Route
                             path="/employee"
                             element={
-                                <ProtectedRoute>
+                                <ProtectedRoute allowedRoles={['employee']}>
                                     <EmployeeLayout />
                                 </ProtectedRoute>
                             }
@@ -233,7 +274,7 @@ function AppContent() {
                         <Route
                             path="/"
                             element={
-                                <ProtectedRoute>
+                                <ProtectedRoute allowedRoles={['hr_head', 'hr_personnel', 'admin']}>
                                     <Layout />
                                 </ProtectedRoute>
                             }

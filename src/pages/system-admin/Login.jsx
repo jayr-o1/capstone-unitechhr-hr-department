@@ -34,23 +34,14 @@ const SystemAdminLogin = () => {
       console.log("Login result:", result);
       
       if (result.success) {
-        console.log("System admin login successful, preparing to redirect");
+        console.log("System admin login successful");
         toast.success("Login successful!");
         
         // Clear any previous error
         setError(null);
         
-        // Add a small delay to allow state to update
-        setTimeout(() => {
-          console.log("Navigating to system admin dashboard");
-          // First push to root to clear any issues with the current route
-          navigate("/", { replace: true });
-          // Then after a tiny delay, navigate to the admin dashboard
-          setTimeout(() => {
-            console.log("Completing navigation to system admin dashboard");
-            navigate("/system-admin/dashboard", { replace: true });
-          }, 100);
-        }, 500);
+        // Navigate directly to system admin dashboard with replacement
+        navigate("/system-admin/dashboard", { replace: true });
       } else {
         setError(result.message || "Invalid credentials. Please try again.");
       }

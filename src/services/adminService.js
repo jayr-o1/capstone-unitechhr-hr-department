@@ -212,7 +212,15 @@ export const getSystemAdminByCredentials = async (username, password) => {
         id: adminDoc.id,
         username: adminData.username,
         displayName: adminData.displayName || 'System Administrator',
-        role: 'system_admin'
+        role: 'system_admin',
+        createdAt: adminData.createdAt || null,
+        lastLogin: adminData.lastLogin || null,
+        // Include any other relevant admin fields
+        permissions: {
+          universities: true,
+          approvals: true,
+          users: true
+        }
       }
     };
   } catch (error) {

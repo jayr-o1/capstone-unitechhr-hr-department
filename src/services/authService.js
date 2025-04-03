@@ -140,6 +140,7 @@ export const loginUser = async (email, password) => {
         const adminResult = await getSystemAdminByCredentials(username, password);
         
         if (adminResult.success) {
+          console.log("System admin login successful");
           return { 
             success: true, 
             role: 'system_admin',
@@ -169,11 +170,9 @@ export const loginUser = async (email, password) => {
     // If it doesn't have our marker and looks like a standard email (has @ and .),
     // treat as a regular HR login
     if (email.includes('@') && !email.includes('_EMPLOYEE_LOGIN_MARKER')) {
-      // Check if it looks like a regular email with a domain
-      const domainPattern = /^[^@]+@[^@]+\.[^@]{2,}$/;
-      if (domainPattern.test(email)) {
-        console.log("Detected standard email format, using HR login flow");
-        
+      console.log("Detected standard email format, using HR login flow");
+      
+      try {
         // Standard Firebase Auth for HR login
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const uid = userCredential.user.uid;
@@ -189,7 +188,7 @@ export const loginUser = async (email, password) => {
           const role = authData.role;
           const status = authData.status;
           
-          console.log("Auth mapping found:", role, "status:", status);
+          console.log("Auth mapping found:", role, "status:", status, "universityId:", universityId);
           
           if (!universityId) {
             console.log("No university ID found in auth mapping");
@@ -214,22 +213,46 @@ export const loginUser = async (email, password) => {
           const universityDoc = await getDoc(universityRef);
           if (universityDoc.exists()) {
             universityName = universityDoc.data().name;
+            console.log("Found university name:", universityName);
+          } else {
+            console.warn("University document not found for ID:", universityId);
           }
 
           // Update the last login time in the appropriate collection based on role
-          if (role === 'hr_head') {
-            const hrHeadRef = doc(db, "universities", universityId, "hr_head", uid);
-            await updateDoc(hrHeadRef, {
-              lastLogin: serverTimestamp()
-            });
-          } else {
-            const hrPersonnelRef = doc(db, "universities", universityId, "hr_personnel", uid);
-            await updateDoc(hrPersonnelRef, {
-              lastLogin: serverTimestamp()
-            });
+          try {
+            if (role === 'hr_head') {
+              console.log("Updating lastLogin for HR Head in university collection");
+              const hrHeadRef = doc(db, "universities", universityId, "hr_head", uid);
+              const hrHeadDoc = await getDoc(hrHeadRef);
+              
+              if (hrHeadDoc.exists()) {
+                await updateDoc(hrHeadRef, {
+                  lastLogin: serverTimestamp()
+                });
+                console.log("HR Head lastLogin updated successfully");
+              } else {
+                console.warn("HR Head record not found in university collection");
+              }
+            } else if (role === 'hr_personnel') {
+              console.log("Updating lastLogin for HR Personnel in university collection");
+              const hrPersonnelRef = doc(db, "universities", universityId, "hr_personnel", uid);
+              const hrPersonnelDoc = await getDoc(hrPersonnelRef);
+              
+              if (hrPersonnelDoc.exists()) {
+                await updateDoc(hrPersonnelRef, {
+                  lastLogin: serverTimestamp()
+                });
+                console.log("HR Personnel lastLogin updated successfully");
+              } else {
+                console.warn("HR Personnel record not found in university collection");
+              }
+            }
+          } catch (updateError) {
+            console.warn("Error updating lastLogin:", updateError);
+            // Continue even if lastLogin update fails
           }
           
-          console.log("HR login successful, returning role:", role);
+          console.log("HR login successful, returning role:", role, "universityId:", universityId, "universityName:", universityName);
           return { 
             success: true, 
             universityId, 
@@ -245,105 +268,40 @@ export const loginUser = async (email, password) => {
           success: false, 
           message: "User not found in the system. Please contact administrator."
         };
-      }
-    }
-    
-    // If we get here, it could be an old-format employee login without our marker
-    // The following code is just for backward compatibility and can be removed later
-    let employeeId = null;
-    let universityCode = null;
-    let isEmployeeLogin = false;
-    let universityName = null;
-    
-    // Employee login pattern (format: employeeId@universityCode.com)
-    const employeeLoginPattern = /^(.+)@(.+)\.com$/;
-    const match = email.match(employeeLoginPattern);
-    
-    // Skip the fallback if this doesn't look like an email at all
-    if (!email.includes('@')) {
-      console.log("Email format doesn't match any known pattern, returning error");
-      return { 
-        success: false, 
-        message: "Invalid email format. Please check your input and try again." 
-      };
-    }
-    
-    // If we get here and it has a @ symbol but didn't match our HR login conditions above,
-    // try once more with Firebase Auth as a fallback for HR logins with non-standard domains
-    console.log("Trying Firebase Auth as fallback for:", email);
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
-      console.log("Firebase Auth fallback successful for UID:", uid);
-      
-      // Get user details and return
-      const authMappingRef = doc(db, "authMappings", uid);
-      const authMappingDoc = await getDoc(authMappingRef);
-      
-      if (authMappingDoc.exists()) {
-        const authData = authMappingDoc.data();
-        const universityId = authData.universityId;
-        const role = authData.role;
+      } catch (firebaseError) {
+        console.error("Firebase auth error:", firebaseError);
         
-        // Get university name
-        if (universityId) {
-          const universityRef = doc(db, "universities", universityId);
-          const universityDoc = await getDoc(universityRef);
-          if (universityDoc.exists()) {
-            universityName = universityDoc.data().name;
-          }
+        if (firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/wrong-password') {
+          return { 
+            success: false, 
+            message: "Invalid email or password. Please try again." 
+          };
+        } else if (firebaseError.code === 'auth/too-many-requests') {
+          return { 
+            success: false, 
+            message: "Too many failed login attempts. Please try again later or reset your password." 
+          };
+        } else {
+          return { 
+            success: false, 
+            message: "Login failed: " + (firebaseError.message || "Unknown error") 
+          };
         }
-        
-        return { 
-          success: true, 
-          universityId, 
-          role,
-          universityCode: null,
-          universityName
-        };
-      } else {
-        return { 
-          success: false, 
-          message: "User not found in the system. Please contact administrator."
-        };
       }
-    } catch (error) {
-      console.error("Firebase Auth fallback failed:", error);
-      return {
-        success: false,
-        message: error.code === 'auth/invalid-credential' 
-          ? "Invalid email or password. Please try again."
-          : "Login failed: " + error.message
-      };
-    }
-  } catch (error) {
-    console.error("Login error:", error);
-    // Format more specific error messages based on Firebase Auth error codes
-    if (error.code === 'auth/user-not-found') {
-      return { 
-        success: false, 
-        message: "User not found. Please check your email and try again."
-      };
-    } else if (error.code === 'auth/wrong-password') {
-      return { 
-        success: false, 
-        message: "Invalid password. Please try again."
-      };
-    } else if (error.code === 'auth/invalid-email') {
-      return { 
-        success: false, 
-        message: "Invalid email format. Please use a valid email address."
-      };
-    } else if (error.code === 'auth/too-many-requests') {
-      return { 
-        success: false, 
-        message: "Too many failed login attempts. Please try again later."
-      };
     }
     
+    // If we reach here, the email format wasn't recognized
+    console.log("Email format doesn't match any known pattern, returning error");
     return { 
       success: false, 
-      message: "Login failed: " + error.message
+      message: "Invalid email format. Please check your input and try again." 
+    };
+    
+  } catch (error) {
+    console.error("Unexpected error in login process:", error);
+    return { 
+      success: false, 
+      message: "An unexpected error occurred. Please try again." 
     };
   }
 };

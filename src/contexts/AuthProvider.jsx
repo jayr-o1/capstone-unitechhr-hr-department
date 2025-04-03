@@ -8,6 +8,10 @@ import { getUniversityById } from "../services/universityService";
 // Create Context
 const AuthContext = createContext(null);
 
+// Keys for localStorage
+const SYSTEM_ADMIN_KEY = "unitech_system_admin";
+const EMPLOYEE_KEY = "unitech_employee";
+
 // Custom Hook for accessing the context
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -51,23 +55,78 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  // Restore saved sessions
+  const restoreSavedSessions = () => {
+    // Try to restore system admin session
+    const savedAdminSession = localStorage.getItem(SYSTEM_ADMIN_KEY);
+    if (savedAdminSession) {
+      try {
+        console.log("Found saved system admin session");
+        const adminData = JSON.parse(savedAdminSession);
+        setUser(adminData.user);
+        setUserDetails(adminData.userDetails);
+        console.log("System admin session restored");
+        return true;
+      } catch (error) {
+        console.error("Error restoring system admin session:", error);
+        localStorage.removeItem(SYSTEM_ADMIN_KEY);
+      }
+    }
+
+    // Try to restore employee session if admin session wasn't found
+    const savedEmployeeSession = localStorage.getItem(EMPLOYEE_KEY);
+    if (savedEmployeeSession) {
+      try {
+        console.log("Found saved employee session");
+        const employeeData = JSON.parse(savedEmployeeSession);
+        setUser(employeeData.user);
+        setUserDetails(employeeData.userDetails);
+        setUniversity(employeeData.university);
+        console.log("Employee session restored");
+        return true;
+      } catch (error) {
+        console.error("Error restoring employee session:", error);
+        localStorage.removeItem(EMPLOYEE_KEY);
+      }
+    }
+
+    return false;
+  };
+
   // Listen to the Firebase Auth state and set the local state.
   useEffect(() => {
     console.log("Setting up auth state listener");
     
+    // First check for saved sessions
+    const hasSavedSession = restoreSavedSessions();
+    
+    // If we found and restored a saved session, we can skip Firebase auth check
+    if (hasSavedSession) {
+      console.log("Session restored from localStorage, skipping Firebase auth check");
+      setLoading(false);
+      return () => {}; // No cleanup needed
+    }
+    
+    // Otherwise, proceed with Firebase auth listener
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
       console.log("Auth state changed:", authUser ? "User logged in" : "No user");
       
+      // Keep loading true until we fetch user details
+      setLoading(true);
+      
       if (authUser) {
-        console.log("Setting user:", authUser.uid);
+        console.log("Setting user from Firebase Auth:", authUser.uid);
         setUser(authUser);
         await fetchUserDetails(authUser.uid);
+        console.log("User details fetched, setting loading to false");
+        setLoading(false);
       } else {
+        console.log("No Firebase Auth user, clearing state and setting loading to false");
         setUser(null);
         setUserDetails(null);
         setUniversity(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     // Cleanup subscription on unmount
@@ -75,13 +134,21 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+    console.log("Login attempt started for:", email);
     setLoading(true);
     setError(null);
-    const result = await loginUser(email, password);
     
-    if (!result.success) {
-      setError(result.message);
-    } else {
+    try {
+      const result = await loginUser(email, password);
+      console.log("Login result:", result);
+      
+      if (!result.success) {
+        console.log("Login failed:", result.message);
+        setError(result.message);
+        setLoading(false);
+        return result;
+      }
+      
       // For system admin logins, set up user details differently
       if (result.role === 'system_admin') {
         console.log("Setting system admin user details");
@@ -104,7 +171,14 @@ const AuthProvider = ({ children }) => {
         console.log("Setting system admin user details:", adminDetails);
         setUserDetails(adminDetails);
         
-        console.log("System admin login successful - user object and details set");
+        // Save system admin session to localStorage
+        localStorage.setItem(SYSTEM_ADMIN_KEY, JSON.stringify({
+          user: adminUser,
+          userDetails: adminDetails
+        }));
+        
+        console.log("System admin login successful - user object and details set and saved to localStorage");
+        setLoading(false);
       }
       // For employee logins, we need to set up user details differently
       else if (result.role === 'employee') {
@@ -126,34 +200,57 @@ const AuthProvider = ({ children }) => {
           setUser(employeeUser);
           
           // Set detailed user info
-          const userDetails = {
+          const employeeDetails = {
             role: "employee",
             universityId: result.universityId,
             ...(result.employeeData || {})
           };
-          console.log("Setting employee user details:", userDetails);
-          setUserDetails(userDetails);
+          console.log("Setting employee user details:", employeeDetails);
+          setUserDetails(employeeDetails);
           
           // Set university info
-          setUniversity({
+          const universityData = {
             id: result.universityId,
             name: result.universityName,
             code: result.universityCode
-          });
+          };
+          setUniversity(universityData);
           
-          console.log("Employee login successful - user object and details set");
+          // Save employee session to localStorage
+          localStorage.setItem(EMPLOYEE_KEY, JSON.stringify({
+            user: employeeUser,
+            userDetails: employeeDetails,
+            university: universityData
+          }));
+          
+          console.log("Employee login successful - user object and details set and saved to localStorage");
+          setLoading(false);
         } else {
           // If Firebase Auth was used, fetch details as normal
           await fetchUserDetails(auth.currentUser.uid);
+          setLoading(false);
         }
-      } else if (auth.currentUser) {
-        // For HR logins, use Firebase Auth as before
-        await fetchUserDetails(auth.currentUser.uid);
+      } else if (result.role === 'hr_head' || result.role === 'hr_personnel') {
+        // For HR logins, Firebase Auth has already been initialized by the loginUser function
+        console.log(`HR ${result.role} login successful - user is set by Firebase Auth`);
+        // Don't set loading to false here - let the onAuthStateChanged handler above handle it
+        // after it fetches the user details
+        console.log("Waiting for Firebase Auth state change to complete user details fetch");
+      } else {
+        console.error("Login successful but unknown role:", result.role);
+        setLoading(false);
       }
+      
+      return result;
+    } catch (error) {
+      console.error("Error during login process:", error);
+      setError(error.message || "An unexpected error occurred");
+      setLoading(false);
+      return { 
+        success: false, 
+        message: error.message || "An unexpected error occurred"
+      };
     }
-    
-    setLoading(false);
-    return result;
   };
 
   const register = async (email, password, displayName, userMetadata = {}) => {
@@ -170,9 +267,15 @@ const AuthProvider = ({ children }) => {
   const logout = async () => {
     setLoading(true);
     try {
-      // For employee logins that didn't use Firebase Auth, just clear the state
-      if (userDetails?.role === 'employee' && user?.isEmployee) {
+      // For system admin or employee logins that didn't use Firebase Auth
+      if (userDetails?.role === 'system_admin') {
+        console.log("Logging out system admin directly");
+        localStorage.removeItem(SYSTEM_ADMIN_KEY);
+        setUser(null);
+        setUserDetails(null);
+      } else if (userDetails?.role === 'employee' && user?.isEmployee) {
         console.log("Logging out employee directly");
+        localStorage.removeItem(EMPLOYEE_KEY);
         setUser(null);
         setUserDetails(null);
         setUniversity(null);

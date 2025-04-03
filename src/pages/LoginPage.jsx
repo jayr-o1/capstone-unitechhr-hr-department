@@ -100,6 +100,7 @@ const LoginPage = () => {
     );
     
     try {
+      console.log("Calling login function with:", loginEmail);
       const result = await login(loginEmail, password);
       console.log("Login result:", result);
       
@@ -129,6 +130,7 @@ const LoginPage = () => {
           }, 800);
         } else {
           // For HR staff, navigate to HR dashboard with a small delay
+          console.log("HR login successful, navigating to dashboard. Role:", result.role);
           setTimeout(() => {
             console.log("Navigating to HR dashboard");
             navigate("/dashboard", { replace: true });

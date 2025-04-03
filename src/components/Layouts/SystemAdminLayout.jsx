@@ -8,7 +8,7 @@ import PageLoader from "../PageLoader";
 const SystemAdminLayout = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [loading, setLoading] = useState(true);
-  const { user, userDetails } = useAuth();
+  const { user, userDetails, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,9 +17,10 @@ const SystemAdminLayout = () => {
     console.log("SystemAdminLayout mounted with:", {
       user: user ? "exists" : "null",
       userRole: userDetails?.role,
+      authLoading,
       pathname: location.pathname
     });
-  }, [user, userDetails, location]);
+  }, [user, userDetails, authLoading, location]);
 
   // Handle screen resize
   useEffect(() => {
@@ -54,13 +55,19 @@ const SystemAdminLayout = () => {
     // Wait a short time to simulate loading
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [location]);
 
   // Make sure only system_admin can access this layout
   useEffect(() => {
+    // Don't check role until auth is loaded
+    if (authLoading) {
+      console.log("Auth is still loading, delaying role check");
+      return;
+    }
+    
     if (userDetails) {
       console.log("SystemAdminLayout: checking user role", {
         currentRole: userDetails.role,
@@ -73,15 +80,37 @@ const SystemAdminLayout = () => {
       } else {
         console.log("System admin role confirmed");
       }
+    } else if (user && !userDetails) {
+      console.log("User exists but userDetails is missing, waiting...");
+      // Give it a bit more time for userDetails to load
+      const timer = setTimeout(() => {
+        if (!userDetails) {
+          console.log("UserDetails still missing, redirecting to login");
+          navigate("/");
+        }
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    } else if (!user && !authLoading) {
+      console.log("No user found after auth loaded, redirecting to login");
+      navigate("/system-admin/login");
     }
-  }, [userDetails, navigate]);
+  }, [userDetails, user, authLoading, navigate]);
 
   // Toggle sidebar visibility
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
 
-  if (loading) {
+  // Show loader while auth is still loading or layout is initializing
+  if (authLoading || loading) {
+    return <PageLoader />;
+  }
+
+  // Extra validation check before rendering layout
+  if (!user || (userDetails && userDetails.role !== "system_admin")) {
+    console.log("Unauthorized access attempt to SystemAdminLayout, redirecting...");
+    navigate("/");
     return <PageLoader />;
   }
 
