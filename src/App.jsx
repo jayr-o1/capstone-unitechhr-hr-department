@@ -36,13 +36,22 @@ import { scheduleJobsCleanup } from "./utils/cleanupUtil";
 import { getUserData } from "./services/userService";
 import { Toaster } from 'react-hot-toast';
 
+// System Admin imports
+import SystemAdminLayout from "./components/Layouts/SystemAdminLayout";
+import SystemAdminDashboard from "./pages/system-admin/Dashboard";
+import SystemAdminApprovals from "./pages/system-admin/Approvals";
+import SystemAdminLogin from "./pages/system-admin/Login";
+
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
     const auth = useAuth();
     
     console.log("ProtectedRoute: Auth state", {
         user: auth?.user ? "exists" : "null",
-        loading: auth?.loading
+        userRole: auth?.userDetails?.role,
+        loading: auth?.loading,
+        isSystemAdmin: auth?.userDetails?.role === 'system_admin',
+        isEmployee: auth?.userDetails?.role === 'employee'
     });
     
     // If still loading auth state, show nothing (or a loader)
@@ -134,8 +143,9 @@ function AppContent() {
         }
     }, [user]);
 
-    // Check if user is an employee
+    // Check if user is an employee or system admin
     const isEmployee = userDetails?.role === 'employee';
+    const isSystemAdmin = userDetails?.role === 'system_admin';
 
     return (
         <Router>
@@ -157,9 +167,39 @@ function AppContent() {
                                 path="/reset-password"
                                 element={<ResetPasswordPage />}
                             />
+                            {/* System Admin Login */}
+                            <Route
+                                path="/system-admin/login"
+                                element={<SystemAdminLogin />}
+                            />
                             {/* Redirect to login for any other route if not authenticated */}
                             <Route path="*" element={<Navigate to="/" />} />
                         </Route>
+                    </>
+                ) : isSystemAdmin ? (
+                    <>
+                        {/* System Admin Routes */}
+                        <Route
+                            path="/system-admin"
+                            element={
+                                <ProtectedRoute>
+                                    <SystemAdminLayout />
+                                </ProtectedRoute>
+                            }
+                        >
+                            <Route
+                                index
+                                element={<Navigate to="/system-admin/dashboard" />}
+                            />
+                            <Route path="dashboard" element={<SystemAdminDashboard />} />
+                            <Route path="approvals" element={<SystemAdminApprovals />} />
+                            {/* Add other system admin routes here */}
+                        </Route>
+                        {/* Redirect other routes to system admin dashboard if user is system admin */}
+                        <Route
+                            path="*"
+                            element={<Navigate to="/system-admin/dashboard" />}
+                        />
                     </>
                 ) : isEmployee ? (
                     <>

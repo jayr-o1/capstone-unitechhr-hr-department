@@ -474,6 +474,16 @@ const LoginPage = () => {
                       Sign up
                     </Link>
                   </p>
+                  
+                  {/* System Admin Link */}
+                  <p className="text-sm font-light text-gray-500 text-center mt-3 pt-2 border-t">
+                    <Link
+                      to="/system-admin/login"
+                      className="font-medium text-gray-600 hover:text-blue-600 hover:underline"
+                    >
+                      System Administrator Access
+                    </Link>
+                  </p>
                 </form>
               </div>
             )}

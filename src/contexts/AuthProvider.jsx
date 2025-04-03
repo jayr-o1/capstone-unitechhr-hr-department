@@ -82,8 +82,32 @@ const AuthProvider = ({ children }) => {
     if (!result.success) {
       setError(result.message);
     } else {
+      // For system admin logins, set up user details differently
+      if (result.role === 'system_admin') {
+        console.log("Setting system admin user details");
+        
+        // Create a user object for the system admin
+        const adminUser = {
+          uid: result.adminUser?.id || `system_admin_${Date.now()}`,
+          displayName: result.adminUser?.displayName || "System Administrator",
+          email: `${result.adminUser?.username || "admin"}@system.admin`
+        };
+        
+        console.log("Created system admin user:", adminUser);
+        setUser(adminUser);
+        
+        // Set detailed user info
+        const adminDetails = {
+          role: "system_admin",
+          ...result.adminUser
+        };
+        console.log("Setting system admin user details:", adminDetails);
+        setUserDetails(adminDetails);
+        
+        console.log("System admin login successful - user object and details set");
+      }
       // For employee logins, we need to set up user details differently
-      if (result.role === 'employee') {
+      else if (result.role === 'employee') {
         console.log("Setting employee user details");
         
         // If employee login was successful but we didn't use Firebase Auth (debug mode)

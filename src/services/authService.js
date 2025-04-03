@@ -126,6 +126,31 @@ export const loginUser = async (email, password) => {
   try {
     console.log("Auth service received login request for:", email);
     
+    // Special case: If this is a system admin login
+    if (email.includes("_SYSTEM_ADMIN_")) {
+      // Parse the username from the email format
+      const adminLoginPattern = /^(.+)_SYSTEM_ADMIN_$/;
+      const match = email.match(adminLoginPattern);
+      
+      if (match) {
+        const username = match[1];
+        
+        // Use system admin authentication
+        const { getSystemAdminByCredentials } = await import('./adminService');
+        const adminResult = await getSystemAdminByCredentials(username, password);
+        
+        if (adminResult.success) {
+          return { 
+            success: true, 
+            role: 'system_admin',
+            adminUser: adminResult.user
+          };
+        } else {
+          return adminResult; // Return error from admin service
+        }
+      }
+    }
+    
     // Special case: If this is an employee login with our marker
     if (email.includes("_EMPLOYEE_LOGIN_MARKER")) {
       // Parse the employee ID and university ID
@@ -326,66 +351,78 @@ export const loginUser = async (email, password) => {
 // Handle registration
 export const registerUser = async (email, password, displayName, userMetadata = {}) => {
   try {
-    // Create user in Firebase Auth
+    // Create the user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // Update display name
+    // Update the user profile with displayName
     await updateProfile(user, { displayName });
     
-    // Save user data to Firestore
-    const { universityId, role, status } = userMetadata;
+    // Determine what kind of registration this is
+    const isHRHead = userMetadata.role === 'hr_head';
+    const universityId = userMetadata.universityId;
     
-    // Create auth mapping
-    await setDoc(doc(db, "authMappings", user.uid), {
-      role,
-      universityId,
-      createdAt: serverTimestamp(),
-      status: status || 'active'
+    // If they're signing up as an HR head, they need approval
+    const status = isHRHead ? 'pending' : 'approved';
+    
+    // Create auth mapping in Firestore
+    const authMappingRef = doc(db, 'authMappings', user.uid);
+    await setDoc(authMappingRef, {
+      email: email,
+      role: userMetadata.role || 'hr_personnel', // Default to HR personnel
+      universityId: universityId,
+      status: status,
+      createdAt: serverTimestamp()
     });
     
-    // Create hr_head or hr_personnel document
-    if (role === 'hr_head') {
-      await setDoc(doc(db, "universities", universityId, "hr_head", user.uid), {
-        name: displayName,
+    // Store additional information in the appropriate collection
+    if (universityId) {
+      // Choose collection based on role
+      const collectionName = userMetadata.role === 'hr_head' 
+        ? 'hr_head' 
+        : 'hr_personnel';
+      
+      const userDocRef = doc(db, 'universities', universityId, collectionName, user.uid);
+      
+      await setDoc(userDocRef, {
         email: email,
-        createdAt: serverTimestamp(),
-        // Add other HR head specific fields
-      });
-    } else {
-      await setDoc(doc(db, "universities", universityId, "hr_personnel", user.uid), {
         name: displayName,
-        email: email,
-        createdAt: serverTimestamp(),
-        // Add other HR personnel specific fields
+        position: userMetadata.position || 'HR Manager',
+        department: userMetadata.department || 'Human Resources',
+        status: status,
+        // Include other metadata as needed
+        permissions: collectionName === 'hr_personnel' 
+          ? { // Default permissions for HR personnel
+              recruitment: true,
+              onboarding: true,
+              employees: true,
+              clusters: false,
+              notifications: false
+            } 
+          : null, // HR Heads don't need permissions
+        createdAt: serverTimestamp()
       });
-    }
-    
-    return { success: true, user };
-  } catch (error) {
-    console.error("Registration error:", error);
-    
-    if (error.code === 'auth/email-already-in-use') {
-      return { 
-        success: false, 
-        message: "Email already in use. Please use a different email address."
-      };
-    } else if (error.code === 'auth/invalid-email') {
-      return { 
-        success: false, 
-        message: "Invalid email format. Please use a valid email address."
-      };
-    } else if (error.code === 'auth/weak-password') {
-      return { 
-        success: false, 
-        message: "Password is too weak. Please use a stronger password."
-      };
     }
     
     return { 
-      success: false, 
-      message: "Registration failed: " + error.message 
+      success: true, 
+      user: user,
+      status: status, 
+      message: isHRHead 
+        ? "Registration successful! Your account is pending approval by a system administrator." 
+        : "Registration successful!" 
     };
+  } catch (error) {
+    console.error("Registration failed:", error);
+    let message = "Registration failed.";
+    if (error.code === 'auth/email-already-in-use') {
+      message = "Email is already in use.";
+    } else if (error.code === 'auth/invalid-email') {
+      message = "Invalid email format.";
+    } else if (error.code === 'auth/weak-password') {
+      message = "Password is too weak.";
+    }
+    return { success: false, message };
   }
 };
 
