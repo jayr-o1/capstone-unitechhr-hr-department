@@ -309,6 +309,8 @@ export const loginUser = async (email, password) => {
 // Handle registration
 export const registerUser = async (email, password, displayName, userMetadata = {}) => {
   try {
+    console.log("Registering user with metadata:", userMetadata);
+    
     // Create the user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -317,28 +319,60 @@ export const registerUser = async (email, password, displayName, userMetadata = 
     await updateProfile(user, { displayName });
     
     // Determine what kind of registration this is
-    const isHRHead = userMetadata.role === 'hr_head';
-    const universityId = userMetadata.universityId;
+    const isHRHead = userMetadata.position === 'HR Head';
     
-    // If they're signing up as an HR head, they need approval
-    const status = isHRHead ? 'pending' : 'approved';
+    // Generate a university ID if not provided
+    let universityId = userMetadata.universityId;
+    let universityCode = null;
+    
+    if (isHRHead && !universityId && userMetadata.universityName) {
+      // Generate a unique university ID based on the name
+      const sanitizedName = userMetadata.universityName
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .substring(0, 10);
+      
+      // Add a timestamp to ensure uniqueness
+      const timestamp = Date.now().toString().substring(7);
+      universityId = `${sanitizedName}_${timestamp}`;
+      
+      // Create a shorter code for employees to use
+      universityCode = sanitizedName.substring(0, 5).toUpperCase();
+      
+      console.log("Generated university ID:", universityId, "and code:", universityCode);
+      
+      // Create the university document
+      const universityRef = doc(db, 'universities', universityId);
+      await setDoc(universityRef, {
+        name: userMetadata.universityName,
+        code: universityCode,
+        createdAt: serverTimestamp(),
+        createdBy: user.uid
+      });
+      
+      console.log("Created university document:", universityId);
+    }
+    
+    // No approval needed (temporary change) - all accounts are approved automatically
+    const status = 'approved';
     
     // Create auth mapping in Firestore
     const authMappingRef = doc(db, 'authMappings', user.uid);
     await setDoc(authMappingRef, {
       email: email,
-      role: userMetadata.role || 'hr_personnel', // Default to HR personnel
+      displayName: displayName,
+      role: isHRHead ? 'hr_head' : 'hr_personnel', // Set role based on position
       universityId: universityId,
       status: status,
       createdAt: serverTimestamp()
     });
     
+    console.log("Created auth mapping for user:", user.uid);
+    
     // Store additional information in the appropriate collection
     if (universityId) {
       // Choose collection based on role
-      const collectionName = userMetadata.role === 'hr_head' 
-        ? 'hr_head' 
-        : 'hr_personnel';
+      const collectionName = isHRHead ? 'hr_head' : 'hr_personnel';
       
       const userDocRef = doc(db, 'universities', universityId, collectionName, user.uid);
       
@@ -360,15 +394,18 @@ export const registerUser = async (email, password, displayName, userMetadata = 
           : null, // HR Heads don't need permissions
         createdAt: serverTimestamp()
       });
+      
+      console.log("Created user document in university collection:", collectionName);
     }
     
     return { 
       success: true, 
       user: user,
       status: status, 
-      message: isHRHead 
-        ? "Registration successful! Your account is pending approval by a system administrator." 
-        : "Registration successful!" 
+      isHRHead: isHRHead,
+      universityId: universityId,
+      universityCode: universityCode,
+      message: "Registration successful! Your account has been created."
     };
   } catch (error) {
     console.error("Registration failed:", error);

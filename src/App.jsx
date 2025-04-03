@@ -41,6 +41,7 @@ import SystemAdminLayout from "./components/Layouts/SystemAdminLayout";
 import SystemAdminDashboard from "./pages/system-admin/Dashboard";
 import SystemAdminApprovals from "./pages/system-admin/Approvals";
 import SystemAdminLogin from "./pages/system-admin/Login";
+import SignOut from "./pages/SignOut";
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -331,6 +332,7 @@ function AppContent() {
                         </Route>
                     </>
                 )}
+                <Route path="/signout" element={<SignOut />} />
             </Routes>
         </Router>
     );
