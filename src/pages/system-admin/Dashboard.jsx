@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { getAllUniversities } from "../../services/universityService";
 import { getPendingHRHeads } from "../../services/adminService";
-import { Building, UserCheck, Users, Layers } from "lucide-react";
+import { Building, UserCheck, Users, Layers, BarChart2, PieChart, Link2, ShieldCheck } from "lucide-react";
 import PageLoader from "../../components/PageLoader";
+import { Link } from "react-router-dom";
 
 const SystemAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -76,24 +77,28 @@ const SystemAdminDashboard = () => {
       value: stats.totalUniversities,
       icon: <Building className="w-8 h-8 text-blue-500" />,
       color: "bg-blue-100",
+      link: "/system-admin/universities"
     },
     {
       title: "Pending Approvals",
       value: stats.pendingApprovals,
       icon: <UserCheck className="w-8 h-8 text-amber-500" />,
       color: "bg-amber-100",
+      link: "/system-admin/approvals"
     },
     {
       title: "Total HR Heads",
       value: stats.totalHRHeads,
       icon: <Users className="w-8 h-8 text-green-500" />,
       color: "bg-green-100",
+      link: "/system-admin/users"
     },
     {
-      title: "Departments",
-      value: 8, // Placeholder value
-      icon: <Layers className="w-8 h-8 text-purple-500" />,
+      title: "Active Licenses",
+      value: 25, // Placeholder value
+      icon: <ShieldCheck className="w-8 h-8 text-purple-500" />,
       color: "bg-purple-100",
+      link: "/system-admin/licenses"
     },
   ];
 
@@ -109,9 +114,10 @@ const SystemAdminDashboard = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {statCards.map((card, index) => (
-          <div
+          <Link
+            to={card.link}
             key={index}
-            className="bg-white rounded-lg shadow-sm p-6 transition-all duration-300 hover:shadow-md"
+            className="bg-white rounded-lg shadow-sm p-6 transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]"
           >
             <div className="flex items-center">
               <div className={`${card.color} p-3 rounded-lg mr-4`}>
@@ -122,7 +128,7 @@ const SystemAdminDashboard = () => {
                 <h3 className="text-2xl font-bold text-gray-800">{card.value}</h3>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -132,66 +138,101 @@ const SystemAdminDashboard = () => {
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button 
-            onClick={() => window.location.href = '/system-admin/universities/new'} 
+          <Link 
+            to="/system-admin/universities" 
             className="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-300"
           >
             <Building className="w-5 h-5 mr-3 text-blue-500" />
-            <span className="font-medium text-blue-700">Add University</span>
-          </button>
+            <span className="font-medium text-blue-700">Manage Universities</span>
+          </Link>
           
-          <button 
-            onClick={() => window.location.href = '/system-admin/approvals'} 
+          <Link 
+            to="/system-admin/approvals" 
             className="flex items-center p-4 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors duration-300"
           >
             <UserCheck className="w-5 h-5 mr-3 text-amber-500" />
             <span className="font-medium text-amber-700">Review Approvals</span>
-          </button>
+          </Link>
           
-          <button 
-            onClick={() => window.location.href = '/system-admin/users'} 
-            className="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-300"
+          <Link 
+            to="/system-admin/licenses" 
+            className="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors duration-300"
           >
-            <Users className="w-5 h-5 mr-3 text-green-500" />
-            <span className="font-medium text-green-700">Manage System Users</span>
-          </button>
+            <ShieldCheck className="w-5 h-5 mr-3 text-purple-500" />
+            <span className="font-medium text-purple-700">Manage Licenses</span>
+          </Link>
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
-          Recent Activity
-        </h2>
-        
-        {stats.pendingApprovals > 0 ? (
-          <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 mb-4">
-            <div className="flex items-center">
-              <UserCheck className="w-5 h-5 mr-2 text-amber-500" />
-              <p className="text-amber-700 font-medium">
-                You have {stats.pendingApprovals} pending HR Head approval{stats.pendingApprovals > 1 ? 's' : ''} to review.
-              </p>
+      {/* Recent Activity & System Health */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Recent Activity */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <BarChart2 className="w-5 h-5 mr-2 text-gray-600" />
+            Recent Activity
+          </h2>
+          
+          {stats.pendingApprovals > 0 ? (
+            <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 mb-4">
+              <div className="flex items-center">
+                <UserCheck className="w-5 h-5 mr-2 text-amber-500" />
+                <p className="text-amber-700 font-medium">
+                  You have {stats.pendingApprovals} pending HR Head approval{stats.pendingApprovals > 1 ? 's' : ''} to review.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-600">No pending approvals at this time.</p>
+          )}
+          
+          <ul className="divide-y divide-gray-200">
+            {/* These would be replaced with actual activity logs */}
+            <li className="py-3">
+              <p className="text-gray-800">New university added: <span className="font-medium">Stanford University</span></p>
+              <p className="text-sm text-gray-500">2 hours ago</p>
+            </li>
+            <li className="py-3">
+              <p className="text-gray-800">HR Head approved: <span className="font-medium">John Doe</span> at <span className="font-medium">Harvard University</span></p>
+              <p className="text-sm text-gray-500">Yesterday</p>
+            </li>
+            <li className="py-3">
+              <p className="text-gray-800">System update applied: <span className="font-medium">v1.2.5</span></p>
+              <p className="text-sm text-gray-500">3 days ago</p>
+            </li>
+          </ul>
+        </div>
+
+        {/* System Health */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <PieChart className="w-5 h-5 mr-2 text-gray-600" />
+            System Health
+          </h2>
+          <div className="space-y-4">
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="font-medium text-green-800 flex items-center">
+                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                Database Status
+              </h3>
+              <p className="text-green-700 mt-1">Operational - No issues detected</p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="font-medium text-green-800 flex items-center">
+                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                Authentication Services
+              </h3>
+              <p className="text-green-700 mt-1">Operational - No issues detected</p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="font-medium text-green-800 flex items-center">
+                <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                Storage Services
+              </h3>
+              <p className="text-green-700 mt-1">Operational - No issues detected</p>
             </div>
           </div>
-        ) : (
-          <p className="text-gray-600">No pending approvals at this time.</p>
-        )}
-        
-        <ul className="divide-y divide-gray-200">
-          {/* These would be replaced with actual activity logs */}
-          <li className="py-3">
-            <p className="text-gray-800">New university added: <span className="font-medium">Stanford University</span></p>
-            <p className="text-sm text-gray-500">2 hours ago</p>
-          </li>
-          <li className="py-3">
-            <p className="text-gray-800">HR Head approved: <span className="font-medium">John Doe</span> at <span className="font-medium">Harvard University</span></p>
-            <p className="text-sm text-gray-500">Yesterday</p>
-          </li>
-          <li className="py-3">
-            <p className="text-gray-800">System update applied: <span className="font-medium">v1.2.5</span></p>
-            <p className="text-sm text-gray-500">3 days ago</p>
-          </li>
-        </ul>
+        </div>
       </div>
     </div>
   );

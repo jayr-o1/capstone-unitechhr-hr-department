@@ -568,6 +568,27 @@ const Layout = () => {
                     userPermissions={hrPersonnel.find(p => p.id === auth.currentUser?.uid)?.permissions}
                 />
 
+                {/* License Validation Notice - Only for HR Head users that haven't validated */}
+                {isHeadHR && userDetails && !userDetails.licenseValidated && (
+                    <div className="bg-amber-50 border-l-4 border-amber-500 text-amber-700 p-4 shadow-sm">
+                        <div className="flex items-center">
+                            <svg className="h-5 w-5 mr-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <div>
+                                <p className="font-medium">Your license is not validated</p>
+                                <p className="text-sm">You need to validate your license to add or modify data. Go to settings to enter a valid license key.</p>
+                            </div>
+                            <button 
+                                onClick={() => navigate("/license")}
+                                className="ml-auto bg-amber-100 hover:bg-amber-200 text-amber-800 font-medium py-1 px-3 rounded-md text-sm transition-colors"
+                            >
+                                Validate License
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Page Content (Only this part gets the loader) */}
                 <div className="relative flex-1 h-[calc(100vh-4rem)] p-4 bg-gray-100 overflow-y-auto">
                     {/* PageLoader positioned relative to the content container only */}
