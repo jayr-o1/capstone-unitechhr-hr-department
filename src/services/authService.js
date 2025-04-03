@@ -1,6 +1,6 @@
 import { auth } from '../firebase'; // Import Firebase auth
 import { db } from '../firebase'; // Import Firestore
-import { signInWithEmailAndPassword, sendPasswordResetEmail, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail, createUserWithEmailAndPassword, updateProfile, signOut } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { serverTimestamp } from "firebase/firestore";
@@ -397,6 +397,10 @@ export const registerUser = async (email, password, displayName, userMetadata = 
       
       console.log("Created user document in university collection:", collectionName);
     }
+    
+    // Sign out the user to ensure they must log in manually after registration
+    await signOut(auth);
+    console.log("User signed out after registration to require manual login");
     
     return { 
       success: true, 

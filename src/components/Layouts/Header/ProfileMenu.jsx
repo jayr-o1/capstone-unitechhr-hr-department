@@ -19,6 +19,7 @@ const ProfileMenu = ({ onClose, onLogout, userEmail, userData }) => {
     displayName = displayName.replace(/\s*\([^)]*\)\s*/g, "").trim();
     
     const position = userData?.position || "HR Personnel";
+    const isHRHead = position === "HR Head" || userData?.role === "hr_head" || userData?.role === "admin";
 
     return (
         <ul className="absolute right-0 mt-2 min-w-max bg-white rounded-lg shadow-lg">
@@ -54,6 +55,34 @@ const ProfileMenu = ({ onClose, onLogout, userEmail, userData }) => {
                 >
                     <ProfileIcon />
                     <span className="ml-2">Profile</span>
+                </Link>
+            </li>
+            <li>
+                <Link
+                    to="/license"
+                    className="flex items-center px-4 py-3 hover:bg-gray-100"
+                    onClick={onClose}
+                >
+                    <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        strokeWidth={1.5} 
+                        stroke="currentColor" 
+                        className="w-5 h-5"
+                    >
+                        <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" 
+                        />
+                    </svg>
+                    <span className="ml-2">License Key</span>
+                    {isHRHead && !userData?.licenseValidated && (
+                        <span className="ml-2 bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-red-200 dark:text-red-900">
+                            !
+                        </span>
+                    )}
                 </Link>
             </li>
             <li>

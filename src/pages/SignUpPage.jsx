@@ -12,8 +12,7 @@ const SignUpPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [employeeId, setEmployeeId] = useState("");
-  const [position, setPosition] = useState("HR Head");
+  const [position] = useState("HR Head");
   const [universityName, setUniversityName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -47,12 +46,6 @@ const SignUpPage = () => {
       setValidationError("Please enter your full name");
       return false;
     }
-
-    // Check employee ID
-    if (!employeeId.trim()) {
-      setValidationError("Please enter your employee ID");
-      return false;
-    }
     
     // Check university name
     if (!universityName.trim()) {
@@ -77,27 +70,23 @@ const SignUpPage = () => {
     // Include additional user metadata in the registration process
     const userMetadata = {
       fullName,
-      employeeId,
       position,
       universityName
     };
 
     console.log("Submitting registration with metadata:", userMetadata);
     
-    const result = await register(email, password, displayName, userMetadata);
-    console.log("Registration result:", result);
-    
-    if (result.success) {
-      if (result.isHRHead) {
-        setSuccessMessage(`Registration successful! Your account has been created as the HR Head for ${universityName}. Your university code is: ${result.universityCode}. Please save this code for employees to use when logging in.`);
-      } else {
-        setSuccessMessage("Registration successful! Your account has been created. You can now login to the HR portal.");
-      }
+    try {
+      const result = await register(email, password, displayName, userMetadata);
+      console.log("Registration result:", result);
       
-      // After 5 seconds, redirect to login
-      setTimeout(() => {
-        navigate("/");
-      }, 5000);
+      if (result.success) {
+        // Set success message based on registration result
+        setSuccessMessage(`Registration successful! Your account has been created as the HR Head for ${universityName}. Your university code is: ${result.universityCode}. Please save this code for employees to use when registering. Please proceed to login with your credentials.`);
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      setValidationError(error.message || "An error occurred during registration. Please try again.");
     }
   };
 
@@ -121,17 +110,15 @@ const SignUpPage = () => {
             <FontAwesomeIcon icon={faCheckCircle} className="animate-scaleIn" />
           </div>
           
-          <h2 className="text-2xl font-bold font-fredoka mb-4 text-gray-800">Registration Submitted</h2>
+          <h2 className="text-2xl font-bold font-fredoka mb-4 text-gray-800">Registration Successful</h2>
           
           <p className="text-gray-700 mb-6 text-lg">{successMessage}</p>
-          
-          <p className="text-gray-600 mb-8">You will be redirected to the login page shortly.</p>
           
           <Link
             to="/"
             className="inline-block w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-base px-5 py-3 text-center transition-all duration-200 transform hover:scale-105"
           >
-            Return to Login
+            Proceed to Login
           </Link>
         </div>
       </div>
@@ -240,52 +227,7 @@ const SignUpPage = () => {
                     </div>
                   </div>
 
-                  {/* Email */}
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="block mb-2 text-sm font-medium text-gray-900"
-                    >
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      id="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                      placeholder="jane.smith@university.edu"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Employee ID */}
-                  <div>
-                    <label
-                      htmlFor="employeeId"
-                      className="block mb-2 text-sm font-medium text-gray-900"
-                    >
-                      Employee ID
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        name="employeeId"
-                        id="employeeId"
-                        value={employeeId}
-                        onChange={(e) => setEmployeeId(e.target.value)}
-                        className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pl-10"
-                        placeholder="EMP12345"
-                        required
-                      />
-                      <FontAwesomeIcon icon={faIdCard} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    </div>
-                  </div>
-
-                  {/* Position */}
+                  {/* Position Field (Immutable) */}
                   <div>
                     <label
                       htmlFor="position"
@@ -293,18 +235,38 @@ const SignUpPage = () => {
                     >
                       Position
                     </label>
-                    <select
-                      name="position"
-                      id="position"
-                      value={position}
-                      onChange={(e) => setPosition(e.target.value)}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                      required
-                    >
-                      <option value="HR Head">HR Head</option>
-                      <option value="HR Personnel">HR Personnel</option>
-                    </select>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="position"
+                        id="position"
+                        value="HR Head"
+                        className="bg-gray-100 border border-gray-300 text-gray-800 rounded-lg block w-full p-2.5 pl-10 cursor-not-allowed"
+                        readOnly
+                      />
+                      <FontAwesomeIcon icon={faUserTie} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    </div>
                   </div>
+                </div>
+
+                {/* Email field - full width */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block mb-2 text-sm font-medium text-gray-900"
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                    placeholder="jane.smith@university.edu"
+                    required
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

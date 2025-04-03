@@ -1,9 +1,55 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import Header from "./Header";
 import SystemAdminSidebar from "./SystemAdminSidebar";
 import { useAuth } from "../../contexts/AuthProvider";
 import PageLoader from "../PageLoader";
+import { ChevronRight, Home, Menu } from "lucide-react";
+
+// Custom System Admin Header without profile dropdown
+const SystemAdminHeader = ({ title, breadcrumb, onBreadcrumbClick, toggleSidebar }) => {
+  return (
+    <header className="sticky top-0 bg-white shadow-sm px-4 py-2 flex items-center justify-between z-40 h-16 md:pr-4 border-b border-gray-200">
+      <div className="flex items-center">
+        <button
+          onClick={toggleSidebar}
+          className="p-1 mr-2 rounded-md text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 lg:hidden"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+        
+        <div className="flex-1 font-fredoka font-normal overflow-x-auto whitespace-nowrap no-scrollbar">
+          {breadcrumb.length > 0 ? (
+            <div className="flex items-center space-x-1">
+              <Home 
+                size={16} 
+                className="text-gray-500 cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={() => onBreadcrumbClick("/system-admin/dashboard")}
+              />
+              {breadcrumb.map((item, index) => (
+                <React.Fragment key={`${index}-${item.title}`}>
+                  <ChevronRight size={16} className="text-gray-400" />
+                  <span 
+                    className={`
+                      ${item.path ? 
+                        "text-blue-600 hover:text-blue-800 hover:underline cursor-pointer" : 
+                        "text-gray-800 font-medium"}
+                      transition-colors
+                    `}
+                    onClick={() => item.path && onBreadcrumbClick(item.path)}
+                  >
+                    {item.title}
+                  </span>
+                </React.Fragment>
+              ))}
+            </div>
+          ) : (
+            <h1 className="text-xl text-gray-800 font-medium">{title}</h1>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
 
 const SystemAdminLayout = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -114,6 +160,10 @@ const SystemAdminLayout = () => {
     return <PageLoader />;
   }
 
+  // Get current page title from URL
+  const currentPageTitle = location.pathname.split("/").pop() || "dashboard";
+  const formattedPageTitle = currentPageTitle.charAt(0).toUpperCase() + currentPageTitle.slice(1).replace(/-/g, " ");
+
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
@@ -121,16 +171,15 @@ const SystemAdminLayout = () => {
 
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Header */}
-        <Header 
+        {/* Custom Header without profile dropdown */}
+        <SystemAdminHeader 
           title="System Administration" 
           breadcrumb={[
             { title: "Home", path: "/system-admin" },
-            { title: location.pathname.split("/").pop()?.replace(/-/g, " ")?.charAt(0).toUpperCase() + location.pathname.split("/").pop()?.replace(/-/g, " ")?.slice(1) || "Dashboard" }
+            { title: formattedPageTitle || "Dashboard" }
           ]}
           onBreadcrumbClick={(path) => navigate(path)}
-          userRole="system_admin"
-          userPermissions={{}}
+          toggleSidebar={toggleSidebar}
         />
 
         {/* Page Content */}
