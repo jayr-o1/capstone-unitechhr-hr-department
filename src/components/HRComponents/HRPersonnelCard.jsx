@@ -278,8 +278,16 @@ const HRPersonnelCard = ({ person, universityId, refreshPersonnel }) => {
       
       {/* Edit Name Modal */}
       {isEditNameOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 min-h-screen"
+          style={{
+            background: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            zIndex: 1000
+          }}
+        >
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
             <h3 className="text-lg font-bold mb-4">Edit Name</h3>
             <form onSubmit={handleEditName}>
               <div className="mb-4">
@@ -316,8 +324,16 @@ const HRPersonnelCard = ({ person, universityId, refreshPersonnel }) => {
       
       {/* Edit Permissions Modal */}
       {isEditPermissionsOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 min-h-screen"
+          style={{
+            background: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            zIndex: 1000
+          }}
+        >
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
             <h3 className="text-lg font-bold mb-4">Edit Permissions</h3>
             <form onSubmit={handleEditPermissions}>
               <div className="mb-4">
@@ -418,8 +434,16 @@ const HRPersonnelCard = ({ person, universityId, refreshPersonnel }) => {
       
       {/* Edit Password Modal */}
       {isEditPasswordOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 min-h-screen"
+          style={{
+            background: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            zIndex: 1000
+          }}
+        >
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
             <h3 className="text-lg font-bold mb-4">Change Password</h3>
             <form onSubmit={handleEditPassword}>
               <div className="mb-4">

@@ -85,7 +85,7 @@ const SignUpPage = () => {
     const result = await register(email, password, displayName, userMetadata);
     if (result.success) {
       if (result.isHRHead) {
-        setSuccessMessage("Registration successful! Your account has been created as the HR Head for " + universityName + ". You can now log in.");
+        setSuccessMessage(`Registration successful! Your account has been created as the HR Head for ${universityName}. Your university code is: ${result.universityCode}. Please save this code for employees to use when logging in.`);
       } else {
         setSuccessMessage("Registration submitted! Your account is pending approval from the HR Head.");
       }

@@ -58,81 +58,74 @@ const Sidebar = ({ userRole, userPermissions }) => {
         }
     };
 
+    // Create menu items array
+    const menuItems = [
+        {
+            name: "HR Dashboard",
+            path: "/dashboard",
+            icon: (
+                <DashboardIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
+            ),
+        },
+        {
+            name: "Job Recruitment",
+            path: "/recruitment",
+            icon: (
+                <RecruitmentIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
+            ),
+        },
+        {
+            name: "Applicant Onboarding",
+            path: "/onboarding",
+            icon: (
+                <OnboardingIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
+            ),
+        },
+        {
+            name: "Employee Profiling",
+            path: "/employees",
+            icon: (
+                <EmployeesIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
+            ),
+        },
+        {
+            name: "Development Clusters",
+            path: "/clusters",
+            icon: (
+                <ClustersIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
+            ),
+        },
+    ];
+
+    // Add HR Management option only for HR Heads
+    if (isHRHead) {
+        menuItems.push({
+            name: "HR Management",
+            path: "/hr-management",
+            icon: (
+                <HRManagementIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
+            ),
+        });
+    }
+
     return (
         <>
             {/* Sidebar */}
             <div
                 className={`fixed top-0 left-0 h-screen w-64 bg-white shadow-lg transition-transform duration-300 z-50 ${
                     isOpen ? "translate-x-0" : "-translate-x-full"
-                }`}
+                } flex flex-col`}
             >
                 {/* Sidebar Header */}
                 <div className="text-center text-3xl font-fredoka font-semibold p-4 bg-gradient-to-r from-[#131674] to-[#8d46a5] text-transparent bg-clip-text">
                     UNITECH HR
                 </div>
 
-                {/* Menu Items */}
-                <ul className="flex flex-col h-[calc(100vh-80px)] justify-between mt-4">
-                    <div className="space-y-4">
-                        {[
-                            {
-                                name: "Dashboard",
-                                path: "/dashboard",
-                                icon: (
-                                    <DashboardIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
-                                ),
-                            },
-                            {
-                                name: "Recruitment",
-                                path: "/recruitment",
-                                icon: (
-                                    <RecruitmentIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
-                                ),
-                            },
-                            {
-                                name: "Onboarding",
-                                path: "/onboarding",
-                                icon: (
-                                    <OnboardingIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
-                                ),
-                            },
-                            {
-                                name: "Employees",
-                                path: "/employees",
-                                icon: (
-                                    <EmployeesIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
-                                ),
-                            },
-                            {
-                                name: "Clusters",
-                                path: "/clusters",
-                                icon: (
-                                    <ClustersIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
-                                ),
-                            },
-                            // Show HR Management for HR Heads, Sign Out for HR Personnel
-                            ...(isHRHead
-                                ? [
-                                      {
-                                          name: "HR Management",
-                                          path: "/hr-management",
-                                          icon: (
-                                              <HRManagementIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
-                                          ),
-                                      },
-                                  ]
-                                : [
-                                      {
-                                          name: "Sign Out",
-                                          path: null,
-                                          onClick: handleLogout,
-                                          icon: (
-                                              <SignOutIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 text-red-600" />
-                                          ),
-                                      },
-                                  ]),
-                        ].map((item, index) => {
-                            const itemHasPermission = item.path === null || hasPermission(item.path);
+                {/* Main Menu Items */}
+                <div className="flex-grow overflow-y-auto pt-4">
+                    <ul className="space-y-4">
+                        {menuItems.map((item, index) => {
+                            const itemHasPermission = hasPermission(item.path);
                             return (
                                 <li
                                     key={index}
@@ -146,19 +139,7 @@ const Sidebar = ({ userRole, userPermissions }) => {
                                             : "bg-gray-100"
                                     }`}
                                 >
-                                    {item.path === null ? (
-                                        <button
-                                            onClick={item.onClick}
-                                            className="w-full flex flex-col items-center justify-center py-3 md:py-4 lg:py-6"
-                                        >
-                                            <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10">
-                                                {item.icon}
-                                            </div>
-                                            <span className="text-xs md:text-sm font-medium text-red-600">
-                                                {item.name}
-                                            </span>
-                                        </button>
-                                    ) : itemHasPermission ? (
+                                    {itemHasPermission ? (
                                         <Link
                                             to={item.path}
                                             className="flex flex-col items-center justify-center py-3 md:py-4 lg:py-6"
@@ -166,7 +147,7 @@ const Sidebar = ({ userRole, userPermissions }) => {
                                             <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10">
                                                 {item.icon}
                                             </div>
-                                            <span className={`text-xs md:text-sm font-medium ${item.name === "Sign Out" ? "text-red-600" : "text-gray-900"}`}>
+                                            <span className="text-xs md:text-sm font-medium text-gray-900">
                                                 {item.name}
                                             </span>
                                         </Link>
@@ -183,14 +164,42 @@ const Sidebar = ({ userRole, userPermissions }) => {
                                 </li>
                             );
                         })}
-                    </div>
+                    </ul>
+                </div>
 
-                    {/* Optional: Add a footer or additional content here */}
-                    <div className="p-4 text-center text-sm text-gray-400 border-t border-gray-700">
-                        {" "}
-                        © 2025 UNITECH HR
+                {/* Sign Out Button for HR Personnel - at bottom with horizontal line */}
+                {!isHRHead && (
+                    <div className="mt-auto mb-4">
+                        <hr className="border-t border-gray-300 mx-4 mb-4" />
+                        <div className="mx-4 bg-gray-100 rounded-xl shadow-md hover:bg-gray-200 transition-colors duration-200 cursor-pointer">
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex flex-col items-center justify-center py-3 md:py-4 lg:py-6 cursor-pointer"
+                            >
+                                <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10">
+                                    {/* Custom logout icon in red */}
+                                    <svg 
+                                        xmlns="http://www.w3.org/2000/svg" 
+                                        fill="none" 
+                                        viewBox="0 0 24 24" 
+                                        strokeWidth={1.5} 
+                                        stroke="currentColor" 
+                                        className="w-full h-full text-red-600"
+                                    >
+                                        <path 
+                                            strokeLinecap="round" 
+                                            strokeLinejoin="round" 
+                                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" 
+                                        />
+                                    </svg>
+                                </div>
+                                <span className="text-xs md:text-sm font-medium text-red-600">
+                                    Sign Out
+                                </span>
+                            </button>
+                        </div>
                     </div>
-                </ul>
+                )}
             </div>
         </>
     );
