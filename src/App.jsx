@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
     BrowserRouter as Router,
     Routes,
@@ -40,20 +40,97 @@ import { Toaster } from 'react-hot-toast';
 // System Admin imports
 import SystemAdminLayout from "./components/Layouts/SystemAdminLayout";
 import SystemAdminDashboard from "./pages/system-admin/Dashboard";
-import SystemAdminApprovals from "./pages/system-admin/Approvals";
 import SystemAdminLicenses from "./pages/system-admin/Licenses";
 import SystemAdminLogin from "./pages/system-admin/Login";
 import SignOut from "./pages/SignOut";
+import { getAllUniversities } from "./services/universityService";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "./firebase";
 
 // Temporary component until we create the full page
 const SystemAdminUniversities = () => {
-    // Sample data - this would be fetched from the database in a real implementation
-    const universities = [
-        { id: "1", name: "Stanford University", code: "STANF", hrHeads: 2, employees: 120, createdAt: "2023-02-15" },
-        { id: "2", name: "Harvard University", code: "HARVA", hrHeads: 1, employees: 85, createdAt: "2023-03-10" },
-        { id: "3", name: "MIT", code: "MITXX", hrHeads: 3, employees: 145, createdAt: "2023-01-05" },
-        { id: "4", name: "University of California", code: "UNICA", hrHeads: 2, employees: 210, createdAt: "2023-04-22" },
-    ];
+    const [universities, setUniversities] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchUniversities = async () => {
+            try {
+                setLoading(true);
+                const result = await getAllUniversities();
+                if (result.success) {
+                    // Get additional collection counts for each university
+                    const universitiesWithCounts = await Promise.all(
+                        result.universities.map(async (uni) => {
+                            // Get employees count
+                            let employeesCount = 0;
+                            try {
+                                const employeesRef = collection(db, "universities", uni.id, "employees");
+                                const employeesSnapshot = await getDocs(employeesRef);
+                                employeesCount = employeesSnapshot.size;
+                            } catch (err) {
+                                console.error(`Error fetching employees for university ${uni.id}:`, err);
+                            }
+
+                            // Get HR heads count
+                            let hrHeadsCount = 0;
+                            try {
+                                const hrHeadsRef = collection(db, "universities", uni.id, "hr_head");
+                                const hrHeadsSnapshot = await getDocs(hrHeadsRef);
+                                hrHeadsCount = hrHeadsSnapshot.size;
+                            } catch (err) {
+                                console.error(`Error fetching HR heads for university ${uni.id}:`, err);
+                            }
+
+                            // Get HR personnel count
+                            let hrPersonnelCount = 0;
+                            try {
+                                const hrPersonnelRef = collection(db, "universities", uni.id, "hr_personnel");
+                                const hrPersonnelSnapshot = await getDocs(hrPersonnelRef);
+                                hrPersonnelCount = hrPersonnelSnapshot.size;
+                            } catch (err) {
+                                console.error(`Error fetching HR personnel for university ${uni.id}:`, err);
+                            }
+
+                            // Get jobs count
+                            let jobsCount = 0;
+                            try {
+                                const jobsRef = collection(db, "universities", uni.id, "jobs");
+                                const jobsSnapshot = await getDocs(jobsRef);
+                                jobsCount = jobsSnapshot.size;
+                            } catch (err) {
+                                console.error(`Error fetching jobs for university ${uni.id}:`, err);
+                            }
+                            
+                            return {
+                                id: uni.id,
+                                name: uni.name,
+                                code: uni.code || 'N/A',
+                                hrHeads: hrHeadsCount,
+                                hrPersonnel: hrPersonnelCount,
+                                employees: employeesCount,
+                                jobs: jobsCount,
+                                createdAt: uni.createdAt ? 
+                                    new Date(uni.createdAt.seconds * 1000).toLocaleDateString() : 
+                                    'N/A'
+                            };
+                        })
+                    );
+                    
+                    setUniversities(universitiesWithCounts);
+                } else {
+                    setError("Failed to load universities");
+                }
+            } catch (err) {
+                console.error("Error fetching universities:", err);
+                setError("An error occurred while fetching universities");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUniversities();
+    }, []);
 
     return (
         <div className="container mx-auto">
@@ -72,155 +149,98 @@ const SystemAdminUniversities = () => {
                 </button>
             </div>
 
-            {/* Universities Table */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Name
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Code
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    HR Heads
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Employees
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Created
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {universities.map((university) => (
-                                <tr key={university.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="font-medium text-gray-900">{university.name}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-blue-100 text-blue-800">
-                                            {university.code}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                                        {university.hrHeads}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                                        {university.employees}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                                        {university.createdAt}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button className="text-blue-600 hover:text-blue-900 mr-3">
-                                            Edit
-                                        </button>
-                                        <button className="text-red-600 hover:text-red-900">
-                                            Delete
-                                        </button>
-                                    </td>
+            {/* Loading and Error States */}
+            {loading ? (
+                <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                    <div className="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="mt-2 text-gray-600">Loading universities...</p>
+                </div>
+            ) : error ? (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+                    <p className="font-medium">{error}</p>
+                    <p className="mt-1">Please try refreshing the page.</p>
+                </div>
+            ) : universities.length === 0 ? (
+                <div className="bg-gray-50 rounded-lg shadow-sm p-8 text-center">
+                    <p className="text-gray-600">No universities found in the system.</p>
+                    <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        Add Your First University
+                    </button>
+                </div>
+            ) : (
+                /* Universities Table */
+                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Name
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Code
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        HR Heads
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        HR Personnel
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Employees
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Jobs
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Created
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Actions
+                                    </th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {universities.map((university) => (
+                                    <tr key={university.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="font-medium text-gray-900">{university.name}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-blue-100 text-blue-800">
+                                                {university.code}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                                            {university.hrHeads}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                                            {university.hrPersonnel}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                                            {university.employees}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                                            {university.jobs}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                                            {university.createdAt}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button className="text-blue-600 hover:text-blue-900 mr-3">
+                                                Edit
+                                            </button>
+                                            <button className="text-red-600 hover:text-red-900">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-        </div>
-    );
-};
-
-// Enhanced SystemAdminUsers component with table
-const SystemAdminUsers = () => {
-    // Sample data - this would be fetched from the database in a real implementation
-    const users = [
-        { id: "1", name: "John Doe", role: "System Admin", email: "john.doe@example.com", lastLogin: "2023-06-15" },
-        { id: "2", name: "Jane Smith", role: "System Admin", email: "jane.smith@example.com", lastLogin: "2023-06-10" },
-        { id: "3", name: "Robert Johnson", role: "Support Admin", email: "robert@example.com", lastLogin: "2023-06-05" },
-        { id: "4", name: "Emily Wilson", role: "Support Admin", email: "emily@example.com", lastLogin: "2023-06-01" },
-    ];
-
-    return (
-        <div className="container mx-auto">
-            <div className="mb-6 flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">System Users Management</h1>
-                    <p className="text-gray-600">
-                        Add, edit, and manage system administrators and support staff.
-                    </p>
-                </div>
-                <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
-                >
-                    <span className="mr-2">+</span>
-                    Add System User
-                </button>
-            </div>
-
-            {/* Users Table */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Name
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Role
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Email
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Last Login
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {users.map((user) => (
-                                <tr key={user.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="font-medium text-gray-900">{user.name}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium ${
-                                            user.role === 'System Admin' 
-                                                ? 'bg-purple-100 text-purple-800' 
-                                                : 'bg-green-100 text-green-800'
-                                        }`}>
-                                            {user.role}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                                        {user.email}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                                        {user.lastLogin}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button className="text-blue-600 hover:text-blue-900 mr-3">
-                                            Edit
-                                        </button>
-                                        <button className="text-red-600 hover:text-red-900">
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            )}
         </div>
     );
 };
@@ -416,10 +436,8 @@ function AppContent() {
                                 element={<Navigate to="/system-admin/dashboard" />}
                             />
                             <Route path="dashboard" element={<SystemAdminDashboard />} />
-                            <Route path="approvals" element={<SystemAdminApprovals />} />
                             <Route path="universities" element={<SystemAdminUniversities />} />
                             <Route path="licenses" element={<SystemAdminLicenses />} />
-                            <Route path="users" element={<SystemAdminUsers />} />
                             {/* Add other system admin routes here */}
                         </Route>
                         {/* Redirect other routes to system admin dashboard if user is system admin */}

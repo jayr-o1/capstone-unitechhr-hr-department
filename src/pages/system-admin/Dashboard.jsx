@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { getAllUniversities } from "../../services/universityService";
-import { getPendingHRHeads } from "../../services/adminService";
-import { Building, UserCheck, Users, Layers, BarChart2, PieChart, Link2, ShieldCheck } from "lucide-react";
+import { Building, BarChart2, PieChart, ShieldCheck, Users, Briefcase } from "lucide-react";
 import PageLoader from "../../components/PageLoader";
 import { Link } from "react-router-dom";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../firebase";
+import { getAllLicenses } from "../../services/licenseService";
 
 const SystemAdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUniversities: 0,
-    pendingApprovals: 0,
+    totalLicenses: 0,
     totalHRHeads: 0,
+    totalHRPersonnel: 0,
     totalEmployees: 0,
+    totalJobs: 0
   });
 
   // Debug logging on component mount
@@ -34,27 +38,58 @@ const SystemAdminDashboard = () => {
           console.error("Error fetching universities:", universityError);
         }
         
-        // Fetch pending HR head approvals
-        let pendingResult = { pendingHRHeads: [] };
+        // Fetch licenses
+        let licensesResult = { licenses: [] };
         try {
-          pendingResult = await getPendingHRHeads();
-          console.log("Pending HR heads:", pendingResult);
-        } catch (pendingError) {
-          console.error("Error fetching pending HR heads:", pendingError);
+          licensesResult = await getAllLicenses();
+          console.log("Licenses data:", licensesResult);
+        } catch (licensesError) {
+          console.error("Error fetching licenses:", licensesError);
         }
         
-        // Count total HR Heads (safely)
-        const totalHRHeads = universitiesResult.universities?.reduce(
-          (total, uni) => total + (uni.usersCount || 0), 
-          0
-        ) || 0;
+        // Initialize counters
+        let totalHRHeads = 0;
+        let totalHRPersonnel = 0;
+        let totalEmployees = 0;
+        let totalJobs = 0;
+
+        // Fetch counts from each university's collections
+        if (universitiesResult.success && universitiesResult.universities.length > 0) {
+          await Promise.all(universitiesResult.universities.map(async (uni) => {
+            try {
+              // Count HR Heads
+              const hrHeadsRef = collection(db, "universities", uni.id, "hr_head");
+              const hrHeadsSnapshot = await getDocs(hrHeadsRef);
+              totalHRHeads += hrHeadsSnapshot.size;
+
+              // Count HR Personnel
+              const hrPersonnelRef = collection(db, "universities", uni.id, "hr_personnel");
+              const hrPersonnelSnapshot = await getDocs(hrPersonnelRef);
+              totalHRPersonnel += hrPersonnelSnapshot.size;
+
+              // Count Employees
+              const employeesRef = collection(db, "universities", uni.id, "employees");
+              const employeesSnapshot = await getDocs(employeesRef);
+              totalEmployees += employeesSnapshot.size;
+
+              // Count Jobs
+              const jobsRef = collection(db, "universities", uni.id, "jobs");
+              const jobsSnapshot = await getDocs(jobsRef);
+              totalJobs += jobsSnapshot.size;
+            } catch (err) {
+              console.error(`Error fetching collections for university ${uni.id}:`, err);
+            }
+          }));
+        }
         
         // Set stats
         setStats({
           totalUniversities: universitiesResult.universities?.length || 0,
-          pendingApprovals: pendingResult.pendingHRHeads?.length || 0,
+          totalLicenses: licensesResult.success ? licensesResult.licenses?.length || 0 : 0,
           totalHRHeads,
-          totalEmployees: 0, // Placeholder until we have a real method to count
+          totalHRPersonnel,
+          totalEmployees,
+          totalJobs
         });
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -80,26 +115,26 @@ const SystemAdminDashboard = () => {
       link: "/system-admin/universities"
     },
     {
-      title: "Pending Approvals",
-      value: stats.pendingApprovals,
-      icon: <UserCheck className="w-8 h-8 text-amber-500" />,
-      color: "bg-amber-100",
-      link: "/system-admin/approvals"
-    },
-    {
-      title: "Total HR Heads",
-      value: stats.totalHRHeads,
-      icon: <Users className="w-8 h-8 text-green-500" />,
-      color: "bg-green-100",
-      link: "/system-admin/users"
-    },
-    {
       title: "Active Licenses",
-      value: 25, // Placeholder value
+      value: stats.totalLicenses,
       icon: <ShieldCheck className="w-8 h-8 text-purple-500" />,
       color: "bg-purple-100",
       link: "/system-admin/licenses"
     },
+    {
+      title: "HR Heads",
+      value: stats.totalHRHeads,
+      icon: <Users className="w-8 h-8 text-green-500" />,
+      color: "bg-green-100",
+      link: "/system-admin/universities"
+    },
+    {
+      title: "Total Employees",
+      value: stats.totalEmployees,
+      icon: <Users className="w-8 h-8 text-orange-500" />,
+      color: "bg-orange-100",
+      link: "/system-admin/universities"
+    }
   ];
 
   return (
@@ -107,7 +142,7 @@ const SystemAdminDashboard = () => {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-800 mb-2">System Administration</h1>
         <p className="text-gray-600">
-          Manage system-wide settings, universities, and user approvals.
+          Manage system-wide settings, universities, and licenses.
         </p>
       </div>
 
@@ -137,21 +172,13 @@ const SystemAdminDashboard = () => {
         <h2 className="text-lg font-semibold text-gray-800 mb-4">
           Quick Actions
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link 
             to="/system-admin/universities" 
             className="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-300"
           >
             <Building className="w-5 h-5 mr-3 text-blue-500" />
             <span className="font-medium text-blue-700">Manage Universities</span>
-          </Link>
-          
-          <Link 
-            to="/system-admin/approvals" 
-            className="flex items-center p-4 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors duration-300"
-          >
-            <UserCheck className="w-5 h-5 mr-3 text-amber-500" />
-            <span className="font-medium text-amber-700">Review Approvals</span>
           </Link>
           
           <Link 
@@ -173,19 +200,6 @@ const SystemAdminDashboard = () => {
             Recent Activity
           </h2>
           
-          {stats.pendingApprovals > 0 ? (
-            <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 mb-4">
-              <div className="flex items-center">
-                <UserCheck className="w-5 h-5 mr-2 text-amber-500" />
-                <p className="text-amber-700 font-medium">
-                  You have {stats.pendingApprovals} pending HR Head approval{stats.pendingApprovals > 1 ? 's' : ''} to review.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-600">No pending approvals at this time.</p>
-          )}
-          
           <ul className="divide-y divide-gray-200">
             {/* These would be replaced with actual activity logs */}
             <li className="py-3">
@@ -193,7 +207,7 @@ const SystemAdminDashboard = () => {
               <p className="text-sm text-gray-500">2 hours ago</p>
             </li>
             <li className="py-3">
-              <p className="text-gray-800">HR Head approved: <span className="font-medium">John Doe</span> at <span className="font-medium">Harvard University</span></p>
+              <p className="text-gray-800">New license generated: <span className="font-medium">UNITECH-HR-AB12-CD34</span></p>
               <p className="text-sm text-gray-500">Yesterday</p>
             </li>
             <li className="py-3">
@@ -238,4 +252,4 @@ const SystemAdminDashboard = () => {
   );
 };
 
-export default SystemAdminDashboard; 
+export default SystemAdminDashboard;
