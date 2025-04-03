@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthProvider";
-import { Building, Users, UserCheck, LayoutDashboard, Key, Settings, LogOut } from "lucide-react";
+import { Building, LayoutDashboard, Key, LogOut } from "lucide-react";
 
 const SystemAdminSidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
@@ -26,19 +26,9 @@ const SystemAdminSidebar = ({ isOpen, toggleSidebar }) => {
       icon: <Building className="w-5 h-5" />,
     },
     {
-      name: "HR Head Approvals",
-      path: "/system-admin/approvals",
-      icon: <UserCheck className="w-5 h-5" />,
-    },
-    {
       name: "Licenses",
       path: "/system-admin/licenses",
       icon: <Key className="w-5 h-5" />,
-    },
-    {
-      name: "System Users",
-      path: "/system-admin/users",
-      icon: <Users className="w-5 h-5" />,
     },
   ];
 
