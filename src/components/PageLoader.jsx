@@ -1,7 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const PageLoader = ({ isLoading, fullscreen, contentOnly }) => {
+const PageLoader = ({ isLoading, fullscreen, contentOnly, message }) => {
     const getLoaderStyles = () => {
         if (contentOnly) {
             // Only cover the content area with absolute positioning
@@ -24,11 +24,11 @@ const PageLoader = ({ isLoading, fullscreen, contentOnly }) => {
                 zIndex: 9999 // Higher z-index to cover everything
             };
         } else {
-            // Cover everything except header and sidebar
+            // Default for main content area - responsive for different layouts
             return {
                 position: 'fixed',
                 top: "4rem", // Adjust this to match the height of your Header
-                left: "16rem", // Adjust this to match the width of your Sidebar
+                left: isMobile() ? 0 : "16rem", // Adjust for mobile vs desktop
                 right: 0,
                 bottom: 0,
                 zIndex: 50
@@ -36,16 +36,21 @@ const PageLoader = ({ isLoading, fullscreen, contentOnly }) => {
         }
     };
     
+    // Helper to detect mobile screens
+    const isMobile = () => {
+        return window.innerWidth < 768;
+    };
+    
     return (
         <AnimatePresence>
             {isLoading && (
                 <motion.div
-                    className={`flex justify-center items-center bg-white bg-opacity-70`}
+                    className="flex flex-col justify-center items-center bg-white bg-opacity-70 backdrop-blur-sm"
                     style={getLoaderStyles()}
-                    initial={{ opacity: 1 }}
+                    initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.1, ease: "easeIn" }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
                 >
                     {/* Rotating Clockwise */}
                     <motion.div
@@ -73,6 +78,7 @@ const PageLoader = ({ isLoading, fullscreen, contentOnly }) => {
                                     type="rotate"
                                     from="0 67 67"
                                     to="360 67 67"
+                                    dur="1s"
                                     repeatCount="indefinite"
                                 />
                             </path>
@@ -105,11 +111,24 @@ const PageLoader = ({ isLoading, fullscreen, contentOnly }) => {
                                     type="rotate"
                                     from="0 67 67"
                                     to="-360 67 67"
+                                    dur="2s"
                                     repeatCount="indefinite"
                                 />
                             </path>
                         </motion.svg>
                     </motion.div>
+                    
+                    {/* Optional loading message */}
+                    {message && (
+                        <motion.p 
+                            className="text-gray-700 mt-24 font-medium text-center px-4"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                        >
+                            {message}
+                        </motion.p>
+                    )}
                 </motion.div>
             )}
         </AnimatePresence>
@@ -120,7 +139,8 @@ const PageLoader = ({ isLoading, fullscreen, contentOnly }) => {
 PageLoader.defaultProps = {
     isLoading: false,
     fullscreen: false,
-    contentOnly: false
+    contentOnly: false,
+    message: ""
 };
 
 export default PageLoader;

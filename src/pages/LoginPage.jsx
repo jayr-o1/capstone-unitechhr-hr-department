@@ -293,10 +293,10 @@ const LoginPage = () => {
   // Add a helper function to render the login mode toggle
   const renderLoginModeToggle = () => {
     return (
-      <div className="flex items-center justify-center mb-6">
-        <div className="flex p-1 bg-gray-100 rounded-full">
+      <div className="flex items-center justify-center mb-4 md:mb-6">
+        <div className="flex p-1 bg-gray-100 rounded-full w-full sm:w-auto">
           <button
-            className={`px-4 py-2 rounded-full ${
+            className={`px-3 md:px-4 py-2 rounded-full text-sm md:text-base flex-1 sm:flex-initial ${
               loginMode === "hr"
                 ? "bg-blue-600 text-white"
                 : "bg-transparent text-gray-700"
@@ -304,11 +304,11 @@ const LoginPage = () => {
             onClick={() => handleModeSelection("hr")}
             type="button"
           >
-            <FontAwesomeIcon icon={faIdCard} className="mr-2" />
+            <FontAwesomeIcon icon={faIdCard} className="mr-1 md:mr-2" />
             HR Login
           </button>
           <button
-            className={`px-4 py-2 rounded-full ${
+            className={`px-3 md:px-4 py-2 rounded-full text-sm md:text-base flex-1 sm:flex-initial ${
               loginMode === "employee"
                 ? "bg-blue-600 text-white"
                 : "bg-transparent text-gray-700"
@@ -316,7 +316,7 @@ const LoginPage = () => {
             onClick={() => handleModeSelection("employee")}
             type="button"
           >
-            <FontAwesomeIcon icon={faSchool} className="mr-2" />
+            <FontAwesomeIcon icon={faSchool} className="mr-1 md:mr-2" />
             Employee Login
           </button>
         </div>
@@ -326,12 +326,12 @@ const LoginPage = () => {
 
   return (
     <div
-      className="h-screen bg-cover bg-center"
+      className="min-h-screen bg-cover bg-center"
       style={{ backgroundImage: `url(${loginBg})` }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 h-full">
-        {/* Left Column */}
-        <div className="flex flex-col items-center justify-center text-center p-6 space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 min-h-screen">
+        {/* Left Column - Hidden on mobile */}
+        <div className="hidden md:flex flex-col items-center justify-center text-center p-6 space-y-4">
           <img
             src={splashArt}
             alt="Splash Art"
@@ -342,21 +342,21 @@ const LoginPage = () => {
           </p>
         </div>
 
-        {/* Right Column */}
-        <div className="flex items-center justify-center p-6">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border border-black">
+        {/* Right Column - Full width on mobile */}
+        <div className="flex items-center justify-center py-4 px-3 md:p-6 md:col-span-1 col-span-2">
+          <div className="bg-white p-4 md:p-8 rounded-lg shadow-lg w-full max-w-md border border-black">
             {/* Logo */}
-            <div className="flex justify-center mb-4">
-              <img src={logo} alt="Logo" className="w-48 h-auto" />
+            <div className="flex justify-center mb-3 md:mb-4">
+              <img src={logo} alt="Logo" className="w-36 md:w-48 h-auto" />
             </div>
 
             {/* Sign In Text */}
-            <h2 className="text-2xl font-bold font-fredoka text-center mb-4">
+            <h2 className="text-xl md:text-2xl font-bold font-fredoka text-center mb-2 md:mb-4">
               {step === 1 ? "Sign In" : step === 2 ? "Enter University ID" : "Employee Login"}
             </h2>
 
             {/* Welcome Back Text */}
-            <p className="text-center text-[#75808B] font-fredoka text-gray-600 mb-6">
+            <p className="text-center text-[#75808B] font-fredoka text-sm md:text-base text-gray-600 mb-4 md:mb-6">
               {step === 1 
                 ? "Welcome back! Please sign in to continue." 
                 : step === 2 
@@ -366,8 +366,9 @@ const LoginPage = () => {
             
             {/* Loading Spinner */}
             {loading && (
-              <div className="flex justify-center mt-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-10 w-10 md:h-12 md:w-12 border-t-4 border-blue-500"></div>
+                <p className="text-sm text-gray-600 mt-4">Loading...</p>
               </div>
             )}
 
@@ -378,16 +379,16 @@ const LoginPage = () => {
                 {renderLoginModeToggle()}
 
                 {/* HR Login Form */}
-                <form className="space-y-4 md:space-y-6" onSubmit={handleLogin}>
+                <form className="space-y-3 md:space-y-4" onSubmit={handleLogin}>
                   {/* Error Messages */}
                   {(authError || error) && (
-                    <p className="text-red-500 text-center mb-4">{error || authError}</p>
+                    <p className="text-red-500 text-center mb-2 md:mb-3 text-sm">{error || authError}</p>
                   )}
 
                   <div>
                     <label
                       htmlFor="email"
-                      className="block mb-2 text-sm font-medium text-gray-900"
+                      className="block mb-1 md:mb-2 text-sm font-medium text-gray-900"
                     >
                       Your email
                     </label>
@@ -397,7 +398,7 @@ const LoginPage = () => {
                       id="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 text-sm md:text-base"
                       placeholder="hr@university.edu"
                       required
                     />
@@ -407,7 +408,7 @@ const LoginPage = () => {
                   <div className="relative">
                     <label
                       htmlFor="password"
-                      className="block mb-2 text-sm font-medium text-gray-900"
+                      className="block mb-1 md:mb-2 text-sm font-medium text-gray-900"
                     >
                       Password
                     </label>
@@ -418,7 +419,7 @@ const LoginPage = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 text-sm md:text-base"
                       required
                     />
                     {/* Eye Icon */}
@@ -430,7 +431,7 @@ const LoginPage = () => {
                   </div>
 
                   {/* Remember Me and Forgot Password */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2">
                     <div className="flex items-start">
                       <div className="flex items-center h-5">
                         <input
@@ -441,7 +442,7 @@ const LoginPage = () => {
                           className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300"
                         />
                       </div>
-                      <div className="ml-3 text-sm">
+                      <div className="ml-2 text-sm">
                         <label htmlFor="remember" className="text-gray-500">
                           Remember me
                         </label>
@@ -458,13 +459,13 @@ const LoginPage = () => {
                   {/* Sign in Button */}
                   <button
                     type="submit"
-                    className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                    className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-2"
                   >
                     Sign in
                   </button>
 
                   {/* Sign Up Link */}
-                  <p className="text-sm font-light text-gray-500">
+                  <p className="text-sm font-light text-gray-500 text-center mt-2">
                     Don't have an account yet?{" "}
                     <Link
                       to="/signup"
@@ -483,23 +484,18 @@ const LoginPage = () => {
                 {/* Toggle between HR and Employee login */}
                 {renderLoginModeToggle()}
 
-                <form className="space-y-4 md:space-y-6" onSubmit={handleUniversitySubmit}>
+                <form className="space-y-3 md:space-y-4" onSubmit={handleUniversitySubmit}>
                   {/* Error Messages */}
                   {(authError || error || codeValidationError) && (
-                    <p className="text-red-500 text-center mb-4">
+                    <p className="text-red-500 text-center mb-2 md:mb-3 text-sm">
                       {error || codeValidationError || authError}
                     </p>
-                  )}
-                  
-                  {/* Code Validation Error */}
-                  {codeValidationError && (
-                    <p className="text-red-500 text-center mb-4">{codeValidationError}</p>
                   )}
 
                   <div>
                     <label
                       htmlFor="universityId"
-                      className="block mb-2 text-sm font-medium text-gray-900"
+                      className="block mb-1 md:mb-2 text-sm font-medium text-gray-900"
                     >
                       University Identifier
                     </label>
@@ -514,7 +510,7 @@ const LoginPage = () => {
                         id="universityId"
                         value={universityId}
                         onChange={(e) => setUniversityId(e.target.value)}
-                        className="pl-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                        className="pl-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 text-sm md:text-base"
                         placeholder="university-code"
                         required
                       />
@@ -527,7 +523,7 @@ const LoginPage = () => {
                   {/* Continue Button */}
                   <button
                     type="submit"
-                    className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex items-center justify-center"
+                    className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center flex items-center justify-center mt-2"
                     disabled={validatingCode}
                   >
                     {validatingCode ? (
@@ -562,18 +558,18 @@ const LoginPage = () => {
                 {/* Toggle between HR and Employee login */}
                 {renderLoginModeToggle()}
 
-                <form className="space-y-4 md:space-y-6" onSubmit={handleLogin}>
+                <form className="space-y-3 md:space-y-4" onSubmit={handleLogin}>
                   {/* Error Messages */}
                   {(authError || error) && (
-                    <p className="text-red-500 text-center mb-4">{error || authError}</p>
+                    <p className="text-red-500 text-center mb-2 md:mb-3 text-sm">{error || authError}</p>
                   )}
 
                   {/* University ID Display */}
-                  <div className="bg-blue-50 p-3 rounded-lg flex items-center mb-2">
+                  <div className="bg-blue-50 p-2 md:p-3 rounded-lg flex items-center mb-2">
                     <FontAwesomeIcon icon={faSchool} className="text-blue-600 mr-2" />
                     <div>
                       <p className="text-sm font-medium text-gray-700">University:</p>
-                      <p className="text-blue-600 font-semibold">{universityName || universityId}</p>
+                      <p className="text-blue-600 font-semibold text-sm md:text-base">{universityName || universityId}</p>
                       {universityName && (
                         <p className="text-xs text-gray-500">Code: {universityId}</p>
                       )}
@@ -584,7 +580,7 @@ const LoginPage = () => {
                   <div>
                     <label
                       htmlFor="employeeId"
-                      className="block mb-2 text-sm font-medium text-gray-900"
+                      className="block mb-1 md:mb-2 text-sm font-medium text-gray-900"
                     >
                       Employee ID
                     </label>
@@ -599,7 +595,7 @@ const LoginPage = () => {
                         id="employeeId"
                         value={employeeId}
                         onChange={(e) => setEmployeeId(e.target.value)}
-                        className="pl-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                        className="pl-10 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 text-sm md:text-base"
                         placeholder="EMP12345"
                         required
                       />
@@ -610,7 +606,7 @@ const LoginPage = () => {
                   <div className="relative">
                     <label
                       htmlFor="password"
-                      className="block mb-2 text-sm font-medium text-gray-900"
+                      className="block mb-1 md:mb-2 text-sm font-medium text-gray-900"
                     >
                       Password
                     </label>
@@ -621,7 +617,7 @@ const LoginPage = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 text-sm md:text-base"
                       required
                     />
                     {/* Eye Icon */}
@@ -633,7 +629,7 @@ const LoginPage = () => {
                   </div>
 
                   {/* Remember Me and Forgot Password */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2">
                     <div className="flex items-start">
                       <div className="flex items-center h-5">
                         <input
@@ -644,7 +640,7 @@ const LoginPage = () => {
                           className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300"
                         />
                       </div>
-                      <div className="ml-3 text-sm">
+                      <div className="ml-2 text-sm">
                         <label htmlFor="remember" className="text-gray-500">
                           Remember me
                         </label>
@@ -661,7 +657,7 @@ const LoginPage = () => {
                   {/* Sign in Button */}
                   <button
                     type="submit"
-                    className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                    className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center mt-2"
                   >
                     Sign in
                   </button>

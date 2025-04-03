@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthProvider';
+import { useLocation } from 'react-router-dom';
 import { 
   getEmployeeData, 
   updateEmployeeProfile,
   getEmployeeDocuments,
   uploadEmployeeDocument,
-  deleteEmployeeDocument
+  deleteEmployeeDocument,
+  getEmployeeSkills
 } from '../../services/employeeService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -23,19 +25,31 @@ import {
   faFileExcel,
   faTrashAlt,
   faCheck,
-  faTimes
+  faTimes,
+  faIdBadge,
+  faGraduationCap,
+  faPlus,
+  faEdit
 } from '@fortawesome/free-solid-svg-icons';
+import toast from 'react-hot-toast';
+import PageLoader from '../../components/PageLoader';
 
 const EmployeeProfile = () => {
   const { user, userDetails } = useAuth();
+  const location = useLocation();
   const [employeeData, setEmployeeData] = useState(null);
   const [documents, setDocuments] = useState([]);
+  const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [activeTab, setActiveTab] = useState('personal');
+  
+  // Refs for scrolling
+  const skillsSectionRef = useRef(null);
   
   // Form data
   const [formData, setFormData] = useState({
@@ -52,6 +66,20 @@ const EmployeeProfile = () => {
   // Document upload
   const fileInputRef = useRef(null);
   const [documentType, setDocumentType] = useState('certification');
+  
+  // Check for active tab in navigation state
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+      
+      // Small delay to ensure DOM elements are rendered
+      setTimeout(() => {
+        if (location.state.activeTab === 'skills' && skillsSectionRef.current) {
+          skillsSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 300);
+    }
+  }, [location.state]);
   
   useEffect(() => {
     const loadData = async () => {
@@ -83,6 +111,12 @@ const EmployeeProfile = () => {
           const docsData = await getEmployeeDocuments(user.uid, userDetails.universityId);
           if (docsData.success) {
             setDocuments(docsData.documents);
+          }
+          
+          // Fetch skills
+          const skillsData = await getEmployeeSkills(user.uid, userDetails.universityId);
+          if (skillsData.success) {
+            setSkills(skillsData.skills || []);
           }
           
           setLoading(false);
@@ -236,326 +270,237 @@ const EmployeeProfile = () => {
     return faFileAlt;
   };
 
+  const handleAddSkill = () => {
+    toast.success('This feature will be available soon!');
+  };
+
+  const handleEditSkill = (skillId) => {
+    toast.success('Edit feature will be available soon!');
+  };
+
+  const handleRemoveSkill = (skillId) => {
+    toast.success('Remove feature will be available soon!');
+  };
+
+  const handleUploadDocument = () => {
+    toast.success('Upload feature will be available soon!');
+  };
+
   if (loading) {
+    return <PageLoader isLoading={true} message="Loading your profile..." />;
+  }
+
+  if (error) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+      <div className="p-4 bg-red-100 text-red-700 rounded-xl">
+        <p>{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Employee Profile</h1>
-      
-      {error && (
-        <div className="bg-red-100 text-red-700 p-4 rounded-md mb-6 flex items-center justify-between">
-          <p>{error}</p>
-          <button onClick={() => setError(null)}>
-            <FontAwesomeIcon icon={faTimes} />
-          </button>
-        </div>
-      )}
-      
-      {success && (
-        <div className="bg-green-100 text-green-700 p-4 rounded-md mb-6 flex items-center justify-between">
-          <p>{success}</p>
-          <button onClick={() => setSuccess(null)}>
-            <FontAwesomeIcon icon={faTimes} />
-          </button>
-        </div>
-      )}
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Personal Information */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">Personal Information</h2>
-              <button 
-                onClick={() => setEditMode(!editMode)} 
-                className={`px-4 py-2 rounded-md ${editMode 
-                  ? 'bg-gray-200 text-gray-700' 
-                  : 'bg-blue-600 text-white'}`}
-              >
-                {editMode ? 'Cancel' : 'Edit Profile'}
-              </button>
+    <div className="pb-6">
+      {/* Profile Header */}
+      <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center">
+          <div className="md:mr-6 mb-4 md:mb-0 flex justify-center md:justify-start">
+            <div className="w-24 h-24 md:w-32 md:h-32 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl md:text-4xl font-bold">
+              {employeeData?.name?.charAt(0) || 'JD'}
             </div>
-            
-            {editMode ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-700 mb-2">Full Name</label>
-                    <div className="relative">
-                      <FontAwesomeIcon icon={faUser} className="absolute left-3 top-3 text-gray-400" />
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className="pl-10 w-full p-2 border rounded-md"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 mb-2">Email</label>
-                    <div className="relative">
-                      <FontAwesomeIcon icon={faEnvelope} className="absolute left-3 top-3 text-gray-400" />
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="pl-10 w-full p-2 border rounded-md"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-gray-700 mb-2">Phone</label>
-                    <div className="relative">
-                      <FontAwesomeIcon icon={faPhone} className="absolute left-3 top-3 text-gray-400" />
-                      <input
-                        type="text"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        className="pl-10 w-full p-2 border rounded-md"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 mb-2">Position</label>
-                    <div className="relative">
-                      <FontAwesomeIcon icon={faBriefcase} className="absolute left-3 top-3 text-gray-400" />
-                      <input
-                        type="text"
-                        name="position"
-                        value={formData.position}
-                        onChange={handleInputChange}
-                        className="pl-10 w-full p-2 border rounded-md"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 mb-2">Department</label>
-                  <div className="relative">
-                    <FontAwesomeIcon icon={faBuilding} className="absolute left-3 top-3 text-gray-400" />
-                    <input
-                      type="text"
-                      name="department"
-                      value={formData.department}
-                      onChange={handleInputChange}
-                      className="pl-10 w-full p-2 border rounded-md"
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 mb-2">Address</label>
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded-md"
-                    rows="3"
-                  ></textarea>
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 mb-2">Bio</label>
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded-md"
-                    rows="4"
-                  ></textarea>
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 mb-2">Education</label>
-                  <textarea
-                    name="education"
-                    value={formData.education}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded-md"
-                    rows="3"
-                  ></textarea>
-                </div>
-                
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleSaveProfile}
-                    disabled={saving}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
-                  >
-                    {saving ? (
-                      <>
-                        <span className="mr-2">Saving...</span>
-                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                      </>
-                    ) : (
-                      <>
-                        <FontAwesomeIcon icon={faCheck} className="mr-2" />
-                        Save Changes
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex items-start">
-                    <FontAwesomeIcon icon={faUser} className="text-blue-600 mt-1 mr-3" />
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Full Name</h3>
-                      <p>{formData.name}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <FontAwesomeIcon icon={faEnvelope} className="text-blue-600 mt-1 mr-3" />
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                      <p>{formData.email}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <FontAwesomeIcon icon={faPhone} className="text-blue-600 mt-1 mr-3" />
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Phone</h3>
-                      <p>{formData.phone || 'Not provided'}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <FontAwesomeIcon icon={faBriefcase} className="text-blue-600 mt-1 mr-3" />
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Position</h3>
-                      <p>{formData.position || 'Not specified'}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <FontAwesomeIcon icon={faBuilding} className="text-blue-600 mt-1 mr-3" />
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Department</h3>
-                      <p>{formData.department || 'Not assigned'}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <FontAwesomeIcon icon={faCalendarAlt} className="text-blue-600 mt-1 mr-3" />
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Employee ID</h3>
-                      <p>{employeeData?.employeeId || 'Not assigned'}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Address</h3>
-                  <p className="whitespace-pre-line">{formData.address || 'Not provided'}</p>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Bio</h3>
-                  <p className="whitespace-pre-line">{formData.bio || 'No bio provided'}</p>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Education</h3>
-                  <p className="whitespace-pre-line">{formData.education || 'No education details provided'}</p>
-                </div>
-              </div>
-            )}
           </div>
-        </div>
-        
-        {/* Documents Section */}
-        <div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">Documents</h2>
-            
-            {/* Upload Form */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-medium mb-3">Upload New Document</h3>
-              
-              <div className="mb-3">
-                <label className="block text-gray-700 text-sm mb-2">Document Type</label>
-                <select
-                  value={documentType}
-                  onChange={(e) => setDocumentType(e.target.value)}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="certification">Certification</option>
-                  <option value="resume">Resume/CV</option>
-                  <option value="degree">Degree/Diploma</option>
-                  <option value="training">Training</option>
-                  <option value="other">Other</option>
-                </select>
+          <div className="flex-1 text-center md:text-left">
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">{employeeData?.name || 'Jane Doe'}</h1>
+            <p className="text-gray-600 text-sm md:text-base mb-2">{employeeData?.position || 'Associate Professor'} - {employeeData?.department || 'Computer Science'}</p>
+            <div className="flex flex-col md:flex-row md:items-center text-sm mt-3 space-y-2 md:space-y-0 md:space-x-4">
+              <div className="flex items-center justify-center md:justify-start">
+                <FontAwesomeIcon icon={faEnvelope} className="text-blue-500 mr-2" />
+                <span>{employeeData?.email || 'jane.doe@example.com'}</span>
               </div>
-              
-              <div className="mb-3">
-                <label className="block text-gray-700 text-sm mb-2">File</label>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  className="w-full p-2 border rounded-md"
-                  disabled={uploading}
-                />
+              <div className="flex items-center justify-center md:justify-start">
+                <FontAwesomeIcon icon={faPhone} className="text-blue-500 mr-2" />
+                <span>{employeeData?.phone || '+1 234 567 8901'}</span>
               </div>
-              
-              {uploading && (
-                <div className="flex justify-center py-2">
-                  <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-blue-500"></div>
-                </div>
-              )}
-            </div>
-            
-            {/* Documents List */}
-            <div>
-              <h3 className="font-medium mb-3">Your Documents</h3>
-              
-              {documents.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No documents uploaded yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50">
-                      <div className="flex items-center">
-                        <FontAwesomeIcon icon={getFileIcon(doc.name)} className="text-blue-600 mr-3 text-lg" />
-                        <div>
-                          <a href={doc.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-medium">
-                            {doc.name}
-                          </a>
-                          <p className="text-xs text-gray-500 capitalize">{doc.type}</p>
-                        </div>
-                      </div>
-                      
-                      <button 
-                        onClick={() => handleDeleteDocument(doc.id, doc.fileName)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <FontAwesomeIcon icon={faTrashAlt} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="flex items-center justify-center md:justify-start">
+                <FontAwesomeIcon icon={faIdBadge} className="text-blue-500 mr-2" />
+                <span>{employeeData?.employeeId || 'EMP00123'}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Tab Navigation */}
+      <div className="bg-white rounded-xl shadow-md p-2 mb-6 overflow-x-auto">
+        <div className="flex min-w-max">
+          <button
+            className={`py-2 px-4 ${activeTab === 'personal' ? 'bg-blue-100 text-blue-700 font-medium rounded-lg' : 'text-gray-600 hover:bg-gray-100 rounded-lg'}`}
+            onClick={() => setActiveTab('personal')}
+          >
+            Personal Information
+          </button>
+          <button
+            className={`py-2 px-4 ${activeTab === 'skills' ? 'bg-blue-100 text-blue-700 font-medium rounded-lg' : 'text-gray-600 hover:bg-gray-100 rounded-lg'}`}
+            onClick={() => setActiveTab('skills')}
+          >
+            Skills
+          </button>
+          <button
+            className={`py-2 px-4 ${activeTab === 'documents' ? 'bg-blue-100 text-blue-700 font-medium rounded-lg' : 'text-gray-600 hover:bg-gray-100 rounded-lg'}`}
+            onClick={() => setActiveTab('documents')}
+          >
+            Documents
+          </button>
+        </div>
+      </div>
+
+      {/* Content based on active tab */}
+      {activeTab === 'personal' && (
+        <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
+          <h2 className="text-xl font-bold mb-4">Personal Information</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {/* Department */}
+            <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center mb-2">
+                <FontAwesomeIcon icon={faBuilding} className="text-blue-500 mr-2" />
+                <h3 className="font-medium">Department</h3>
+              </div>
+              <p className="text-sm md:text-base text-gray-700">{employeeData?.department || 'Computer Science'}</p>
+            </div>
+            
+            {/* Position */}
+            <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center mb-2">
+                <FontAwesomeIcon icon={faIdBadge} className="text-blue-500 mr-2" />
+                <h3 className="font-medium">Position</h3>
+              </div>
+              <p className="text-sm md:text-base text-gray-700">{employeeData?.position || 'Associate Professor'}</p>
+            </div>
+          </div>
+          
+          {/* Education Section */}
+          <h3 className="text-lg font-bold mt-6 mb-4">Education</h3>
+          <div className="space-y-4">
+            {employeeData?.education?.map((edu, index) => (
+              <div key={index} className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center mb-1">
+                  <FontAwesomeIcon icon={faGraduationCap} className="text-blue-500 mr-2" />
+                  <h4 className="font-medium">{edu.institution}</h4>
+                </div>
+                <p className="text-sm md:text-base text-gray-700 ml-6">{edu.degree}</p>
+                <p className="text-xs md:text-sm text-gray-500 ml-6">{edu.year}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'skills' && (
+        <div className="bg-white rounded-xl shadow-md p-4 md:p-6" ref={skillsSectionRef}>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Skills</h2>
+            <button 
+              onClick={handleAddSkill} 
+              className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <FontAwesomeIcon icon={faPlus} className="mr-1" />
+              Add Skill
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            {skills.map((skill) => (
+              <div key={skill.id} className="bg-gray-50 rounded-lg p-3 md:p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-medium">{skill.name}</h3>
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => handleEditSkill(skill.id)}
+                      className="text-gray-600 hover:text-blue-600"
+                    >
+                      <FontAwesomeIcon icon={faEdit} />
+                    </button>
+                    <button 
+                      onClick={() => handleRemoveSkill(skill.id)}
+                      className="text-gray-600 hover:text-red-600"
+                    >
+                      <FontAwesomeIcon icon={faTrashAlt} />
+                    </button>
+                  </div>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full" 
+                    style={{ width: `${skill.proficiency}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-xs mt-1">
+                  <span>Beginner</span>
+                  <span>Proficient</span>
+                  <span>Expert</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'documents' && (
+        <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Documents</h2>
+            <button 
+              onClick={handleUploadDocument} 
+              className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <FontAwesomeIcon icon={faPlus} className="mr-1" />
+              Upload
+            </button>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Date</th>
+                  <th className="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {documents.map((doc) => (
+                  <tr key={doc.id}>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <FontAwesomeIcon icon={getFileIcon(doc.fileName)} className="text-blue-500 mr-2" />
+                        <span className="text-sm font-medium text-gray-900">{doc.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">{doc.type}</td>
+                    <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">{doc.uploadDate}</td>
+                    <td className="py-3 px-4 whitespace-nowrap text-right text-sm">
+                      <button className="text-indigo-600 hover:text-indigo-900 mr-2">View</button>
+                      <button 
+                        onClick={() => handleDeleteDocument(doc.id, doc.fileName)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

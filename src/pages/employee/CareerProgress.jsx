@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthProvider';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   getEmployeeSkills, 
   getCareerPaths,
@@ -17,17 +18,24 @@ import {
   faCertificate,
   faArrowRight,
   faLightbulb,
-  faBriefcase
+  faBriefcase,
+  faTrophy
 } from '@fortawesome/free-solid-svg-icons';
+import PageLoader from '../../components/PageLoader';
 
 const CareerProgress = () => {
   const { user, userDetails } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [employeeData, setEmployeeData] = useState(null);
   const [skills, setSkills] = useState([]);
   const [careerPaths, setCareerPaths] = useState([]);
   const [selectedCareerPath, setSelectedCareerPath] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Refs for scrolling
+  const careerPathDetailsRef = useRef(null);
   
   useEffect(() => {
     const loadData = async () => {
@@ -77,6 +85,15 @@ const CareerProgress = () => {
     loadData();
   }, [user, userDetails]);
   
+  // Scroll to career details if redirect from dashboard
+  useEffect(() => {
+    if (location.state?.fromDashboard && careerPathDetailsRef.current) {
+      setTimeout(() => {
+        careerPathDetailsRef.current.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
+  }, [location.state, selectedCareerPath]);
+  
   const getSkillLevel = (proficiency) => {
     if (proficiency >= 90) return 'Expert';
     if (proficiency >= 70) return 'Advanced';
@@ -113,18 +130,24 @@ const CareerProgress = () => {
     return Math.round((acquiredSkills / totalSkills) * 100);
   };
   
+  const handleViewAllSkills = () => {
+    navigate('/employee/profile', { state: { activeTab: 'skills' } });
+  };
+  
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
-      </div>
-    );
+    return <PageLoader isLoading={true} message="Loading your career progress..." />;
   }
   
   if (error) {
     return (
-      <div className="p-4 bg-red-100 text-red-700 rounded-md">
+      <div className="p-4 bg-red-100 text-red-700 rounded-xl">
         <p>{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+        >
+          Retry
+        </button>
       </div>
     );
   }
@@ -133,33 +156,58 @@ const CareerProgress = () => {
   const skillProgressPercentage = getSkillProgressPercentage();
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Career Development</h1>
+    <div className="pb-6">
+      <h1 className="text-2xl font-bold mb-6">Career Development</h1>
       
-      {/* Career Path & Skills Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Current Position */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center mb-4">
-            <div className="rounded-full bg-blue-100 p-3 mr-4">
+      {/* Current Position Overview */}
+      <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-6">
+        <h2 className="text-xl md:text-2xl font-bold mb-4">Current Position</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <div className="bg-blue-50 rounded-xl p-4 flex flex-col items-center text-center">
+            <div className="bg-blue-100 rounded-full p-3 mb-3">
               <FontAwesomeIcon icon={faBriefcase} className="text-blue-600 text-xl" />
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-800">Current Position</h2>
-              <p className="text-gray-600">{employeeData?.position || 'Not assigned'}</p>
-            </div>
+            <h3 className="font-semibold mb-1">Current Position</h3>
+            <p className="text-lg font-bold text-blue-700">{employeeData?.position || 'Not assigned'}</p>
           </div>
-          <div className="mt-4">
-            <h3 className="font-medium text-gray-700 mb-2">Department</h3>
-            <p className="text-gray-600">{employeeData?.department || 'Not assigned'}</p>
-            
-            <h3 className="font-medium text-gray-700 mt-4 mb-2">Experience</h3>
-            <p className="text-gray-600">{employeeData?.yearOfExperience || '0'} years</p>
+          
+          <div className="bg-indigo-50 rounded-xl p-4 flex flex-col items-center text-center">
+            <div className="bg-indigo-100 rounded-full p-3 mb-3">
+              <FontAwesomeIcon icon={faTrophy} className="text-indigo-600 text-xl" />
+            </div>
+            <h3 className="font-semibold mb-1">Next Position</h3>
+            <p className="text-lg font-bold text-indigo-700">{employeeData?.nextPosition || 'Not assigned'}</p>
+          </div>
+          
+          <div className="bg-green-50 rounded-xl p-4 flex flex-col items-center text-center">
+            <div className="bg-green-100 rounded-full p-3 mb-3">
+              <FontAwesomeIcon icon={faChartLine} className="text-green-600 text-xl" />
+            </div>
+            <h3 className="font-semibold mb-1">Completion</h3>
+            <p className="text-lg font-bold text-green-700">{skillProgressPercentage}%</p>
           </div>
         </div>
         
+        {/* Progress bar */}
+        <div className="mt-6">
+          <div className="flex justify-between text-sm mb-1">
+            <span className="font-medium">{employeeData?.position || 'Not assigned'}</span>
+            <span className="font-medium">{employeeData?.nextPosition || 'Not assigned'}</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full" 
+              style={{ width: `${skillProgressPercentage}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Career Path & Skills Summary */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Skills Overview */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
           <div className="flex items-center mb-4">
             <div className="rounded-full bg-green-100 p-3 mr-4">
               <FontAwesomeIcon icon={faGraduationCap} className="text-green-600 text-xl" />
@@ -188,8 +236,12 @@ const CareerProgress = () => {
               ))}
               
               {skills.length > 5 && (
-                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2">
+                <button 
+                  onClick={handleViewAllSkills}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2 flex items-center cursor-pointer"
+                >
                   View all skills
+                  <FontAwesomeIcon icon={faArrowRight} className="ml-1 text-xs" />
                 </button>
               )}
             </div>
@@ -201,7 +253,7 @@ const CareerProgress = () => {
         </div>
         
         {/* Career Paths */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
           <div className="flex items-center mb-4">
             <div className="rounded-full bg-purple-100 p-3 mr-4">
               <FontAwesomeIcon icon={faChartLine} className="text-purple-600 text-xl" />
@@ -217,8 +269,15 @@ const CareerProgress = () => {
               {careerPaths.map((path) => (
                 <button
                   key={path.id}
-                  onClick={() => setSelectedCareerPath(path)}
-                  className={`w-full text-left p-3 rounded-md flex items-center justify-between ${
+                  onClick={() => {
+                    setSelectedCareerPath(path);
+                    setTimeout(() => {
+                      if (careerPathDetailsRef.current) {
+                        careerPathDetailsRef.current.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }, 100);
+                  }}
+                  className={`w-full text-left p-3 rounded-lg flex items-center justify-between ${
                     selectedCareerPath?.id === path.id 
                       ? 'bg-blue-50 border border-blue-200' 
                       : 'hover:bg-gray-50 border border-gray-200'
@@ -250,7 +309,7 @@ const CareerProgress = () => {
       
       {/* Selected Career Path Details */}
       {selectedCareerPath && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div ref={careerPathDetailsRef} className="bg-white rounded-xl shadow-md p-6 mb-8 border border-gray-100">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">
             {selectedCareerPath.title}
           </h2>
@@ -294,7 +353,7 @@ const CareerProgress = () => {
                   </div>
                   
                   {/* Step Content */}
-                  <div className="bg-blue-50 p-4 rounded-md">
+                  <div className="bg-blue-50 p-4 rounded-xl">
                     <h4 className="font-medium text-gray-800">{step.title}</h4>
                     <p className="text-gray-600 text-sm mt-1">{step.description}</p>
                     
@@ -321,7 +380,7 @@ const CareerProgress = () => {
           
           {/* Missing Skills */}
           {missingSkills.length > 0 && (
-            <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
+            <div className="bg-yellow-50 p-6 rounded-xl border border-yellow-200">
               <div className="flex items-center mb-4">
                 <FontAwesomeIcon icon={faLightbulb} className="text-yellow-500 text-xl mr-3" />
                 <h3 className="text-lg font-bold text-gray-800">Skills to Develop</h3>
@@ -351,7 +410,7 @@ const CareerProgress = () => {
       )}
       
       {/* Certifications & Achievements */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
         <h2 className="text-xl font-bold text-gray-800 mb-6">
           Certifications & Achievements
         </h2>
@@ -359,7 +418,7 @@ const CareerProgress = () => {
         {employeeData?.certifications?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {employeeData.certifications.map((cert, index) => (
-              <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                 <div className="flex items-start">
                   <FontAwesomeIcon icon={faCertificate} className="text-blue-500 mt-1 mr-3" />
                   <div>
