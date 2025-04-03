@@ -82,12 +82,16 @@ const SignUpPage = () => {
       universityName
     };
 
+    console.log("Submitting registration with metadata:", userMetadata);
+    
     const result = await register(email, password, displayName, userMetadata);
+    console.log("Registration result:", result);
+    
     if (result.success) {
       if (result.isHRHead) {
         setSuccessMessage(`Registration successful! Your account has been created as the HR Head for ${universityName}. Your university code is: ${result.universityCode}. Please save this code for employees to use when logging in.`);
       } else {
-        setSuccessMessage("Registration submitted! Your account is pending approval from the HR Head.");
+        setSuccessMessage("Registration successful! Your account has been created. You can now login to the HR portal.");
       }
       
       // After 5 seconds, redirect to login
@@ -251,11 +255,13 @@ const SignUpPage = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                      placeholder="name@university.edu"
+                      placeholder="jane.smith@university.edu"
                       required
                     />
                   </div>
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Employee ID */}
                   <div>
                     <label
@@ -287,93 +293,106 @@ const SignUpPage = () => {
                     >
                       Position
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="position"
                       id="position"
-                      value="HR Head"
-                      readOnly
-                      className="bg-gray-100 border border-gray-300 text-gray-900 rounded-lg block w-full p-2.5 cursor-not-allowed"
-                    />
+                      value={position}
+                      onChange={(e) => setPosition(e.target.value)}
+                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                      required
+                    >
+                      <option value="HR Head">HR Head</option>
+                      <option value="HR Personnel">HR Personnel</option>
+                    </select>
                   </div>
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Password */}
-                  <div className="relative">
+                  <div>
                     <label
                       htmlFor="password"
                       className="block mb-2 text-sm font-medium text-gray-900"
                     >
                       Password
                     </label>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      id="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                      required
-                    />
-                    <FontAwesomeIcon
-                      icon={showPassword ? faEyeSlash : faEye}
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute top-1/2 right-3 transform translate-y-1/3 cursor-pointer text-gray-600"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10"
+                        placeholder="••••••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3"
+                      >
+                        <FontAwesomeIcon
+                          icon={showPassword ? faEyeSlash : faEye}
+                          className="text-gray-400 hover:text-gray-600"
+                        />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Confirm Password */}
-                  <div className="relative">
+                  <div>
                     <label
                       htmlFor="confirmPassword"
                       className="block mb-2 text-sm font-medium text-gray-900"
                     >
                       Confirm Password
                     </label>
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      name="confirmPassword"
-                      id="confirmPassword"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                      required
-                    />
-                    <FontAwesomeIcon
-                      icon={showConfirmPassword ? faEyeSlash : faEye}
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute top-1/2 right-3 transform translate-y-1/3 cursor-pointer text-gray-600"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        id="confirmPassword"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-10"
+                        placeholder="••••••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3"
+                      >
+                        <FontAwesomeIcon
+                          icon={showConfirmPassword ? faEyeSlash : faEye}
+                          className="text-gray-400 hover:text-gray-600"
+                        />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800 border-l-4 border-blue-500 my-4">
-                  <p className="font-medium">Important Registration Information:</p>
-                  <ul className="list-disc pl-5 mt-1">
-                    <li>The first user to register with a new university will automatically be activated as the HR Head.</li>
-                    <li>Subsequent users will require approval from the HR Head before activation.</li>
-                  </ul>
+                {/* Submit Button */}
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-base px-5 py-3 text-center transition-all duration-200 transform hover:scale-105"
+                    disabled={loading}
+                  >
+                    {loading ? "Creating Account..." : "Create Account"}
+                  </button>
                 </div>
 
-                {/* Sign Up Button */}
-                <button
-                  type="submit"
-                  className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                >
-                  Register Account
-                </button>
-
-                {/* Sign In Link */}
-                <p className="text-sm font-light text-gray-500 text-center mt-4">
-                  Already have an account?{" "}
-                  <Link
-                    to="/"
-                    className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
-                  >
-                    Sign in
-                  </Link>
-                </p>
+                {/* Login Link */}
+                <div className="text-center mt-4">
+                  <p className="text-sm text-gray-600">
+                    Already have an account?{" "}
+                    <Link to="/" className="text-blue-600 hover:underline">
+                      Sign in
+                    </Link>
+                  </p>
+                </div>
               </form>
             )}
           </div>
