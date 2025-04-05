@@ -14,6 +14,7 @@ import showSuccessAlert from "../components/Alerts/SuccessAlert";
 import showErrorAlert from "../components/Alerts/ErrorAlert";
 import showWarningAlert from "../components/Alerts/WarningAlert";
 import showDeleteConfirmation from "../components/Alerts/DeleteAlert";
+import EditEmployeeModal from "../components/Modals/EditEmployeeModal";
 
 const EmployeeDetails = () => {
   const { employeeId } = useParams();
@@ -497,6 +498,44 @@ const EmployeeDetails = () => {
         console.error("Failed to copy: ", err);
         showErrorAlert("Failed to copy to clipboard");
       });
+  };
+
+  // Render the edit employee modal
+  const renderEditEmployeeModal = () => {
+    return (
+      <EditEmployeeModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        employee={employee}
+        universityId={universityId}
+        onEmployeeUpdated={refreshEmployeeData}
+      />
+    );
+  };
+
+  // Function to refresh employee data after an update
+  const refreshEmployeeData = async () => {
+    try {
+      setLoading(true);
+      const employeeRef = doc(db, "universities", universityId, "employees", employeeId);
+      const employeeDoc = await getDoc(employeeRef);
+
+      if (employeeDoc.exists()) {
+        setEmployee({
+          id: employeeDoc.id,
+          ...employeeDoc.data(),
+          dateHired: employeeDoc.data().dateHired?.toDate?.() || new Date(),
+        });
+        showSuccessAlert("Employee data refreshed successfully!");
+      } else {
+        setError("Employee not found");
+      }
+    } catch (err) {
+      console.error("Error refreshing employee data:", err);
+      showErrorAlert("Failed to refresh employee data");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Loading state
@@ -1222,6 +1261,9 @@ const EmployeeDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Render the edit modal */}
+      {renderEditEmployeeModal()}
     </div>
   );
 };

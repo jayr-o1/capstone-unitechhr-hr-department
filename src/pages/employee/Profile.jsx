@@ -66,6 +66,8 @@ const EmployeeProfile = () => {
   // Document upload
   const fileInputRef = useRef(null);
   const [documentType, setDocumentType] = useState('certification');
+  const [documentDescription, setDocumentDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
   
   // Check for active tab in navigation state
   useEffect(() => {
@@ -174,30 +176,112 @@ const EmployeeProfile = () => {
     }
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const handleUploadDocument = () => {
+    // Toggle document upload form visibility
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setDocumentType('certification');
+    setDocumentDescription('');
+    setSelectedFile(null);
+    setUploading(false);
+    setError(null);
+    setSuccess(null);
+    
+    // Create a file input and trigger it
+    fileInputRef.current.click();
+  };
+  
+  // Handle file selection
+  const handleFileChange = (e) => {
+    if (e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+      
+      // Show upload form/modal
+      toast((t) => (
+        <div className="p-4">
+          <h3 className="font-bold mb-2">Upload Document</h3>
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-1">Document Type</label>
+            <select 
+              value={documentType}
+              onChange={(e) => setDocumentType(e.target.value)}
+              className="w-full p-2 border rounded"
+            >
+              <option value="certification">Certification</option>
+              <option value="resume">Resume/CV</option>
+              <option value="education">Education Document</option>
+              <option value="id">ID Document</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-1">Description</label>
+            <input 
+              type="text"
+              value={documentDescription}
+              onChange={(e) => setDocumentDescription(e.target.value)}
+              className="w-full p-2 border rounded"
+              placeholder="Brief description of the document"
+            />
+          </div>
+          <div className="mb-3">
+            <p className="text-sm">File: <span className="font-medium">{e.target.files[0].name}</span></p>
+            <p className="text-xs text-gray-500">{Math.round(e.target.files[0].size / 1024)} KB</p>
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                setSelectedFile(null);
+              }}
+              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                handleDocumentUpload();
+              }}
+              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              disabled={uploading}
+            >
+              {uploading ? 'Uploading...' : 'Upload'}
+            </button>
+          </div>
+        </div>
+      ), { 
+        duration: Infinity,
+        style: { 
+          maxWidth: '400px',
+          width: '100%'
+        }
+      });
+    }
+  };
+  
+  // Handle document upload
+  const handleDocumentUpload = async () => {
+    if (!selectedFile || !userDetails?.universityId) {
+      toast.error(!selectedFile ? 'No file selected' : 'Cannot determine your university');
+      return;
+    }
     
     try {
       setUploading(true);
       setError(null);
-      setSuccess(null);
-      
-      if (!userDetails || !userDetails.universityId) {
-        setError('User details not available');
-        setUploading(false);
-        return;
-      }
       
       const result = await uploadEmployeeDocument(
         user.uid, 
         userDetails.universityId, 
-        file,
+        selectedFile,
         documentType
       );
       
       if (result.success) {
         setSuccess('Document uploaded successfully');
+        toast.success('Document uploaded successfully');
         
         // Refresh documents
         const docsData = await getEmployeeDocuments(user.uid, userDetails.universityId);
@@ -209,14 +293,17 @@ const EmployeeProfile = () => {
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
+        
+        setSelectedFile(null);
       } else {
         setError(result.message || 'Failed to upload document');
+        toast.error(result.message || 'Failed to upload document');
       }
-      
-      setUploading(false);
     } catch (err) {
       console.error("Error uploading document:", err);
       setError("An error occurred while uploading document");
+      toast.error("An error occurred while uploading document");
+    } finally {
       setUploading(false);
     }
   };
@@ -280,10 +367,6 @@ const EmployeeProfile = () => {
 
   const handleRemoveSkill = (skillId) => {
     toast.success('Remove feature will be available soon!');
-  };
-
-  const handleUploadDocument = () => {
-    toast.success('Upload feature will be available soon!');
   };
 
   if (loading) {
@@ -362,42 +445,205 @@ const EmployeeProfile = () => {
       {/* Content based on active tab */}
       {activeTab === 'personal' && (
         <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
-          <h2 className="text-xl font-bold mb-4">Personal Information</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            {/* Department */}
-            <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center mb-2">
-                <FontAwesomeIcon icon={faBuilding} className="text-blue-500 mr-2" />
-                <h3 className="font-medium">Department</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Personal Information</h2>
+            {!editMode ? (
+              <button 
+                onClick={() => setEditMode(true)} 
+                className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <FontAwesomeIcon icon={faEdit} className="mr-1" />
+                Edit Profile
+              </button>
+            ) : (
+              <div className="flex space-x-2">
+                <button 
+                  onClick={() => setEditMode(false)} 
+                  className="flex items-center text-sm bg-gray-500 text-white px-3 py-1 rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faTimes} className="mr-1" />
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveProfile} 
+                  className="flex items-center text-sm bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition-colors"
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <span>Saving...</span>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faCheck} className="mr-1" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
               </div>
-              <p className="text-sm md:text-base text-gray-700">{employeeData?.department || 'Computer Science'}</p>
-            </div>
-            
-            {/* Position */}
-            <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center mb-2">
-                <FontAwesomeIcon icon={faIdBadge} className="text-blue-500 mr-2" />
-                <h3 className="font-medium">Position</h3>
-              </div>
-              <p className="text-sm md:text-base text-gray-700">{employeeData?.position || 'Associate Professor'}</p>
-            </div>
+            )}
           </div>
           
-          {/* Education Section */}
-          <h3 className="text-lg font-bold mt-6 mb-4">Education</h3>
-          <div className="space-y-4">
-            {employeeData?.education?.map((edu, index) => (
-              <div key={index} className="p-3 md:p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center mb-1">
-                  <FontAwesomeIcon icon={faGraduationCap} className="text-blue-500 mr-2" />
-                  <h4 className="font-medium">{edu.institution}</h4>
+          {success && (
+            <div className="mb-4 p-2 bg-green-100 text-green-700 rounded-lg">
+              {success}
+            </div>
+          )}
+          
+          {error && (
+            <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+          
+          {!editMode ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                {/* Department */}
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <FontAwesomeIcon icon={faBuilding} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Department</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.department || 'Not specified'}</p>
                 </div>
-                <p className="text-sm md:text-base text-gray-700 ml-6">{edu.degree}</p>
-                <p className="text-xs md:text-sm text-gray-500 ml-6">{edu.year}</p>
+                
+                {/* Position */}
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <FontAwesomeIcon icon={faBriefcase} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Position</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.position || 'Not specified'}</p>
+                </div>
+                
+                {/* Phone */}
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <FontAwesomeIcon icon={faPhone} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Phone</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.phone || 'Not specified'}</p>
+                </div>
+                
+                {/* Email */}
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <FontAwesomeIcon icon={faEnvelope} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Email</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.email || 'Not specified'}</p>
+                </div>
               </div>
-            ))}
-          </div>
+              
+              {/* Bio Section */}
+              <div className="mt-6">
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <FontAwesomeIcon icon={faUser} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Bio</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.bio || 'No bio available'}</p>
+                </div>
+              </div>
+              
+              {/* Address Section */}
+              <div className="mt-6">
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <FontAwesomeIcon icon={faBuilding} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Address</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.address || 'No address available'}</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <form className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Name */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                {/* Email */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                {/* Phone */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Phone</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                {/* Department and Position are read-only */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Department</label>
+                  <input
+                    type="text"
+                    value={employeeData?.department || 'Not specified'}
+                    disabled
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm"
+                  />
+                  <small className="text-gray-500">Department cannot be changed</small>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Position</label>
+                  <input
+                    type="text"
+                    value={employeeData?.position || 'Not specified'}
+                    disabled
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm"
+                  />
+                  <small className="text-gray-500">Position cannot be changed</small>
+                </div>
+              </div>
+              
+              {/* Address */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Address</label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              {/* Bio */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Bio</label>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleInputChange}
+                  rows="4"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                ></textarea>
+              </div>
+            </form>
+          )}
         </div>
       )}
 
@@ -455,50 +701,90 @@ const EmployeeProfile = () => {
         <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Documents</h2>
-            <button 
-              onClick={handleUploadDocument} 
-              className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <FontAwesomeIcon icon={faPlus} className="mr-1" />
-              Upload
-            </button>
+            <div>
+              {/* Hidden file input, triggered by the Upload button */}
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden"
+              />
+              <button 
+                onClick={handleUploadDocument} 
+                className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <span>Uploading...</span>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faUpload} className="mr-1" />
+                    Upload Document
+                  </>
+                )}
+              </button>
+            </div>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Date</th>
-                  <th className="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {documents.map((doc) => (
-                  <tr key={doc.id}>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <FontAwesomeIcon icon={getFileIcon(doc.fileName)} className="text-blue-500 mr-2" />
-                        <span className="text-sm font-medium text-gray-900">{doc.name}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">{doc.type}</td>
-                    <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">{doc.uploadDate}</td>
-                    <td className="py-3 px-4 whitespace-nowrap text-right text-sm">
-                      <button className="text-indigo-600 hover:text-indigo-900 mr-2">View</button>
-                      <button 
-                        onClick={() => handleDeleteDocument(doc.id, doc.fileName)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
+          {documents.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <FontAwesomeIcon icon={faFileAlt} className="text-4xl mb-3" />
+              <p>No documents uploaded yet</p>
+              <button 
+                onClick={handleUploadDocument}
+                className="mt-3 text-blue-500 hover:text-blue-700 hover:underline"
+              >
+                Upload your first document
+              </button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Date</th>
+                    <th className="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {documents.map((doc) => (
+                    <tr key={doc.id}>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <FontAwesomeIcon icon={getFileIcon(doc.fileName)} className="text-blue-500 mr-2" />
+                          <span className="text-sm font-medium text-gray-900">{doc.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500 capitalize">{doc.type}</td>
+                      <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">
+                        {doc.createdAt?.toDate ? 
+                          doc.createdAt.toDate().toLocaleDateString() : 
+                          new Date(doc.createdAt?.seconds * 1000).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap text-right text-sm">
+                        <a 
+                          href={doc.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-indigo-600 hover:text-indigo-900 mr-3"
+                        >
+                          View
+                        </a>
+                        <button 
+                          onClick={() => handleDeleteDocument(doc.id, doc.fileName)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>
