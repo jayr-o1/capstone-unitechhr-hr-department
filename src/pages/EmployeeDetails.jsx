@@ -36,6 +36,16 @@ const EmployeeDetails = () => {
   const [isDocumentFormOpen, setIsDocumentFormOpen] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
 
+  // Skills section states
+  const [isAddingSkill, setIsAddingSkill] = useState(false);
+  const [editingSkill, setEditingSkill] = useState(null);
+  const [skillForm, setSkillForm] = useState({
+    name: "",
+    category: "technical",
+    proficiency: 50,
+    notes: "",
+  });
+
   // Get current user's university ID
   useEffect(() => {
     const getCurrentUserUniversity = async () => {
@@ -538,6 +548,134 @@ const EmployeeDetails = () => {
     }
   };
 
+  // Skills section functions
+  const handleSaveSkill = async () => {
+    if (!skillForm.name || !skillForm.proficiency || !universityId) {
+      showErrorAlert("Please fill all required fields!");
+      return;
+    }
+
+    try {
+      const employeeRef = doc(
+        db,
+        "universities",
+        universityId,
+        "employees",
+        employeeId
+      );
+      const skills = employee.skills || [];
+      let updatedSkills;
+
+      if (editingSkill) {
+        // Update existing skill
+        updatedSkills = skills.map(skill => 
+          skill.id === editingSkill.id ? 
+            {
+              ...skill,
+              name: skillForm.name,
+              category: skillForm.category,
+              proficiency: skillForm.proficiency,
+              notes: skillForm.notes,
+              updatedAt: new Date()
+            } : skill
+        );
+      } else {
+        // Add new skill
+        const newSkill = {
+          id: Date.now().toString(),
+          name: skillForm.name,
+          category: skillForm.category,
+          proficiency: skillForm.proficiency,
+          notes: skillForm.notes,
+          createdAt: new Date()
+        };
+        updatedSkills = [...skills, newSkill];
+      }
+
+      await updateDoc(employeeRef, {
+        skills: updatedSkills,
+        lastUpdated: new Date(),
+      });
+
+      // Update local state
+      setEmployee((prev) => ({
+        ...prev,
+        skills: updatedSkills,
+        lastUpdated: new Date(),
+      }));
+
+      setIsAddingSkill(false);
+      setEditingSkill(null);
+      resetSkillForm();
+      showSuccessAlert(editingSkill ? "Skill updated successfully" : "Skill added successfully");
+    } catch (error) {
+      console.error("Error saving skill:", error);
+      showErrorAlert(`Failed to ${editingSkill ? 'update' : 'add'} skill: ${error.message}`);
+    }
+  };
+
+  const handleEditSkill = (skill) => {
+    setIsAddingSkill(true);
+    setEditingSkill(skill);
+    setSkillForm({
+      name: skill.name,
+      category: skill.category,
+      proficiency: skill.proficiency,
+      notes: skill.notes,
+    });
+  };
+
+  const handleDeleteSkill = async (id) => {
+    if (!universityId) {
+      showErrorAlert("Cannot delete skill: University ID not found");
+      return;
+    }
+
+    showDeleteConfirmation(
+      `Are you sure you want to delete this skill?`,
+      async () => {
+        try {
+          const employeeRef = doc(
+            db,
+            "universities",
+            universityId,
+            "employees",
+            employeeId
+          );
+          const updatedSkills = employee.skills.filter((skill) => skill.id !== id);
+
+          await updateDoc(employeeRef, {
+            skills: updatedSkills,
+            lastUpdated: new Date(),
+          });
+
+          // Update local state
+          setEmployee((prev) => ({
+            ...prev,
+            skills: updatedSkills,
+            lastUpdated: new Date(),
+          }));
+
+          showSuccessAlert("Skill deleted successfully");
+        } catch (error) {
+          console.error("Error deleting skill:", error);
+          showErrorAlert("Failed to delete skill");
+        }
+      },
+      "Yes, delete skill",
+      "Cancel"
+    );
+  };
+
+  const resetSkillForm = () => {
+    setSkillForm({
+      name: "",
+      category: "technical",
+      proficiency: 50,
+      notes: "",
+    });
+  };
+
   // Loading state
   if (loading) {
     // Check if this is a page refresh
@@ -714,41 +852,73 @@ const EmployeeDetails = () => {
 
           {/* Status Change */}
           <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm mt-4">
-            <h3 className="font-semibold mb-4">Change Status</h3>
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => handleStatusChange("New Hire")}
-                disabled={employee.status === "New Hire"}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  employee.status === "New Hire"
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-blue-100 text-blue-800 hover:bg-blue-200"
-                }`}
-              >
-                Set as New Hire
-              </button>
-              <button
-                onClick={() => handleStatusChange("Active")}
-                disabled={employee.status === "Active"}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  employee.status === "Active"
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-green-100 text-green-800 hover:bg-green-200"
-                }`}
-              >
-                Set as Active
-              </button>
-              <button
-                onClick={() => handleStatusChange("Inactive")}
-                disabled={employee.status === "Inactive"}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  employee.status === "Inactive"
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-red-100 text-red-800 hover:bg-red-200"
-                }`}
-              >
-                Set as Inactive
-              </button>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold mb-2">Status</h3>
+              <div className="flex space-x-2">
+                <button
+                  className={`px-2.5 py-1 rounded-lg text-sm ${
+                    employee.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                  }`}
+                  onClick={() => handleStatusChange('Active')}
+                >
+                  Active
+                </button>
+                <button
+                  className={`px-2.5 py-1 rounded-lg text-sm ${
+                    employee.status === 'Leave' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
+                  }`}
+                  onClick={() => handleStatusChange('Leave')}
+                >
+                  On Leave
+                </button>
+                <button
+                  className={`px-2.5 py-1 rounded-lg text-sm ${
+                    employee.status === 'Terminated' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                  }`}
+                  onClick={() => handleStatusChange('Terminated')}
+                >
+                  Terminated
+                </button>
+              </div>
+            </div>
+            
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              {/* Position */}
+              <div className="p-3 bg-gray-50 rounded-lg flex flex-col">
+                <span className="text-sm text-gray-500">Position</span>
+                <span className="font-medium">{employee.position || 'Not specified'}</span>
+              </div>
+              
+              {/* Department */}
+              <div className="p-3 bg-gray-50 rounded-lg flex flex-col">
+                <span className="text-sm text-gray-500">Department</span>
+                <span className="font-medium">{employee.department || 'Not specified'}</span>
+              </div>
+              
+              {/* Email */}
+              <div className="p-3 bg-gray-50 rounded-lg flex flex-col">
+                <span className="text-sm text-gray-500">Email</span>
+                <span className="font-medium">{employee.email || 'Not specified'}</span>
+              </div>
+              
+              {/* Phone */}
+              <div className="p-3 bg-gray-50 rounded-lg flex flex-col">
+                <span className="text-sm text-gray-500">Phone</span>
+                <span className="font-medium">{employee.phone || 'Not specified'}</span>
+              </div>
+              
+              {/* Date Hired */}
+              <div className="p-3 bg-gray-50 rounded-lg flex flex-col">
+                <span className="text-sm text-gray-500">Date Hired</span>
+                <span className="font-medium">{formatDate(employee.dateHired) || 'Not specified'}</span>
+              </div>
+              
+              {/* Employee ID */}
+              <div className="p-3 bg-gray-50 rounded-lg flex flex-col">
+                <span className="text-sm text-gray-500">Employee ID</span>
+                <span className="font-medium">{employee.employeeId || 'Not assigned'}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1254,6 +1424,226 @@ const EmployeeDetails = () => {
                     className="mt-3 px-4 py-2 bg-[#9AADEA] text-white rounded-lg hover:bg-[#7b8edc] transition text-sm"
                   >
                     Upload Your First Document
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Skills Section */}
+          <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm mt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Skills & Competencies</h3>
+              <button
+                onClick={() => setIsAddingSkill(true)}
+                className="px-3 py-1 bg-[#9AADEA] text-white rounded-lg hover:bg-[#7b8edc] transition"
+              >
+                Add Skill
+              </button>
+            </div>
+
+            {/* Add/Edit Skill Form */}
+            {(isAddingSkill || editingSkill) && (
+              <div className="mb-6 border border-gray-200 rounded-lg p-4">
+                <h4 className="font-medium mb-3">
+                  {editingSkill ? "Edit Skill" : "Add New Skill"}
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Skill Name*
+                    </label>
+                    <input
+                      type="text"
+                      value={skillForm.name}
+                      onChange={(e) => 
+                        setSkillForm({...skillForm, name: e.target.value})
+                      }
+                      placeholder="e.g., JavaScript, Leadership, Communication"
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={skillForm.category}
+                      onChange={(e) => 
+                        setSkillForm({...skillForm, category: e.target.value})
+                      }
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="technical">Technical</option>
+                      <option value="soft">Soft Skill</option>
+                      <option value="language">Language</option>
+                      <option value="certification">Certification</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Proficiency Level* ({skillForm.proficiency}%)
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={skillForm.proficiency}
+                    onChange={(e) => 
+                      setSkillForm({...skillForm, proficiency: parseInt(e.target.value)})
+                    }
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between text-xs mt-1 text-gray-500">
+                    <span>Beginner</span>
+                    <span>Intermediate</span>
+                    <span>Advanced</span>
+                    <span>Expert</span>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Notes (Optional)
+                  </label>
+                  <textarea
+                    value={skillForm.notes}
+                    onChange={(e) => 
+                      setSkillForm({...skillForm, notes: e.target.value})
+                    }
+                    placeholder="Additional details about this skill"
+                    rows="3"
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  ></textarea>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => {
+                      setIsAddingSkill(false);
+                      setEditingSkill(null);
+                      resetSkillForm();
+                    }}
+                    className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveSkill}
+                    disabled={!skillForm.name || !skillForm.proficiency}
+                    className={`px-3 py-1 rounded-lg ${
+                      skillForm.name && skillForm.proficiency
+                        ? "bg-[#9AADEA] text-white hover:bg-[#7b8edc]"
+                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    } transition`}
+                  >
+                    {editingSkill ? "Update Skill" : "Add Skill"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Skills List */}
+            <div className="space-y-4">
+              {employee.skills && employee.skills.length > 0 ? (
+                employee.skills.map((skill) => (
+                  <div key={skill.id} className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <div>
+                        <h4 className="font-medium">{skill.name}</h4>
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                          {skill.category ? skill.category.charAt(0).toUpperCase() + skill.category.slice(1) : 'Technical'}
+                        </span>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={() => handleEditSkill(skill)}
+                          className="text-[#9AADEA] hover:text-white hover:bg-[#9AADEA] rounded transition-colors duration-200 p-1"
+                          title="Edit skill"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteSkill(skill.id)}
+                          className="text-red-500 hover:text-white hover:bg-red-500 rounded transition-colors duration-200 p-1"
+                          title="Delete skill"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+                      <div 
+                        className="bg-blue-600 h-2.5 rounded-full" 
+                        style={{ width: `${skill.proficiency}%` }}
+                      ></div>
+                    </div>
+                    
+                    <div className="flex justify-between text-xs text-gray-500 mb-2">
+                      <span>Beginner</span>
+                      <span>Intermediate</span>
+                      <span>Advanced</span>
+                      <span>Expert</span>
+                    </div>
+                    
+                    {skill.notes && (
+                      <p className="text-sm text-gray-600 mt-2 italic">{skill.notes}</p>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 border border-dashed border-gray-300 rounded-lg">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-12 w-12 text-gray-400 mx-auto mb-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                  <p className="text-gray-500">No skills added yet.</p>
+                  <button
+                    onClick={() => setIsAddingSkill(true)}
+                    className="mt-3 px-4 py-2 bg-[#9AADEA] text-white rounded-lg hover:bg-[#7b8edc] transition text-sm"
+                  >
+                    Add First Skill
                   </button>
                 </div>
               )}

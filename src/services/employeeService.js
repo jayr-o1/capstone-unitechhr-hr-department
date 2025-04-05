@@ -591,3 +591,222 @@ export const getCareerPaths = async (universityId, departmentId) => {
         return { success: false, message: error.message, careerPaths: [] };
     }
 };
+
+// Add employee skill
+export const addEmployeeSkill = async (userId, universityId, skillData) => {
+    try {
+        if (!userId || !universityId || !skillData.name) {
+            return { success: false, message: 'Missing required parameters' };
+        }
+        
+        // Check if this is a mock user ID from direct employee login
+        let employeeId = userId;
+        let employeeDocId = userId;
+        
+        if (userId.startsWith('emp_')) {
+            // Extract the employee ID from the mock user ID
+            const parts = userId.split('_');
+            if (parts.length >= 2) {
+                employeeId = parts[1];
+                console.log("Extracted employeeId from mock user:", employeeId);
+                
+                // Find the actual document ID by querying
+                const employeesRef = collection(db, 'universities', universityId, 'employees');
+                const q = query(employeesRef, where("employeeId", "==", employeeId));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    employeeDocId = querySnapshot.docs[0].id;
+                    console.log("Found document ID for employee:", employeeDocId);
+                } else {
+                    return { success: false, message: 'Employee record not found' };
+                }
+            }
+        }
+        
+        // Get the current employee document to access existing skills
+        const employeeRef = doc(db, 'universities', universityId, 'employees', employeeDocId);
+        const employeeDoc = await getDoc(employeeRef);
+        
+        if (!employeeDoc.exists()) {
+            return { success: false, message: 'Employee record not found' };
+        }
+        
+        const employeeData = employeeDoc.data();
+        const currentSkills = employeeData.skills || [];
+        
+        // Create new skill with ID and timestamp
+        const newSkill = {
+            id: Date.now().toString(),
+            name: skillData.name,
+            category: skillData.category || 'technical',
+            proficiency: skillData.proficiency || 50,
+            notes: skillData.notes || '',
+            createdAt: serverTimestamp()
+        };
+        
+        // Add the new skill to the array
+        const updatedSkills = [...currentSkills, newSkill];
+        
+        // Update the employee document
+        await updateDoc(employeeRef, {
+            skills: updatedSkills,
+            updatedAt: serverTimestamp()
+        });
+        
+        return { 
+            success: true, 
+            skill: newSkill
+        };
+    } catch (error) {
+        console.error('Error adding employee skill:', error);
+        return { 
+            success: false, 
+            message: error.message 
+        };
+    }
+};
+
+// Update employee skill
+export const updateEmployeeSkill = async (userId, universityId, skillId, skillData) => {
+    try {
+        if (!userId || !universityId || !skillId) {
+            return { success: false, message: 'Missing required parameters' };
+        }
+        
+        // Check if this is a mock user ID from direct employee login
+        let employeeId = userId;
+        let employeeDocId = userId;
+        
+        if (userId.startsWith('emp_')) {
+            // Extract the employee ID from the mock user ID
+            const parts = userId.split('_');
+            if (parts.length >= 2) {
+                employeeId = parts[1];
+                console.log("Extracted employeeId from mock user:", employeeId);
+                
+                // Find the actual document ID by querying
+                const employeesRef = collection(db, 'universities', universityId, 'employees');
+                const q = query(employeesRef, where("employeeId", "==", employeeId));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    employeeDocId = querySnapshot.docs[0].id;
+                    console.log("Found document ID for employee:", employeeDocId);
+                } else {
+                    return { success: false, message: 'Employee record not found' };
+                }
+            }
+        }
+        
+        // Get the current employee document to access existing skills
+        const employeeRef = doc(db, 'universities', universityId, 'employees', employeeDocId);
+        const employeeDoc = await getDoc(employeeRef);
+        
+        if (!employeeDoc.exists()) {
+            return { success: false, message: 'Employee record not found' };
+        }
+        
+        const employeeData = employeeDoc.data();
+        const currentSkills = employeeData.skills || [];
+        
+        // Find the skill to update
+        const skillIndex = currentSkills.findIndex(skill => skill.id === skillId);
+        
+        if (skillIndex === -1) {
+            return { success: false, message: 'Skill not found' };
+        }
+        
+        // Update the skill with new data
+        const updatedSkills = [...currentSkills];
+        updatedSkills[skillIndex] = {
+            ...updatedSkills[skillIndex],
+            ...skillData,
+            updatedAt: serverTimestamp()
+        };
+        
+        // Update the employee document
+        await updateDoc(employeeRef, {
+            skills: updatedSkills,
+            updatedAt: serverTimestamp()
+        });
+        
+        return { 
+            success: true, 
+            skill: updatedSkills[skillIndex]
+        };
+    } catch (error) {
+        console.error('Error updating employee skill:', error);
+        return { 
+            success: false, 
+            message: error.message 
+        };
+    }
+};
+
+// Delete employee skill
+export const deleteEmployeeSkill = async (userId, universityId, skillId) => {
+    try {
+        if (!userId || !universityId || !skillId) {
+            return { success: false, message: 'Missing required parameters' };
+        }
+        
+        // Check if this is a mock user ID from direct employee login
+        let employeeId = userId;
+        let employeeDocId = userId;
+        
+        if (userId.startsWith('emp_')) {
+            // Extract the employee ID from the mock user ID
+            const parts = userId.split('_');
+            if (parts.length >= 2) {
+                employeeId = parts[1];
+                console.log("Extracted employeeId from mock user:", employeeId);
+                
+                // Find the actual document ID by querying
+                const employeesRef = collection(db, 'universities', universityId, 'employees');
+                const q = query(employeesRef, where("employeeId", "==", employeeId));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    employeeDocId = querySnapshot.docs[0].id;
+                    console.log("Found document ID for employee:", employeeDocId);
+                } else {
+                    return { success: false, message: 'Employee record not found' };
+                }
+            }
+        }
+        
+        // Get the current employee document to access existing skills
+        const employeeRef = doc(db, 'universities', universityId, 'employees', employeeDocId);
+        const employeeDoc = await getDoc(employeeRef);
+        
+        if (!employeeDoc.exists()) {
+            return { success: false, message: 'Employee record not found' };
+        }
+        
+        const employeeData = employeeDoc.data();
+        const currentSkills = employeeData.skills || [];
+        
+        // Filter out the skill to delete
+        const updatedSkills = currentSkills.filter(skill => skill.id !== skillId);
+        
+        // Check if any skill was removed
+        if (updatedSkills.length === currentSkills.length) {
+            return { success: false, message: 'Skill not found' };
+        }
+        
+        // Update the employee document
+        await updateDoc(employeeRef, {
+            skills: updatedSkills,
+            updatedAt: serverTimestamp()
+        });
+        
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting employee skill:', error);
+        return { 
+            success: false, 
+            message: error.message 
+        };
+    }
+};

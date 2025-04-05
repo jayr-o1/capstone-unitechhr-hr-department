@@ -7,7 +7,10 @@ import {
   getEmployeeDocuments,
   uploadEmployeeDocument,
   deleteEmployeeDocument,
-  getEmployeeSkills
+  getEmployeeSkills,
+  addEmployeeSkill,
+  updateEmployeeSkill,
+  deleteEmployeeSkill
 } from '../../services/employeeService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -68,6 +71,16 @@ const EmployeeProfile = () => {
   const [documentType, setDocumentType] = useState('certification');
   const [documentDescription, setDocumentDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  
+  // Skills state
+  const [isAddingSkill, setIsAddingSkill] = useState(false);
+  const [editingSkill, setEditingSkill] = useState(null);
+  const [skillForm, setSkillForm] = useState({
+    name: '',
+    category: 'technical',
+    proficiency: 50,
+    notes: ''
+  });
   
   // Check for active tab in navigation state
   useEffect(() => {
@@ -357,16 +370,135 @@ const EmployeeProfile = () => {
     return faFileAlt;
   };
 
-  const handleAddSkill = () => {
-    toast.success('This feature will be available soon!');
-  };
-
-  const handleEditSkill = (skillId) => {
-    toast.success('Edit feature will be available soon!');
-  };
-
   const handleRemoveSkill = (skillId) => {
-    toast.success('Remove feature will be available soon!');
+    if (!window.confirm('Are you sure you want to delete this skill?')) {
+      return;
+    }
+    
+    deleteSkill(skillId);
+  };
+
+  const resetSkillForm = () => {
+    setSkillForm({
+      name: '',
+      category: 'technical',
+      proficiency: 50,
+      notes: ''
+    });
+  };
+
+  const handleEditSkill = (skill) => {
+    setEditingSkill(skill);
+    setIsAddingSkill(true);
+    setSkillForm({
+      name: skill.name,
+      category: skill.category || 'technical',
+      proficiency: skill.proficiency || 50,
+      notes: skill.notes || ''
+    });
+    
+    // Scroll to the form
+    if (skillsSectionRef.current) {
+      skillsSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleAddSkill = () => {
+    setIsAddingSkill(true);
+    setEditingSkill(null);
+    resetSkillForm();
+  };
+
+  const handleCancelSkill = () => {
+    setIsAddingSkill(false);
+    setEditingSkill(null);
+    resetSkillForm();
+  };
+
+  const handleSaveSkill = async () => {
+    try {
+      setError(null);
+      setSuccess(null);
+      
+      if (!userDetails || !userDetails.universityId) {
+        setError('User details not available');
+        return;
+      }
+      
+      if (!skillForm.name) {
+        setError('Skill name is required');
+        return;
+      }
+      
+      let result;
+      
+      if (editingSkill) {
+        // Update existing skill
+        result = await updateEmployeeSkill(
+          user.uid,
+          userDetails.universityId,
+          editingSkill.id,
+          skillForm
+        );
+      } else {
+        // Add new skill
+        result = await addEmployeeSkill(
+          user.uid,
+          userDetails.universityId,
+          skillForm
+        );
+      }
+      
+      if (result.success) {
+        setSuccess(editingSkill ? 'Skill updated successfully' : 'Skill added successfully');
+        
+        // Refresh skills
+        const skillsData = await getEmployeeSkills(user.uid, userDetails.universityId);
+        if (skillsData.success) {
+          setSkills(skillsData.skills || []);
+        }
+        
+        // Reset form
+        setIsAddingSkill(false);
+        setEditingSkill(null);
+        resetSkillForm();
+      } else {
+        setError(result.message || `Failed to ${editingSkill ? 'update' : 'add'} skill`);
+      }
+    } catch (err) {
+      console.error(`Error ${editingSkill ? 'updating' : 'adding'} skill:`, err);
+      setError(`An error occurred while ${editingSkill ? 'updating' : 'adding'} skill`);
+    }
+  };
+
+  const deleteSkill = async (skillId) => {
+    try {
+      setError(null);
+      setSuccess(null);
+      
+      if (!userDetails || !userDetails.universityId) {
+        setError('User details not available');
+        return;
+      }
+      
+      const result = await deleteEmployeeSkill(
+        user.uid,
+        userDetails.universityId,
+        skillId
+      );
+      
+      if (result.success) {
+        setSuccess('Skill deleted successfully');
+        
+        // Update local state
+        setSkills(prev => prev.filter(skill => skill.id !== skillId));
+      } else {
+        setError(result.message || 'Failed to delete skill');
+      }
+    } catch (err) {
+      console.error("Error deleting skill:", err);
+      setError("An error occurred while deleting skill");
+    }
   };
 
   if (loading) {
@@ -497,15 +629,6 @@ const EmployeeProfile = () => {
           {!editMode ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {/* Department */}
-                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <FontAwesomeIcon icon={faBuilding} className="text-blue-500 mr-2" />
-                    <h3 className="font-medium">Department</h3>
-                  </div>
-                  <p className="text-sm md:text-base text-gray-700">{employeeData?.department || 'Not specified'}</p>
-                </div>
-                
                 {/* Position */}
                 <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center mb-2">
@@ -515,13 +638,13 @@ const EmployeeProfile = () => {
                   <p className="text-sm md:text-base text-gray-700">{employeeData?.position || 'Not specified'}</p>
                 </div>
                 
-                {/* Phone */}
+                {/* Department */}
                 <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center mb-2">
-                    <FontAwesomeIcon icon={faPhone} className="text-blue-500 mr-2" />
-                    <h3 className="font-medium">Phone</h3>
+                    <FontAwesomeIcon icon={faBuilding} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Department</h3>
                   </div>
-                  <p className="text-sm md:text-base text-gray-700">{employeeData?.phone || 'Not specified'}</p>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.department || 'Not specified'}</p>
                 </div>
                 
                 {/* Email */}
@@ -531,6 +654,15 @@ const EmployeeProfile = () => {
                     <h3 className="font-medium">Email</h3>
                   </div>
                   <p className="text-sm md:text-base text-gray-700">{employeeData?.email || 'Not specified'}</p>
+                </div>
+                
+                {/* Phone */}
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <FontAwesomeIcon icon={faPhone} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Phone</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.phone || 'Not specified'}</p>
                 </div>
               </div>
               
@@ -559,16 +691,27 @@ const EmployeeProfile = () => {
           ) : (
             <form className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Name */}
+                {/* Department and Position are read-only */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                  <label className="block text-sm font-medium text-gray-700">Position</label>
                   <input
                     type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={employeeData?.position || 'Not specified'}
+                    disabled
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm"
                   />
+                  <small className="text-gray-500">Position cannot be changed</small>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Department</label>
+                  <input
+                    type="text"
+                    value={employeeData?.department || 'Not specified'}
+                    disabled
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm"
+                  />
+                  <small className="text-gray-500">Department cannot be changed</small>
                 </div>
                 
                 {/* Email */}
@@ -595,27 +738,16 @@ const EmployeeProfile = () => {
                   />
                 </div>
                 
-                {/* Department and Position are read-only */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Department</label>
+                {/* Name */}
+                <div className="space-y-2 md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
                   <input
                     type="text"
-                    value={employeeData?.department || 'Not specified'}
-                    disabled
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                  <small className="text-gray-500">Department cannot be changed</small>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Position</label>
-                  <input
-                    type="text"
-                    value={employeeData?.position || 'Not specified'}
-                    disabled
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm"
-                  />
-                  <small className="text-gray-500">Position cannot be changed</small>
                 </div>
               </div>
               
@@ -651,48 +783,189 @@ const EmployeeProfile = () => {
         <div className="bg-white rounded-xl shadow-md p-4 md:p-6" ref={skillsSectionRef}>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Skills</h2>
-            <button 
-              onClick={handleAddSkill} 
-              className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <FontAwesomeIcon icon={faPlus} className="mr-1" />
-              Add Skill
-            </button>
+            {!isAddingSkill && (
+              <button 
+                onClick={handleAddSkill} 
+                className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <FontAwesomeIcon icon={faPlus} className="mr-1" />
+                Add Skill
+              </button>
+            )}
           </div>
           
-          <div className="space-y-4">
-            {skills.map((skill) => (
-              <div key={skill.id} className="bg-gray-50 rounded-lg p-3 md:p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-medium">{skill.name}</h3>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => handleEditSkill(skill.id)}
-                      className="text-gray-600 hover:text-blue-600"
-                    >
-                      <FontAwesomeIcon icon={faEdit} />
-                    </button>
-                    <button 
-                      onClick={() => handleRemoveSkill(skill.id)}
-                      className="text-gray-600 hover:text-red-600"
-                    >
-                      <FontAwesomeIcon icon={faTrashAlt} />
-                    </button>
-                  </div>
+          {error && (
+            <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+          
+          {success && (
+            <div className="mb-4 p-2 bg-green-100 text-green-700 rounded-lg">
+              {success}
+            </div>
+          )}
+          
+          {/* Add/Edit Skill Form */}
+          {isAddingSkill && (
+            <div className="mb-6 border border-gray-200 rounded-lg p-4">
+              <h4 className="font-medium mb-3">
+                {editingSkill ? "Edit Skill" : "Add New Skill"}
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={skillForm.category}
+                    onChange={(e) => 
+                      setSkillForm({...skillForm, category: e.target.value})
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="technical">Technical</option>
+                    <option value="soft">Soft Skill</option>
+                    <option value="language">Language</option>
+                    <option value="certification">Certification</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div 
-                    className="bg-blue-600 h-2.5 rounded-full" 
-                    style={{ width: `${skill.proficiency}%` }}
-                  ></div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Skill Name*
+                  </label>
+                  <input
+                    type="text"
+                    value={skillForm.name}
+                    onChange={(e) => 
+                      setSkillForm({...skillForm, name: e.target.value})
+                    }
+                    placeholder="e.g., JavaScript, Leadership, Communication"
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  />
                 </div>
-                <div className="flex justify-between text-xs mt-1">
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Proficiency Level* ({skillForm.proficiency}%)
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={skillForm.proficiency}
+                  onChange={(e) => 
+                    setSkillForm({...skillForm, proficiency: parseInt(e.target.value)})
+                  }
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-xs mt-1 text-gray-500">
                   <span>Beginner</span>
-                  <span>Proficient</span>
+                  <span>Intermediate</span>
+                  <span>Advanced</span>
                   <span>Expert</span>
                 </div>
               </div>
-            ))}
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  value={skillForm.notes}
+                  onChange={(e) => 
+                    setSkillForm({...skillForm, notes: e.target.value})
+                  }
+                  placeholder="Additional details about this skill"
+                  rows="3"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                ></textarea>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={handleCancelSkill}
+                  className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveSkill}
+                  disabled={!skillForm.name}
+                  className={`px-3 py-1 rounded-lg ${
+                    skillForm.name
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  } transition`}
+                >
+                  {editingSkill ? "Update Skill" : "Add Skill"}
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Skills List */}
+          <div className="space-y-4">
+            {skills.length > 0 ? (
+              skills.map((skill) => (
+                <div key={skill.id} className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <div>
+                      <h4 className="font-medium">{skill.name}</h4>
+                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                        {skill.category ? skill.category.charAt(0).toUpperCase() + skill.category.slice(1) : 'Technical'}
+                      </span>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => handleEditSkill(skill)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <FontAwesomeIcon icon={faEdit} />
+                      </button>
+                      <button 
+                        onClick={() => handleRemoveSkill(skill.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <FontAwesomeIcon icon={faTrashAlt} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+                    <div 
+                      className="bg-blue-600 h-2.5 rounded-full" 
+                      style={{ width: `${skill.proficiency}%` }}
+                    ></div>
+                  </div>
+                  
+                  <div className="flex justify-between text-xs text-gray-500 mb-2">
+                    <span>Beginner</span>
+                    <span>Intermediate</span>
+                    <span>Advanced</span>
+                    <span>Expert</span>
+                  </div>
+                  
+                  {skill.notes && (
+                    <p className="text-sm text-gray-600 mt-2 italic">{skill.notes}</p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-6 border border-dashed border-gray-300 rounded-lg">
+                <FontAwesomeIcon icon={faGraduationCap} className="text-gray-400 text-3xl mb-2" />
+                <p className="text-gray-500">No skills added yet.</p>
+                <button 
+                  onClick={handleAddSkill}
+                  className="mt-3 text-blue-500 hover:text-blue-700 hover:underline"
+                >
+                  Add your first skill
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
