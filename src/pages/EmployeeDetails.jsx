@@ -847,77 +847,44 @@ const EmployeeDetails = () => {
                 <p className="text-sm text-gray-500">Joined On</p>
                 <p className="font-medium">{formatDate(employee.dateHired)}</p>
               </div>
-            </div>
-          </div>
-
-          {/* Status Change */}
-          <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm mt-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold mb-2">Status</h3>
-              <div className="flex space-x-2">
-                <button
-                  className={`px-2.5 py-1 rounded-lg text-sm ${
-                    employee.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                  }`}
-                  onClick={() => handleStatusChange('Active')}
-                >
-                  Active
-                </button>
-                <button
-                  className={`px-2.5 py-1 rounded-lg text-sm ${
-                    employee.status === 'Leave' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'
-                  }`}
-                  onClick={() => handleStatusChange('Leave')}
-                >
-                  On Leave
-                </button>
-                <button
-                  className={`px-2.5 py-1 rounded-lg text-sm ${
-                    employee.status === 'Terminated' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
-                  }`}
-                  onClick={() => handleStatusChange('Terminated')}
-                >
-                  Terminated
-                </button>
-              </div>
-            </div>
-            
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              {/* Position */}
-              <div className="p-3 bg-gray-50 rounded-lg flex flex-col">
-                <span className="text-sm text-gray-500">Position</span>
-                <span className="font-medium">{employee.position || 'Not specified'}</span>
-              </div>
               
-              {/* Department */}
-              <div className="p-3 bg-gray-50 rounded-lg flex flex-col">
-                <span className="text-sm text-gray-500">Department</span>
-                <span className="font-medium">{employee.department || 'Not specified'}</span>
-              </div>
-              
-              {/* Email */}
-              <div className="p-3 bg-gray-50 rounded-lg flex flex-col">
-                <span className="text-sm text-gray-500">Email</span>
-                <span className="font-medium">{employee.email || 'Not specified'}</span>
-              </div>
-              
-              {/* Phone */}
-              <div className="p-3 bg-gray-50 rounded-lg flex flex-col">
-                <span className="text-sm text-gray-500">Phone</span>
-                <span className="font-medium">{employee.phone || 'Not specified'}</span>
-              </div>
-              
-              {/* Date Hired */}
-              <div className="p-3 bg-gray-50 rounded-lg flex flex-col">
-                <span className="text-sm text-gray-500">Date Hired</span>
-                <span className="font-medium">{formatDate(employee.dateHired) || 'Not specified'}</span>
-              </div>
-              
-              {/* Employee ID */}
-              <div className="p-3 bg-gray-50 rounded-lg flex flex-col">
-                <span className="text-sm text-gray-500">Employee ID</span>
-                <span className="font-medium">{employee.employeeId || 'Not assigned'}</span>
+              <div className="pt-3">
+                <p className="text-sm font-medium text-gray-700 mb-2">Change Status</p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => handleStatusChange("New Hire")}
+                    disabled={employee.status === "New Hire"}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                      employee.status === "New Hire"
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                    }`}
+                  >
+                    Set as New Hire
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange("Active")}
+                    disabled={employee.status === "Active"}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                      employee.status === "Active"
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-green-100 text-green-800 hover:bg-green-200"
+                    }`}
+                  >
+                    Set as Active
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange("Inactive")}
+                    disabled={employee.status === "Inactive"}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                      employee.status === "Inactive"
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-red-100 text-red-800 hover:bg-red-200"
+                    }`}
+                  >
+                    Set as Inactive
+                  </button>
+                </div>
               </div>
             </div>
           </div>

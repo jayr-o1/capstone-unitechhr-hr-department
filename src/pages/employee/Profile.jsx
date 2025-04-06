@@ -628,7 +628,7 @@ const EmployeeProfile = () => {
           
           {!editMode ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {/* Position */}
                 <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center mb-2">
@@ -638,12 +638,12 @@ const EmployeeProfile = () => {
                   <p className="text-sm md:text-base text-gray-700">{employeeData?.position || 'Not specified'}</p>
                 </div>
                 
-                {/* Department */}
-                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <FontAwesomeIcon icon={faBuilding} className="text-blue-500 mr-2" />
-                    <h3 className="font-medium">Department</h3>
-                  </div>
+            {/* Department */}
+            <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center mb-2">
+                <FontAwesomeIcon icon={faBuilding} className="text-blue-500 mr-2" />
+                <h3 className="font-medium">Department</h3>
+              </div>
                   <p className="text-sm md:text-base text-gray-700">{employeeData?.department || 'Not specified'}</p>
                 </div>
                 
@@ -654,11 +654,11 @@ const EmployeeProfile = () => {
                     <h3 className="font-medium">Email</h3>
                   </div>
                   <p className="text-sm md:text-base text-gray-700">{employeeData?.email || 'Not specified'}</p>
-                </div>
-                
+            </div>
+            
                 {/* Phone */}
-                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center mb-2">
+            <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center mb-2">
                     <FontAwesomeIcon icon={faPhone} className="text-blue-500 mr-2" />
                     <h3 className="font-medium">Phone</h3>
                   </div>
@@ -674,9 +674,9 @@ const EmployeeProfile = () => {
                     <h3 className="font-medium">Bio</h3>
                   </div>
                   <p className="text-sm md:text-base text-gray-700">{employeeData?.bio || 'No bio available'}</p>
-                </div>
-              </div>
-              
+            </div>
+          </div>
+          
               {/* Address Section */}
               <div className="mt-6">
                 <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
@@ -773,7 +773,7 @@ const EmployeeProfile = () => {
                   rows="4"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 ></textarea>
-              </div>
+          </div>
             </form>
           )}
         </div>
@@ -784,13 +784,13 @@ const EmployeeProfile = () => {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Skills</h2>
             {!isAddingSkill && (
-              <button 
-                onClick={handleAddSkill} 
-                className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <FontAwesomeIcon icon={faPlus} className="mr-1" />
-                Add Skill
-              </button>
+            <button 
+              onClick={handleAddSkill} 
+              className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <FontAwesomeIcon icon={faPlus} className="mr-1" />
+              Add Skill
+            </button>
             )}
           </div>
           
@@ -912,41 +912,41 @@ const EmployeeProfile = () => {
             {skills.length > 0 ? (
               skills.map((skill) => (
                 <div key={skill.id} className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-2">
+                <div className="flex justify-between items-center mb-2">
                     <div>
                       <h4 className="font-medium">{skill.name}</h4>
                       <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
                         {skill.category ? skill.category.charAt(0).toUpperCase() + skill.category.slice(1) : 'Technical'}
                       </span>
                     </div>
-                    <div className="flex space-x-2">
-                      <button 
+                  <div className="flex space-x-2">
+                    <button 
                         onClick={() => handleEditSkill(skill)}
                         className="text-blue-600 hover:text-blue-800"
-                      >
-                        <FontAwesomeIcon icon={faEdit} />
-                      </button>
-                      <button 
-                        onClick={() => handleRemoveSkill(skill.id)}
+                    >
+                      <FontAwesomeIcon icon={faEdit} />
+                    </button>
+                    <button 
+                      onClick={() => handleRemoveSkill(skill.id)}
                         className="text-red-600 hover:text-red-800"
-                      >
-                        <FontAwesomeIcon icon={faTrashAlt} />
-                      </button>
-                    </div>
+                    >
+                      <FontAwesomeIcon icon={faTrashAlt} />
+                    </button>
                   </div>
+                </div>
                   
                   <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-                    <div 
-                      className="bg-blue-600 h-2.5 rounded-full" 
-                      style={{ width: `${skill.proficiency}%` }}
-                    ></div>
-                  </div>
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full" 
+                    style={{ width: `${skill.proficiency}%` }}
+                  ></div>
+                </div>
                   
                   <div className="flex justify-between text-xs text-gray-500 mb-2">
-                    <span>Beginner</span>
+                  <span>Beginner</span>
                     <span>Intermediate</span>
                     <span>Advanced</span>
-                    <span>Expert</span>
+                  <span>Expert</span>
                   </div>
                   
                   {skill.notes && (
@@ -982,9 +982,9 @@ const EmployeeProfile = () => {
                 onChange={handleFileChange} 
                 className="hidden"
               />
-              <button 
-                onClick={handleUploadDocument} 
-                className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
+            <button 
+              onClick={handleUploadDocument} 
+              className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
                 disabled={uploading}
               >
                 {uploading ? (
@@ -995,7 +995,7 @@ const EmployeeProfile = () => {
                     Upload Document
                   </>
                 )}
-              </button>
+            </button>
             </div>
           </div>
           
@@ -1011,32 +1011,32 @@ const EmployeeProfile = () => {
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Date</th>
-                    <th className="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {documents.map((doc) => (
-                    <tr key={doc.id}>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <FontAwesomeIcon icon={getFileIcon(doc.fileName)} className="text-blue-500 mr-2" />
-                          <span className="text-sm font-medium text-gray-900">{doc.name}</span>
-                        </div>
-                      </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Date</th>
+                  <th className="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {documents.map((doc) => (
+                  <tr key={doc.id}>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <FontAwesomeIcon icon={getFileIcon(doc.fileName)} className="text-blue-500 mr-2" />
+                        <span className="text-sm font-medium text-gray-900">{doc.name}</span>
+                      </div>
+                    </td>
                       <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500 capitalize">{doc.type}</td>
                       <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">
                         {doc.createdAt?.toDate ? 
                           doc.createdAt.toDate().toLocaleDateString() : 
                           new Date(doc.createdAt?.seconds * 1000).toLocaleDateString()}
                       </td>
-                      <td className="py-3 px-4 whitespace-nowrap text-right text-sm">
+                    <td className="py-3 px-4 whitespace-nowrap text-right text-sm">
                         <a 
                           href={doc.url} 
                           target="_blank" 
@@ -1045,18 +1045,18 @@ const EmployeeProfile = () => {
                         >
                           View
                         </a>
-                        <button 
-                          onClick={() => handleDeleteDocument(doc.id, doc.fileName)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      <button 
+                        onClick={() => handleDeleteDocument(doc.id, doc.fileName)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           )}
         </div>
       )}
