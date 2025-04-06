@@ -4,6 +4,7 @@ import { db } from "../firebase";
 import { auth } from "../firebase";
 import PageLoader from "../components/PageLoader";
 import AddEmployeeModal from "../components/Modals/AddEmployeeModal";
+import EditCredentialsModal from "../components/Modals/EditCredentialsModal";
 import {
   exportEmployees,
   importEmployees,
@@ -24,6 +25,8 @@ const Employees = () => {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("all"); // "all", "newHires", "active", "inactive"
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditCredentialsModalOpen, setIsEditCredentialsModalOpen] = useState(false);
+  const [currentEmployee, setCurrentEmployee] = useState(null);
   const [universityId, setUniversityId] = useState(null);
   const navigate = useNavigate();
 
@@ -161,10 +164,10 @@ const Employees = () => {
     navigate(`/employees/${employeeId}`);
   };
 
-  // Handle edit employee
-  const handleEditEmployee = (employee) => {
-    // Open edit employee modal (to be implemented)
-    console.log("Edit employee:", employee.id);
+  // Handle edit employee credentials
+  const handleEditCredentials = (employee) => {
+    setCurrentEmployee(employee);
+    setIsEditCredentialsModalOpen(true);
   };
 
   if (loading) {
@@ -375,10 +378,10 @@ const Employees = () => {
                           View
                         </button>
                         <button
-                          onClick={() => handleEditEmployee(employee)}
+                          onClick={() => handleEditCredentials(employee)}
                           className="bg-[#9AADEA] text-white hover:bg-[#7b8edc] transition px-3 py-1 rounded-lg"
                         >
-                          Edit
+                          Edit Credentials
                         </button>
                       </div>
                     </td>
@@ -402,6 +405,17 @@ const Employees = () => {
           onClose={() => setIsAddModalOpen(false)}
           onEmployeeAdded={fetchEmployees}
           universityId={universityId}
+        />
+      )}
+
+      {/* Edit Credentials Modal */}
+      {isEditCredentialsModalOpen && (
+        <EditCredentialsModal
+          isOpen={isEditCredentialsModalOpen}
+          onClose={() => setIsEditCredentialsModalOpen(false)}
+          employee={currentEmployee}
+          universityId={universityId}
+          onEmployeeUpdated={fetchEmployees}
         />
       )}
     </div>
