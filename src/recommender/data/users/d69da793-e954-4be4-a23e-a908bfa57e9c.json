@@ -1,17 +1,18 @@
 {
-    "user_id": "user3",
+    "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
     "preferred_specialization": "Cybersecurity",
     "current_skills": [
-        "Network Security",
-        "Information Security"
+        "Python"
     ],
     "lacking_skills": [
-        "Cryptography",
-        "Security Auditing",
         "Incident Response",
+        "Cryptography",
+        "Network Security",
+        "Security Auditing",
+        "Information Security",
         "Risk Management",
         "Security Tools",
         "Ethical Hacking"
     ],
-    "timestamp": "2025-04-09T11:46:08.990386"
+    "timestamp": "2025-04-09T12:22:19.581767"
 }

@@ -1,0 +1,16 @@
+{
+  "current": {
+    "accuracy": 1.0,
+    "training_entries": 10,
+    "unique_fields": 4,
+    "timestamp": "2025-04-09T12:21:18.104220"
+  },
+  "history": [
+    {
+      "accuracy": 1.0,
+      "training_entries": 10,
+      "unique_fields": 4,
+      "timestamp": "2025-04-09T12:21:18.104220"
+    }
+  ]
+}

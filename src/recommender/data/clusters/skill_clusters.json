@@ -1,4 +1,365 @@
 {
+    "Machine Learning": [
+        {
+            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user6",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Data Analysis": [
+        {
+            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user10",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Machine Learning",
+                "SQL"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics"
+            ]
+        }
+    ],
+    "Statistics": [
+        {
+            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python"
+            ]
+        }
+    ],
+    "Statistical Modeling": [
+        {
+            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user10",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Machine Learning",
+                "SQL"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user6",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Data Visualization": [
+        {
+            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user10",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Machine Learning",
+                "SQL"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user6",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "SQL": [
+        {
+            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user6",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Big Data": [
+        {
+            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user10",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Machine Learning",
+                "SQL"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user6",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Incident Response": [
+        {
+            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        },
+        {
+            "user_id": "user7",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Ethical Hacking",
+                "Cryptography"
+            ]
+        }
+    ],
+    "Cryptography": [
+        {
+            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        }
+    ],
+    "Network Security": [
+        {
+            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python"
+            ]
+        }
+    ],
+    "Security Auditing": [
+        {
+            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        },
+        {
+            "user_id": "user7",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Ethical Hacking",
+                "Cryptography"
+            ]
+        }
+    ],
+    "Information Security": [
+        {
+            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user7",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Ethical Hacking",
+                "Cryptography"
+            ]
+        }
+    ],
+    "Risk Management": [
+        {
+            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        },
+        {
+            "user_id": "user7",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Ethical Hacking",
+                "Cryptography"
+            ]
+        }
+    ],
+    "Security Tools": [
+        {
+            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        },
+        {
+            "user_id": "user7",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Ethical Hacking",
+                "Cryptography"
+            ]
+        }
+    ],
+    "Ethical Hacking": [
+        {
+            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        }
+    ],
     "Data Structures": [
         {
             "user_id": "user1",
@@ -140,247 +501,6 @@
             ]
         }
     ],
-    "Data Analysis": [
-        {
-            "user_id": "user10",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Machine Learning",
-                "SQL"
-            ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics"
-            ]
-        }
-    ],
-    "Data Visualization": [
-        {
-            "user_id": "user10",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Machine Learning",
-                "SQL"
-            ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics"
-            ]
-        },
-        {
-            "user_id": "user6",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Big Data": [
-        {
-            "user_id": "user10",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Machine Learning",
-                "SQL"
-            ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics"
-            ]
-        },
-        {
-            "user_id": "user6",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Statistical Modeling": [
-        {
-            "user_id": "user10",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Machine Learning",
-                "SQL"
-            ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics"
-            ]
-        },
-        {
-            "user_id": "user6",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "SQL": [
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics"
-            ]
-        },
-        {
-            "user_id": "user6",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Machine Learning": [
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics"
-            ]
-        },
-        {
-            "user_id": "user6",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Cryptography": [
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Information Security"
-            ]
-        }
-    ],
-    "Security Auditing": [
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Information Security"
-            ]
-        },
-        {
-            "user_id": "user7",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Ethical Hacking",
-                "Cryptography"
-            ]
-        }
-    ],
-    "Incident Response": [
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Information Security"
-            ]
-        },
-        {
-            "user_id": "user7",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Ethical Hacking",
-                "Cryptography"
-            ]
-        }
-    ],
-    "Risk Management": [
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Information Security"
-            ]
-        },
-        {
-            "user_id": "user7",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Ethical Hacking",
-                "Cryptography"
-            ]
-        }
-    ],
-    "Security Tools": [
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Information Security"
-            ]
-        },
-        {
-            "user_id": "user7",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Ethical Hacking",
-                "Cryptography"
-            ]
-        }
-    ],
-    "Ethical Hacking": [
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Information Security"
-            ]
-        }
-    ],
     "Infrastructure as Code": [
         {
             "user_id": "user4",
@@ -485,17 +605,6 @@
                 "Programming",
                 "Algorithms",
                 "Data Structures"
-            ]
-        }
-    ],
-    "Information Security": [
-        {
-            "user_id": "user7",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Ethical Hacking",
-                "Cryptography"
             ]
         }
     ],

@@ -1,17 +1,17 @@
 {
-    "user_id": "user4",
+    "user_id": "user8",
     "preferred_specialization": "Cloud Computing",
     "current_skills": [
         "Cloud Platforms",
-        "Networking"
+        "DevOps",
+        "System Administration"
     ],
     "lacking_skills": [
         "Infrastructure as Code",
         "Containerization",
+        "Networking",
         "Security",
-        "Automation",
-        "DevOps",
-        "System Administration"
+        "Automation"
     ],
     "timestamp": "2025-04-09T11:46:08.990386"
 }

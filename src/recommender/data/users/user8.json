@@ -7,11 +7,11 @@
         "System Administration"
     ],
     "lacking_skills": [
-        "Infrastructure as Code",
         "Containerization",
         "Networking",
         "Security",
+        "Infrastructure as Code",
         "Automation"
     ],
-    "timestamp": "2025-04-09T10:49:12.304831"
+    "timestamp": "2025-04-09T11:46:27.907908"
 }

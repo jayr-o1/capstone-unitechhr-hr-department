@@ -12,6 +12,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.feedback import initialize_feedback_db, get_user_feedback
 from recommender import recommend_career_from_resume, load_model_and_data
 
+# Try to import model evaluation function
+try:
+    from utils.model_trainer import evaluate_model_performance
+    MODEL_EVALUATION_AVAILABLE = True
+except ImportError:
+    MODEL_EVALUATION_AVAILABLE = False
+
 def main():
     """
     Main entry point for the career recommender system.
@@ -32,6 +39,18 @@ def main():
         print("Failed to load model and data. Exiting.")
         return 1
     
+    # Show model information if available
+    if MODEL_EVALUATION_AVAILABLE:
+        try:
+            metrics = evaluate_model_performance()
+            if metrics:
+                print(f"\nUsing model trained on: {metrics.get('trained_at', 'Unknown')}")
+                print(f"Model accuracy: {metrics.get('accuracy', 0):.4f}")
+                print(f"Using feedback from {metrics.get('feedback_entries_used', 0)} users")
+        except Exception as e:
+            print(f"Error evaluating model: {e}")
+            print("Continuing with existing model without evaluation metrics.")
+    
     # Ask user for their ID or create a new one
     user_id = input("\nEnter your user ID (leave blank for new user): ").strip() or None
     
@@ -40,44 +59,35 @@ def main():
     print(f"\nAnalyzing resume from: {resume_file_path}")
     
     # Get recommendations
-    try:
-        recommendations, skills, experience = recommend_career_from_resume(resume_file_path, user_id)
+    recommendations, skills, experience = recommend_career_from_resume(resume_file_path, user_id)
+    
+    # Display recommendations
+    print("\n" + "=" * 60)
+    print("RECOMMENDATIONS")
+    print("=" * 60)
+    
+    print(f"\nRecommended Field: {recommendations['Recommended Field']} (Confidence: {recommendations['Field Confidence']}%)")
+    
+    print("\nTop Career Paths:")
+    for i, (path, confidence) in enumerate(zip(recommendations["Top 3 Career Paths"], recommendations["Confidence Percentages"]), 1):
+        print(f"{i}. {path} (Match: {confidence}%)")
         
-        # Print the recommendations with confidence percentages, lacking skills, and training recommendations
-        print("\nAccording to your profile, you're more suited to be in the field of", recommendations["Recommended Field"])
-        print(f"Confidence in Field Recommendation: {recommendations['Field Confidence']}%")
-        print("\nHere are the top 3 career paths you can take:")
+        # Show required skills
+        required = recommendations["Required Skills"][i-1].split(", ")
+        print(f"   Required Skills: {', '.join(required)}")
         
-        for i, (career_path, skills, confidence, lacking_skills, training) in enumerate(zip(
-            recommendations["Top 3 Career Paths"], 
-            recommendations["Required Skills"], 
-            recommendations["Confidence Percentages"],
-            recommendations["Lacking Skills"],
-            recommendations["Training Recommendations"]
-        ), 1):
-            print(f"\n{i}. {career_path} (Confidence: {confidence}%)")
-            print(f"   Required Skills: {skills}")
-            print(f"   Lacking Skills: {', '.join(lacking_skills) if lacking_skills else 'None'}")
-            print(f"   Training Recommendations: {', '.join(training) if training else 'None'}")
+        # Show lacking skills
+        lacking = recommendations["Lacking Skills"][i-1]
+        if lacking:
+            print(f"   Skills to Develop: {', '.join(lacking)}")
         
-        # Get user feedback
-        user_id = get_user_feedback(recommendations, user_id, skills, experience)
-        print(f"\nThank you for your feedback! Your user ID is: {user_id}")
-        
-        # For demo purposes, show how recommendations change with feedback
-        print("\nLet's see how recommendations change with your feedback:")
-        new_recommendations, _, _ = recommend_career_from_resume(resume_file_path, user_id)
-        
-        print("\nUpdated recommendations based on your feedback:")
-        print("Field:", new_recommendations["Recommended Field"])
-        for i, path in enumerate(new_recommendations["Top 3 Career Paths"], 1):
-            print(f"{i}. {path}")
-            
-    except Exception as e:
-        print(f"Error: {e}")
-        import traceback
-        traceback.print_exc()
-        return 1
+        # Show training recommendations
+        training = recommendations["Training Recommendations"][i-1]
+        if training:
+            print(f"   Recommended Training: {training[0]}" + (f" + {len(training)-1} more" if len(training) > 1 else ""))
+    
+    # Gather feedback for learning
+    user_id = get_user_feedback(recommendations, user_id, skills, experience)
     
     return 0
 
