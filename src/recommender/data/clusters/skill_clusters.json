@@ -330,5 +330,125 @@
                 "Kali Linux"
             ]
         }
+    ],
+    "Data Mining": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Problem Solving",
+                "Cloud Platforms",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Data Visualization": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Problem Solving",
+                "Cloud Platforms",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Experimental Design": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Problem Solving",
+                "Cloud Platforms",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Machine Learning": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Problem Solving",
+                "Cloud Platforms",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Deep Learning": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Problem Solving",
+                "Cloud Platforms",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Big Data": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Problem Solving",
+                "Cloud Platforms",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Statistics": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Problem Solving",
+                "Cloud Platforms",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Natural Language Processing": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Problem Solving",
+                "Cloud Platforms",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "SQL": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Problem Solving",
+                "Cloud Platforms",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Statistical Modeling": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Problem Solving",
+                "Cloud Platforms",
+                "Data Analysis"
+            ]
+        }
     ]
 }

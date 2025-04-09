@@ -20,7 +20,10 @@ from utils.data_loader import (
     load_skills_data,
     get_training_recommendations,
     save_user_preferences,
-    load_user_preferences
+    load_user_preferences,
+    load_predefined_users,
+    get_predefined_user,
+    recommend_specializations_based_on_skills
 )
 from utils.cluster_manager import update_clusters, get_users_by_skill
 from utils.feedback_handler import save_feedback, get_user_feedback
@@ -63,6 +66,102 @@ def display_skill_clusters(skill):
     else:
         print(f"\nNo users currently need training in {skill}")
 
+def display_predefined_users():
+    """Display list of predefined users with their names."""
+    predefined_users = load_predefined_users()
+    if predefined_users and 'users' in predefined_users:
+        print("\nPredefined users:")
+        for user in predefined_users['users']:
+            print(f"  - {user['id']}: {user['name']}")
+    return predefined_users.get('users', [])
+
+def handle_undecided_user(user_id, user_name, user_skills, career_paths, skills_data):
+    """Handle an undecided user by recommending fields and specializations based on skills."""
+    print(f"\n{user_name} is undecided with skills: {', '.join(user_skills)}")
+    
+    # Get recommendations based on skills
+    recommendations = recommend_specializations_based_on_skills(user_skills)
+    
+    # Display recommended field
+    recommended_field = recommendations['recommended_field']
+    print(f"\nRecommended Field: {recommended_field}")
+    
+    # Display top specialization recommendations
+    print("\nRecommended Specializations:")
+    for i, rec in enumerate(recommendations['top_specializations'], 1):
+        print(f"{i}. {rec['specialization']} ({rec['match_percentage']}% match)")
+    
+    # Ask if the user wants to select one of the recommended specializations
+    select_recommendation = get_validated_yes_no("\nWould you like to select one of these specializations?", default='y')
+    
+    if select_recommendation:
+        choice = get_validated_integer("\nEnter the number of your chosen specialization: ", 1, len(recommendations['top_specializations']))
+        selected_recommendation = recommendations['top_specializations'][choice-1]
+        
+        # Find the career path object for the selected specialization
+        selected_path = next((path for path in career_paths if path['title'] == selected_recommendation['specialization']), None)
+        
+        # Run analysis with the selected specialization
+        if selected_path:
+            run_analysis(user_id, selected_path, user_skills, career_paths, skills_data)
+            return
+    
+    # Ask for feedback on recommendations
+    collect_undecided_feedback(user_id, user_name, recommendations)
+
+def collect_undecided_feedback(user_id, user_name, recommendations):
+    """Collect feedback from undecided users on their recommendations."""
+    print("\n" + "="*60)
+    print("FEEDBACK ON RECOMMENDATIONS")
+    print("="*60)
+    
+    print(f"\nWe value your feedback, {user_name}!")
+    
+    # Get overall satisfaction with field recommendation
+    field_satisfaction = get_validated_integer(
+        f"\nOn a scale of 1-5, how satisfied are you with the {recommendations['recommended_field']} field recommendation? ", 
+        1, 5
+    )
+    
+    # Get satisfaction with specialization recommendations
+    spec_satisfaction = get_validated_integer(
+        "\nOn a scale of 1-5, how satisfied are you with the specialization recommendations? ", 
+        1, 5
+    )
+    
+    # Get most appealing specialization
+    print("\nWhich specialization appeals to you the most?")
+    for i, rec in enumerate(recommendations['top_specializations'], 1):
+        print(f"{i}. {rec['specialization']}")
+    
+    appealing_choice = get_validated_integer("Enter your choice (1-3): ", 1, len(recommendations['top_specializations']))
+    appealing_specialization = recommendations['top_specializations'][appealing_choice-1]['specialization']
+    
+    # Get free-form feedback
+    comments = get_validated_string("\nAny additional comments on your recommendations? ", required=False)
+    
+    # Save the feedback
+    feedback_data = {
+        'user_id': user_id,
+        'name': user_name,
+        'recommended_field': recommendations['recommended_field'],
+        'field_satisfaction': field_satisfaction,
+        'specialization_satisfaction': spec_satisfaction,
+        'appealing_specialization': appealing_specialization,
+        'comments': comments,
+        'timestamp': datetime.now().isoformat()
+    }
+    
+    # Save feedback
+    save_feedback(
+        user_id=user_id, 
+        rating=field_satisfaction, 
+        comments=comments, 
+        suggestions=f"Field: {recommendations['recommended_field']}, Preferred: {appealing_specialization}"
+    )
+    
+    print("\nThank you for your feedback! This will help us improve our recommendations.")
+
 def main():
     """Main function to run the recommender system."""
     print("\n" + "="*60)
@@ -72,23 +171,31 @@ def main():
     # Check and install required packages
     check_install_packages()
     
+    # Load all predefined users and display them
+    predefined_users = display_predefined_users()
+    
     # Load or create user preferences
-    print("\nPredefined user IDs: user1, user2, user3, user4, user5, user6, user7, user8, user9, user10")
     user_id = get_validated_string("\nEnter your user ID (or press Enter for a new user): ", min_length=0, required=False)
     
+    # Initialize variables
     existing_user_data = None
+    predefined_user = None
+    
+    # Check if this is a predefined user
     if user_id:
+        predefined_user = get_predefined_user(user_id)
+        if predefined_user:
+            print(f"\nWelcome, {predefined_user['name']}!")
+            print(f"Your skills: {', '.join(predefined_user['skills'])}")
+        
+        # Also check for existing user data
         existing_user_data = load_user_preferences(user_id)
         if existing_user_data:
-            print(f"\nWelcome back, user {user_id}!")
             print(f"Your preferred specialization: {existing_user_data['preferred_specialization']}")
-            print("Your current skills:", ", ".join(existing_user_data['current_skills']))
-        else:
-            print(f"\nNo existing data found for user ID: {user_id}")
-            print("Creating a new user profile...")
-            user_id = str(uuid.uuid4())
-            print(f"New user ID assigned: {user_id}")
-    else:
+            print(f"Your current skills: {', '.join(existing_user_data['current_skills'])}")
+    
+    # If no user_id provided, create a new user
+    if not user_id:
         user_id = str(uuid.uuid4())
         print(f"\nNew user ID assigned: {user_id}")
     
@@ -96,27 +203,68 @@ def main():
     career_paths = load_career_paths()
     skills_data = load_skills_data()
     
-    # Get user's preferred specialization
+    # If we have a predefined user but no existing user data
+    if predefined_user and not existing_user_data:
+        # Ask if they're undecided or want to choose a specialization
+        undecided = get_validated_yes_no("\nAre you undecided about your career path?", default='n')
+        
+        if undecided:
+            # Handle undecided user by recommending based on skills
+            handle_undecided_user(
+                user_id=user_id,
+                user_name=predefined_user['name'],
+                user_skills=predefined_user['skills'],
+                career_paths=career_paths,
+                skills_data=skills_data
+            )
+            return
+    
+    # If user has existing data, ask if they want to update
     if existing_user_data:
-        # Ask if the user wants to update their specialization
         update_choice = get_validated_yes_no("\nDo you want to update your specialization?", default='n')
         if not update_choice:
             selected_path = next((path for path in career_paths if path['title'] == existing_user_data['preferred_specialization']), None)
+            # Use current skills from database or predefined user
             current_skills = existing_user_data['current_skills']
             # Go directly to analysis and recommendations
             run_analysis(user_id, selected_path, current_skills, career_paths, skills_data)
             return
     
-    # Show available specializations
+    # Show available specializations with an option for "Undecided"
     print("\nAvailable Specializations:")
+    print("0. I'm Undecided (Get Recommendations)")
     for i, path in enumerate(career_paths, 1):
         print(f"{i}. {path['title']}")
     
-    choice = get_validated_integer("\nEnter the number of your preferred specialization: ", 1, len(career_paths))
+    choice = get_validated_integer("\nEnter the number of your preferred specialization: ", 0, len(career_paths))
+    
+    # Handle undecided user (choice 0)
+    if choice == 0:
+        if predefined_user:
+            current_skills = predefined_user['skills']
+        else:
+            # Get user's name
+            user_name = get_validated_string("\nPlease enter your name: ", min_length=1)
+            # Get skills for a new undecided user
+            current_skills = get_validated_list("\nPlease enter your current skills (comma-separated): ", min_items=1)
+            
+        # Handle undecided user
+        handle_undecided_user(
+            user_id=user_id,
+            user_name=predefined_user['name'] if predefined_user else user_name,
+            user_skills=current_skills,
+            career_paths=career_paths,
+            skills_data=skills_data
+        )
+        return
+    
+    # User selected a specific specialization
     selected_path = career_paths[choice-1]
     
-    # Get user's current skills
-    if existing_user_data:
+    # Get user's current skills (from predefined user or input)
+    if predefined_user:
+        current_skills = predefined_user['skills']
+    elif existing_user_data:
         print("\nYour current skills:", ", ".join(existing_user_data['current_skills']))
         update_skills = get_validated_yes_no("Do you want to update your skills?", default='n')
         if update_skills:
@@ -281,70 +429,22 @@ def collect_feedback(user_id, lacking_skills):
         'timestamp': datetime.now().isoformat()
     }
     
-    # Save comprehensive feedback
-    save_feedback(user_id, rating, 
-                 f"Skills rating: {skills_rating}/5, Training rating: {training_rating}/5, " + 
-                 f"Most helpful: {helpful_comments}, Suggestions: {improvement_suggestions}", 
-                 missing_skills)
-    
-    # Save detailed feedback to a separate file for model improvement
-    save_detailed_feedback(user_id, feedback_data)
-    
+    # Print a thank you message
     print("\nThank you for your detailed feedback!")
     print("This will help us improve our recommendation system for you and other users.")
     
-    # Check if they want to retrain the model with their feedback
-    if rating >= 4:
-        retrain_option = get_validated_yes_no("\nWould you like to contribute your feedback to improve the model? ", default='y')
-        if retrain_option:
-            print("\nThank you! Your feedback will be used to improve the model in the next training cycle.")
-            # Set a flag in the user profile to include this feedback in the next training
-            update_user_feedback_preference(user_id, include_in_training=True)
-
-def save_detailed_feedback(user_id, feedback_data):
-    """Save detailed feedback data for model improvement."""
-    feedback_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
-                               'data', 'detailed_feedback')
-    os.makedirs(feedback_dir, exist_ok=True)
+    # Ask if they want to contribute their feedback to model improvement
+    contribute = get_validated_yes_no("\nWould you like to contribute your feedback to improve the model? ", default='y')
     
-    file_path = os.path.join(feedback_dir, f"{user_id}_detailed_feedback.json")
-    
-    # Load existing feedback if any
-    existing_feedback = []
-    if os.path.exists(file_path):
-        try:
-            with open(file_path, 'r') as f:
-                existing_feedback = json.load(f)
-                if not isinstance(existing_feedback, list):
-                    existing_feedback = [existing_feedback]
-        except json.JSONDecodeError:
-            existing_feedback = []
-    
-    # Add new feedback
-    existing_feedback.append(feedback_data)
-    
-    # Save updated feedback
-    with open(file_path, 'w') as f:
-        json.dump(existing_feedback, f, indent=4)
-
-def update_user_feedback_preference(user_id, include_in_training=True):
-    """Update user preferences for including feedback in model training."""
-    user_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
-                            'data', 'users', f"{user_id}.json")
-    
-    if os.path.exists(user_file):
-        try:
-            with open(user_file, 'r') as f:
-                user_data = json.load(f)
-            
-            # Update preference
-            user_data['include_feedback_in_training'] = include_in_training
-            
-            # Save updated data
-            with open(user_file, 'w') as f:
-                json.dump(user_data, f, indent=4)
-        except Exception as e:
-            print(f"Error updating user preferences: {e}")
+    if contribute:
+        # Save feedback data
+        save_feedback(
+            user_id=user_id,
+            rating=rating,
+            comments=helpful_comments,
+            suggestions=improvement_suggestions
+        )
+        print("\nThank you! Your feedback will be used to improve the model in the next training cycle.")
 
 if __name__ == "__main__":
     main() 
