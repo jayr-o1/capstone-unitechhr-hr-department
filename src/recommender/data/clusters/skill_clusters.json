@@ -1,0 +1,513 @@
+{
+    "Data Structures": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development"
+            ]
+        },
+        {
+            "user_id": "user9",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development",
+                "Database Management"
+            ]
+        }
+    ],
+    "Algorithms": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development"
+            ]
+        },
+        {
+            "user_id": "user9",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development",
+                "Database Management"
+            ]
+        }
+    ],
+    "Version Control": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development"
+            ]
+        },
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Algorithms",
+                "Data Structures"
+            ]
+        },
+        {
+            "user_id": "user9",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development",
+                "Database Management"
+            ]
+        }
+    ],
+    "Software Testing": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development"
+            ]
+        },
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Algorithms",
+                "Data Structures"
+            ]
+        },
+        {
+            "user_id": "user9",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development",
+                "Database Management"
+            ]
+        }
+    ],
+    "Database Management": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development"
+            ]
+        },
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Algorithms",
+                "Data Structures"
+            ]
+        }
+    ],
+    "Problem Solving": [
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development"
+            ]
+        },
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Algorithms",
+                "Data Structures"
+            ]
+        },
+        {
+            "user_id": "user9",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development",
+                "Database Management"
+            ]
+        }
+    ],
+    "Data Analysis": [
+        {
+            "user_id": "user10",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Machine Learning",
+                "SQL"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics"
+            ]
+        }
+    ],
+    "Data Visualization": [
+        {
+            "user_id": "user10",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Machine Learning",
+                "SQL"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user6",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Big Data": [
+        {
+            "user_id": "user10",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Machine Learning",
+                "SQL"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user6",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Statistical Modeling": [
+        {
+            "user_id": "user10",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Machine Learning",
+                "SQL"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user6",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "SQL": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user6",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Machine Learning": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user6",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Statistics",
+                "Data Analysis"
+            ]
+        }
+    ],
+    "Cryptography": [
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        }
+    ],
+    "Security Auditing": [
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        },
+        {
+            "user_id": "user7",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Ethical Hacking",
+                "Cryptography"
+            ]
+        }
+    ],
+    "Incident Response": [
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        },
+        {
+            "user_id": "user7",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Ethical Hacking",
+                "Cryptography"
+            ]
+        }
+    ],
+    "Risk Management": [
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        },
+        {
+            "user_id": "user7",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Ethical Hacking",
+                "Cryptography"
+            ]
+        }
+    ],
+    "Security Tools": [
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        },
+        {
+            "user_id": "user7",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Ethical Hacking",
+                "Cryptography"
+            ]
+        }
+    ],
+    "Ethical Hacking": [
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        }
+    ],
+    "Infrastructure as Code": [
+        {
+            "user_id": "user4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Networking"
+            ]
+        },
+        {
+            "user_id": "user8",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "DevOps",
+                "System Administration"
+            ]
+        }
+    ],
+    "Containerization": [
+        {
+            "user_id": "user4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Networking"
+            ]
+        },
+        {
+            "user_id": "user8",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "DevOps",
+                "System Administration"
+            ]
+        }
+    ],
+    "Security": [
+        {
+            "user_id": "user4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Networking"
+            ]
+        },
+        {
+            "user_id": "user8",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "DevOps",
+                "System Administration"
+            ]
+        }
+    ],
+    "Automation": [
+        {
+            "user_id": "user4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Networking"
+            ]
+        },
+        {
+            "user_id": "user8",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "DevOps",
+                "System Administration"
+            ]
+        }
+    ],
+    "DevOps": [
+        {
+            "user_id": "user4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Networking"
+            ]
+        }
+    ],
+    "System Administration": [
+        {
+            "user_id": "user4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Networking"
+            ]
+        }
+    ],
+    "Web Development": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Algorithms",
+                "Data Structures"
+            ]
+        }
+    ],
+    "Information Security": [
+        {
+            "user_id": "user7",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Ethical Hacking",
+                "Cryptography"
+            ]
+        }
+    ],
+    "Networking": [
+        {
+            "user_id": "user8",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "DevOps",
+                "System Administration"
+            ]
+        }
+    ]
+}

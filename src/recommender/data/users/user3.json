@@ -1,0 +1,17 @@
+{
+    "user_id": "user3",
+    "preferred_specialization": "Cybersecurity",
+    "current_skills": [
+        "Network Security",
+        "Information Security"
+    ],
+    "lacking_skills": [
+        "Cryptography",
+        "Security Auditing",
+        "Incident Response",
+        "Risk Management",
+        "Security Tools",
+        "Ethical Hacking"
+    ],
+    "timestamp": "2025-04-09T10:49:12.304831"
+}

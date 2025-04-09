@@ -1,0 +1,17 @@
+{
+    "user_id": "user2",
+    "preferred_specialization": "Data Science",
+    "current_skills": [
+        "Python",
+        "Statistics"
+    ],
+    "lacking_skills": [
+        "SQL",
+        "Statistical Modeling",
+        "Data Analysis",
+        "Big Data",
+        "Data Visualization",
+        "Machine Learning"
+    ],
+    "timestamp": "2025-04-09T10:49:47.584724"
+}

@@ -1,0 +1,56 @@
+{
+    "career_paths": [
+        {
+            "title": "Software Development",
+            "required_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Database Management",
+                "Web Development",
+                "Problem Solving"
+            ]
+        },
+        {
+            "title": "Data Science",
+            "required_skills": [
+                "Python",
+                "Statistics",
+                "Machine Learning",
+                "Data Analysis",
+                "Data Visualization",
+                "SQL",
+                "Big Data",
+                "Statistical Modeling"
+            ]
+        },
+        {
+            "title": "Cybersecurity",
+            "required_skills": [
+                "Network Security",
+                "Information Security",
+                "Cryptography",
+                "Security Auditing",
+                "Incident Response",
+                "Risk Management",
+                "Security Tools",
+                "Ethical Hacking"
+            ]
+        },
+        {
+            "title": "Cloud Computing",
+            "required_skills": [
+                "Cloud Platforms",
+                "Infrastructure as Code",
+                "Containerization",
+                "Networking",
+                "Security",
+                "Automation",
+                "DevOps",
+                "System Administration"
+            ]
+        }
+    ]
+} 
