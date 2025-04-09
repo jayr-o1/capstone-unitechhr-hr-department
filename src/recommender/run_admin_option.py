@@ -11,7 +11,8 @@ from admin_dashboard import (
     view_model_status,
     retrain_model,
     run_initial_training,
-    generate_synthetic_feedback
+    generate_synthetic_feedback,
+    generate_diverse_training_data
 )
 
 def print_usage():
@@ -25,6 +26,7 @@ def print_usage():
     print("  5 - Retrain Model")
     print("  6 - Run Initial Model Training")
     print("  7 - Generate Synthetic Feedback")
+    print("  8 - Generate Diverse Training Data")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -34,7 +36,7 @@ if __name__ == "__main__":
     try:
         option = int(sys.argv[1])
     except ValueError:
-        print("Error: Option must be a number between 1 and 7")
+        print("Error: Option must be a number between 1 and 8")
         print_usage()
         sys.exit(1)
         
@@ -46,7 +48,8 @@ if __name__ == "__main__":
         4: view_model_status,
         5: retrain_model,
         6: run_initial_training,
-        7: generate_synthetic_feedback
+        7: generate_synthetic_feedback,
+        8: generate_diverse_training_data
     }
     
     if option not in options:
