@@ -1,0 +1,17 @@
+{
+    "user_id": "user5",
+    "preferred_specialization": "Software Development",
+    "current_skills": [
+        "Programming",
+        "Algorithms",
+        "Data Structures"
+    ],
+    "lacking_skills": [
+        "Version Control",
+        "Software Testing",
+        "Database Management",
+        "Web Development",
+        "Problem Solving"
+    ],
+    "timestamp": "2025-04-09T10:49:12.304831"
+}

@@ -1,0 +1,22 @@
+{
+    "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+    "preferred_specialization": "Nursing",
+    "current_skills": [
+        "IV"
+    ],
+    "lacking_skills": [
+        "Pharmacology",
+        "Infection Control",
+        "Documentation",
+        "Medical Terminology",
+        "Communication",
+        "Care Planning",
+        "Patient Assessment",
+        "Patient Education",
+        "Evidence-Based Practice",
+        "Clinical Skills",
+        "Critical Thinking",
+        "Emergency Response"
+    ],
+    "timestamp": "2025-04-09T14:02:48.161957"
+}

@@ -7,7 +7,10 @@ import {
   getEmployeeDocuments,
   uploadEmployeeDocument,
   deleteEmployeeDocument,
-  getEmployeeSkills
+  getEmployeeSkills,
+  addEmployeeSkill,
+  updateEmployeeSkill,
+  deleteEmployeeSkill
 } from '../../services/employeeService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -66,6 +69,18 @@ const EmployeeProfile = () => {
   // Document upload
   const fileInputRef = useRef(null);
   const [documentType, setDocumentType] = useState('certification');
+  const [documentDescription, setDocumentDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  
+  // Skills state
+  const [isAddingSkill, setIsAddingSkill] = useState(false);
+  const [editingSkill, setEditingSkill] = useState(null);
+  const [skillForm, setSkillForm] = useState({
+    name: '',
+    category: 'technical',
+    proficiency: 50,
+    notes: ''
+  });
   
   // Check for active tab in navigation state
   useEffect(() => {
@@ -174,30 +189,112 @@ const EmployeeProfile = () => {
     }
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const handleUploadDocument = () => {
+    // Toggle document upload form visibility
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setDocumentType('certification');
+    setDocumentDescription('');
+    setSelectedFile(null);
+    setUploading(false);
+    setError(null);
+    setSuccess(null);
+    
+    // Create a file input and trigger it
+    fileInputRef.current.click();
+  };
+  
+  // Handle file selection
+  const handleFileChange = (e) => {
+    if (e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+      
+      // Show upload form/modal
+      toast((t) => (
+        <div className="p-4">
+          <h3 className="font-bold mb-2">Upload Document</h3>
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-1">Document Type</label>
+            <select 
+              value={documentType}
+              onChange={(e) => setDocumentType(e.target.value)}
+              className="w-full p-2 border rounded"
+            >
+              <option value="certification">Certification</option>
+              <option value="resume">Resume/CV</option>
+              <option value="education">Education Document</option>
+              <option value="id">ID Document</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-1">Description</label>
+            <input 
+              type="text"
+              value={documentDescription}
+              onChange={(e) => setDocumentDescription(e.target.value)}
+              className="w-full p-2 border rounded"
+              placeholder="Brief description of the document"
+            />
+          </div>
+          <div className="mb-3">
+            <p className="text-sm">File: <span className="font-medium">{e.target.files[0].name}</span></p>
+            <p className="text-xs text-gray-500">{Math.round(e.target.files[0].size / 1024)} KB</p>
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                setSelectedFile(null);
+              }}
+              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                handleDocumentUpload();
+              }}
+              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              disabled={uploading}
+            >
+              {uploading ? 'Uploading...' : 'Upload'}
+            </button>
+          </div>
+        </div>
+      ), { 
+        duration: Infinity,
+        style: { 
+          maxWidth: '400px',
+          width: '100%'
+        }
+      });
+    }
+  };
+  
+  // Handle document upload
+  const handleDocumentUpload = async () => {
+    if (!selectedFile || !userDetails?.universityId) {
+      toast.error(!selectedFile ? 'No file selected' : 'Cannot determine your university');
+      return;
+    }
     
     try {
       setUploading(true);
       setError(null);
-      setSuccess(null);
-      
-      if (!userDetails || !userDetails.universityId) {
-        setError('User details not available');
-        setUploading(false);
-        return;
-      }
       
       const result = await uploadEmployeeDocument(
         user.uid, 
         userDetails.universityId, 
-        file,
+        selectedFile,
         documentType
       );
       
       if (result.success) {
         setSuccess('Document uploaded successfully');
+        toast.success('Document uploaded successfully');
         
         // Refresh documents
         const docsData = await getEmployeeDocuments(user.uid, userDetails.universityId);
@@ -209,14 +306,17 @@ const EmployeeProfile = () => {
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
+        
+        setSelectedFile(null);
       } else {
         setError(result.message || 'Failed to upload document');
+        toast.error(result.message || 'Failed to upload document');
       }
-      
-      setUploading(false);
     } catch (err) {
       console.error("Error uploading document:", err);
       setError("An error occurred while uploading document");
+      toast.error("An error occurred while uploading document");
+    } finally {
       setUploading(false);
     }
   };
@@ -270,20 +370,135 @@ const EmployeeProfile = () => {
     return faFileAlt;
   };
 
-  const handleAddSkill = () => {
-    toast.success('This feature will be available soon!');
-  };
-
-  const handleEditSkill = (skillId) => {
-    toast.success('Edit feature will be available soon!');
-  };
-
   const handleRemoveSkill = (skillId) => {
-    toast.success('Remove feature will be available soon!');
+    if (!window.confirm('Are you sure you want to delete this skill?')) {
+      return;
+    }
+    
+    deleteSkill(skillId);
   };
 
-  const handleUploadDocument = () => {
-    toast.success('Upload feature will be available soon!');
+  const resetSkillForm = () => {
+    setSkillForm({
+      name: '',
+      category: 'technical',
+      proficiency: 50,
+      notes: ''
+    });
+  };
+
+  const handleEditSkill = (skill) => {
+    setEditingSkill(skill);
+    setIsAddingSkill(true);
+    setSkillForm({
+      name: skill.name,
+      category: skill.category || 'technical',
+      proficiency: skill.proficiency || 50,
+      notes: skill.notes || ''
+    });
+    
+    // Scroll to the form
+    if (skillsSectionRef.current) {
+      skillsSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleAddSkill = () => {
+    setIsAddingSkill(true);
+    setEditingSkill(null);
+    resetSkillForm();
+  };
+
+  const handleCancelSkill = () => {
+    setIsAddingSkill(false);
+    setEditingSkill(null);
+    resetSkillForm();
+  };
+
+  const handleSaveSkill = async () => {
+    try {
+      setError(null);
+      setSuccess(null);
+      
+      if (!userDetails || !userDetails.universityId) {
+        setError('User details not available');
+        return;
+      }
+      
+      if (!skillForm.name) {
+        setError('Skill name is required');
+        return;
+      }
+      
+      let result;
+      
+      if (editingSkill) {
+        // Update existing skill
+        result = await updateEmployeeSkill(
+          user.uid,
+          userDetails.universityId,
+          editingSkill.id,
+          skillForm
+        );
+      } else {
+        // Add new skill
+        result = await addEmployeeSkill(
+          user.uid,
+          userDetails.universityId,
+          skillForm
+        );
+      }
+      
+      if (result.success) {
+        setSuccess(editingSkill ? 'Skill updated successfully' : 'Skill added successfully');
+        
+        // Refresh skills
+        const skillsData = await getEmployeeSkills(user.uid, userDetails.universityId);
+        if (skillsData.success) {
+          setSkills(skillsData.skills || []);
+        }
+        
+        // Reset form
+        setIsAddingSkill(false);
+        setEditingSkill(null);
+        resetSkillForm();
+      } else {
+        setError(result.message || `Failed to ${editingSkill ? 'update' : 'add'} skill`);
+      }
+    } catch (err) {
+      console.error(`Error ${editingSkill ? 'updating' : 'adding'} skill:`, err);
+      setError(`An error occurred while ${editingSkill ? 'updating' : 'adding'} skill`);
+    }
+  };
+
+  const deleteSkill = async (skillId) => {
+    try {
+      setError(null);
+      setSuccess(null);
+      
+      if (!userDetails || !userDetails.universityId) {
+        setError('User details not available');
+        return;
+      }
+      
+      const result = await deleteEmployeeSkill(
+        user.uid,
+        userDetails.universityId,
+        skillId
+      );
+      
+      if (result.success) {
+        setSuccess('Skill deleted successfully');
+        
+        // Update local state
+        setSkills(prev => prev.filter(skill => skill.id !== skillId));
+      } else {
+        setError(result.message || 'Failed to delete skill');
+      }
+    } catch (err) {
+      console.error("Error deleting skill:", err);
+      setError("An error occurred while deleting skill");
+    }
   };
 
   if (loading) {
@@ -362,42 +577,205 @@ const EmployeeProfile = () => {
       {/* Content based on active tab */}
       {activeTab === 'personal' && (
         <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
-          <h2 className="text-xl font-bold mb-4">Personal Information</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Personal Information</h2>
+            {!editMode ? (
+              <button 
+                onClick={() => setEditMode(true)} 
+                className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <FontAwesomeIcon icon={faEdit} className="mr-1" />
+                Edit Profile
+              </button>
+            ) : (
+              <div className="flex space-x-2">
+                <button 
+                  onClick={() => setEditMode(false)} 
+                  className="flex items-center text-sm bg-gray-500 text-white px-3 py-1 rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faTimes} className="mr-1" />
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveProfile} 
+                  className="flex items-center text-sm bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition-colors"
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <span>Saving...</span>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faCheck} className="mr-1" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
           
+          {success && (
+            <div className="mb-4 p-2 bg-green-100 text-green-700 rounded-lg">
+              {success}
+            </div>
+          )}
+          
+          {error && (
+            <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+          
+          {!editMode ? (
+            <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                {/* Position */}
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <FontAwesomeIcon icon={faBriefcase} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Position</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.position || 'Not specified'}</p>
+                </div>
+                
             {/* Department */}
             <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center mb-2">
                 <FontAwesomeIcon icon={faBuilding} className="text-blue-500 mr-2" />
                 <h3 className="font-medium">Department</h3>
               </div>
-              <p className="text-sm md:text-base text-gray-700">{employeeData?.department || 'Computer Science'}</p>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.department || 'Not specified'}</p>
+                </div>
+                
+                {/* Email */}
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <FontAwesomeIcon icon={faEnvelope} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Email</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.email || 'Not specified'}</p>
             </div>
             
-            {/* Position */}
+                {/* Phone */}
             <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center mb-2">
-                <FontAwesomeIcon icon={faIdBadge} className="text-blue-500 mr-2" />
-                <h3 className="font-medium">Position</h3>
+                    <FontAwesomeIcon icon={faPhone} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Phone</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.phone || 'Not specified'}</p>
+                </div>
               </div>
-              <p className="text-sm md:text-base text-gray-700">{employeeData?.position || 'Associate Professor'}</p>
+              
+              {/* Bio Section */}
+              <div className="mt-6">
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <FontAwesomeIcon icon={faUser} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Bio</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.bio || 'No bio available'}</p>
             </div>
           </div>
           
-          {/* Education Section */}
-          <h3 className="text-lg font-bold mt-6 mb-4">Education</h3>
-          <div className="space-y-4">
-            {employeeData?.education?.map((edu, index) => (
-              <div key={index} className="p-3 md:p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center mb-1">
-                  <FontAwesomeIcon icon={faGraduationCap} className="text-blue-500 mr-2" />
-                  <h4 className="font-medium">{edu.institution}</h4>
+              {/* Address Section */}
+              <div className="mt-6">
+                <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <FontAwesomeIcon icon={faBuilding} className="text-blue-500 mr-2" />
+                    <h3 className="font-medium">Address</h3>
+                  </div>
+                  <p className="text-sm md:text-base text-gray-700">{employeeData?.address || 'No address available'}</p>
                 </div>
-                <p className="text-sm md:text-base text-gray-700 ml-6">{edu.degree}</p>
-                <p className="text-xs md:text-sm text-gray-500 ml-6">{edu.year}</p>
               </div>
-            ))}
+            </>
+          ) : (
+            <form className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Department and Position are read-only */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Position</label>
+                  <input
+                    type="text"
+                    value={employeeData?.position || 'Not specified'}
+                    disabled
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm"
+                  />
+                  <small className="text-gray-500">Position cannot be changed</small>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Department</label>
+                  <input
+                    type="text"
+                    value={employeeData?.department || 'Not specified'}
+                    disabled
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm"
+                  />
+                  <small className="text-gray-500">Department cannot be changed</small>
+                </div>
+                
+                {/* Email */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                {/* Phone */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Phone</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                {/* Name */}
+                <div className="space-y-2 md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              
+              {/* Address */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Address</label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              {/* Bio */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Bio</label>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleInputChange}
+                  rows="4"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                ></textarea>
           </div>
+            </form>
+          )}
         </div>
       )}
 
@@ -405,6 +783,7 @@ const EmployeeProfile = () => {
         <div className="bg-white rounded-xl shadow-md p-4 md:p-6" ref={skillsSectionRef}>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Skills</h2>
+            {!isAddingSkill && (
             <button 
               onClick={handleAddSkill} 
               className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
@@ -412,41 +791,181 @@ const EmployeeProfile = () => {
               <FontAwesomeIcon icon={faPlus} className="mr-1" />
               Add Skill
             </button>
+            )}
           </div>
           
+          {error && (
+            <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+          
+          {success && (
+            <div className="mb-4 p-2 bg-green-100 text-green-700 rounded-lg">
+              {success}
+            </div>
+          )}
+          
+          {/* Add/Edit Skill Form */}
+          {isAddingSkill && (
+            <div className="mb-6 border border-gray-200 rounded-lg p-4">
+              <h4 className="font-medium mb-3">
+                {editingSkill ? "Edit Skill" : "Add New Skill"}
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={skillForm.category}
+                    onChange={(e) => 
+                      setSkillForm({...skillForm, category: e.target.value})
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="technical">Technical</option>
+                    <option value="soft">Soft Skill</option>
+                    <option value="language">Language</option>
+                    <option value="certification">Certification</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Skill Name*
+                  </label>
+                  <input
+                    type="text"
+                    value={skillForm.name}
+                    onChange={(e) => 
+                      setSkillForm({...skillForm, name: e.target.value})
+                    }
+                    placeholder="e.g., JavaScript, Leadership, Communication"
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Proficiency Level* ({skillForm.proficiency}%)
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={skillForm.proficiency}
+                  onChange={(e) => 
+                    setSkillForm({...skillForm, proficiency: parseInt(e.target.value)})
+                  }
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-xs mt-1 text-gray-500">
+                  <span>Beginner</span>
+                  <span>Intermediate</span>
+                  <span>Advanced</span>
+                  <span>Expert</span>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  value={skillForm.notes}
+                  onChange={(e) => 
+                    setSkillForm({...skillForm, notes: e.target.value})
+                  }
+                  placeholder="Additional details about this skill"
+                  rows="3"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                ></textarea>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={handleCancelSkill}
+                  className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveSkill}
+                  disabled={!skillForm.name}
+                  className={`px-3 py-1 rounded-lg ${
+                    skillForm.name
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  } transition`}
+                >
+                  {editingSkill ? "Update Skill" : "Add Skill"}
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Skills List */}
           <div className="space-y-4">
-            {skills.map((skill) => (
-              <div key={skill.id} className="bg-gray-50 rounded-lg p-3 md:p-4">
+            {skills.length > 0 ? (
+              skills.map((skill) => (
+                <div key={skill.id} className="bg-gray-50 rounded-lg p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-medium">{skill.name}</h3>
+                    <div>
+                      <h4 className="font-medium">{skill.name}</h4>
+                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                        {skill.category ? skill.category.charAt(0).toUpperCase() + skill.category.slice(1) : 'Technical'}
+                      </span>
+                    </div>
                   <div className="flex space-x-2">
                     <button 
-                      onClick={() => handleEditSkill(skill.id)}
-                      className="text-gray-600 hover:text-blue-600"
+                        onClick={() => handleEditSkill(skill)}
+                        className="text-blue-600 hover:text-blue-800"
                     >
                       <FontAwesomeIcon icon={faEdit} />
                     </button>
                     <button 
                       onClick={() => handleRemoveSkill(skill.id)}
-                      className="text-gray-600 hover:text-red-600"
+                        className="text-red-600 hover:text-red-800"
                     >
                       <FontAwesomeIcon icon={faTrashAlt} />
                     </button>
                   </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
                   <div 
                     className="bg-blue-600 h-2.5 rounded-full" 
                     style={{ width: `${skill.proficiency}%` }}
                   ></div>
                 </div>
-                <div className="flex justify-between text-xs mt-1">
+                  
+                  <div className="flex justify-between text-xs text-gray-500 mb-2">
                   <span>Beginner</span>
-                  <span>Proficient</span>
+                    <span>Intermediate</span>
+                    <span>Advanced</span>
                   <span>Expert</span>
+                  </div>
+                  
+                  {skill.notes && (
+                    <p className="text-sm text-gray-600 mt-2 italic">{skill.notes}</p>
+                  )}
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-6 border border-dashed border-gray-300 rounded-lg">
+                <FontAwesomeIcon icon={faGraduationCap} className="text-gray-400 text-3xl mb-2" />
+                <p className="text-gray-500">No skills added yet.</p>
+                <button 
+                  onClick={handleAddSkill}
+                  className="mt-3 text-blue-500 hover:text-blue-700 hover:underline"
+                >
+                  Add your first skill
+                </button>
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}
@@ -455,15 +974,43 @@ const EmployeeProfile = () => {
         <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Documents</h2>
+            <div>
+              {/* Hidden file input, triggered by the Upload button */}
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden"
+              />
             <button 
               onClick={handleUploadDocument} 
               className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <FontAwesomeIcon icon={faPlus} className="mr-1" />
-              Upload
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <span>Uploading...</span>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faUpload} className="mr-1" />
+                    Upload Document
+                  </>
+                )}
             </button>
+            </div>
           </div>
           
+          {documents.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <FontAwesomeIcon icon={faFileAlt} className="text-4xl mb-3" />
+              <p>No documents uploaded yet</p>
+              <button 
+                onClick={handleUploadDocument}
+                className="mt-3 text-blue-500 hover:text-blue-700 hover:underline"
+              >
+                Upload your first document
+              </button>
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead className="bg-gray-50">
@@ -483,10 +1030,21 @@ const EmployeeProfile = () => {
                         <span className="text-sm font-medium text-gray-900">{doc.name}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">{doc.type}</td>
-                    <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">{doc.uploadDate}</td>
+                      <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500 capitalize">{doc.type}</td>
+                      <td className="py-3 px-4 whitespace-nowrap text-sm text-gray-500">
+                        {doc.createdAt?.toDate ? 
+                          doc.createdAt.toDate().toLocaleDateString() : 
+                          new Date(doc.createdAt?.seconds * 1000).toLocaleDateString()}
+                      </td>
                     <td className="py-3 px-4 whitespace-nowrap text-right text-sm">
-                      <button className="text-indigo-600 hover:text-indigo-900 mr-2">View</button>
+                        <a 
+                          href={doc.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-indigo-600 hover:text-indigo-900 mr-3"
+                        >
+                          View
+                        </a>
                       <button 
                         onClick={() => handleDeleteDocument(doc.id, doc.fileName)}
                         className="text-red-600 hover:text-red-900"
@@ -499,6 +1057,7 @@ const EmployeeProfile = () => {
               </tbody>
             </table>
           </div>
+          )}
         </div>
       )}
     </div>

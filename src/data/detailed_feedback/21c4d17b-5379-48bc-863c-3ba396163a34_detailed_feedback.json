@@ -1,0 +1,23 @@
+[
+    {
+        "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
+        "rating": 5,
+        "skills_rating": 5,
+        "training_rating": 5,
+        "skill_specific_feedback": {
+            "Investigation Techniques": true,
+            "Self Defense": true,
+            "Legal Knowledge": true,
+            "Criminal Procedure": true,
+            "Firearms Training": true,
+            "De-escalation": true,
+            "Crisis Management": true,
+            "Report Writing": true
+        },
+        "helpful_comments": "skills",
+        "improvement_suggestions": "add more specialization",
+        "career_path_accurate": true,
+        "missing_skills": "none",
+        "timestamp": "2025-04-09T13:58:53.935078"
+    }
+]

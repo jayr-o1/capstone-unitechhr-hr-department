@@ -59,7 +59,7 @@ const jobDetailsData = [
         datePosted: "1 day ago",
         availableSlots: 2,
         newApplicants: false,
-        status: "Open",
+        status: "Open", 
         applicants: [
             {
                 id: 3,
