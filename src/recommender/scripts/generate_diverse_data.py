@@ -38,7 +38,12 @@ def generate_diverse_employee_data(num_samples=500):
     records = []
     
     # Create more diverse skill combinations
-    for _ in range(num_samples):
+    for i in range(num_samples):
+        # Show progress every 5% of completion
+        if i % max(1, num_samples // 20) == 0:
+            progress = (i / num_samples) * 100
+            print(f"Progress: {progress:.1f}% - Generated {i}/{num_samples} records")
+            
         # Randomly select a field
         field = random.choice(list(career_fields.keys()))
         
@@ -93,7 +98,7 @@ def generate_diverse_employee_data(num_samples=500):
         # Create the record
         record = {
             "ID": f"EMP{random.randint(10000, 99999)}",
-            "Name": f"Employee {_+1}",  # Placeholder name
+            "Name": f"Employee {i+1}",  # Placeholder name
             "Age": random.randint(22, 65),
             "Gender": random.choice(["Male", "Female", "Non-binary"]),
             "Education": random.choice(["Bachelor's", "Master's", "PhD", "High School", "Associate's"]),
@@ -107,6 +112,9 @@ def generate_diverse_employee_data(num_samples=500):
         }
         
         records.append(record)
+    
+    # Show 100% completion
+    print(f"Progress: 100% - Generated {num_samples}/{num_samples} records")
     
     # Convert to DataFrame
     df = pd.DataFrame(records)

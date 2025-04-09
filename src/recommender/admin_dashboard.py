@@ -10,6 +10,7 @@ import json
 import subprocess
 from datetime import datetime
 from collections import Counter, defaultdict
+import time
 
 # Add the parent directory to the path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -28,7 +29,13 @@ except ImportError:
 
 def clear_screen():
     """Clear the terminal screen."""
-    os.system('cls' if os.name == 'nt' else 'clear')
+    if os.name == 'nt':  # Windows
+        os.system('cls')
+    else:  # Unix/Linux/Mac
+        os.system('clear')
+    
+    # Add a small delay to ensure the screen is cleared properly
+    time.sleep(0.1)
 
 def print_header(title):
     """Print a header with a title."""
@@ -228,26 +235,18 @@ def retrain_model():
     print("\nStarting model retraining...\n")
     print("-" * 60)
     
-    # Run the retraining process
+    # Run the retraining process using a simpler approach
     try:
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        # Use subprocess.run instead of Popen for simplicity
+        result = subprocess.run(cmd, capture_output=True, text=True)
         
-        # Stream output in real-time
-        while True:
-            output = process.stdout.readline()
-            if output == '' and process.poll() is not None:
-                break
-            if output:
-                print(output.strip())
-        
-        # Get return code
-        return_code = process.poll()
+        # Display the output
+        print(result.stdout)
         
         # Check for errors
-        if return_code != 0:
-            error = process.stderr.read()
-            print(f"\nError during retraining (code {return_code}):")
-            print(error)
+        if result.returncode != 0:
+            print(f"\nError during retraining (code {result.returncode}):")
+            print(result.stderr)
     except Exception as e:
         print(f"\nError executing retraining script: {e}")
     
@@ -257,14 +256,6 @@ def retrain_model():
 def run_initial_training():
     """Run initial model training without requiring feedback data."""
     print_header("INITIAL MODEL TRAINING")
-    
-    # Check if we have the training script
-    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scripts', 'initial_model_training.py')
-    
-    if not os.path.exists(script_path):
-        print(f"Initial training script not found at: {script_path}")
-        input("\nPress Enter to continue...")
-        return
     
     print("\nThis will train a new model using synthetic data.")
     print("Note: This will overwrite any existing model.\n")
@@ -278,31 +269,74 @@ def run_initial_training():
     print("\nStarting initial model training...\n")
     print("-" * 60)
     
-    # Run the initial training process
+    # Import the model trainer directly
+    from utils.model_trainer import initial_model_training
+    import time
+    import threading
+    
+    # Function to show continuous progress indicator
+    def show_progress():
+        indicators = ['|', '/', '-', '\\']
+        i = 0
+        while not stop_event.is_set():
+            sys.stdout.write(f"\rTraining in progress {indicators[i % len(indicators)]} ")
+            sys.stdout.flush()
+            i += 1
+            time.sleep(0.2)
+        sys.stdout.write("\rTraining completed!          \n")
+        sys.stdout.flush()
+    
+    # Set up progress indicator thread
+    stop_event = threading.Event()
+    progress_thread = threading.Thread(target=show_progress)
+    progress_thread.daemon = True
+    
     try:
-        process = subprocess.Popen([sys.executable, script_path], 
-                                  stdout=subprocess.PIPE, 
-                                  stderr=subprocess.PIPE, 
-                                  text=True)
+        # Start time for tracking duration
+        start_time = time.time()
         
-        # Stream output in real-time
-        while True:
-            output = process.stdout.readline()
-            if output == '' and process.poll() is not None:
-                break
-            if output:
-                print(output.strip())
+        # Start progress indicator
+        progress_thread.start()
         
-        # Get return code
-        return_code = process.poll()
+        # Run the training directly
+        success = initial_model_training()
         
-        # Check for errors
-        if return_code != 0:
-            error = process.stderr.read()
-            print(f"\nError during initial training (code {return_code}):")
-            print(error)
+        # Calculate training duration
+        duration = time.time() - start_time
+        minutes, seconds = divmod(duration, 60)
+        
+        # Stop the progress indicator
+        stop_event.set()
+        progress_thread.join(timeout=1.0)
+        
+        if success:
+            print(f"\nModel training completed successfully! (Took {int(minutes)}m {int(seconds)}s)")
+            
+            # Evaluate the model
+            try:
+                from utils.model_trainer import evaluate_model_performance
+                print("\nEvaluating model performance:")
+                metrics = evaluate_model_performance()
+                if metrics:
+                    print(f"Model accuracy: {metrics['accuracy']:.4f}")
+                    
+                    if "classification_report" in metrics:
+                        report = metrics["classification_report"]
+                        class_names = []
+                        for class_name, class_metrics in report.items():
+                            if isinstance(class_metrics, dict):
+                                class_names.append(class_name)
+                        print(f"Trained for {len(class_names)} classes")
+            except Exception as e:
+                print(f"Error evaluating model: {e}")
+        else:
+            print("\nModel training failed. Check the logs for details.")
     except Exception as e:
-        print(f"\nError executing initial training script: {e}")
+        # Stop the progress indicator
+        stop_event.set()
+        if progress_thread.is_alive():
+            progress_thread.join(timeout=1.0)
+        print(f"\nError during initial training: {e}")
     
     print("-" * 60)
     input("\nPress Enter to continue...")
@@ -331,29 +365,18 @@ def generate_synthetic_feedback():
     print("\nStarting synthetic feedback generation...\n")
     print("-" * 60)
     
-    # Run the synthetic feedback generation process
+    # Run the synthetic feedback generation process using a simpler approach
     try:
-        process = subprocess.Popen([sys.executable, script_path], 
-                                  stdout=subprocess.PIPE, 
-                                  stderr=subprocess.PIPE, 
-                                  text=True)
+        # Use subprocess.run instead of Popen for simplicity
+        result = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
         
-        # Stream output in real-time
-        while True:
-            output = process.stdout.readline()
-            if output == '' and process.poll() is not None:
-                break
-            if output:
-                print(output.strip())
-        
-        # Get return code
-        return_code = process.poll()
+        # Display the output
+        print(result.stdout)
         
         # Check for errors
-        if return_code != 0:
-            error = process.stderr.read()
-            print(f"\nError during synthetic feedback generation (code {return_code}):")
-            print(error)
+        if result.returncode != 0:
+            print(f"\nError during synthetic feedback generation (code {result.returncode}):")
+            print(result.stderr)
     except Exception as e:
         print(f"\nError executing synthetic feedback generation script: {e}")
     
@@ -363,14 +386,6 @@ def generate_synthetic_feedback():
 def generate_diverse_training_data():
     """Generate diverse synthetic data for model training."""
     print_header("GENERATING DIVERSE TRAINING DATA")
-    
-    # Check if we have the diverse data generator script
-    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scripts', 'generate_diverse_data.py')
-    
-    if not os.path.exists(script_path):
-        print(f"Diverse data generator script not found at: {script_path}")
-        input("\nPress Enter to continue...")
-        return
     
     print("\nThis will generate diverse synthetic data for model training.")
     print("Note: This operation will overwrite any existing synthetic training data.\n")
@@ -384,50 +399,156 @@ def generate_diverse_training_data():
     print("\nStarting diverse data generation...\n")
     print("-" * 60)
     
-    # Run the diverse data generation process
+    # Import needed modules upfront
+    import os
+    import time
+    import random
+    
+    # Import the script to run directly
     try:
-        process = subprocess.Popen([sys.executable, script_path], 
-                                  stdout=subprocess.PIPE, 
-                                  stderr=subprocess.PIPE, 
-                                  text=True)
+        # Make sure we have the scripts directory in the path
+        scripts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scripts')
+        sys.path.append(scripts_dir)
         
-        # Stream output in real-time
-        while True:
-            output = process.stdout.readline()
-            if output == '' and process.poll() is not None:
-                break
-            if output:
-                print(output.strip())
-        
-        # Get return code
-        return_code = process.poll()
-        
-        # Check for errors
-        if return_code != 0:
-            error = process.stderr.read()
-            print(f"\nError during diverse data generation (code {return_code}):")
-            print(error)
+        try:
+            # First try to import using importlib
+            import importlib.util
+            script_path = os.path.join(scripts_dir, 'generate_diverse_data.py')
+            
+            if not os.path.exists(script_path):
+                print(f"Diverse data generator script not found at: {script_path}")
+                input("\nPress Enter to continue...")
+                return
+                
+            spec = importlib.util.spec_from_file_location("generate_diverse_data", script_path)
+            generate_diverse_data_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(generate_diverse_data_module)
+            
+            if hasattr(generate_diverse_data_module, 'main'):
+                # Start time for tracking duration
+                start_time = time.time()
+                
+                # Run the main function directly
+                generate_diverse_data_module.main()
+                
+                # Calculate duration
+                duration = time.time() - start_time
+                minutes, seconds = divmod(duration, 60)
+                print(f"\nData generation completed successfully! (Took {int(minutes)}m {int(seconds)}s)")
+            else:
+                print("Could not find main function in generate_diverse_data.py")
+        except Exception as import_error:
+            print(f"Error importing generate_diverse_data.py: {import_error}")
+            
+            # Fallback to asking for the number of records and running the functions directly
+            print("\nUsing fallback method to generate data:")
+            
+            try:
+                # Import required functions
+                from recommender import career_fields
+                import pandas as pd
+                
+                # Get number of samples
+                try:
+                    num_samples = int(input("\nHow many employee records to generate? (default: 500): ") or "500")
+                    if num_samples <= 0:
+                        print("Number must be positive. Using default (500).")
+                        num_samples = 500
+                except ValueError:
+                    print("Invalid input. Using default (500).")
+                    num_samples = 500
+                
+                # Define the generate_diverse_employee_data function
+                def generate_diverse_employee_data(num_samples):
+                    """Generate diverse employee data."""
+                    print(f"Generating {num_samples} diverse employee records...")
+                    
+                    # Lists to store generated data
+                    records = []
+                    
+                    # Create more diverse skill combinations
+                    for i in range(num_samples):
+                        # Show progress every 5% of records
+                        if i % max(1, num_samples // 20) == 0:
+                            progress = (i / num_samples) * 100
+                            print(f"Progress: {progress:.1f}% - Generated {i}/{num_samples} records")
+                            
+                        # Randomly select a field
+                        field = random.choice(list(career_fields.keys()))
+                        
+                        # Randomly select a career goal from the field
+                        career_goal = random.choice(career_fields[field]["roles"])
+                        field_skills = career_fields[field]["skills"]
+                        
+                        # Select skills
+                        num_skills = random.randint(3, 8)
+                        selected_skills = random.sample(field_skills, min(num_skills, len(field_skills)))
+                        skills_string = ", ".join(selected_skills)
+                        
+                        # Create record
+                        record = {
+                            "ID": f"EMP{random.randint(10000, 99999)}",
+                            "Name": f"Employee {i+1}",
+                            "Age": random.randint(22, 65),
+                            "Field": field,
+                            "Career Goal": career_goal,
+                            "Skills": skills_string,
+                            "Experience": f"{random.randint(0, 20)}+ years"
+                        }
+                        records.append(record)
+                    
+                    # Show completion
+                    print(f"Progress: 100% - Generated {num_samples}/{num_samples} records")
+                    
+                    # Convert to DataFrame
+                    df = pd.DataFrame(records)
+                    return df
+                
+                # Make sure data directory exists
+                data_dir = os.path.join("data")
+                os.makedirs(data_dir, exist_ok=True)
+                
+                # Generate and save employee data
+                start_time = time.time()
+                employee_data = generate_diverse_employee_data(num_samples)
+                employee_data_path = os.path.join(data_dir, "synthetic_employee_data.csv")
+                employee_data.to_csv(employee_data_path, index=False)
+                print(f"Saved {len(employee_data)} employee records to {employee_data_path}")
+                
+                # Calculate duration
+                duration = time.time() - start_time
+                minutes, seconds = divmod(duration, 60)
+                print(f"\nData generation completed successfully! (Took {int(minutes)}m {int(seconds)}s)")
+                
+            except Exception as e:
+                print(f"Error in fallback data generation: {e}")
     except Exception as e:
-        print(f"\nError executing diverse data generation script: {e}")
+        print(f"\nError generating diverse data: {e}")
     
     print("-" * 60)
     input("\nPress Enter to continue...")
 
 def display_menu():
     """Display the main menu options."""
-    print_header("ADMIN DASHBOARD - MAIN MENU")
+    # Print the entire menu as a single string to avoid buffer issues
+    menu = """
+============================================================
+ADMIN DASHBOARD - MAIN MENU
+============================================================
+
+1. View Model Status
+2. View User Statistics
+3. View All Feedback
+4. View Skill Clusters
+5. Generate Synthetic Feedback
+6. Retrain Model
+7. Run Initial Model Training
+8. Generate Diverse Training Data
+9. Exit
+"""
+    print(menu)
     
-    print("1. View Model Status")
-    print("2. View User Statistics")
-    print("3. View All Feedback")
-    print("4. View Skill Clusters")
-    print("5. Generate Synthetic Feedback")
-    print("6. Retrain Model")
-    print("7. Run Initial Model Training")
-    print("8. Generate Diverse Training Data")
-    print("9. Exit")
-    
-    return get_validated_integer("\nSelect an option (1-9): ", 1, 9)
+    return get_validated_integer("Select an option (1-9): ", 1, 9)
 
 def main():
     """Main function to run the admin dashboard."""

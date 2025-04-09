@@ -605,15 +605,12 @@ def evaluate_model_performance():
             # Extract experience as a numerical value
             experience_values = test_data["Experience"].str.extract("(\d+)").astype(float)
             
-            # Combine features
+            # Combine features - use same column naming as in training
             X = pd.DataFrame(X_skills.toarray())
+            X.columns = [str(col) for col in X.columns]  # Use string representation as in training
             
-            # Ensure consistent feature names across training and inference
-            # Use the same naming convention as in the training code
-            X.columns = [f'skill_{i}' for i in range(X.shape[1])]
-            
-            # Add experience column
-            X['experience'] = experience_values
+            # Add experience column with same column name as in training
+            X[str(X.shape[1])] = experience_values.values  # Add as last column with string index
             
             # Check for and handle NaN values
             if X.isna().any().any():
@@ -623,16 +620,16 @@ def evaluate_model_performance():
             # Transform using PCA if available
             if pca is not None and hasattr(pca, 'transform'):
                 try:
-                    # Ensure feature count matches
-                    if X.shape[1] != pca.n_features_in_:
-                        print(f"Warning: Feature count mismatch during evaluation. PCA expects {pca.n_features_in_} features but got {X.shape[1]}.")
-                        raise ValueError("Feature count mismatch")
                     X_test = pca.transform(X)
                 except Exception as e:
                     print(f"Could not apply PCA during evaluation: {e}")
                     # Create a new PCA with appropriate dimensions
                     print("Creating new PCA for evaluation...")
-                    n_components = min(X.shape[0]-1, X.shape[1]-1, 3)
+                    # Use the same number of components as the original PCA if possible
+                    if hasattr(pca, 'n_components_'):
+                        n_components = min(X.shape[0]-1, X.shape[1]-1, pca.n_components_)
+                    else:
+                        n_components = min(X.shape[0]-1, X.shape[1]-1, 3)
                     print(f"Using {n_components} PCA components based on evaluation dataset size")
                     eval_pca = PCA(n_components=n_components, random_state=42)
                     X_test = eval_pca.fit_transform(X)
@@ -647,7 +644,15 @@ def evaluate_model_performance():
                 label_encoder.fit(employee_data["Field"])
             
             # Encode the target variable
-            y_true = label_encoder.transform(test_data["Field"])
+            try:
+                y_true = label_encoder.transform(test_data["Field"])
+            except ValueError as e:
+                print(f"Error encoding target variable: {e}")
+                # Handle new categories by retraining the encoder
+                print("Retraining label encoder with test data categories...")
+                all_categories = set(employee_data["Field"].unique()).union(set(test_data["Field"].unique()))
+                label_encoder.fit(list(all_categories))
+                y_true = label_encoder.transform(test_data["Field"])
             
             # Predict
             # Handle different model APIs
@@ -692,7 +697,8 @@ def evaluate_model_performance():
             # Return basic info even if evaluation failed
             return {
                 "accuracy": 0.0,
-                "trained_at": trained_at,
+                "trained_at": trained_at, 
+                "training_data_shape": training_data_shape,
                 "feedback_entries_used": feedback_entries_used,
                 "error": str(e),
                 "note": "Model evaluation failed, but basic information is available"
