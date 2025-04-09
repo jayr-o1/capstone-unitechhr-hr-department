@@ -1,0 +1,112 @@
+{
+    "feedback_entries": [
+        {
+            "user_id": "4276b77c-c44e-498a-bda0-f539cd8cb12a",
+            "timestamp": "2025-04-09T10:18:47.225065",
+            "skills": "Python, Data Science, DevOps, Cybersecurity, SQL, Machine Learning",
+            "experience": "0+ years",
+            "recommendations": {
+                "Recommended Field": "Computer Science",
+                "Field Confidence": 99.98,
+                "Top 3 Career Paths": [
+                    "System Administrator",
+                    "Cloud Architect",
+                    "Network Engineer"
+                ],
+                "Required Skills": [
+                    "Python, Data Science, DevOps, Cybersecurity, SQL, Machine Learning",
+                    "Data Science, Python, SQL",
+                    "Machine Learning, Python, UI/UX Design, SQL"
+                ],
+                "Confidence Percentages": [
+                    50.0,
+                    66.67,
+                    75.0
+                ],
+                "Lacking Skills": [
+                    [
+                        "Data Science",
+                        "DevOps",
+                        "Cybersecurity"
+                    ],
+                    [
+                        "Data Science"
+                    ],
+                    [
+                        "UI/UX Design"
+                    ]
+                ],
+                "Training Recommendations": [
+                    [
+                        "Data Science Specialization (Coursera)",
+                        "DevOps Engineer Nanodegree (Udacity)",
+                        "Cybersecurity Fundamentals (edX)"
+                    ],
+                    [
+                        "Data Science Specialization (Coursera)"
+                    ],
+                    [
+                        "Training for UI/UX Design (Check online platforms like Coursera, Udemy, or edX)"
+                    ]
+                ]
+            },
+            "feedback": {
+                "selected_path": "System Administrator",
+                "rating": 5,
+                "comments": ""
+            }
+        }
+    ],
+    "improved_recommendations": {
+        "4276b77c-c44e-498a-bda0-f539cd8cb12a": {
+            "skills": "Python, Data Science, DevOps, Cybersecurity, SQL, Machine Learning",
+            "experience": "0+ years",
+            "recommendation": {
+                "Recommended Field": "Computer Science",
+                "Field Confidence": 99.98,
+                "Top 3 Career Paths": [
+                    "System Administrator",
+                    "Cloud Architect",
+                    "Network Engineer"
+                ],
+                "Required Skills": [
+                    "Python, Data Science, DevOps, Cybersecurity, SQL, Machine Learning",
+                    "Data Science, Python, SQL",
+                    "Machine Learning, Python, UI/UX Design, SQL"
+                ],
+                "Confidence Percentages": [
+                    50.0,
+                    66.67,
+                    75.0
+                ],
+                "Lacking Skills": [
+                    [
+                        "Data Science",
+                        "DevOps",
+                        "Cybersecurity"
+                    ],
+                    [
+                        "Data Science"
+                    ],
+                    [
+                        "UI/UX Design"
+                    ]
+                ],
+                "Training Recommendations": [
+                    [
+                        "Data Science Specialization (Coursera)",
+                        "DevOps Engineer Nanodegree (Udacity)",
+                        "Cybersecurity Fundamentals (edX)"
+                    ],
+                    [
+                        "Data Science Specialization (Coursera)"
+                    ],
+                    [
+                        "Training for UI/UX Design (Check online platforms like Coursera, Udemy, or edX)"
+                    ]
+                ]
+            },
+            "last_updated": "2025-04-09T10:18:47.225065"
+        }
+    }
+}

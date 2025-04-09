@@ -1,22 +1,25 @@
-# Import necessary libraries
+"""
+Main recommender module for career recommendations.
+This module integrates ML models with user input to provide career recommendations.
+"""
+
+import os
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import PCA
-from imblearn.over_sampling import SMOTE
-from xgboost import XGBClassifier
-from sklearn.metrics import accuracy_score, classification_report, f1_score
-import joblib
-from datetime import datetime
-import os
 
-# Load synthetic datasets
-employee_data = pd.read_csv("synthetic_employee_data.csv")
-career_path_data = pd.read_csv("synthetic_career_path_data.csv")
+# Import utilities
+from utils.data_processing import parse_resume, calculate_total_experience
+from utils.feedback import load_feedback_db, get_user_feedback
 
-# Define career fields with specific skills and roles
+# Define paths
+MODEL_PATH = "models/career_path_recommendation_model.pkl"
+EMPLOYEE_DATA_PATH = "data/synthetic_employee_data.csv"
+CAREER_PATH_DATA_PATH = "data/synthetic_career_path_data.csv"
+
+# Career fields data
 career_fields = {
     "Computer Science": {
         "roles": [
@@ -177,71 +180,82 @@ career_fields = {
     }
 }
 
-# Step 1: Group career goals into broader fields
-employee_data["Field"] = employee_data["Career Goal"].map(
-    {goal: field for field, goals in career_fields.items() for goal in goals["roles"]}
-)
+# Global variables
+model = None
+tfidf = None
+pca = None
+label_encoder = None
+employee_data = None
+career_path_data = None
 
-# Step 2: Use TF-IDF for skills
-tfidf = TfidfVectorizer(max_features=100)  # Limit to 100 features to reduce dimensionality
-X_skills = tfidf.fit_transform(employee_data["Skills"])
+def load_model_and_data():
+    """
+    Load the trained model and dataset for making recommendations.
+    
+    Returns:
+        bool: True if loading was successful, False otherwise
+    """
+    global model, tfidf, pca, label_encoder, employee_data, career_path_data
+    
+    try:
+        # Load the trained model
+        model = joblib.load(MODEL_PATH)
+        
+        # Load datasets
+        employee_data = pd.read_csv(EMPLOYEE_DATA_PATH)
+        career_path_data = pd.read_csv(CAREER_PATH_DATA_PATH)
+        
+        # Prepare TF-IDF vectorizer
+        tfidf = TfidfVectorizer(max_features=100)
+        X_skills = tfidf.fit_transform(employee_data["Skills"])
+        
+        # TODO: Load label encoder from the model file
+        # For now, recreate it
+        from sklearn.preprocessing import LabelEncoder
+        label_encoder = LabelEncoder()
+        employee_data["Field"] = employee_data["Career Goal"].map(
+            {goal: field for field, goals in career_fields.items() for goal in goals["roles"]}
+        )
+        label_encoder.fit(employee_data["Field"])
+        
+        # Prepare PCA
+        X = pd.concat([pd.DataFrame(X_skills.toarray()), employee_data["Experience"].str.extract("(\d+)").astype(float)], axis=1)
+        pca = PCA(n_components=min(38, X.shape[1]))
+        pca.fit(X)
+        
+        return True
+    except Exception as e:
+        print(f"Error loading model and data: {e}")
+        return False
 
-# Step 3: Convert experience to numerical values
-employee_data["Experience"] = employee_data["Experience"].str.extract("(\d+)").astype(float)
-
-# Step 4: Combine features
-X = pd.concat([pd.DataFrame(X_skills.toarray()), employee_data["Experience"]], axis=1)
-
-# Ensure all column names are strings
-X.columns = X.columns.astype(str)
-
-# Step 5: Encode the target variable (y) using LabelEncoder
-label_encoder = LabelEncoder()
-y = label_encoder.fit_transform(employee_data["Field"])  # Encode string labels to integers
-
-# Step 6: Split data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Step 7: Address imbalanced data using SMOTE
-smote = SMOTE(random_state=42)
-X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
-
-# Step 8: Reduce dimensionality using PCA
-pca = PCA(n_components=min(38, X_train_res.shape[1]))
-X_train_pca = pca.fit_transform(X_train_res)
-X_test_pca = pca.transform(X_test)
-
-# Step 9: Train XGBoost model
-model = XGBClassifier(n_estimators=200, max_depth=10, learning_rate=0.1, random_state=42)
-model.fit(X_train_pca, y_train_res)
-
-# Step 10: Evaluate the model
-y_pred = model.predict(X_test_pca)
-
-# Decode predictions back to original labels for evaluation
-y_pred_labels = list(map(str, label_encoder.inverse_transform(y_pred)))
-y_test_labels = list(map(str, label_encoder.inverse_transform(y_test)))
-
-print("Accuracy:", accuracy_score(y_test_labels, y_pred_labels))
-print("F1-Score:", f1_score(y_test_labels, y_pred_labels, average="weighted"))
-print("\nClassification Report:\n", classification_report(y_test_labels, y_pred_labels))
-
-# Step 11: Save the model for future use
-joblib.dump(model, "career_path_recommendation_model.pkl")
-print("Model saved as 'career_path_recommendation_model.pkl'")
-
-# Function to recommend field and career paths
-def recommend_field_and_career_paths(skills, experience):
+def recommend_field_and_career_paths(skills, experience, user_id=None):
     """
     Recommends a field, top 3 career paths, required skills, lacking skills, and training recommendations.
 
     Args:
         skills (str): Comma-separated string of skills (e.g., "Python, SQL, Machine Learning").
         experience (str): Experience in years (e.g., "5+ years").
+        user_id (str, optional): User ID for personalized recommendations.
 
     Returns:
         dict: A dictionary containing the recommended field, top 3 career paths, required skills, lacking skills, and training recommendations.
     """
+    # First check if we have personalized recommendations for this user
+    if user_id:
+        feedback_db = load_feedback_db()
+        if user_id in feedback_db["improved_recommendations"]:
+            personalized_recs = feedback_db["improved_recommendations"][user_id]
+            # Check if the skills and experience are similar to what we've seen before
+            # Simple implementation - could be enhanced with similarity metrics
+            if personalized_recs["skills"] == skills and personalized_recs["experience"] == experience:
+                print(f"Using personalized recommendations for user {user_id}")
+                return personalized_recs["recommendation"]
+    
+    # Ensure model and data are loaded
+    if model is None or tfidf is None or pca is None:
+        if not load_model_and_data():
+            raise Exception("Failed to load model and data")
+    
     # Convert skills to TF-IDF features
     skills_tfidf = tfidf.transform([skills])
 
@@ -250,7 +264,9 @@ def recommend_field_and_career_paths(skills, experience):
 
     # Combine features
     X_input = pd.concat([pd.DataFrame(skills_tfidf.toarray()), pd.Series(experience_num)], axis=1)
-    X_input.columns = X.columns  # Ensure column names match
+    
+    # Ensure column names match
+    X_input.columns = [str(col) for col in X_input.columns]
 
     # Reduce dimensionality using PCA
     X_input_pca = pca.transform(X_input)
@@ -297,7 +313,8 @@ def recommend_field_and_career_paths(skills, experience):
     for i, (career_path, req_skills) in enumerate(zip(recommended_career_paths, required_skills)):
         req_skills_set = set(req_skills.split(", "))
         lacking_skills = req_skills_set - input_skills_set
-        lacking_skills_list.append(lacking_skills)
+        # Convert the set to a list for JSON serialization
+        lacking_skills_list.append(list(lacking_skills))
 
         # Recommend training for lacking skills
         training_recommendations = []
@@ -333,102 +350,16 @@ def recommend_field_and_career_paths(skills, experience):
         "Training Recommendations": training_recommendations_list  # Training recommendations for lacking skills
     }
 
-# Function to parse a resume
-def parse_resume(file_path):
-    """
-    Parses a resume file and extracts name, skills, experiences, and certifications.
-
-    Args:
-        file_path (str): Path to the resume file.
-
-    Returns:
-        dict: A dictionary containing the parsed resume data.
-    """
-    with open(file_path, "r") as file:
-        content = file.read()
-
-    resume_data = {
-        "Name": "",
-        "Skills": [],
-        "Experiences": [],
-        "Certifications": []
-    }
-
-    # Split the content into sections
-    sections = content.split("\n\n")
-
-    for section in sections:
-        if section.startswith("Name:"):
-            resume_data["Name"] = section.replace("Name:", "").strip()
-        elif section.startswith("Skills:"):
-            skills = section.replace("Skills:", "").strip().split("\n")
-            resume_data["Skills"] = [skill.strip("- ").strip() for skill in skills if skill.strip()]
-        elif section.startswith("Experiences:"):
-            experiences = section.replace("Experiences:", "").strip().split("\n\n")
-            for exp in experiences:
-                if exp.strip():
-                    parts = exp.strip().split("\n")
-                    if len(parts) == 2:
-                        title_company = parts[0].strip()
-                        duration = parts[1].strip()
-                        if "|" in title_company:
-                            title, company = title_company.split("|")
-                            start_date, end_date = duration.split(" - ")
-                            resume_data["Experiences"].append({
-                                "Title": title.strip(),
-                                "Company": company.strip(),
-                                "Start Date": start_date.strip(),
-                                "End Date": end_date.strip()
-                            })
-        elif section.startswith("Certifications:"):
-            certifications = section.replace("Certifications:", "").strip().split("\n")
-            for cert in certifications:
-                if cert.strip():
-                    if "|" in cert:
-                        cert_name, issuer = cert.strip().split("|")
-                        resume_data["Certifications"].append({
-                            "Name": cert_name.strip(),
-                            "Issuer": issuer.strip()
-                        })
-
-    return resume_data
-
-def calculate_total_experience(experiences):
-    """
-    Calculates the total years of experience from a list of experiences.
-
-    Args:
-        experiences (list): List of experiences, each containing "Start Date" and "End Date".
-
-    Returns:
-        float: Total years of experience.
-    """
-    total_experience = 0
-
-    for exp in experiences:
-        start_date = datetime.strptime(exp["Start Date"], "%B %Y")
-
-        # Handle 'Present' as the current date
-        if exp["End Date"].lower() == "present":
-            end_date = datetime.today()
-        else:
-            end_date = datetime.strptime(exp["End Date"], "%B %Y")
-
-        duration = (end_date - start_date).days / 365.25  # Convert days to years
-        total_experience += duration
-
-    return total_experience
-
-# Function to recommend career paths from a resume
-def recommend_career_from_resume(file_path):
+def recommend_career_from_resume(file_path, user_id=None):
     """
     Recommends a field, top 3 career paths, required skills, lacking skills, and training recommendations based on the skills and experience in a resume.
 
     Args:
         file_path (str): Path to the resume file.
+        user_id (str, optional): User ID for personalized recommendations.
 
     Returns:
-        dict: A dictionary containing the recommended field, top 3 career paths, required skills, lacking skills, and training recommendations.
+        tuple: A tuple containing (recommendations, skills, experience)
     """
     # Parse the resume
     resume_data = parse_resume(file_path)
@@ -442,20 +373,6 @@ def recommend_career_from_resume(file_path):
     experience_str = f"{int(total_experience)}+ years"  # Format experience as "X+ years"
 
     # Get recommendations
-    recommendations = recommend_field_and_career_paths(", ".join(skills), experience_str)
+    recommendations = recommend_field_and_career_paths(", ".join(skills), experience_str, user_id)
 
-    return recommendations
-
-# Example usage
-resume_file_path = "resume_1.txt"
-recommendations = recommend_career_from_resume(resume_file_path)
-
-# Print the recommendations with confidence percentages, lacking skills, and training recommendations
-print("\nAccording to your profile, you're more suited to be in the field of", recommendations["Recommended Field"])
-print(f"Confidence in Field Recommendation: {recommendations['Field Confidence']}%")
-print("Here are the top 3 career paths you can take:")
-for i, (career_path, skills, confidence, lacking_skills, training) in enumerate(zip(recommendations["Top 3 Career Paths"], recommendations["Required Skills"], recommendations["Confidence Percentages"], recommendations["Lacking Skills"], recommendations["Training Recommendations"]), 1):
-    print(f"{i}. {career_path} (Confidence: {confidence}%)")
-    print(f"   Required Skills: {skills}")
-    print(f"   Lacking Skills: {', '.join(lacking_skills) if lacking_skills else 'None'}")
-    print(f"   Training Recommendations: {', '.join(training) if training else 'None'}")
+    return recommendations, ", ".join(skills), experience_str 
