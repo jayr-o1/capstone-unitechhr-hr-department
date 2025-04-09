@@ -195,7 +195,15 @@
             ]
         }
     ],
-    "Algorithms": [
+    "Problem Solving": [
+        {
+            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Mobile Development"
+            ]
+        },
         {
             "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
             "preferred_specialization": "Software Development",
@@ -211,6 +219,60 @@
             "current_skills": [
                 "Programming",
                 "Web Development"
+            ]
+        },
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Algorithms",
+                "Data Structures"
+            ]
+        },
+        {
+            "user_id": "user9",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development",
+                "Database Management"
+            ]
+        }
+    ],
+    "Version Control": [
+        {
+            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Mobile Development"
+            ]
+        },
+        {
+            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Node JS",
+                "React JS",
+                "Javascript"
+            ]
+        },
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development"
+            ]
+        },
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Algorithms",
+                "Data Structures"
             ]
         },
         {
@@ -225,98 +287,13 @@
     ],
     "Software Testing": [
         {
-            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
+            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
             "preferred_specialization": "Software Development",
             "current_skills": [
-                "Node JS",
-                "React JS",
-                "Javascript"
-            ]
-        },
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development"
-            ]
-        },
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Algorithms",
-                "Data Structures"
-            ]
-        },
-        {
-            "user_id": "user9",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
                 "Web Development",
-                "Database Management"
-            ]
-        }
-    ],
-    "Database Management": [
-        {
-            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Node JS",
-                "React JS",
-                "Javascript"
+                "Mobile Development"
             ]
         },
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development"
-            ]
-        },
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Algorithms",
-                "Data Structures"
-            ]
-        }
-    ],
-    "Data Structures": [
-        {
-            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Node JS",
-                "React JS",
-                "Javascript"
-            ]
-        },
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development"
-            ]
-        },
-        {
-            "user_id": "user9",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development",
-                "Database Management"
-            ]
-        }
-    ],
-    "Problem Solving": [
         {
             "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
             "preferred_specialization": "Software Development",
@@ -355,6 +332,14 @@
     ],
     "Programming": [
         {
+            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Mobile Development"
+            ]
+        },
+        {
             "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
             "preferred_specialization": "Software Development",
             "current_skills": [
@@ -364,7 +349,15 @@
             ]
         }
     ],
-    "Web Development": [
+    "Data Structures": [
+        {
+            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Mobile Development"
+            ]
+        },
         {
             "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
             "preferred_specialization": "Software Development",
@@ -375,16 +368,32 @@
             ]
         },
         {
-            "user_id": "user5",
+            "user_id": "user1",
             "preferred_specialization": "Software Development",
             "current_skills": [
                 "Programming",
-                "Algorithms",
-                "Data Structures"
+                "Web Development"
+            ]
+        },
+        {
+            "user_id": "user9",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development",
+                "Database Management"
             ]
         }
     ],
-    "Version Control": [
+    "Database Management": [
+        {
+            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Mobile Development"
+            ]
+        },
         {
             "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
             "preferred_specialization": "Software Development",
@@ -410,6 +419,33 @@
                 "Algorithms",
                 "Data Structures"
             ]
+        }
+    ],
+    "Algorithms": [
+        {
+            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Mobile Development"
+            ]
+        },
+        {
+            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Node JS",
+                "React JS",
+                "Javascript"
+            ]
+        },
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Web Development"
+            ]
         },
         {
             "user_id": "user9",
@@ -421,7 +457,75 @@
             ]
         }
     ],
-    "Incident Response": [
+    "Web Development": [
+        {
+            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Node JS",
+                "React JS",
+                "Javascript"
+            ]
+        },
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Algorithms",
+                "Data Structures"
+            ]
+        }
+    ],
+    "Information Security": [
+        {
+            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Node JS"
+            ]
+        },
+        {
+            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user7",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Ethical Hacking",
+                "Cryptography"
+            ]
+        }
+    ],
+    "Network Security": [
+        {
+            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Node JS"
+            ]
+        },
+        {
+            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python"
+            ]
+        }
+    ],
+    "Security Tools": [
+        {
+            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Node JS"
+            ]
+        },
         {
             "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
             "preferred_specialization": "Cybersecurity",
@@ -449,6 +553,13 @@
     ],
     "Cryptography": [
         {
+            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Node JS"
+            ]
+        },
+        {
             "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
@@ -461,20 +572,18 @@
             "current_skills": [
                 "Network Security",
                 "Information Security"
-            ]
-        }
-    ],
-    "Network Security": [
-        {
-            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python"
             ]
         }
     ],
     "Security Auditing": [
         {
+            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Node JS"
+            ]
+        },
+        {
             "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
@@ -487,24 +596,6 @@
             "current_skills": [
                 "Network Security",
                 "Information Security"
-            ]
-        },
-        {
-            "user_id": "user7",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Ethical Hacking",
-                "Cryptography"
-            ]
-        }
-    ],
-    "Information Security": [
-        {
-            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python"
             ]
         },
         {
@@ -519,31 +610,12 @@
     ],
     "Risk Management": [
         {
-            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
-                "Python"
+                "Node JS"
             ]
         },
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Information Security"
-            ]
-        },
-        {
-            "user_id": "user7",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Ethical Hacking",
-                "Cryptography"
-            ]
-        }
-    ],
-    "Security Tools": [
         {
             "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
             "preferred_specialization": "Cybersecurity",
@@ -571,6 +643,13 @@
     ],
     "Ethical Hacking": [
         {
+            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Node JS"
+            ]
+        },
+        {
             "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
@@ -583,6 +662,39 @@
             "current_skills": [
                 "Network Security",
                 "Information Security"
+            ]
+        }
+    ],
+    "Incident Response": [
+        {
+            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Node JS"
+            ]
+        },
+        {
+            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security"
+            ]
+        },
+        {
+            "user_id": "user7",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Ethical Hacking",
+                "Cryptography"
             ]
         }
     ],

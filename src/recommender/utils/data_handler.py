@@ -62,7 +62,7 @@ def process_feedback_data(feedback_data):
     for entry in feedback_data.get("feedback_entries", []):
         # Extract features from the entry
         skills = entry.get("skills", "")
-        experience = entry.get("experience", "")
+        experience = entry.get("experience", "0+ years")
         
         # Skip entries with empty skills or experience
         if not skills or not experience:
@@ -77,6 +77,13 @@ def process_feedback_data(feedback_data):
         except (ValueError, TypeError):
             # Default to 0 if conversion fails
             exp_numeric = 0
+        
+        # Ensure skills is a string
+        if not isinstance(skills, str):
+            try:
+                skills = ", ".join(skills) if isinstance(skills, list) else str(skills)
+            except:
+                skills = ""
         
         # Combine features
         feature = {

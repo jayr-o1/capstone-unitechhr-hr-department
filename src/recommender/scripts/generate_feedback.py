@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 # Add the parent directory to the path so we can import the recommender module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.feedback import load_feedback_db, save_feedback_db
+from utils.feedback_handler import load_feedback_db, save_feedback_db
 from utils.data_loader import load_user_preferences
 from recommender import recommend_field_and_career_paths
 

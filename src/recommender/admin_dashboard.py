@@ -360,43 +360,110 @@ def generate_synthetic_feedback():
     print("-" * 60)
     input("\nPress Enter to continue...")
 
-def main_menu():
-    """Display the main menu and handle user choices."""
-    while True:
+def generate_diverse_training_data():
+    """Generate diverse synthetic data for model training."""
+    print_header("GENERATING DIVERSE TRAINING DATA")
+    
+    # Check if we have the diverse data generator script
+    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scripts', 'generate_diverse_data.py')
+    
+    if not os.path.exists(script_path):
+        print(f"Diverse data generator script not found at: {script_path}")
+        input("\nPress Enter to continue...")
+        return
+    
+    print("\nThis will generate diverse synthetic data for model training.")
+    print("Note: This operation will overwrite any existing synthetic training data.\n")
+    
+    confirm = get_validated_string("\nDo you want to continue? (y/n): ", required=True).lower()
+    if confirm != 'y':
+        print("Operation cancelled.")
+        input("\nPress Enter to continue...")
+        return
+    
+    print("\nStarting diverse data generation...\n")
+    print("-" * 60)
+    
+    # Run the diverse data generation process
+    try:
+        process = subprocess.Popen([sys.executable, script_path], 
+                                  stdout=subprocess.PIPE, 
+                                  stderr=subprocess.PIPE, 
+                                  text=True)
+        
+        # Stream output in real-time
+        while True:
+            output = process.stdout.readline()
+            if output == '' and process.poll() is not None:
+                break
+            if output:
+                print(output.strip())
+        
+        # Get return code
+        return_code = process.poll()
+        
+        # Check for errors
+        if return_code != 0:
+            error = process.stderr.read()
+            print(f"\nError during diverse data generation (code {return_code}):")
+            print(error)
+    except Exception as e:
+        print(f"\nError executing diverse data generation script: {e}")
+    
+    print("-" * 60)
+    input("\nPress Enter to continue...")
+
+def display_menu():
+    """Display the main menu options."""
+    print_header("ADMIN DASHBOARD - MAIN MENU")
+    
+    print("1. View Model Status")
+    print("2. View User Statistics")
+    print("3. View All Feedback")
+    print("4. View Skill Clusters")
+    print("5. Generate Synthetic Feedback")
+    print("6. Retrain Model")
+    print("7. Run Initial Model Training")
+    print("8. Generate Diverse Training Data")
+    print("9. Exit")
+    
+    return get_validated_integer("\nSelect an option (1-9): ", 1, 9)
+
+def main():
+    """Main function to run the admin dashboard."""
+    # Set working directory to the recommender root
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    
+    print("\nWelcome to the Career Recommender Admin Dashboard\n")
+    
+    run_dashboard = True
+    while run_dashboard:
+        # Clear screen for better UI
         clear_screen()
-        print_header("ADMIN DASHBOARD")
-        
-        print("1. View All Feedback")
-        print("2. View User Statistics")
-        print("3. View Skill Clusters")
-        print("4. View Model Status")
-        print("5. Retrain Model")
-        print("6. Run Initial Model Training")
-        print("7. Generate Synthetic Feedback")
-        print("8. Exit")
-        
-        choice = get_validated_integer("\nEnter your choice (1-8): ", 1, 8)
+        choice = display_menu()
         
         if choice == 1:
-            view_all_feedback()
+            view_model_status()
         elif choice == 2:
             view_user_statistics()
         elif choice == 3:
-            view_skill_clusters()
+            view_all_feedback()
         elif choice == 4:
-            view_model_status()
+            view_skill_clusters()
         elif choice == 5:
-            retrain_model()
-        elif choice == 6:
-            run_initial_training()
-        elif choice == 7:
             generate_synthetic_feedback()
+        elif choice == 6:
+            retrain_model()
+        elif choice == 7:
+            run_initial_training()
         elif choice == 8:
-            print("\nExiting Admin Dashboard. Goodbye!")
-            break
+            generate_diverse_training_data()
+        elif choice == 9:
+            run_dashboard = False
+            print("\nExiting Admin Dashboard...")
         else:
-            print("\nInvalid choice. Please try again.")
+            print("Invalid option. Please try again.")
             input("\nPress Enter to continue...")
 
 if __name__ == "__main__":
-    main_menu() 
+    main() 

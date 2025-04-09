@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.model_trainer import retrain_model, evaluate_model_performance
-from utils.feedback import load_feedback_db
+from utils.feedback_handler import load_feedback_db
 
 def should_retrain(last_trained_date, feedback_count, min_days=7, min_feedback=10):
     """

@@ -1,0 +1,22 @@
+[
+    {
+        "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
+        "rating": 5,
+        "skills_rating": 5,
+        "training_rating": 5,
+        "skill_specific_feedback": {
+            "Problem Solving": true,
+            "Version Control": true,
+            "Software Testing": true,
+            "Programming": true,
+            "Data Structures": true,
+            "Database Management": true,
+            "Algorithms": true
+        },
+        "helpful_comments": "5",
+        "improvement_suggestions": "Show the skills",
+        "career_path_accurate": true,
+        "missing_skills": "",
+        "timestamp": "2025-04-09T13:22:20.037133"
+    }
+]

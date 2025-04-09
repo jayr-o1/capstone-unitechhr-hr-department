@@ -20,7 +20,7 @@ import shutil
 import traceback  # Add traceback module for error handling
 
 # Import utilities
-from utils.feedback import load_feedback_db
+from utils.feedback_handler import load_feedback_db
 
 # Define paths
 MODEL_PATH = "models/career_path_recommendation_model.pkl"
@@ -315,7 +315,14 @@ def retrain_model(feedback_file=None, verbose=True):
                 print("Using existing TF-IDF vectorizer...")
             # Ensure no None or NaN values in skills list
             clean_skills_list = [str(s).lower() if s is not None else "" for s in skills_list]
-            skills_features = tfidf.transform(clean_skills_list)
+            try:
+                skills_features = tfidf.transform(clean_skills_list)
+            except Exception as e:
+                if verbose:
+                    print(f"Error transforming skills with existing TF-IDF: {e}")
+                    print("Creating new TF-IDF vectorizer instead...")
+                tfidf = TfidfVectorizer(lowercase=True, stop_words='english')
+                skills_features = tfidf.fit_transform(clean_skills_list)
         
         if verbose:
             print(f"Created skills features matrix with shape {skills_features.shape}")
@@ -336,15 +343,19 @@ def retrain_model(feedback_file=None, verbose=True):
         
         # Create DataFrame with features
         X = pd.DataFrame(skills_features.toarray())
+        
+        # Ensure consistent feature names across training and inference
+        # Rename all features with a prefix to avoid numeric-only column names
+        # which can cause errors when columns are accessed
+        X.columns = [f'skill_{i}' for i in range(X.shape[1])]
+        
         # Add experience column
         X['experience'] = experience_values_processed
         
-        # Convert all column names to string (to ensure type consistency)
-        X.columns = X.columns.astype(str)
-        
         # Check for and handle NaN values
         if X.isna().any().any():
-            print(f"Warning: Found {X.isna().sum().sum()} NaN values in evaluation feature matrix. Filling with 0.")
+            if verbose:
+                print(f"Warning: Found {X.isna().sum().sum()} NaN values in feature matrix. Filling with 0.")
             X.fillna(0, inplace=True)
         
         if verbose:
@@ -595,11 +606,14 @@ def evaluate_model_performance():
             experience_values = test_data["Experience"].str.extract("(\d+)").astype(float)
             
             # Combine features
-            X = pd.concat([pd.DataFrame(X_skills.toarray()), experience_values], axis=1)
-            X.columns = [str(col) for col in X.columns]
+            X = pd.DataFrame(X_skills.toarray())
             
-            # Convert all column names to string (to ensure type consistency)
-            X.columns = X.columns.astype(str)
+            # Ensure consistent feature names across training and inference
+            # Use the same naming convention as in the training code
+            X.columns = [f'skill_{i}' for i in range(X.shape[1])]
+            
+            # Add experience column
+            X['experience'] = experience_values
             
             # Check for and handle NaN values
             if X.isna().any().any():

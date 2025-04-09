@@ -13,7 +13,7 @@ import random
 
 # Import utilities
 from utils.data_processing import parse_resume, calculate_total_experience
-from utils.feedback import load_feedback_db, get_user_feedback
+from utils.feedback_handler import load_feedback_db, get_user_feedback
 
 # Define paths
 MODEL_PATH = "models/career_path_recommendation_model.pkl"
@@ -268,7 +268,7 @@ def recommend_field_and_career_paths(skills, experience, user_id=None):
     # First check if we have personalized recommendations for this user
     if user_id:
         feedback_db = load_feedback_db()
-        if user_id in feedback_db["improved_recommendations"]:
+        if user_id in feedback_db.get("improved_recommendations", {}):
             personalized_recs = feedback_db["improved_recommendations"][user_id]
             # Check if the skills and experience are similar to what we've seen before
             # Simple implementation - could be enhanced with similarity metrics
@@ -282,20 +282,52 @@ def recommend_field_and_career_paths(skills, experience, user_id=None):
             raise Exception("Failed to load model and data")
     
     # Convert skills to TF-IDF features
+    # Ensure skills is a string
+    if not isinstance(skills, str):
+        skills = ", ".join(skills) if isinstance(skills, list) else str(skills)
+    
+    # Handle potentially empty skills
+    if not skills.strip():
+        skills = "none"
+    
     skills_tfidf = tfidf.transform([skills])
 
-    # Convert experience to numerical value
-    experience_num = float(experience.strip("+ years"))
+    # Convert experience to numerical value with better error handling
+    try:
+        # Remove "+" and "years" for consistent extraction
+        exp_value = experience.replace("+", "").replace("years", "").strip()
+        # Convert to numeric
+        experience_num = float(exp_value)
+    except (ValueError, TypeError, AttributeError):
+        # Default to 0 if conversion fails
+        print(f"Warning: Could not parse experience value '{experience}', using 0 as default")
+        experience_num = 0.0
 
-    # Combine features
-    X_input = pd.concat([pd.DataFrame(skills_tfidf.toarray()), pd.Series(experience_num)], axis=1)
+    # Create feature DataFrame with proper column names
+    X_skills_array = skills_tfidf.toarray()
+    X_skills_df = pd.DataFrame(X_skills_array)
     
-    # Ensure column names match
-    X_input.columns = [str(col) for col in range(X_input.shape[1])]
-
-    # Reduce dimensionality using PCA
-    X_input_pca = pca.transform(X_input)
-
+    # Use consistent feature naming for skills columns
+    X_skills_df.columns = [f'skill_{i}' for i in range(X_skills_df.shape[1])]
+    
+    # Add experience column
+    X_input = X_skills_df.copy()
+    X_input['experience'] = experience_num
+    
+    # Check for and handle NaN values
+    if X_input.isna().any().any():
+        print(f"Warning: Found {X_input.isna().sum().sum()} NaN values in input features, filling with 0")
+        X_input.fillna(0, inplace=True)
+    
+    # Apply PCA transformation
+    try:
+        X_input_pca = pca.transform(X_input)
+    except Exception as e:
+        print(f"Warning: Error during PCA transformation: {e}")
+        print("Using original features without PCA")
+        # If PCA fails, use the original features directly
+        X_input_pca = X_input.values
+    
     # Predict field and get probabilities
     try:
         # Try standard predict_proba method first
