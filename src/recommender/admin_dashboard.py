@@ -206,14 +206,6 @@ def retrain_model():
     """Retrain the recommendation model using accumulated feedback."""
     print_header("MODEL RETRAINING")
     
-    # Check if we have the retraining script
-    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scripts', 'retrain_model.py')
-    
-    if not os.path.exists(script_path):
-        print(f"Retraining script not found at: {script_path}")
-        input("\nPress Enter to continue...")
-        return
-    
     # Ask user for retraining parameters
     force_retrain = get_validated_string("\nForce retraining regardless of conditions? (y/n): ", required=True).lower() == 'y'
     
@@ -224,31 +216,142 @@ def retrain_model():
         threshold = 1  # Minimum value to force retraining
         days = 0  # Minimum value to force retraining
     
-    # Build command
-    cmd = [sys.executable, script_path]
-    
-    if force_retrain:
-        cmd.append('--force')
-    else:
-        cmd.extend(['--threshold', str(threshold), '--days', str(days)])
-    
     print("\nStarting model retraining...\n")
     print("-" * 60)
     
-    # Run the retraining process using a simpler approach
-    try:
-        # Use subprocess.run instead of Popen for simplicity
-        result = subprocess.run(cmd, capture_output=True, text=True)
+    # Import the model trainer and feedback handler directly
+    from utils.model_trainer import retrain_model as model_retrain, evaluate_model_performance
+    from utils.feedback_handler import get_all_feedback
+    import time
+    import threading
+    
+    # Get current feedback count
+    feedback_entries = get_all_feedback()
+    print(f"Current feedback entries: {len(feedback_entries)}")
+    
+    # Check current model metrics
+    metrics = evaluate_model_performance()
+    if metrics:
+        print(f"Model last trained on: {metrics.get('trained_at', 'Unknown').split('T')[0]}")
         
-        # Display the output
-        print(result.stdout)
+        # Calculate days since last training
+        try:
+            last_trained = datetime.fromisoformat(metrics.get('trained_at'))
+            days_since = (datetime.now() - last_trained).days
+            print(f"Days since last training: {days_since}")
+        except (ValueError, TypeError):
+            days_since = float('inf')
+            print("Days since last training: Unknown")
         
-        # Check for errors
-        if result.returncode != 0:
-            print(f"\nError during retraining (code {result.returncode}):")
-            print(result.stderr)
-    except Exception as e:
-        print(f"\nError executing retraining script: {e}")
+        print(f"Current model accuracy: {metrics.get('accuracy', 0):.4f}")
+    else:
+        print("No existing model found or evaluation failed.")
+        days_since = float('inf')
+    
+    # Check if retraining is needed
+    if force_retrain:
+        print("\nForcing model retraining...")
+        should_retrain = True
+    elif len(feedback_entries) < threshold:
+        print(f"\nNot enough feedback entries for retraining (need {threshold}, have {len(feedback_entries)}).")
+        should_retrain = False
+    elif days_since < days:
+        print(f"\nModel was trained recently (within {days_since} days, threshold is {days} days).")
+        should_retrain = False
+    else:
+        print(f"\nRetraining conditions met: {len(feedback_entries)} feedback entries and {days_since} days since last training.")
+        should_retrain = True
+    
+    # Function to show continuous progress indicator
+    def show_progress():
+        indicators = ['|', '/', '-', '\\']
+        i = 0
+        phases = [
+            "Loading model components",
+            "Processing feedback data",
+            "Preparing features",
+            "Training model",
+            "Evaluating performance",
+            "Saving updated model"
+        ]
+        current_phase = 0
+        
+        while not stop_event.is_set():
+            phase_text = phases[current_phase % len(phases)]
+            sys.stdout.write(f"\rRetraining in progress {indicators[i % len(indicators)]} {phase_text}... ")
+            sys.stdout.flush()
+            i += 1
+            
+            # Change phase every few iterations to simulate progress through different stages
+            if i % 20 == 0:
+                current_phase = (current_phase + 1) % len(phases)
+                
+            time.sleep(0.2)
+        sys.stdout.write("\rRetraining completed!                                           \n")
+        sys.stdout.flush()
+    
+    # Retrain the model if needed
+    if should_retrain:
+        # Start time for tracking duration
+        start_time = time.time()
+        
+        # Set up progress indicator thread
+        stop_event = threading.Event()
+        progress_thread = threading.Thread(target=show_progress)
+        progress_thread.daemon = True
+        
+        try:
+            # Start progress indicator
+            progress_thread.start()
+            
+            # Create a simple mechanism to track progress across threads
+            progress_info = {'current_step': 'Initializing', 'percentage': 0}
+            
+            def progress_callback(step, percent=None):
+                """Update progress information during retraining"""
+                progress_info['current_step'] = step
+                if percent is not None:
+                    progress_info['percentage'] = percent
+                # Print specific update messages when key steps complete
+                if percent is not None and percent % 25 == 0:
+                    # Write to a new line to avoid interference with spinner
+                    print(f"\n>> {step} - {percent}% complete")
+            
+            # Run retraining directly with progress callback
+            success = model_retrain(verbose=False, progress_callback=progress_callback)
+            
+            # Calculate duration
+            duration = time.time() - start_time
+            minutes, seconds = divmod(duration, 60)
+            
+            # Stop progress indicator
+            stop_event.set()
+            progress_thread.join(timeout=1.0)
+            
+            if success:
+                print(f"\nModel retraining completed successfully! (Took {int(minutes)}m {int(seconds)}s)")
+                
+                # Show new model metrics
+                new_metrics = evaluate_model_performance()
+                if new_metrics:
+                    print(f"\nNew model accuracy: {new_metrics.get('accuracy', 0):.4f}")
+                    print(f"Feedback entries used: {new_metrics.get('feedback_entries_used', 0)}")
+                    
+                    # Compare with old metrics
+                    if metrics:
+                        old_accuracy = metrics.get('accuracy', 0)
+                        accuracy_change = new_metrics.get('accuracy', 0) - old_accuracy
+                        print(f"Accuracy change: {accuracy_change:+.4f}")
+            else:
+                print("\nModel retraining failed.")
+        except Exception as e:
+            # Stop the progress indicator
+            stop_event.set()
+            if progress_thread.is_alive():
+                progress_thread.join(timeout=1.0)
+            print(f"\nError during retraining: {e}")
+    else:
+        print("\nSkipping model retraining based on conditions.")
     
     print("-" * 60)
     input("\nPress Enter to continue...")

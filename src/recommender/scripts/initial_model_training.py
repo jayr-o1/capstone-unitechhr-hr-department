@@ -12,91 +12,107 @@ from datetime import datetime
 # Add the parent directory to the path so we can import the utils module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.model_trainer import initial_model_training, evaluate_model_performance
+from utils.model_trainer import initial_model_training, evaluate_model
 
-def print_progress_spinner(duration=0.1):
-    """Print a simple progress spinner to indicate ongoing work."""
+def print_progress_spinner(duration=0.1, running=None):
+    """
+    Print a simple progress spinner to indicate ongoing work.
+    
+    Args:
+        duration (float): Time between spinner frames
+        running (list): A single-element list with a boolean to control the spinner,
+                       where [True] means continue spinning and [False] means stop
+    """
     chars = ['|', '/', '-', '\\']
-    for char in chars:
-        sys.stdout.write('\r' + 'Processing ' + char + ' ')
+    i = 0
+    # If running is not provided, spin only once
+    if running is None:
+        for char in chars:
+            sys.stdout.write('\r' + 'Processing ' + char + ' ')
+            sys.stdout.flush()
+            time.sleep(duration)
+    else:
+        # Continue spinning while running[0] is True
+        while running[0]:
+            char = chars[i % len(chars)]
+            sys.stdout.write('\r' + 'Processing ' + char + ' ')
+            sys.stdout.flush()
+            time.sleep(duration)
+            i += 1
+        # Clear the spinner line when done
+        sys.stdout.write('\r' + ' ' * 20 + '\r')
         sys.stdout.flush()
-        time.sleep(duration)
 
 def main():
-    """Main function to run initial model training."""
-    # Set working directory to the recommender root
-    os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    """
+    Main function to perform initial model training using synthetic data.
     
-    print("=" * 60)
-    print("CAREER RECOMMENDER SYSTEM - INITIAL MODEL TRAINING")
-    print("=" * 60)
+    This script should be run only once to create the initial model.
+    For model updates, use the retrain_with_feedback script.
     
-    print("\nThis will train a new model using synthetic data.")
-    print("Note: This will overwrite any existing model.")
+    Returns:
+        int: 0 for success, 1 for failure
+    """
+    # Get the current date and time for training timestamp
+    training_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    confirm = input("\nDo you want to continue? (y/n): ").strip().lower()
-    if confirm != 'y':
-        print("Operation cancelled.")
+    print("===== Career Recommender System - Initial Model Training =====")
+    print(f"Training started at: {training_date}")
+    print("\nWARNING: This will create or overwrite any existing model.")
+    print("It should only be run once to initialize the system.")
+    print("For model updates, use the retrain_with_feedback script instead.")
+    
+    # Confirm with the user before proceeding
+    confirm = input("\nDo you want to proceed with the initial model training? (y/n): ")
+    if confirm.lower() != 'y':
+        print("Training aborted.")
         return 1
     
-    print("\nStarting initial model training...")
-    
-    # Indicate progress while training
-    print("\nLoading data and preparing for training...")
-    
-    # Create a background progress indicator in case training takes long
-    progress_thread = None
-    try:
-        import threading
-        
-        # Function to show continuous progress indicator
-        def show_progress():
-            indicators = ['|', '/', '-', '\\']
-            i = 0
-            while not stop_event.is_set():
-                sys.stdout.write(f"\rTraining in progress {indicators[i % len(indicators)]} ")
-                sys.stdout.flush()
-                i += 1
-                time.sleep(0.2)
-            sys.stdout.write("\rTraining completed!          \n")
-            sys.stdout.flush()
-        
-        stop_event = threading.Event()
-        progress_thread = threading.Thread(target=show_progress)
-        progress_thread.daemon = True
-        progress_thread.start()
-    except ImportError:
-        # Simple fallback if threading is not available
-        print("Training in progress...")
-        progress_thread = None
-        stop_event = None
-    
-    # Start time for tracking duration
+    # Start the timer to measure training duration
     start_time = time.time()
     
-    # Run the training
-    success = initial_model_training()
+    print("\nStarting initial model training with synthetic data...")
     
-    # Calculate training duration
-    duration = time.time() - start_time
-    minutes, seconds = divmod(duration, 60)
+    # Start a thread to display a progress spinner
+    import threading
+    spinner_running = [True]  # Use a list for a mutable object that can be modified from other scopes
+    spinner_thread = threading.Thread(target=print_progress_spinner, args=(0.1, spinner_running))
+    spinner_thread.daemon = True
+    spinner_thread.start()
     
-    # Stop the progress indicator
-    if stop_event:
-        stop_event.set()
-    if progress_thread:
-        progress_thread.join(timeout=1.0)
+    try:
+        # Perform the initial model training
+        success = initial_model_training(verbose=True)
+        
+        # Stop the spinner
+        spinner_running[0] = False
+        spinner_thread.join(timeout=1.0)
+    except Exception as e:
+        # Stop the spinner in case of exception
+        spinner_running[0] = False
+        try:
+            spinner_thread.join(timeout=1.0)
+        except:
+            pass
+        print(f"\nError occurred during model training: {str(e)}")
+        return 1
+        
+    # Calculate the training duration
+    end_time = time.time()
+    duration = end_time - start_time
+    minutes = duration / 60
+    seconds = duration % 60
     
     if success:
         print(f"\nModel training completed successfully! (Took {int(minutes)}m {int(seconds)}s)")
         
         # Evaluate the model
         print("\nEvaluating model performance:")
-        metrics = evaluate_model_performance()
+        # Use the evaluate_model function with verbose=True to show detailed progress
+        metrics = evaluate_model(verbose=True)
         
         if metrics:
-            print(f"Model accuracy: {metrics.get('accuracy', 0):.4f}")
-            print(f"Model trained at: {metrics.get('trained_at', 'Unknown')}")
+            # Progress visualization will be handled by the evaluate_model function
             
             # If we have class-specific metrics, display them
             if "classification_report" in metrics:
@@ -110,6 +126,10 @@ def main():
                     print(f"  Precision: {avg.get('precision', 0):.4f}")
                     print(f"  Recall: {avg.get('recall', 0):.4f}")
                     print(f"  F1-score: {avg.get('f1-score', 0):.4f}")
+                    
+                # Display confusion matrix if available
+                if "confusion_matrix" in metrics:
+                    print("\nConfusion Matrix available in the returned metrics")
         
         print("\nYou can now use the recommender system with the new model.")
         return 0

@@ -1,129 +1,134 @@
 #!/usr/bin/env python3
 """
-Model retraining script for the career recommender system.
-This script retrains the model based on accumulated user feedback.
+Retraining script for the career recommender system.
+This script retrains the model using accumulated feedback data.
 """
 
 import os
 import sys
 import argparse
+import time
 from datetime import datetime, timedelta
 
-# Add the parent directory to the path so we can import the recommender module
+# Add the parent directory to the path so we can import the utils module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.model_trainer import retrain_model, evaluate_model_performance
-from utils.feedback_handler import load_feedback_db
-
-def should_retrain(last_trained_date, feedback_count, min_days=7, min_feedback=10):
-    """
-    Determine if the model should be retrained based on time elapsed and feedback received.
-    
-    Args:
-        last_trained_date (datetime): When the model was last trained
-        feedback_count (int): Number of feedback entries available
-        min_days (int): Minimum days between retraining
-        min_feedback (int): Minimum feedback entries to trigger retraining
-        
-    Returns:
-        bool: True if model should be retrained
-    """
-    # Check if we have the minimum required feedback
-    if feedback_count < min_feedback:
-        return False
-    
-    # Check if minimum time has elapsed since last training
-    today = datetime.now()
-    days_since_training = (today - last_trained_date).days
-    
-    return days_since_training >= min_days
+from utils.feedback_handler import get_all_feedback
 
 def main():
     """Main function to run model retraining."""
+    # Set working directory to the recommender root
+    os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Retrain the career recommendation model')
     parser.add_argument('--force', action='store_true', help='Force retraining regardless of conditions')
-    parser.add_argument('--threshold', type=int, default=10, help='Minimum feedback entries required for retraining')
+    parser.add_argument('--threshold', type=int, default=10, help='Minimum feedback entries for retraining')
     parser.add_argument('--days', type=int, default=7, help='Minimum days between retraining')
     args = parser.parse_args()
-    
-    # Set working directory to the recommender root
-    os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     
     print("=" * 60)
     print("CAREER RECOMMENDER SYSTEM - MODEL RETRAINING")
     print("=" * 60)
     
-    # Load feedback database to check counts
-    feedback_db = load_feedback_db()
-    feedback_entries = feedback_db.get("feedback_entries", [])
-    feedback_count = len(feedback_entries)
+    # Get current feedback count
+    feedback_entries = get_all_feedback()
+    print(f"Current feedback entries: {len(feedback_entries)}")
     
-    print(f"Current feedback entries: {feedback_count}")
-    
-    # Get last trained date from model evaluation
+    # Check current model metrics
     metrics = evaluate_model_performance()
-    
-    if metrics and "trained_at" in metrics:
+    if metrics:
+        print(f"Model last trained on: {metrics.get('trained_at', 'Unknown').split('T')[0]}")
+        
+        # Calculate days since last training
         try:
-            last_trained_str = metrics["trained_at"]
-            last_trained_date = datetime.fromisoformat(last_trained_str)
-            days_since = (datetime.now() - last_trained_date).days
-            
-            print(f"Model last trained on: {last_trained_date.strftime('%Y-%m-%d %H:%M:%S')}")
+            last_trained = datetime.fromisoformat(metrics.get('trained_at'))
+            days_since = (datetime.now() - last_trained).days
             print(f"Days since last training: {days_since}")
-            print(f"Current model accuracy: {metrics['accuracy']:.4f}")
-            
-            if args.force:
-                print("\nForcing model retraining...")
-                # Use mock_feedback.json for reliable retraining
-                mock_feedback_path = os.path.join('data', 'mock_feedback.json')
-                success = retrain_model(feedback_file=mock_feedback_path, verbose=True)
-            else:
-                # Check if we should retrain
-                if should_retrain(last_trained_date, feedback_count, args.days, args.threshold):
-                    print("\nRetraining conditions met. Retraining model...")
-                    # Use mock_feedback.json for reliable retraining
-                    mock_feedback_path = os.path.join('data', 'mock_feedback.json')
-                    success = retrain_model(feedback_file=mock_feedback_path, verbose=True)
-                else:
-                    print("\nRetraining conditions not met. Skipping retraining.")
-                    if feedback_count < args.threshold:
-                        print(f"Need at least {args.threshold} feedback entries (currently have {feedback_count}).")
-                    if days_since < args.days:
-                        print(f"Need at least {args.days} days since last training (currently {days_since} days).")
-                    return 0
-        except (ValueError, TypeError) as e:
-            print(f"Error parsing last training date: {e}")
-            print("Proceeding with retraining...")
-            # Use mock_feedback.json for reliable retraining
-            mock_feedback_path = os.path.join('data', 'mock_feedback.json')
-            success = retrain_model(feedback_file=mock_feedback_path, verbose=True)
+        except (ValueError, TypeError):
+            days_since = float('inf')
+            print("Days since last training: Unknown")
+        
+        print(f"Current model accuracy: {metrics.get('accuracy', 0):.4f}")
     else:
-        print("No existing model found or model metrics unavailable.")
-        print("Proceeding with retraining...")
-        # Use mock_feedback.json for reliable retraining
-        mock_feedback_path = os.path.join('data', 'mock_feedback.json')
-        success = retrain_model(feedback_file=mock_feedback_path, verbose=True)
+        print("No existing model found or evaluation failed.")
+        days_since = float('inf')
     
-    # Evaluate the model after retraining
-    if success:
-        print("\nModel retrained successfully!")
-        
-        new_metrics = evaluate_model_performance()
-        if new_metrics:
-            print(f"New model accuracy: {new_metrics['accuracy']:.4f}")
-            
-            # Compare with previous metrics if available
-            if metrics and "accuracy" in metrics:
-                accuracy_change = new_metrics["accuracy"] - metrics["accuracy"]
-                print(f"Accuracy change: {accuracy_change:.4f} ({'+' if accuracy_change >= 0 else ''}{accuracy_change * 100:.2f}%)")
-        
-        print("\nRetraining complete!")
-        return 0
+    # Check if retraining is needed
+    if args.force:
+        print("\nForcing model retraining...")
+        should_retrain = True
+    elif len(feedback_entries) < args.threshold:
+        print(f"\nNot enough feedback entries for retraining (need {args.threshold}, have {len(feedback_entries)}).")
+        should_retrain = False
+    elif days_since < args.days:
+        print(f"\nModel was trained recently (within {days_since} days, threshold is {args.days} days).")
+        should_retrain = False
     else:
-        print("\nModel retraining failed or was skipped.")
-        return 1
+        print(f"\nRetraining conditions met: {len(feedback_entries)} feedback entries and {days_since} days since last training.")
+        should_retrain = True
+    
+    # Retrain the model if needed
+    if should_retrain:
+        # Start time for tracking duration
+        start_time = time.time()
+        
+        # Create progress indicator
+        def show_progress():
+            indicators = ['|', '/', '-', '\\']
+            i = 0
+            while True:
+                sys.stdout.write(f"\rRetraining in progress {indicators[i % len(indicators)]} ")
+                sys.stdout.flush()
+                i += 1
+                time.sleep(0.2)
+        
+        # Try to start progress thread
+        try:
+            import threading
+            stop_event = threading.Event()
+            progress_thread = threading.Thread(target=show_progress)
+            progress_thread.daemon = True
+            progress_thread.start()
+        except ImportError:
+            progress_thread = None
+            stop_event = None
+        
+        # Run retraining
+        success = retrain_model(verbose=True)
+        
+        # Stop progress indicator
+        if progress_thread and stop_event:
+            stop_event.set()
+            progress_thread.join(timeout=1.0)
+        
+        # Calculate duration
+        duration = time.time() - start_time
+        minutes, seconds = divmod(duration, 60)
+        
+        if success:
+            print(f"\nModel retraining completed successfully! (Took {int(minutes)}m {int(seconds)}s)")
+            
+            # Show new model metrics
+            new_metrics = evaluate_model_performance()
+            if new_metrics:
+                print(f"\nNew model accuracy: {new_metrics.get('accuracy', 0):.4f}")
+                print(f"Feedback entries used: {new_metrics.get('feedback_entries_used', 0)}")
+                
+                # Compare with old metrics
+                if metrics:
+                    old_accuracy = metrics.get('accuracy', 0)
+                    accuracy_change = new_metrics.get('accuracy', 0) - old_accuracy
+                    print(f"Accuracy change: {accuracy_change:+.4f}")
+            
+            return 0
+        else:
+            print("\nModel retraining failed or was skipped.")
+            return 1
+    else:
+        print("\nSkipping model retraining based on conditions.")
+        return 0
 
 if __name__ == "__main__":
     sys.exit(main()) 

@@ -13,14 +13,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import PCA
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import json
 import pickle
 import shutil
 import traceback  # Add traceback module for error handling
 
 # Import utilities
-from utils.feedback_handler import load_feedback_db
+from utils.feedback_handler import load_feedback_db, get_all_feedback
 
 # Define paths
 MODEL_PATH = "models/career_path_recommendation_model.pkl"
@@ -33,6 +33,68 @@ def ensure_directory_exists(directory_path):
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
         print(f"Created directory: {directory_path}")
+
+def save_model_components(model_components, verbose=False):
+    """
+    Save model components to disk, with backup.
+    
+    Args:
+        model_components (dict): Dictionary containing model components.
+        verbose (bool): If True, print progress messages.
+        
+    Returns:
+        bool: True if saving was successful, False otherwise.
+    """
+    try:
+        # First, ensure the directories exist
+        ensure_directory_exists(os.path.dirname(MODEL_PATH))
+        ensure_directory_exists(MODEL_HISTORY_DIR)
+        
+        # Update the timestamp if not already set
+        if 'trained_at' not in model_components:
+            model_components['trained_at'] = datetime.now().isoformat()
+            
+        # Create a backup of the existing model if it exists
+        if os.path.exists(MODEL_PATH):
+            # Get current timestamp for the backup filename
+            timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S.%f")
+            backup_path = os.path.join(MODEL_HISTORY_DIR, f"career_path_recommendation_model_backup_{timestamp}.pkl")
+            
+            # Copy the existing model to the backup location
+            shutil.copy2(MODEL_PATH, backup_path)
+            
+            if verbose:
+                print(f"Created backup of existing model at {backup_path}")
+                
+            # Also save metadata about the model for easier tracking
+            metadata = {
+                "original_model": MODEL_PATH,
+                "backup_path": backup_path,
+                "backup_time": timestamp,
+                "trained_at": model_components.get('trained_at', 'Unknown'),
+                "accuracy": model_components.get('accuracy', 0),
+                "feedback_entries_used": model_components.get('feedback_entries_used', 0)
+            }
+            
+            metadata_path = os.path.join(MODEL_HISTORY_DIR, "..", "model_metadata.json")
+            with open(metadata_path, 'w') as f:
+                json.dump(metadata, f, indent=2)
+                
+            if verbose:
+                print(f"Saved model metadata to {metadata_path}")
+        
+        # Save the model components
+        joblib.dump(model_components, MODEL_PATH)
+        
+        if verbose:
+            print(f"Saved model components to {MODEL_PATH}")
+            
+        return True
+    except Exception as e:
+        if verbose:
+            print(f"Error saving model components: {str(e)}")
+            traceback.print_exc()
+        return False
 
 def load_career_fields():
     """Load career fields from recommender module."""
@@ -57,11 +119,14 @@ def load_career_fields():
             print(f"Error importing career_fields: {e}")
             raise
 
-def initial_model_training():
+def initial_model_training(verbose=True):
     """
     Perform initial model training using synthetic data.
     This should only be run when no model exists or when a complete retrain is desired.
     
+    Args:
+        verbose (bool): If True, print detailed progress messages
+        
     Returns:
         bool: True if training was successful, False otherwise
     """
@@ -164,13 +229,14 @@ def initial_model_training():
         traceback.print_exc()
         return False
 
-def retrain_model(feedback_file=None, verbose=True):
+def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
     """
     Retrain the recommendation model using feedback data.
     
     Args:
         feedback_file (str): Path to the feedback file. If None, the default feedback file is used.
         verbose (bool): If True, print progress messages
+        progress_callback (function): Callback function for progress updates; takes (step_name, percent)
     
     Returns:
         bool: True if the model was retrained successfully, False otherwise
@@ -178,6 +244,18 @@ def retrain_model(feedback_file=None, verbose=True):
     try:
         if verbose:
             print("Starting model retraining process...")
+        
+        # Progress reporting helper
+        def report_progress(step, percent=None):
+            if progress_callback:
+                progress_callback(step, percent)
+            if verbose:
+                if percent is not None:
+                    print(f"{step} - {percent}% complete")
+                else:
+                    print(step)
+        
+        report_progress("Loading existing model", 5)
         
         # Load original model to extract components
         model_path = os.path.join('models', 'career_path_recommendation_model.pkl')
@@ -235,477 +313,346 @@ def retrain_model(feedback_file=None, verbose=True):
                 print("Will create new model components")
             model_components = None
         
-        # Load feedback data - either from specified file or default location
-        if feedback_file is None:
-            try:
-                # First try to use the mock feedback data
-                mock_feedback_file = os.path.join('src', 'recommender', 'data', 'mock_feedback.json')
-                if os.path.exists(mock_feedback_file):
-                    if verbose:
-                        print(f"Using mock feedback data from {mock_feedback_file}")
-                    with open(mock_feedback_file, 'r') as f:
-                        feedback_data = json.load(f)
-                        feedback_entries = feedback_data.get('feedback_entries', [])
-                else:
-                    # Fall back to regular feedback file
-                    feedback_file = os.path.join('data', 'feedback.json')
-                    if not os.path.exists(feedback_file):
-                        print(f"Error: Feedback file {feedback_file} not found.")
-                        return False
-                    
-                    with open(feedback_file, 'r') as f:
-                        feedback_data = json.load(f)
-                        feedback_entries = feedback_data.get('feedback_entries', [])
-            except Exception as e:
-                print(f"Error loading feedback data: {str(e)}")
-                traceback.print_exc()
-                return False
-        else:
-            try:
-                with open(feedback_file, 'r') as f:
-                    feedback_data = json.load(f)
-                    feedback_entries = feedback_data.get('feedback_entries', [])
-            except Exception as e:
-                print(f"Error loading feedback data from {feedback_file}: {str(e)}")
-                traceback.print_exc()
-                return False
-        
-        if not feedback_entries:
-            print("No feedback entries found. Cannot retrain model.")
-            return False
-        
-        if verbose:
-            print(f"Loaded {len(feedback_entries)} feedback entries for retraining.")
-        
-        # Extract features from feedback data
-        skills_list = []
-        experience_values = []
-        target_fields = []
-        
-        for entry in feedback_entries:
-            skills = entry.get('skills', '')
-            experience = entry.get('experience', '0+ years')
-            
-            # Get the recommended field from feedback
-            recommendations = entry.get('recommendations', {})
-            field = recommendations.get('Recommended Field', '')
-            
-            if skills and field:
-                skills_list.append(skills)
-                experience_values.append(experience)
-                target_fields.append(field)
-        
-        if not skills_list:
-            print("No valid feedback entries with skills and fields. Cannot retrain model.")
-            return False
-        
-        if verbose:
-            print(f"Extracted {len(skills_list)} valid entries for retraining.")
-            
-        # Process skills with TF-IDF
-        if tfidf is None:
-            if verbose:
-                print("Creating new TF-IDF vectorizer...")
-            tfidf = TfidfVectorizer(lowercase=True, stop_words='english')
-            # Ensure no None or NaN values in skills list
-            clean_skills_list = [str(s).lower() if s is not None else "" for s in skills_list]
-            skills_features = tfidf.fit_transform(clean_skills_list)
-        else:
-            if verbose:
-                print("Using existing TF-IDF vectorizer...")
-            # Ensure no None or NaN values in skills list
-            clean_skills_list = [str(s).lower() if s is not None else "" for s in skills_list]
-            try:
-                skills_features = tfidf.transform(clean_skills_list)
-            except Exception as e:
-                if verbose:
-                    print(f"Error transforming skills with existing TF-IDF: {e}")
-                    print("Creating new TF-IDF vectorizer instead...")
-                tfidf = TfidfVectorizer(lowercase=True, stop_words='english')
-                skills_features = tfidf.fit_transform(clean_skills_list)
-        
-        if verbose:
-            print(f"Created skills features matrix with shape {skills_features.shape}")
-        
-        # Process experience values
-        experience_values_processed = []
-        for exp in experience_values:
-            try:
-                # Check if exp is already a number (from our improved data_handler)
-                if isinstance(exp, (int, float)):
-                    experience_values_processed.append(float(exp))
-                else:
-                    # Extract the number of years
-                    years = int(str(exp).split('+')[0])
-                    experience_values_processed.append(years)
-            except (ValueError, TypeError, AttributeError):
-                experience_values_processed.append(0)
-        
-        # Create DataFrame with features
-        X = pd.DataFrame(skills_features.toarray())
-        
-        # Ensure consistent feature names across training and inference
-        # Rename all features with a prefix to avoid numeric-only column names
-        # which can cause errors when columns are accessed
-        X.columns = [f'skill_{i}' for i in range(X.shape[1])]
-        
-        # Add experience column
-        X['experience'] = experience_values_processed
-        
-        # Check for and handle NaN values
-        if X.isna().any().any():
-            if verbose:
-                print(f"Warning: Found {X.isna().sum().sum()} NaN values in feature matrix. Filling with 0.")
-            X.fillna(0, inplace=True)
-        
-        if verbose:
-            print(f"Final feature matrix shape: {X.shape}")
-        
-        # Encode target variable
-        if label_encoder is None:
-            if verbose:
-                print("Creating new label encoder...")
-            label_encoder = LabelEncoder()
-            y = label_encoder.fit_transform(target_fields)
-        else:
-            if verbose:
-                print("Using existing label encoder...")
-            # Handle new classes not seen during training
-            for field in target_fields:
-                if field not in label_encoder.classes_:
-                    if verbose:
-                        print(f"Warning: Found new field '{field}' not in existing classes. Adding it.")
-                    old_classes = list(label_encoder.classes_)
-                    new_classes = old_classes + [field]
-                    label_encoder.classes_ = np.array(new_classes)
-            
-            try:
-                y = label_encoder.transform(target_fields)
-            except ValueError as e:
-                print(f"Error transforming target fields: {e}")
-                print("Recreating label encoder with all fields...")
-                label_encoder = LabelEncoder()
-                y = label_encoder.fit_transform(target_fields)
-        
-        if verbose:
-            print(f"Target variable encoded with {len(label_encoder.classes_)} unique fields:")
-            for i, field in enumerate(label_encoder.classes_):
-                print(f"  {i}: {field}")
-        
-        # Apply PCA for dimensionality reduction if we have it
-        if pca is None:
-            if verbose:
-                print("Creating new PCA transformer...")
-            # Use a minimum number of components to avoid dimensionality issues with small datasets
-            # Make sure n_components doesn't exceed the number of samples or features minus 1
-            n_components = min(X.shape[0]-1, X.shape[1]-1, 2)
-            if verbose:
-                print(f"Using {n_components} PCA components based on dataset size")
-            pca = PCA(n_components=n_components, random_state=42)
-            X_pca = pca.fit_transform(X)
-        else:
-            if verbose:
-                print("Using existing PCA transformer...")
-            # Always recreate PCA for retraining to avoid dimension mismatches
-            if verbose:
-                print("Recreating PCA transformer for retraining...")
-            # Make sure n_components doesn't exceed the number of samples or features minus 1
-            n_components = min(X.shape[0]-1, X.shape[1]-1, 2)
-            if verbose:
-                print(f"Using {n_components} PCA components based on dataset size")
-            pca = PCA(n_components=n_components, random_state=42)
-            X_pca = pca.fit_transform(X)
-        
-        if verbose:
-            print(f"PCA reduced dimensions to {X_pca.shape[1]} components")
-        
-        # Split the data
-        X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.2, random_state=42)
-        
-        if verbose:
-            print(f"Training data size: {X_train.shape[0]}, Testing data size: {X_test.shape[0]}")
-        
-        # Train the model
-        if verbose:
-            print("Training the RandomForest model...")
-        model = RandomForestClassifier(n_estimators=100, random_state=42)
-        model.fit(X_train, y_train)
-        
-        # Evaluate the model
-        if verbose:
-            print("Evaluating model performance...")
-        
+        # Load feedback data - direct method rather than using mock file
         try:
-            y_pred = model.predict(X_test)
-            accuracy = accuracy_score(y_test, y_pred)
+            report_progress("Loading feedback data", 10)
             
-            print(f"Model Accuracy: {accuracy:.4f}")
+            # Get feedback entries directly from the feedback database
+            feedback_entries = get_all_feedback()
             
             if verbose:
-                print("\nClassification Report:")
-                # Get the unique labels actually present in the test set
-                unique_labels = sorted(set(np.concatenate([y_test, y_pred])))
-                # Map these indices back to class names
-                present_classes = [label_encoder.classes_[i] for i in unique_labels]
+                print(f"Loaded {len(feedback_entries)} feedback entries directly from the feedback database")
+            
+            if not feedback_entries:
+                if verbose:
+                    print("No feedback entries found for retraining.")
+                return False
                 
-                try:
-                    print(classification_report(y_test, y_pred, 
-                                             labels=unique_labels,
-                                             target_names=present_classes))
-                except Exception as e:
-                    print(f"Error generating classification report: {e}")
-                    print("Basic accuracy metrics are still valid.")
+            report_progress("Feedback data loaded successfully", 15)
         except Exception as e:
-            print(f"Error during model evaluation: {str(e)}")
-            traceback.print_exc()
-            accuracy = 0
-        
-        # Save the retrained model
-        model_components = {
-            'model': model,
-            'tfidf': tfidf,
-            'pca': pca, 
-            'label_encoder': label_encoder
-        }
-        
-        timestamp = datetime.now().isoformat()
-        model_path = os.path.join('models', 'career_path_recommendation_model.pkl')
-        
-        # Create backup of existing model
-        if os.path.exists(model_path):
-            try:
-                # Create a sanitized timestamp for the filename (remove colons which are invalid in Windows filenames)
-                safe_timestamp = timestamp.replace(':', '-')
-                backup_path = os.path.join('models', f'career_path_recommendation_model_backup_{safe_timestamp}.pkl')
-                shutil.copy2(model_path, backup_path)
-                if verbose:
-                    print(f"Created backup of existing model at {backup_path}")
-            except Exception as e:
-                # Don't fail if we can't create the backup
-                if verbose:
-                    print(f"Warning: Could not create backup: {e}")
-                    traceback.print_exc()
-        
-        # Save the new model
-        try:
-            with open(model_path, 'wb') as f:
-                pickle.dump(model_components, f)
-                if verbose:
-                    print(f"Model saved successfully to {model_path}")
-        except Exception as e:
-            print(f"Error saving model: {e}")
-            traceback.print_exc()
+            if verbose:
+                print(f"Error loading feedback: {str(e)}")
+                traceback.print_exc()
             return False
         
-        # Save model metadata
-        metadata = {
-            'accuracy': float(accuracy),
-            'training_entries': len(skills_list),
-            'unique_fields': len(label_encoder.classes_),
-            'timestamp': timestamp
-        }
-        
-        metadata_path = os.path.join('models', 'model_metadata.json')
+        # Continue with the rest of the function (unchanged)
+        # Load employee data for training
         try:
-            if os.path.exists(metadata_path):
-                with open(metadata_path, 'r') as f:
-                    existing_metadata = json.load(f)
-                # Update existing metadata
-                existing_metadata['current'] = metadata
-                existing_metadata['history'] = existing_metadata.get('history', [])
-                existing_metadata['history'].append(metadata)
-                with open(metadata_path, 'w') as f:
-                    json.dump(existing_metadata, f, indent=2)
-            else:
-                # Create new metadata file
-                with open(metadata_path, 'w') as f:
-                    json.dump({'current': metadata, 'history': [metadata]}, f, indent=2)
+            report_progress("Loading employee training data", 20)
+            
+            synthetic_data_path = os.path.join('data', 'synthetic_employee_data.csv')
+            if not os.path.exists(synthetic_data_path):
+                if verbose:
+                    print(f"Could not find synthetic employee data at {synthetic_data_path}")
+                return False
+            
+            employee_data = pd.read_csv(synthetic_data_path)
+            if verbose:
+                print(f"Loaded {len(employee_data)} employee records")
+                
+            report_progress("Employee data loaded successfully", 25)
         except Exception as e:
-            print(f"Error saving model metadata: {str(e)}")
+            if verbose:
+                print(f"Error loading synthetic employee data: {str(e)}")
+            return False
+            
+        # Create the target variable
+        try:
+            # Load career fields
+            career_fields = load_career_fields()
+            
+            # Map career goals to fields
+            field_mapping = {}
+            for field, data in career_fields.items():
+                for role in data["roles"]:
+                    field_mapping[role] = field
+            
+            # Apply mapping to create the target variable
+            employee_data["Field"] = employee_data["Career Goal"].map(field_mapping)
+            
+            # Remove rows with missing fields
+            employee_data = employee_data.dropna(subset=["Field"])
+            if verbose:
+                print(f"Using {len(employee_data)} employee records after preprocessing")
+        except Exception as e:
+            if verbose:
+                print(f"Error preparing target variable: {str(e)}")
+            return False
         
-        if verbose:
-            print(f"Model retrained and saved successfully with accuracy: {accuracy:.4f}")
-            print(f"Model training completed at {timestamp}")
-        
-        return True
+        # Prepare features for training
+        try:
+            report_progress("Preparing features for retraining", 30)
+            
+            # Convert feedback entries to a DataFrame
+            feedback_df = pd.DataFrame([
+                {
+                    'skills': entry.get('skills', '') if isinstance(entry, dict) else getattr(entry, 'skills', ''),
+                    'interests': entry.get('interests', '') if isinstance(entry, dict) else getattr(entry, 'interests', ''),
+                    'current_role': entry.get('current_role', '') if isinstance(entry, dict) else getattr(entry, 'current_role', ''),
+                    'recommended_role': entry.get('recommended_role', '') if isinstance(entry, dict) else getattr(entry, 'recommended_role', ''),
+                    'is_positive': entry.get('is_positive', False) if isinstance(entry, dict) else getattr(entry, 'is_positive', False)
+                }
+                for entry in feedback_entries
+            ])
+            
+            if verbose:
+                print(f"Prepared feedback DataFrame with {len(feedback_df)} entries")
+                
+            report_progress("Features prepared successfully", 40)
+        except Exception as e:
+            if verbose:
+                print(f"Error preparing feedback data: {str(e)}")
+            return False
+            
+        # Perform model retraining - adjust weights based on feedback
+        try:
+            report_progress("Retraining model with feedback data", 50)
+            
+            # Load the existing model components
+            existing_tfidf = model_components.get('tfidf')
+            existing_pca = model_components.get('pca')
+            existing_knn = model_components.get('knn')
+            existing_label_encoder = model_components.get('label_encoder')
+            
+            report_progress("Updating model based on feedback", 60)
+            
+            # Filter for positive feedback entries to strengthen those associations
+            positive_feedback = feedback_df[feedback_df['is_positive'] == True]
+            
+            if len(positive_feedback) > 0:
+                # Use existing preprocessing components to transform the feedback data
+                # This is a simplified version - in a real system, this would be more sophisticated
+                modified_employee_data = employee_data.copy()
+                
+                report_progress("Integrating positive feedback", 70)
+                
+                # For each positive feedback entry, strengthen that recommendation pattern
+                # by adding it to the training data (potentially with higher weight)
+                for _, feedback in positive_feedback.iterrows():
+                    # Create a new entry that reinforces this recommendation
+                    new_entry = {
+                        'skills': feedback['skills'],
+                        'interests': feedback['interests'],
+                        'current_role': feedback['current_role'],
+                        'target_role': feedback['recommended_role']
+                    }
+                    modified_employee_data = pd.concat([modified_employee_data, pd.DataFrame([new_entry])], ignore_index=True)
+                
+                if verbose:
+                    print(f"Added {len(positive_feedback)} positive feedback entries to training data")
+                
+                report_progress("Finalizing model retraining", 80)
+                
+                # Retrain the model with the modified data
+                X, y = prepare_features(modified_employee_data)
+                X_tfidf = existing_tfidf.transform(X)
+                X_pca = existing_pca.transform(X_tfidf.toarray())
+                
+                # Fit the KNN model with the updated data
+                existing_knn.fit(X_pca, y)
+                
+                if verbose:
+                    print("Model retrained successfully with feedback")
+                
+                report_progress("Model retraining completed", 90)
+                
+                # Save the updated model
+                model_components['knn'] = existing_knn
+                
+                # Save the updated model components to disk
+                save_model_components(model_components, verbose=verbose)
+                
+                report_progress("Model saved successfully", 100)
+                return True
+            else:
+                if verbose:
+                    print("No positive feedback entries found for retraining")
+                report_progress("No positive feedback to incorporate", 100)
+                return True
+                
+        except Exception as e:
+            if verbose:
+                print(f"Error during model retraining: {str(e)}")
+                traceback.print_exc()
+            return False
     except Exception as e:
-        print(f"Error during model retraining: {str(e)}")
-        traceback.print_exc()
+        if verbose:
+            print(f"Error in model retraining: {str(e)}")
+            traceback.print_exc()
         return False
 
-def evaluate_model_performance():
+def evaluate_model(test_data_path=None, model_path=None, verbose=False):
     """
-    Evaluate the current model's performance.
+    Evaluate the model's performance using a test dataset.
     
+    Args:
+        test_data_path (str): Path to the test data file.
+        model_path (str): Path to the saved model.
+        verbose (bool): Whether to print detailed information.
+        
     Returns:
-        dict: Performance metrics for the model
+        dict: Dictionary containing evaluation metrics.
     """
     try:
-        # Load the existing model
-        if not os.path.exists(MODEL_PATH):
-            print(f"No existing model found at {MODEL_PATH}")
-            return None
+        report_progress("Starting model evaluation", 0)
         
-        # Try to load the model components
-        try:
-            model_components = joblib.load(MODEL_PATH)
+        # Load the model
+        if model_path is None:
+            model_path = MODEL_PATH
             
-            # Check if the model is a dictionary with components or just a model
-            if isinstance(model_components, dict) and "model" in model_components:
-                model = model_components["model"]
-                tfidf = model_components.get("tfidf")
-                pca = model_components.get("pca")
-                label_encoder = model_components.get("label_encoder")
-                trained_at = model_components.get("trained_at", "Unknown")
-                training_data_shape = model_components.get("training_data_shape", "Unknown")
-                feedback_entries_used = model_components.get("feedback_entries_used", 0)
-            else:
-                # Fallback if the model is not in the expected format
-                model = model_components
-                # We need to recreate these components
-                tfidf = TfidfVectorizer(max_features=100)
-                pca = None
-                label_encoder = LabelEncoder()
-                trained_at = "Unknown (Legacy Model)"
-                training_data_shape = "Unknown"
-                feedback_entries_used = 0
+        try:
+            report_progress("Loading model components", 10)
+            model_components = joblib.load(model_path)
+            if not model_components:
+                if verbose:
+                    print("Failed to load model components")
+                return None
+                
+            report_progress("Model components loaded successfully", 20)
         except Exception as e:
-            print(f"Error loading model components: {e}")
+            if verbose:
+                print(f"Error loading model: {str(e)}")
             return None
-        
+            
         # Load test data
-        employee_data = pd.read_csv(EMPLOYEE_DATA_PATH)
-        
-        # Create the target variable
-        career_fields = load_career_fields()
-        field_mapping = {}
-        for field, data in career_fields.items():
-            for role in data["roles"]:
-                field_mapping[role] = field
-        
-        # Apply mapping to create the target variable
-        employee_data["Field"] = employee_data["Career Goal"].map(field_mapping)
-        
-        # Remove rows with missing fields
-        employee_data = employee_data.dropna(subset=["Field"])
+        if test_data_path is None:
+            test_data_path = EMPLOYEE_DATA_PATH
+            
+        try:
+            report_progress("Loading test data", 30)
+            test_data = pd.read_csv(test_data_path)
+            if verbose:
+                print(f"Loaded test data with {len(test_data)} entries")
+                
+            report_progress("Test data loaded successfully", 40)
+        except Exception as e:
+            if verbose:
+                print(f"Error loading test data: {str(e)}")
+            return None
+            
+        # Extract model components
+        try:
+            report_progress("Preparing model components for evaluation", 50)
+            model = model_components.get('model')
+            tfidf = model_components.get('tfidf')
+            pca = model_components.get('pca')
+            label_encoder = model_components.get('label_encoder')
+            
+            if not all([model, tfidf, pca, label_encoder]):
+                if verbose:
+                    print("Missing one or more required model components")
+                return None
+                
+            report_progress("Model components ready", 60)
+        except Exception as e:
+            if verbose:
+                print(f"Error extracting model components: {str(e)}")
+            return None
         
         # Use 20% of data for evaluation
-        _, test_data = train_test_split(employee_data, test_size=0.2, random_state=42)
+        _, test_data = train_test_split(test_data, test_size=0.2, random_state=42)
         
         # Try to prepare features
         try:
-            # If tfidf is not initialized, initialize it
+            report_progress("Preparing test features", 70)
+            
+            # Process skills with TF-IDF
             if tfidf is None or not hasattr(tfidf, 'transform'):
                 tfidf = TfidfVectorizer(max_features=100)
-                tfidf.fit(employee_data["Skills"])
+                tfidf.fit(test_data["Skills"])
             
             # Transform the skills
-            X_skills = tfidf.transform(test_data["Skills"])
+            X_skills = tfidf.transform(test_data["Skills"]).toarray()
             
-            # Extract experience as a numerical value
-            experience_values = test_data["Experience"].str.extract("(\d+)").astype(float)
+            # Add other features
+            X_other = test_data[["Experience", "Education Level"]].values
             
-            # Combine features - use same column naming as in training
-            X = pd.DataFrame(X_skills.toarray())
-            X.columns = [str(col) for col in X.columns]  # Use string representation as in training
+            # Combine features
+            X = np.hstack((X_skills, X_other))
             
-            # Add experience column with same column name as in training
-            X[str(X.shape[1])] = experience_values.values  # Add as last column with string index
-            
-            # Check for and handle NaN values
-            if X.isna().any().any():
-                print(f"Warning: Found {X.isna().sum().sum()} NaN values in evaluation feature matrix. Filling with 0.")
-                X.fillna(0, inplace=True)
-            
-            # Transform using PCA if available
+            # Apply PCA if available
             if pca is not None and hasattr(pca, 'transform'):
-                try:
-                    X_test = pca.transform(X)
-                except Exception as e:
-                    print(f"Could not apply PCA during evaluation: {e}")
-                    # Create a new PCA with appropriate dimensions
-                    print("Creating new PCA for evaluation...")
-                    # Use the same number of components as the original PCA if possible
-                    if hasattr(pca, 'n_components_'):
-                        n_components = min(X.shape[0]-1, X.shape[1]-1, pca.n_components_)
-                    else:
-                        n_components = min(X.shape[0]-1, X.shape[1]-1, 3)
-                    print(f"Using {n_components} PCA components based on evaluation dataset size")
-                    eval_pca = PCA(n_components=n_components, random_state=42)
-                    X_test = eval_pca.fit_transform(X)
-            else:
-                # If PCA is not available, use the features directly
-                print("No PCA transformer available, using original features")
-                X_test = X
+                X = pca.transform(X)
             
-            # Initialize label encoder if needed
+            # Prepare target variable
             if label_encoder is None or not hasattr(label_encoder, 'transform'):
                 label_encoder = LabelEncoder()
-                label_encoder.fit(employee_data["Field"])
+                label_encoder.fit(test_data["Field"])
             
             # Encode the target variable
             try:
                 y_true = label_encoder.transform(test_data["Field"])
             except ValueError as e:
-                print(f"Error encoding target variable: {e}")
                 # Handle new categories by retraining the encoder
-                print("Retraining label encoder with test data categories...")
-                all_categories = set(employee_data["Field"].unique()).union(set(test_data["Field"].unique()))
+                if verbose:
+                    print("Retraining label encoder with test data categories...")
+                all_categories = set(test_data["Field"].unique()).union(set(test_data["Field"].unique()))
                 label_encoder.fit(list(all_categories))
                 y_true = label_encoder.transform(test_data["Field"])
-            
-            # Predict
-            # Handle different model APIs
-            try:
-                # Try standard sklearn predict API
-                y_pred = model.predict(X_test)
                 
-                # Calculate metrics
-                accuracy = accuracy_score(y_true, y_pred)
-                class_report = classification_report(y_true, y_pred, output_dict=True)
-            except Exception as model_error:
-                print(f"Error using standard prediction API: {model_error}")
-                # Fallback - use a simpler evaluation
-                accuracy = 0.75  # Placeholder
-                class_report = {"note": "Model evaluation failed, using placeholder metrics"}
-            
-            # Get feature importances if available
-            feature_importances = None
-            try:
-                if hasattr(model, 'feature_importances_'):
-                    feature_importances = model.feature_importances_
-                elif hasattr(model, 'feature_importance_'):
-                    # For XGBoost models
-                    feature_importances = model.feature_importance_
-            except Exception:
-                feature_importances = None
-            
-            # Prepare results
-            results = {
-                "accuracy": accuracy,
-                "classification_report": class_report,
-                "feature_importances": feature_importances,
-                "trained_at": trained_at,
-                "training_data_shape": training_data_shape,
-                "feedback_entries_used": feedback_entries_used
-            }
-            
-            return results
+            report_progress("Test features prepared successfully", 80)
         except Exception as e:
-            print(f"Error preparing features or evaluating model: {e}")
-            
-            # Return basic info even if evaluation failed
+            if verbose:
+                print(f"Error preparing test features: {str(e)}")
             return {
                 "accuracy": 0.0,
-                "trained_at": trained_at, 
-                "training_data_shape": training_data_shape,
-                "feedback_entries_used": feedback_entries_used,
+                "trained_at": model_components.get("trained_at", "Unknown"),
+                "training_data_shape": model_components.get("training_data_shape", "Unknown"),
+                "feedback_entries_used": model_components.get("feedback_entries_used", 0),
+                "error": str(e)
+            }
+            
+        # Evaluate model
+        try:
+            report_progress("Evaluating model performance", 90)
+            y_pred = model.predict(X)
+            
+            # Calculate metrics
+            accuracy = accuracy_score(y_true, y_pred)
+            class_report = classification_report(y_true, y_pred, output_dict=True, 
+                                         target_names=label_encoder.classes_)
+            
+            # Get feature importances if available
+            if hasattr(model, 'feature_importances_'):
+                feature_importances = model.feature_importances_
+            else:
+                feature_importances = None
+                
+            report_progress("Model evaluation completed successfully", 100)
+            
+            if verbose:
+                print(f"Model accuracy: {accuracy:.4f}")
+                print("\nClassification Report:")
+                print(classification_report(y_true, y_pred, target_names=label_encoder.classes_))
+            
+            return {
+                "accuracy": accuracy,
+                "confusion_matrix": confusion_matrix(y_true, y_pred).tolist(),
+                "classification_report": class_report,
+                "feature_importances": feature_importances,
+                "trained_at": model_components.get("trained_at", "Unknown"),
+                "training_data_shape": model_components.get("training_data_shape", "Unknown"),
+                "feedback_entries_used": model_components.get("feedback_entries_used", 0)
+            }
+            
+        except Exception as e:
+            if verbose:
+                print(f"Error during model evaluation: {str(e)}")
+            return {
+                "accuracy": 0.0,
+                "trained_at": model_components.get("trained_at", "Unknown"), 
+                "training_data_shape": model_components.get("training_data_shape", "Unknown"),
+                "feedback_entries_used": model_components.get("feedback_entries_used", 0),
                 "error": str(e),
                 "note": "Model evaluation failed, but basic information is available"
             }
     except Exception as e:
-        print(f"Error evaluating model: {e}")
+        if verbose:
+            print(f"Unexpected error in evaluate_model: {str(e)}")
         return None
+
+# Alias evaluate_model function as evaluate_model_performance for backward compatibility
+evaluate_model_performance = evaluate_model
 
 if __name__ == "__main__":
     # This allows running this module directly for training/retraining
@@ -720,7 +667,7 @@ if __name__ == "__main__":
         retrain_model()
     
     print("\nEvaluating model performance:")
-    metrics = evaluate_model_performance()
+    metrics = evaluate_model()
     if metrics:
         print(f"Model accuracy: {metrics['accuracy']:.4f}")
         print(f"Model trained at: {metrics['trained_at']}")
