@@ -79,35 +79,61 @@ def handle_undecided_user(user_id, user_name, user_skills, career_paths, skills_
     """Handle an undecided user by recommending fields and specializations based on skills."""
     print(f"\n{user_name} is undecided with skills: {', '.join(user_skills)}")
     
-    # Get recommendations based on skills
-    recommendations = recommend_specializations_based_on_skills(user_skills)
+    # Group career paths by field
+    fields = {
+        "Technology": ["Software Development", "Data Science", "Cybersecurity", "Cloud Computing"],
+        "Criminal Justice": ["Criminology", "Forensic Science", "Law Enforcement", "Criminal Justice"],
+        "Healthcare": ["Healthcare Administration", "Nursing", "Clinical Psychology", "Industrial-Organizational Psychology"],
+        "Business": ["Marketing", "Finance", "Human Resources"],
+        "Engineering": ["Mechanical Engineering", "Civil Engineering"],
+        "Education": ["Elementary Education", "Secondary Education"],
+        "Creative Arts": ["Graphic Design", "Film Production"],
+        "Legal": ["Legal Practice"],
+        "Science": ["Environmental Science"],
+        "Media": ["Journalism"],
+        "Social Services": ["Social Work"],
+        "Healthcare Specialists": ["Physical Therapy", "Speech-Language Pathology"],
+        "Design": ["Architecture", "Interior Design"],
+        "Agriculture": ["Agriculture"],
+        "Hospitality": ["Hospitality Management"],
+        "Medical": ["Dentistry", "Pharmacy", "Veterinary Medicine"],
+        "Urban Development": ["Urban Planning"]
+    }
     
-    # Display recommended field
-    recommended_field = recommendations['recommended_field']
-    print(f"\nRecommended Field: {recommended_field}")
+    # Show available fields with match percentages
+    print("\nAvailable Fields:")
+    field_matches = {}
+    for field, specializations in fields.items():
+        # Calculate field match percentage based on skills
+        field_skills = set()
+        for path in career_paths:
+            if path['title'] in specializations:
+                field_skills.update(path['required_skills'])
+        match_percentage = calculate_skill_match_percentage(user_skills, list(field_skills))
+        field_matches[field] = match_percentage
+        print(f"{list(fields.keys()).index(field) + 1}. {field} (Match: {match_percentage:.1f}%)")
     
-    # Display top specialization recommendations
-    print("\nRecommended Specializations:")
-    for i, rec in enumerate(recommendations['top_specializations'], 1):
-        print(f"{i}. {rec['specialization']} ({rec['match_percentage']}% match)")
+    choice = get_validated_integer("\nEnter the number of your preferred field: ", 1, len(fields))
     
-    # Ask if the user wants to select one of the recommended specializations
-    select_recommendation = get_validated_yes_no("\nWould you like to select one of these specializations?", default='y')
+    # User selected a specific field
+    selected_field = list(fields.keys())[choice-1]
     
-    if select_recommendation:
-        choice = get_validated_integer("\nEnter the number of your chosen specialization: ", 1, len(recommendations['top_specializations']))
-        selected_recommendation = recommendations['top_specializations'][choice-1]
-        
-        # Find the career path object for the selected specialization
-        selected_path = next((path for path in career_paths if path['title'] == selected_recommendation['specialization']), None)
-        
-        # Run analysis with the selected specialization
-        if selected_path:
-            run_analysis(user_id, selected_path, user_skills, career_paths, skills_data)
-            return
+    # Filter career paths for the selected field
+    field_paths = [path for path in career_paths if path['title'] in fields[selected_field]]
     
-    # Ask for feedback on recommendations
-    collect_undecided_feedback(user_id, user_name, recommendations)
+    # Show specializations within the selected field
+    print(f"\nAvailable Specializations in {selected_field}:")
+    for i, path in enumerate(field_paths, 1):
+        match_percentage = calculate_skill_match_percentage(user_skills, path['required_skills'])
+        print(f"{i}. {path['title']} (Match: {match_percentage:.1f}%)")
+    
+    spec_choice = get_validated_integer("\nEnter the number of your preferred specialization: ", 1, len(field_paths))
+    
+    # User selected a specific specialization
+    selected_path = field_paths[spec_choice-1]
+    
+    # Run analysis and display recommendations
+    run_analysis(user_id, selected_path, user_skills, career_paths, skills_data)
 
 def collect_undecided_feedback(user_id, user_name, recommendations):
     """Collect feedback from undecided users on their recommendations."""
@@ -162,6 +188,19 @@ def collect_undecided_feedback(user_id, user_name, recommendations):
     
     print("\nThank you for your feedback! This will help us improve our recommendations.")
 
+def calculate_skill_match_percentage(user_skills, required_skills):
+    """Calculate the percentage match between user skills and required skills."""
+    if not required_skills:
+        return 0.0
+    
+    user_skills_set = set(skill.lower() for skill in user_skills)
+    required_skills_set = set(skill.lower() for skill in required_skills)
+    
+    matching_skills = user_skills_set.intersection(required_skills_set)
+    match_percentage = (len(matching_skills) / len(required_skills_set)) * 100
+    
+    return match_percentage
+
 def main():
     """Main function to run the recommender system."""
     print("\n" + "="*60)
@@ -191,6 +230,7 @@ def main():
         # Also check for existing user data
         existing_user_data = load_user_preferences(user_id)
         if existing_user_data:
+            print(f"Your preferred field: {existing_user_data['preferred_field']}")
             print(f"Your preferred specialization: {existing_user_data['preferred_specialization']}")
             print(f"Your current skills: {', '.join(existing_user_data['current_skills'])}")
     
@@ -202,64 +242,6 @@ def main():
     # Load career paths and skills data
     career_paths = load_career_paths()
     skills_data = load_skills_data()
-    
-    # If we have a predefined user but no existing user data
-    if predefined_user and not existing_user_data:
-        # Ask if they're undecided or want to choose a specialization
-        undecided = get_validated_yes_no("\nAre you undecided about your career path?", default='n')
-        
-        if undecided:
-            # Handle undecided user by recommending based on skills
-            handle_undecided_user(
-                user_id=user_id,
-                user_name=predefined_user['name'],
-                user_skills=predefined_user['skills'],
-                career_paths=career_paths,
-                skills_data=skills_data
-            )
-            return
-    
-    # If user has existing data, ask if they want to update
-    if existing_user_data:
-        update_choice = get_validated_yes_no("\nDo you want to update your specialization?", default='n')
-        if not update_choice:
-            selected_path = next((path for path in career_paths if path['title'] == existing_user_data['preferred_specialization']), None)
-            # Use current skills from database or predefined user
-            current_skills = existing_user_data['current_skills']
-            # Go directly to analysis and recommendations
-            run_analysis(user_id, selected_path, current_skills, career_paths, skills_data)
-            return
-    
-    # Show available specializations with an option for "Undecided"
-    print("\nAvailable Specializations:")
-    print("0. I'm Undecided (Get Recommendations)")
-    for i, path in enumerate(career_paths, 1):
-        print(f"{i}. {path['title']}")
-    
-    choice = get_validated_integer("\nEnter the number of your preferred specialization: ", 0, len(career_paths))
-    
-    # Handle undecided user (choice 0)
-    if choice == 0:
-        if predefined_user:
-            current_skills = predefined_user['skills']
-        else:
-            # Get user's name
-            user_name = get_validated_string("\nPlease enter your name: ", min_length=1)
-            # Get skills for a new undecided user
-            current_skills = get_validated_list("\nPlease enter your current skills (comma-separated): ", min_items=1)
-            
-        # Handle undecided user
-        handle_undecided_user(
-            user_id=user_id,
-            user_name=predefined_user['name'] if predefined_user else user_name,
-            user_skills=current_skills,
-            career_paths=career_paths,
-            skills_data=skills_data
-        )
-        return
-    
-    # User selected a specific specialization
-    selected_path = career_paths[choice-1]
     
     # Get user's current skills (from predefined user or input)
     if predefined_user:
@@ -273,6 +255,93 @@ def main():
             current_skills = existing_user_data['current_skills']
     else:
         current_skills = get_validated_list("\nPlease enter your current skills (comma-separated): ", min_items=1)
+    
+    # Group career paths by field
+    fields = {
+        "Technology": ["Software Development", "Data Science", "Cybersecurity", "Cloud Computing"],
+        "Criminal Justice": ["Criminology", "Forensic Science", "Law Enforcement", "Criminal Justice"],
+        "Healthcare": ["Healthcare Administration", "Nursing", "Clinical Psychology", "Industrial-Organizational Psychology"],
+        "Business": ["Marketing", "Finance", "Human Resources"],
+        "Engineering": ["Mechanical Engineering", "Civil Engineering"],
+        "Education": ["Elementary Education", "Secondary Education"],
+        "Creative Arts": ["Graphic Design", "Film Production"],
+        "Legal": ["Legal Practice"],
+        "Science": ["Environmental Science"],
+        "Media": ["Journalism"],
+        "Social Services": ["Social Work"],
+        "Healthcare Specialists": ["Physical Therapy", "Speech-Language Pathology"],
+        "Design": ["Architecture", "Interior Design"],
+        "Agriculture": ["Agriculture"],
+        "Hospitality": ["Hospitality Management"],
+        "Medical": ["Dentistry", "Pharmacy", "Veterinary Medicine"],
+        "Urban Development": ["Urban Planning"]
+    }
+    
+    # Show available fields with match percentages
+    print("\nAvailable Fields:")
+    field_matches = {}
+    for field, specializations in fields.items():
+        # Calculate field match percentage based on skills
+        field_skills = set()
+        for path in career_paths:
+            if path['title'] in specializations:
+                field_skills.update(path['required_skills'])
+        match_percentage = calculate_skill_match_percentage(current_skills, list(field_skills))
+        field_matches[field] = match_percentage
+        print(f"{list(fields.keys()).index(field) + 1}. {field} (Match: {match_percentage:.1f}%)")
+    print(f"{len(fields) + 1}. I'm Undecided (Get Recommendations)")
+    
+    choice = get_validated_integer("\nEnter the number of your preferred field: ", 1, len(fields) + 1)
+    
+    # Handle undecided user (last choice)
+    if choice == len(fields) + 1:
+        if predefined_user:
+            user_name = predefined_user['name']
+        else:
+            user_name = get_validated_string("\nPlease enter your name: ", min_length=1)
+            
+        handle_undecided_user(
+            user_id=user_id,
+            user_name=user_name,
+            user_skills=current_skills,
+            career_paths=career_paths,
+            skills_data=skills_data
+        )
+        return
+    
+    # User selected a specific field
+    selected_field = list(fields.keys())[choice-1]
+    
+    # Filter career paths for the selected field
+    field_paths = [path for path in career_paths if path['title'] in fields[selected_field]]
+    
+    # Show specializations within the selected field
+    print(f"\nAvailable Specializations in {selected_field}:")
+    for i, path in enumerate(field_paths, 1):
+        match_percentage = calculate_skill_match_percentage(current_skills, path['required_skills'])
+        print(f"{i}. {path['title']} (Match: {match_percentage:.1f}%)")
+    print(f"{len(field_paths) + 1}. I'm Undecided (Get Recommendations)")
+    
+    spec_choice = get_validated_integer("\nEnter the number of your preferred specialization: ", 1, len(field_paths) + 1)
+    
+    # Handle undecided user for specialization
+    if spec_choice == len(field_paths) + 1:
+        if predefined_user:
+            user_name = predefined_user['name']
+        else:
+            user_name = get_validated_string("\nPlease enter your name: ", min_length=1)
+            
+        handle_undecided_user(
+            user_id=user_id,
+            user_name=user_name,
+            user_skills=current_skills,
+            career_paths=field_paths,  # Only consider paths in the selected field
+            skills_data=skills_data
+        )
+        return
+    
+    # User selected a specific specialization
+    selected_path = field_paths[spec_choice-1]
     
     # Run analysis and display recommendations
     run_analysis(user_id, selected_path, current_skills, career_paths, skills_data)

@@ -450,5 +450,113 @@
                 "Data Analysis"
             ]
         }
+    ],
+    "Criminal Profiling": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Research Methods",
+                "Statistical Analysis",
+                "Criminal Psychology",
+                "Interviewing"
+            ]
+        }
+    ],
+    "Crime Prevention": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Research Methods",
+                "Statistical Analysis",
+                "Criminal Psychology",
+                "Interviewing"
+            ]
+        }
+    ],
+    "White-Collar Crime": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Research Methods",
+                "Statistical Analysis",
+                "Criminal Psychology",
+                "Interviewing"
+            ]
+        }
+    ],
+    "Investigative Techniques": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Research Methods",
+                "Statistical Analysis",
+                "Criminal Psychology",
+                "Interviewing"
+            ]
+        }
+    ],
+    "Criminal Theory": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Research Methods",
+                "Statistical Analysis",
+                "Criminal Psychology",
+                "Interviewing"
+            ]
+        }
+    ],
+    "Criminal Law": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Research Methods",
+                "Statistical Analysis",
+                "Criminal Psychology",
+                "Interviewing"
+            ]
+        }
+    ],
+    "Victimology": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Research Methods",
+                "Statistical Analysis",
+                "Criminal Psychology",
+                "Interviewing"
+            ]
+        }
+    ],
+    "Juvenile Delinquency": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Research Methods",
+                "Statistical Analysis",
+                "Criminal Psychology",
+                "Interviewing"
+            ]
+        }
+    ],
+    "Sociology": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Research Methods",
+                "Statistical Analysis",
+                "Criminal Psychology",
+                "Interviewing"
+            ]
+        }
     ]
 }
