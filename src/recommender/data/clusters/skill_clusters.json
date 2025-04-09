@@ -1,4 +1,184 @@
 {
+    "Investigation Techniques": [
+        {
+            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Law"
+            ]
+        }
+    ],
+    "Self Defense": [
+        {
+            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Law"
+            ]
+        }
+    ],
+    "Legal Knowledge": [
+        {
+            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Law"
+            ]
+        }
+    ],
+    "Criminal Procedure": [
+        {
+            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Law"
+            ]
+        }
+    ],
+    "Firearms Training": [
+        {
+            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Law"
+            ]
+        }
+    ],
+    "De-escalation": [
+        {
+            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Law"
+            ]
+        }
+    ],
+    "Crisis Management": [
+        {
+            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Law"
+            ]
+        }
+    ],
+    "Report Writing": [
+        {
+            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Law"
+            ]
+        }
+    ],
+    "Pharmacology": [
+        {
+            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+            "preferred_specialization": "Nursing",
+            "current_skills": [
+                "IV"
+            ]
+        }
+    ],
+    "Infection Control": [
+        {
+            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+            "preferred_specialization": "Nursing",
+            "current_skills": [
+                "IV"
+            ]
+        }
+    ],
+    "Documentation": [
+        {
+            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+            "preferred_specialization": "Nursing",
+            "current_skills": [
+                "IV"
+            ]
+        }
+    ],
+    "Medical Terminology": [
+        {
+            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+            "preferred_specialization": "Nursing",
+            "current_skills": [
+                "IV"
+            ]
+        }
+    ],
+    "Communication": [
+        {
+            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+            "preferred_specialization": "Nursing",
+            "current_skills": [
+                "IV"
+            ]
+        }
+    ],
+    "Care Planning": [
+        {
+            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+            "preferred_specialization": "Nursing",
+            "current_skills": [
+                "IV"
+            ]
+        }
+    ],
+    "Patient Assessment": [
+        {
+            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+            "preferred_specialization": "Nursing",
+            "current_skills": [
+                "IV"
+            ]
+        }
+    ],
+    "Patient Education": [
+        {
+            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+            "preferred_specialization": "Nursing",
+            "current_skills": [
+                "IV"
+            ]
+        }
+    ],
+    "Evidence-Based Practice": [
+        {
+            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+            "preferred_specialization": "Nursing",
+            "current_skills": [
+                "IV"
+            ]
+        }
+    ],
+    "Clinical Skills": [
+        {
+            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+            "preferred_specialization": "Nursing",
+            "current_skills": [
+                "IV"
+            ]
+        }
+    ],
+    "Critical Thinking": [
+        {
+            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+            "preferred_specialization": "Nursing",
+            "current_skills": [
+                "IV"
+            ]
+        }
+    ],
+    "Emergency Response": [
+        {
+            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
+            "preferred_specialization": "Nursing",
+            "current_skills": [
+                "IV"
+            ]
+        }
+    ],
     "Information Security": [
         {
             "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
