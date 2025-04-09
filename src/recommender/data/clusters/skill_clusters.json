@@ -1,807 +1,153 @@
 {
-    "Machine Learning": [
-        {
-            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python"
-            ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics"
-            ]
-        },
-        {
-            "user_id": "user6",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Data Analysis": [
-        {
-            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python"
-            ]
-        },
-        {
-            "user_id": "user10",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Machine Learning",
-                "SQL"
-            ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics"
-            ]
-        }
-    ],
-    "Statistics": [
-        {
-            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python"
-            ]
-        }
-    ],
-    "Statistical Modeling": [
-        {
-            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python"
-            ]
-        },
-        {
-            "user_id": "user10",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Machine Learning",
-                "SQL"
-            ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics"
-            ]
-        },
-        {
-            "user_id": "user6",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Data Visualization": [
-        {
-            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python"
-            ]
-        },
-        {
-            "user_id": "user10",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Machine Learning",
-                "SQL"
-            ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics"
-            ]
-        },
-        {
-            "user_id": "user6",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "SQL": [
-        {
-            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python"
-            ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics"
-            ]
-        },
-        {
-            "user_id": "user6",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Big Data": [
-        {
-            "user_id": "0fb2af83-800d-466c-958d-5863aa849796",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python"
-            ]
-        },
-        {
-            "user_id": "user10",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Machine Learning",
-                "SQL"
-            ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics"
-            ]
-        },
-        {
-            "user_id": "user6",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Statistics",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Problem Solving": [
-        {
-            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Web Development",
-                "Mobile Development"
-            ]
-        },
-        {
-            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Node JS",
-                "React JS",
-                "Javascript"
-            ]
-        },
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development"
-            ]
-        },
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Algorithms",
-                "Data Structures"
-            ]
-        },
-        {
-            "user_id": "user9",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development",
-                "Database Management"
-            ]
-        }
-    ],
-    "Version Control": [
-        {
-            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Web Development",
-                "Mobile Development"
-            ]
-        },
-        {
-            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Node JS",
-                "React JS",
-                "Javascript"
-            ]
-        },
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development"
-            ]
-        },
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Algorithms",
-                "Data Structures"
-            ]
-        },
-        {
-            "user_id": "user9",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development",
-                "Database Management"
-            ]
-        }
-    ],
-    "Software Testing": [
-        {
-            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Web Development",
-                "Mobile Development"
-            ]
-        },
-        {
-            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Node JS",
-                "React JS",
-                "Javascript"
-            ]
-        },
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development"
-            ]
-        },
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Algorithms",
-                "Data Structures"
-            ]
-        },
-        {
-            "user_id": "user9",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development",
-                "Database Management"
-            ]
-        }
-    ],
-    "Programming": [
-        {
-            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Web Development",
-                "Mobile Development"
-            ]
-        },
-        {
-            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Node JS",
-                "React JS",
-                "Javascript"
-            ]
-        }
-    ],
-    "Data Structures": [
-        {
-            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Web Development",
-                "Mobile Development"
-            ]
-        },
-        {
-            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Node JS",
-                "React JS",
-                "Javascript"
-            ]
-        },
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development"
-            ]
-        },
-        {
-            "user_id": "user9",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development",
-                "Database Management"
-            ]
-        }
-    ],
-    "Database Management": [
-        {
-            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Web Development",
-                "Mobile Development"
-            ]
-        },
-        {
-            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Node JS",
-                "React JS",
-                "Javascript"
-            ]
-        },
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development"
-            ]
-        },
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Algorithms",
-                "Data Structures"
-            ]
-        }
-    ],
-    "Algorithms": [
-        {
-            "user_id": "18718ee4-eb1a-4d6c-853d-993bf66fd03a",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Web Development",
-                "Mobile Development"
-            ]
-        },
-        {
-            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Node JS",
-                "React JS",
-                "Javascript"
-            ]
-        },
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development"
-            ]
-        },
-        {
-            "user_id": "user9",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Web Development",
-                "Database Management"
-            ]
-        }
-    ],
-    "Web Development": [
-        {
-            "user_id": "34fe1377-cadb-4ade-82af-338e5ec07bea",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Node JS",
-                "React JS",
-                "Javascript"
-            ]
-        },
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Algorithms",
-                "Data Structures"
-            ]
-        }
-    ],
     "Information Security": [
         {
-            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
+            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
-                "Node JS"
+                "PicoCTF",
+                "Bruteforce",
+                "Pentesting"
             ]
         },
         {
-            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
-                "Python"
-            ]
-        },
-        {
-            "user_id": "user7",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Ethical Hacking",
-                "Cryptography"
-            ]
-        }
-    ],
-    "Network Security": [
-        {
-            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Node JS"
-            ]
-        },
-        {
-            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python"
-            ]
-        }
-    ],
-    "Security Tools": [
-        {
-            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Node JS"
-            ]
-        },
-        {
-            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python"
-            ]
-        },
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Information Security"
-            ]
-        },
-        {
-            "user_id": "user7",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Ethical Hacking",
-                "Cryptography"
+                "Python",
+                "Kali Linux"
             ]
         }
     ],
     "Cryptography": [
         {
-            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
+            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
-                "Node JS"
+                "PicoCTF",
+                "Bruteforce",
+                "Pentesting"
             ]
         },
         {
-            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
-                "Python"
-            ]
-        },
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Information Security"
-            ]
-        }
-    ],
-    "Security Auditing": [
-        {
-            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Node JS"
-            ]
-        },
-        {
-            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python"
-            ]
-        },
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Information Security"
-            ]
-        },
-        {
-            "user_id": "user7",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Ethical Hacking",
-                "Cryptography"
-            ]
-        }
-    ],
-    "Risk Management": [
-        {
-            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Node JS"
-            ]
-        },
-        {
-            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python"
-            ]
-        },
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Information Security"
-            ]
-        },
-        {
-            "user_id": "user7",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Network Security",
-                "Ethical Hacking",
-                "Cryptography"
+                "Python",
+                "Kali Linux"
             ]
         }
     ],
     "Ethical Hacking": [
         {
-            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
+            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
-                "Node JS"
+                "PicoCTF",
+                "Bruteforce",
+                "Pentesting"
             ]
         },
         {
-            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
-                "Python"
+                "Python",
+                "Kali Linux"
+            ]
+        }
+    ],
+    "Security Tools": [
+        {
+            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "PicoCTF",
+                "Bruteforce",
+                "Pentesting"
             ]
         },
         {
-            "user_id": "user3",
+            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
-                "Network Security",
-                "Information Security"
+                "Python",
+                "Kali Linux"
+            ]
+        }
+    ],
+    "Risk Management": [
+        {
+            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "PicoCTF",
+                "Bruteforce",
+                "Pentesting"
+            ]
+        },
+        {
+            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python",
+                "Kali Linux"
+            ]
+        }
+    ],
+    "Network Security": [
+        {
+            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "PicoCTF",
+                "Bruteforce",
+                "Pentesting"
+            ]
+        },
+        {
+            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Python",
+                "Kali Linux"
             ]
         }
     ],
     "Incident Response": [
         {
-            "user_id": "69e366e1-1fb8-4fda-98e1-361d58683a4c",
+            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
-                "Node JS"
+                "PicoCTF",
+                "Bruteforce",
+                "Pentesting"
             ]
         },
         {
-            "user_id": "d69da793-e954-4be4-a23e-a908bfa57e9c",
+            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
-                "Python"
+                "Python",
+                "Kali Linux"
             ]
-        },
+        }
+    ],
+    "Security Auditing": [
         {
-            "user_id": "user3",
+            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
-                "Network Security",
-                "Information Security"
+                "PicoCTF",
+                "Bruteforce",
+                "Pentesting"
             ]
         },
         {
-            "user_id": "user7",
+            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
             "preferred_specialization": "Cybersecurity",
             "current_skills": [
-                "Network Security",
-                "Ethical Hacking",
-                "Cryptography"
-            ]
-        }
-    ],
-    "Infrastructure as Code": [
-        {
-            "user_id": "user4",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Networking"
-            ]
-        },
-        {
-            "user_id": "user8",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "DevOps",
-                "System Administration"
-            ]
-        }
-    ],
-    "Containerization": [
-        {
-            "user_id": "user4",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Networking"
-            ]
-        },
-        {
-            "user_id": "user8",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "DevOps",
-                "System Administration"
-            ]
-        }
-    ],
-    "Security": [
-        {
-            "user_id": "user4",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Networking"
-            ]
-        },
-        {
-            "user_id": "user8",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "DevOps",
-                "System Administration"
-            ]
-        }
-    ],
-    "Automation": [
-        {
-            "user_id": "user4",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Networking"
-            ]
-        },
-        {
-            "user_id": "user8",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "DevOps",
-                "System Administration"
-            ]
-        }
-    ],
-    "DevOps": [
-        {
-            "user_id": "user4",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Networking"
-            ]
-        }
-    ],
-    "System Administration": [
-        {
-            "user_id": "user4",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Networking"
-            ]
-        }
-    ],
-    "Networking": [
-        {
-            "user_id": "user8",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "DevOps",
-                "System Administration"
+                "Python",
+                "Kali Linux"
             ]
         }
     ]
