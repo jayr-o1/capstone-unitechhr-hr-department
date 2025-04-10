@@ -1,4 +1,981 @@
 {
+    "Programming": [
+        {
+            "user_id": "39a0dbe1-c360-416f-b53f-a885c3ab55da",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding"
+            ]
+        },
+        {
+            "user_id": "9d5d64cc-9b01-4e05-aaea-433ece79559a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding",
+                "Web Development",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_4",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "System Architecture",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Software Testing"
+            ]
+        }
+    ],
+    "Data Structures": [
+        {
+            "user_id": "39a0dbe1-c360-416f-b53f-a885c3ab55da",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding"
+            ]
+        },
+        {
+            "user_id": "9d5d64cc-9b01-4e05-aaea-433ece79559a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding",
+                "Web Development",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "cluster_user_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "System Architecture",
+                "Version Control",
+                "Unit Testing",
+                "API Design",
+                "Software Testing",
+                "Algorithms",
+                "Database Management",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "System Architecture",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_4",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        }
+    ],
+    "Algorithms": [
+        {
+            "user_id": "39a0dbe1-c360-416f-b53f-a885c3ab55da",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding"
+            ]
+        },
+        {
+            "user_id": "9d5d64cc-9b01-4e05-aaea-433ece79559a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding",
+                "Web Development",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "System Architecture",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Programming",
+                "Software Testing"
+            ]
+        }
+    ],
+    "Version Control": [
+        {
+            "user_id": "39a0dbe1-c360-416f-b53f-a885c3ab55da",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding"
+            ]
+        },
+        {
+            "user_id": "9d5d64cc-9b01-4e05-aaea-433ece79559a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding",
+                "Web Development",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Software Testing"
+            ]
+        }
+    ],
+    "Software Testing": [
+        {
+            "user_id": "39a0dbe1-c360-416f-b53f-a885c3ab55da",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding"
+            ]
+        },
+        {
+            "user_id": "9d5d64cc-9b01-4e05-aaea-433ece79559a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding",
+                "Web Development",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_4",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        }
+    ],
+    "Database Management": [
+        {
+            "user_id": "39a0dbe1-c360-416f-b53f-a885c3ab55da",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding"
+            ]
+        },
+        {
+            "user_id": "9d5d64cc-9b01-4e05-aaea-433ece79559a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding",
+                "Web Development",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Web Development",
+                "API Design",
+                "Debugging"
+            ]
+        }
+    ],
+    "Web Development": [
+        {
+            "user_id": "39a0dbe1-c360-416f-b53f-a885c3ab55da",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "System Architecture",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_4",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        }
+    ],
+    "Problem Solving": [
+        {
+            "user_id": "39a0dbe1-c360-416f-b53f-a885c3ab55da",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding"
+            ]
+        },
+        {
+            "user_id": "9d5d64cc-9b01-4e05-aaea-433ece79559a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding",
+                "Web Development",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "cluster_user_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "System Architecture",
+                "Version Control",
+                "Unit Testing",
+                "API Design",
+                "Software Testing",
+                "Algorithms",
+                "Database Management",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Web Development",
+                "API Design",
+                "Debugging"
+            ]
+        }
+    ],
+    "API Design": [
+        {
+            "user_id": "39a0dbe1-c360-416f-b53f-a885c3ab55da",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding"
+            ]
+        },
+        {
+            "user_id": "9d5d64cc-9b01-4e05-aaea-433ece79559a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding",
+                "Web Development",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "Problem Solving"
+            ]
+        }
+    ],
+    "System Architecture": [
+        {
+            "user_id": "39a0dbe1-c360-416f-b53f-a885c3ab55da",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding"
+            ]
+        },
+        {
+            "user_id": "9d5d64cc-9b01-4e05-aaea-433ece79559a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding",
+                "Web Development",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Web Development",
+                "API Design",
+                "Debugging"
+            ]
+        }
+    ],
+    "Debugging": [
+        {
+            "user_id": "39a0dbe1-c360-416f-b53f-a885c3ab55da",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding"
+            ]
+        },
+        {
+            "user_id": "9d5d64cc-9b01-4e05-aaea-433ece79559a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding",
+                "Web Development",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        }
+    ],
+    "Unit Testing": [
+        {
+            "user_id": "39a0dbe1-c360-416f-b53f-a885c3ab55da",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding"
+            ]
+        },
+        {
+            "user_id": "9d5d64cc-9b01-4e05-aaea-433ece79559a",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Coding",
+                "Web Development",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_4",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_4",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Web Development",
+                "API Design",
+                "Debugging"
+            ]
+        }
+    ],
     "Sociology": [
         {
             "user_id": "cluster_user_1",
@@ -92,6 +1069,16 @@
             ]
         },
         {
+            "user_id": "d40a9497-2438-414a-bf2d-023113398b63",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Drawing",
+                "3D Modeling",
+                "Rendering",
+                "Autocad"
+            ]
+        },
+        {
             "user_id": "skill_cluster_project_management_4",
             "preferred_specialization": "Architecture",
             "current_skills": [
@@ -164,6 +1151,16 @@
                 "Construction Management",
                 "Structural Analysis",
                 "AutoCAD"
+            ]
+        },
+        {
+            "user_id": "d40a9497-2438-414a-bf2d-023113398b63",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Drawing",
+                "3D Modeling",
+                "Rendering",
+                "Autocad"
             ]
         }
     ],
@@ -660,6 +1657,16 @@
                 "Structural Analysis",
                 "AutoCAD"
             ]
+        },
+        {
+            "user_id": "d40a9497-2438-414a-bf2d-023113398b63",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Drawing",
+                "3D Modeling",
+                "Rendering",
+                "Autocad"
+            ]
         }
     ],
     "Project Planning": [
@@ -676,6 +1683,16 @@
                 "Construction Management",
                 "Structural Analysis",
                 "AutoCAD"
+            ]
+        },
+        {
+            "user_id": "d40a9497-2438-414a-bf2d-023113398b63",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Drawing",
+                "3D Modeling",
+                "Rendering",
+                "Autocad"
             ]
         }
     ],
@@ -773,140 +1790,6 @@
                 "Court Testimony",
                 "DNA Analysis",
                 "Bloodstain Pattern Analysis"
-            ]
-        }
-    ],
-    "Data Structures": [
-        {
-            "user_id": "cluster_user_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Web Development",
-                "System Architecture",
-                "Version Control",
-                "Unit Testing",
-                "API Design",
-                "Software Testing",
-                "Algorithms",
-                "Database Management",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Web Development",
-                "API Design",
-                "Database Management",
-                "Unit Testing",
-                "Problem Solving"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_5",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "System Architecture",
-                "API Design",
-                "Database Management",
-                "Unit Testing",
-                "Problem Solving",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_4",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Algorithms",
-                "System Architecture",
-                "Database Management",
-                "API Design",
-                "Problem Solving",
-                "Programming",
-                "Software Testing"
-            ]
-        }
-    ],
-    "Problem Solving": [
-        {
-            "user_id": "cluster_user_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Web Development",
-                "System Architecture",
-                "Version Control",
-                "Unit Testing",
-                "API Design",
-                "Software Testing",
-                "Algorithms",
-                "Database Management",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Data Structures",
-                "System Architecture",
-                "Database Management",
-                "API Design",
-                "Unit Testing",
-                "Programming",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Algorithms",
-                "Data Structures",
-                "Database Management",
-                "API Design",
-                "Unit Testing",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Data Structures",
-                "Algorithms",
-                "Version Control",
-                "Software Testing",
-                "Web Development",
-                "API Design",
-                "Debugging"
             ]
         }
     ],
@@ -1361,6 +2244,90 @@
                 "AutoCAD",
                 "Sustainable Design",
                 "3D Visualization"
+            ]
+        }
+    ],
+    "Structural Analysis": [
+        {
+            "user_id": "d40a9497-2438-414a-bf2d-023113398b63",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Drawing",
+                "3D Modeling",
+                "Rendering",
+                "Autocad"
+            ]
+        }
+    ],
+    "Geotechnical Engineering": [
+        {
+            "user_id": "d40a9497-2438-414a-bf2d-023113398b63",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Drawing",
+                "3D Modeling",
+                "Rendering",
+                "Autocad"
+            ]
+        }
+    ],
+    "Hydraulics": [
+        {
+            "user_id": "d40a9497-2438-414a-bf2d-023113398b63",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Drawing",
+                "3D Modeling",
+                "Rendering",
+                "Autocad"
+            ]
+        }
+    ],
+    "Construction Management": [
+        {
+            "user_id": "d40a9497-2438-414a-bf2d-023113398b63",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Drawing",
+                "3D Modeling",
+                "Rendering",
+                "Autocad"
+            ]
+        }
+    ],
+    "Infrastructure Design": [
+        {
+            "user_id": "d40a9497-2438-414a-bf2d-023113398b63",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Drawing",
+                "3D Modeling",
+                "Rendering",
+                "Autocad"
+            ]
+        }
+    ],
+    "Environmental Engineering": [
+        {
+            "user_id": "d40a9497-2438-414a-bf2d-023113398b63",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Drawing",
+                "3D Modeling",
+                "Rendering",
+                "Autocad"
+            ]
+        }
+    ],
+    "Surveying": [
+        {
+            "user_id": "d40a9497-2438-414a-bf2d-023113398b63",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Drawing",
+                "3D Modeling",
+                "Rendering",
+                "Autocad"
             ]
         }
     ],
@@ -1918,19 +2885,6 @@
                 "Cloud Platforms",
                 "Containerization"
             ]
-        },
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Infrastructure as Code",
-                "Containerization",
-                "DevOps",
-                "Microservices",
-                "Serverless Architecture",
-                "Automation"
-            ]
         }
     ],
     "Load Balancing": [
@@ -1974,19 +2928,6 @@
                 "DevOps",
                 "Cloud Platforms",
                 "Containerization"
-            ]
-        },
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Infrastructure as Code",
-                "Containerization",
-                "DevOps",
-                "Microservices",
-                "Serverless Architecture",
-                "Automation"
             ]
         }
     ],
@@ -2101,19 +3042,6 @@
                 "Cloud Platforms",
                 "Load Balancing"
             ]
-        },
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Infrastructure as Code",
-                "Containerization",
-                "DevOps",
-                "Microservices",
-                "Serverless Architecture",
-                "Automation"
-            ]
         }
     ],
     "Security": [
@@ -2212,19 +3140,6 @@
                 "DevOps",
                 "Cloud Platforms",
                 "Containerization"
-            ]
-        },
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Infrastructure as Code",
-                "Containerization",
-                "DevOps",
-                "Microservices",
-                "Serverless Architecture",
-                "Automation"
             ]
         }
     ],
@@ -2445,539 +3360,6 @@
                 "Literacy Instruction",
                 "Special Education Awareness",
                 "Educational Technology"
-            ]
-        }
-    ],
-    "Database Management": [
-        {
-            "user_id": "skill_cluster_database_management_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_database_management_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Data Structures",
-                "System Architecture",
-                "Problem Solving",
-                "Programming",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_database_management_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Data Structures",
-                "Algorithms",
-                "Version Control",
-                "Software Testing",
-                "Web Development",
-                "API Design",
-                "Debugging"
-            ]
-        }
-    ],
-    "Debugging": [
-        {
-            "user_id": "skill_cluster_database_management_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_database_management_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        }
-    ],
-    "Version Control": [
-        {
-            "user_id": "skill_cluster_database_management_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_database_management_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Database Management",
-                "Problem Solving"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Software Testing"
-            ]
-        }
-    ],
-    "API Design": [
-        {
-            "user_id": "skill_cluster_database_management_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_database_management_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Data Structures",
-                "System Architecture",
-                "Problem Solving",
-                "Programming",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Database Management",
-                "Problem Solving"
-            ]
-        }
-    ],
-    "Software Testing": [
-        {
-            "user_id": "skill_cluster_database_management_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_database_management_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Web Development",
-                "API Design",
-                "Database Management",
-                "Unit Testing",
-                "Problem Solving"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Database Management",
-                "Problem Solving"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_4",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Database Management",
-                "API Design",
-                "Problem Solving"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        }
-    ],
-    "Web Development": [
-        {
-            "user_id": "skill_cluster_database_management_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Data Structures",
-                "System Architecture",
-                "Problem Solving",
-                "Programming",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_database_management_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_5",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "System Architecture",
-                "API Design",
-                "Database Management",
-                "Unit Testing",
-                "Problem Solving",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Unit Testing",
-                "Problem Solving",
-                "Programming"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Data Structures",
-                "System Architecture",
-                "Database Management",
-                "API Design",
-                "Unit Testing",
-                "Programming",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Algorithms",
-                "Data Structures",
-                "Database Management",
-                "API Design",
-                "Unit Testing",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_4",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Algorithms",
-                "System Architecture",
-                "Database Management",
-                "API Design",
-                "Problem Solving",
-                "Programming",
-                "Software Testing"
-            ]
-        }
-    ],
-    "Unit Testing": [
-        {
-            "user_id": "skill_cluster_database_management_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Data Structures",
-                "System Architecture",
-                "Problem Solving",
-                "Programming",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Database Management",
-                "Problem Solving"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_4",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Database Management",
-                "API Design",
-                "Problem Solving"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_4",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Algorithms",
-                "System Architecture",
-                "Database Management",
-                "API Design",
-                "Problem Solving",
-                "Programming",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Data Structures",
-                "Algorithms",
-                "Version Control",
-                "Software Testing",
-                "Web Development",
-                "API Design",
-                "Debugging"
-            ]
-        }
-    ],
-    "Algorithms": [
-        {
-            "user_id": "skill_cluster_database_management_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Data Structures",
-                "System Architecture",
-                "Problem Solving",
-                "Programming",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Web Development",
-                "API Design",
-                "Database Management",
-                "Unit Testing",
-                "Problem Solving"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_5",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "System Architecture",
-                "API Design",
-                "Database Management",
-                "Unit Testing",
-                "Problem Solving",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Data Structures",
-                "System Architecture",
-                "Database Management",
-                "API Design",
-                "Unit Testing",
-                "Programming",
-                "Software Testing"
             ]
         }
     ],
@@ -3540,19 +3922,6 @@
                 "Containerization",
                 "Load Balancing"
             ]
-        },
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Infrastructure as Code",
-                "Containerization",
-                "DevOps",
-                "Microservices",
-                "Serverless Architecture",
-                "Automation"
-            ]
         }
     ],
     "DevOps": [
@@ -3594,133 +3963,6 @@
                 "Serverless Architecture",
                 "Cloud Platforms",
                 "Load Balancing"
-            ]
-        }
-    ],
-    "Programming": [
-        {
-            "user_id": "skill_cluster_programming_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Web Development",
-                "API Design",
-                "Database Management",
-                "Unit Testing",
-                "Problem Solving"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_2",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Database Management",
-                "Problem Solving"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "API Design",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_4",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Web Development",
-                "Algorithms",
-                "Data Structures",
-                "System Architecture",
-                "Database Management",
-                "API Design",
-                "Problem Solving"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_programming_5",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "System Architecture",
-                "API Design",
-                "Database Management",
-                "Unit Testing",
-                "Problem Solving",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Algorithms",
-                "Data Structures",
-                "Database Management",
-                "API Design",
-                "Unit Testing",
-                "Software Testing"
-            ]
-        }
-    ],
-    "System Architecture": [
-        {
-            "user_id": "skill_cluster_programming_1",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Web Development",
-                "API Design",
-                "Database Management",
-                "Unit Testing",
-                "Problem Solving"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_web_development_3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Debugging",
-                "Version Control",
-                "Algorithms",
-                "Data Structures",
-                "Database Management",
-                "API Design",
-                "Unit Testing",
-                "Software Testing"
-            ]
-        },
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Data Structures",
-                "Algorithms",
-                "Version Control",
-                "Software Testing",
-                "Web Development",
-                "API Design",
-                "Debugging"
             ]
         }
     ],
@@ -4050,6 +4292,138 @@
                 "Incident Response",
                 "Security Tools",
                 "Cloud Security"
+            ]
+        }
+    ],
+    "Digital Marketing": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Marketing",
+            "current_skills": [
+                "Financial Analysis",
+                "Risk Management",
+                "Investment Strategy",
+                "Market Research"
+            ]
+        }
+    ],
+    "Brand Management": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Marketing",
+            "current_skills": [
+                "Financial Analysis",
+                "Risk Management",
+                "Investment Strategy",
+                "Market Research"
+            ]
+        }
+    ],
+    "Content Strategy": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Marketing",
+            "current_skills": [
+                "Financial Analysis",
+                "Risk Management",
+                "Investment Strategy",
+                "Market Research"
+            ]
+        }
+    ],
+    "Social Media Marketing": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Marketing",
+            "current_skills": [
+                "Financial Analysis",
+                "Risk Management",
+                "Investment Strategy",
+                "Market Research"
+            ]
+        }
+    ],
+    "SEO": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Marketing",
+            "current_skills": [
+                "Financial Analysis",
+                "Risk Management",
+                "Investment Strategy",
+                "Market Research"
+            ]
+        }
+    ],
+    "Campaign Analysis": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Marketing",
+            "current_skills": [
+                "Financial Analysis",
+                "Risk Management",
+                "Investment Strategy",
+                "Market Research"
+            ]
+        }
+    ],
+    "Consumer Behavior": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Marketing",
+            "current_skills": [
+                "Financial Analysis",
+                "Risk Management",
+                "Investment Strategy",
+                "Market Research"
+            ]
+        }
+    ],
+    "Email Marketing": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Marketing",
+            "current_skills": [
+                "Financial Analysis",
+                "Risk Management",
+                "Investment Strategy",
+                "Market Research"
+            ]
+        }
+    ],
+    "Advertising": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Marketing",
+            "current_skills": [
+                "Financial Analysis",
+                "Risk Management",
+                "Investment Strategy",
+                "Market Research"
+            ]
+        }
+    ],
+    "Marketing Analytics": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Marketing",
+            "current_skills": [
+                "Financial Analysis",
+                "Risk Management",
+                "Investment Strategy",
+                "Market Research"
+            ]
+        }
+    ],
+    "Product Positioning": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Marketing",
+            "current_skills": [
+                "Financial Analysis",
+                "Risk Management",
+                "Investment Strategy",
+                "Market Research"
             ]
         }
     ]

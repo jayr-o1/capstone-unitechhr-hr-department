@@ -561,6 +561,14 @@ def main():
             if skill.lower() == 'exit':
                 break
             display_skill_clusters(skill)
+    
+    # Display feedback reminder
+    print("\n" + "=" * 60)
+    print("YOUR FEEDBACK HELPS US IMPROVE!")
+    print("=" * 60)
+    print("Please run 'python collect_feedback.py' to provide feedback about your recommendations.")
+    print("Your user ID is:", user_id)
+    print("=" * 60)
 
 if __name__ == "__main__":
     try:

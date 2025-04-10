@@ -1,22 +1,24 @@
 {
     "user_id": "user5",
-    "preferred_field": "Technology",
-    "preferred_specialization": "Cloud Computing",
+    "preferred_field": "Business",
+    "preferred_specialization": "Marketing",
     "current_skills": [
-        "Cloud Platforms",
-        "Infrastructure as Code",
-        "Containerization",
-        "DevOps",
-        "Microservices",
-        "Serverless Architecture",
-        "Automation"
+        "Financial Analysis",
+        "Risk Management",
+        "Investment Strategy",
+        "Market Research"
     ],
     "lacking_skills": [
-        "Networking",
-        "Security",
-        "System Administration",
-        "Virtualization",
-        "Load Balancing"
-    ],
-    "timestamp": "2025-04-09T08:30:15.000000"
-} 
+        "Digital Marketing",
+        "Brand Management",
+        "Content Strategy",
+        "Social Media Marketing",
+        "SEO",
+        "Campaign Analysis",
+        "Consumer Behavior",
+        "Email Marketing",
+        "Advertising",
+        "Marketing Analytics",
+        "Product Positioning"
+    ]
+}
