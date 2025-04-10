@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_2cfa7ca2",
+        "rating": 4,
+        "comments": "This recommendation aligns with my career goals.",
+        "suggestions": "None",
+        "timestamp": "2025-03-22T11:09:21.711235",
+        "is_positive": true,
+        "skills": "Finite Element Analysis (FEA), Pneumatics, Control Systems, Project Management, CAD (Computer-Aided Design), ANSYS",
+        "current_role": "Renewable Energy Engineer",
+        "recommended_role": "Renewable Energy Engineer"
+    }
+]

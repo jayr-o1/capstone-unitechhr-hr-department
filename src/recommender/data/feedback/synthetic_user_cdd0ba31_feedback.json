@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_cdd0ba31",
+        "rating": 5,
+        "comments": "This recommendation aligns with my career goals.",
+        "suggestions": "None",
+        "timestamp": "2025-04-03T20:14:21.711235",
+        "is_positive": true,
+        "skills": "ANSYS, Thermodynamics, Wireless Communication, Electromagnetics",
+        "current_role": "Automobile Engineer",
+        "recommended_role": "Automobile Engineer"
+    }
+]

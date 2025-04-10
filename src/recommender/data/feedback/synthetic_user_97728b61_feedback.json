@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_97728b61",
+        "rating": 3,
+        "comments": "The training recommendations are useful.",
+        "suggestions": "None",
+        "timestamp": "2025-03-26T09:57:21.711235",
+        "is_positive": false,
+        "skills": "Qualitative Research, Peer Review, Academic Writing, Scientific Communication",
+        "current_role": "University Professor",
+        "recommended_role": "University Professor"
+    }
+]

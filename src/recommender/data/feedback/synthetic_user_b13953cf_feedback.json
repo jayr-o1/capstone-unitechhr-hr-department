@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_b13953cf",
+        "rating": 5,
+        "comments": "The training recommendations are useful.",
+        "suggestions": "None",
+        "timestamp": "2025-03-25T20:52:21.711235",
+        "is_positive": true,
+        "skills": "Financial Reporting, Financial Modeling, Payroll Management",
+        "current_role": "Forensic Accountant",
+        "recommended_role": "Forensic Accountant"
+    }
+]

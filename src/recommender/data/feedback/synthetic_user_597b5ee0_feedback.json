@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_597b5ee0",
+        "rating": 4,
+        "comments": "This recommendation aligns with my career goals.",
+        "suggestions": "None",
+        "timestamp": "2025-04-02T05:01:21.711235",
+        "is_positive": true,
+        "skills": "Developmental Psychology, Cognitive Behavioral Therapy (CBT), Counseling Techniques",
+        "current_role": "Social Worker",
+        "recommended_role": "Social Worker"
+    }
+]

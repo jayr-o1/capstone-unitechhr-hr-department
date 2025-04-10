@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_ef092cb2",
+        "rating": 5,
+        "comments": "The training recommendations are useful.",
+        "suggestions": "None",
+        "timestamp": "2025-03-26T21:25:21.711235",
+        "is_positive": true,
+        "skills": "Mediation, Taxation Law, Legal Writing, International Law, Family Law, Trial Advocacy",
+        "current_role": "Environmental Lawyer",
+        "recommended_role": "Environmental Lawyer"
+    }
+]

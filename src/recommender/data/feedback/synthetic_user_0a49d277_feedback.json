@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_0a49d277",
+        "rating": 5,
+        "comments": "The career path matches my interests.",
+        "suggestions": "None",
+        "timestamp": "2025-03-10T10:25:21.711235",
+        "is_positive": true,
+        "skills": "Contract Law, Legal Research, Taxation Law, Legal Writing, Negotiation, Trial Advocacy",
+        "current_role": "Corporate Attorney",
+        "recommended_role": "Corporate Attorney"
+    }
+]

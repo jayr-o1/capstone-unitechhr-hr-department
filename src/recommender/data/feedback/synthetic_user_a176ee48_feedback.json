@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_a176ee48",
+        "rating": 5,
+        "comments": "The career path matches my interests.",
+        "suggestions": "None",
+        "timestamp": "2025-03-28T23:16:21.711235",
+        "is_positive": true,
+        "skills": "Emergency Response, Anatomy & Physiology, Radiology, Rehabilitation Therapy, Medical Ethics, Surgery, Microbiology",
+        "current_role": "Cardiologist",
+        "recommended_role": "Cardiologist"
+    }
+]

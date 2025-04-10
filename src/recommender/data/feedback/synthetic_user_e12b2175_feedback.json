@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_e12b2175",
+        "rating": 3,
+        "comments": "I appreciate the skill gap analysis.",
+        "suggestions": "None",
+        "timestamp": "2025-04-02T05:13:21.711235",
+        "is_positive": false,
+        "skills": "Pneumatics, CAD (Computer-Aided Design), 3D Printing, Electromagnetics, Project Management, Robotics, Signal Processing, Finite Element Analysis (FEA)",
+        "current_role": "Renewable Energy Engineer",
+        "recommended_role": "Renewable Energy Engineer"
+    }
+]

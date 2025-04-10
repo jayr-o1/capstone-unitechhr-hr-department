@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_f9ebcc32",
+        "rating": 5,
+        "comments": "The recommendation reflects my capabilities well.",
+        "suggestions": "None",
+        "timestamp": "2025-04-03T19:32:21.711235",
+        "is_positive": true,
+        "skills": "Experimental Design, Academic Writing, Grant Writing, Data Analysis, Statistical Analysis, Peer Review, Scientific Communication, Qualitative Research",
+        "current_role": "Think Tank Analyst",
+        "recommended_role": "Think Tank Analyst"
+    }
+]

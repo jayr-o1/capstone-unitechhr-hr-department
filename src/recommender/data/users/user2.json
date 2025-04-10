@@ -1,22 +1,21 @@
 {
     "user_id": "user2",
+    "preferred_field": "Criminal Justice",
     "preferred_specialization": "Criminology",
     "current_skills": [
         "Research Methods",
         "Statistical Analysis",
         "Criminal Psychology",
-        "Interviewing"
+        "Criminal Theory",
+        "Crime Prevention",
+        "Criminal Law",
+        "Victimology"
     ],
     "lacking_skills": [
-        "Criminal Profiling",
-        "Crime Prevention",
-        "White-Collar Crime",
         "Investigative Techniques",
-        "Criminal Theory",
-        "Criminal Law",
-        "Victimology",
+        "White-Collar Crime",
         "Juvenile Delinquency",
         "Sociology"
     ],
-    "timestamp": "2025-04-09T15:50:28.409816"
-}
+    "timestamp": "2025-04-09T11:45:30.000000"
+} 

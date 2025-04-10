@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_95256578",
+        "rating": 4,
+        "comments": "The training recommendations are useful.",
+        "suggestions": "None",
+        "timestamp": "2025-03-26T06:02:21.711235",
+        "is_positive": true,
+        "skills": "Criminal Law, Intellectual Property Law, Legal Research, Legal Writing",
+        "current_role": "Criminal Defense Attorney",
+        "recommended_role": "Criminal Defense Attorney"
+    }
+]

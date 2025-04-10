@@ -201,6 +201,42 @@ def calculate_skill_match_percentage(user_skills, required_skills):
     
     return match_percentage
 
+def get_field_for_specialization(specialization, career_paths):
+    """Determine which field a specialization belongs to."""
+    # Define mapping from specializations to fields
+    fields = {
+        "Technology": ["Software Development", "Data Science", "Cybersecurity", "Cloud Computing"],
+        "Criminal Justice": ["Criminology", "Forensic Science", "Law Enforcement", "Criminal Justice"],
+        "Healthcare": ["Healthcare Administration", "Nursing", "Clinical Psychology", "Industrial-Organizational Psychology"],
+        "Business": ["Marketing", "Finance", "Human Resources"],
+        "Engineering": ["Mechanical Engineering", "Civil Engineering"],
+        "Education": ["Elementary Education", "Secondary Education"],
+        "Creative Arts": ["Graphic Design", "Film Production"],
+        "Legal": ["Legal Practice"],
+        "Science": ["Environmental Science"],
+        "Media": ["Journalism"],
+        "Social Services": ["Social Work"],
+        "Healthcare Specialists": ["Physical Therapy", "Speech-Language Pathology"],
+        "Design": ["Architecture", "Interior Design"],
+        "Agriculture": ["Agriculture"],
+        "Hospitality": ["Hospitality Management"],
+        "Medical": ["Dentistry", "Pharmacy", "Veterinary Medicine"],
+        "Urban Development": ["Urban Planning"]
+    }
+    
+    # Find the field that contains this specialization
+    for field, specializations in fields.items():
+        if specialization in specializations:
+            return field
+    
+    # If not found in the mapping, try to extract from career paths
+    for path in career_paths:
+        if path['title'] == specialization and 'field' in path:
+            return path['field']
+    
+    # Default return if not found
+    return "Other"
+
 def main():
     """Main function to run the recommender system."""
     print("\n" + "="*60)
@@ -220,6 +256,10 @@ def main():
     existing_user_data = None
     predefined_user = None
     
+    # Load career paths and skills data
+    career_paths = load_career_paths()
+    skills_data = load_skills_data()
+    
     # Check if this is a predefined user
     if user_id:
         predefined_user = get_predefined_user(user_id)
@@ -230,31 +270,47 @@ def main():
         # Also check for existing user data
         existing_user_data = load_user_preferences(user_id)
         if existing_user_data:
-            print(f"Your preferred field: {existing_user_data['preferred_field']}")
-            print(f"Your preferred specialization: {existing_user_data['preferred_specialization']}")
-            print(f"Your current skills: {', '.join(existing_user_data['current_skills'])}")
+            print(f"Your preferred field: {existing_user_data.get('preferred_field', 'Not set')}")
+            print(f"Your preferred specialization: {existing_user_data.get('preferred_specialization', 'Not set')}")
+            print(f"Your current skills: {', '.join(existing_user_data.get('current_skills', []))}")
+            
+            # Ask if the user wants to use their existing profile or start fresh
+            use_existing = get_validated_yes_no("\nDo you want to use your existing profile?", default='y')
+            if use_existing:
+                print("\nUsing your existing profile data.")
+                # Use existing data for recommendation
+                if 'preferred_specialization' in existing_user_data and existing_user_data['preferred_specialization']:
+                    # Find the career path that matches the user's preferred specialization
+                    selected_path = next((path for path in career_paths 
+                                         if path['title'] == existing_user_data['preferred_specialization']), None)
+                    if selected_path:
+                        run_analysis(user_id, selected_path, existing_user_data['current_skills'], career_paths, skills_data)
+                        return
+                    else:
+                        print(f"Could not find your preferred specialization '{existing_user_data['preferred_specialization']}' in our database.")
+                        print("Please select a new specialization.")
+                else:
+                    print("No preferred specialization found in your profile. Please select one.")
+                
+                # Use existing skills but continue with selection
+                current_skills = existing_user_data.get('current_skills', [])
+            else:
+                print("\nStarting fresh with new information.")
+                # Continue to interactive mode but with the same user ID
     
     # If no user_id provided, create a new user
     if not user_id:
         user_id = str(uuid.uuid4())
         print(f"\nNew user ID assigned: {user_id}")
     
-    # Load career paths and skills data
-    career_paths = load_career_paths()
-    skills_data = load_skills_data()
-    
-    # Get user's current skills (from predefined user or input)
-    if predefined_user:
-        current_skills = predefined_user['skills']
-    elif existing_user_data:
-        print("\nYour current skills:", ", ".join(existing_user_data['current_skills']))
-        update_skills = get_validated_yes_no("Do you want to update your skills?", default='n')
-        if update_skills:
-            current_skills = get_validated_list("\nPlease enter your current skills (comma-separated): ", min_items=1)
+    # Interactive Mode - Get user's skills
+    # Only ask for skills if we don't have them already from existing data
+    if not 'current_skills' in locals() or not current_skills:
+        if predefined_user:
+            current_skills = predefined_user['skills']
+            print(f"\nUsing predefined skills: {', '.join(current_skills)}")
         else:
-            current_skills = existing_user_data['current_skills']
-    else:
-        current_skills = get_validated_list("\nPlease enter your current skills (comma-separated): ", min_items=1)
+            current_skills = get_validated_list("\nPlease enter your current skills (comma-separated): ", min_items=1)
     
     # Group career paths by field
     fields = {
@@ -353,9 +409,13 @@ def run_analysis(user_id, selected_path, current_skills, career_paths, skills_da
     current_skills_set = set(current_skills)
     lacking_skills = required_skills - current_skills_set
     
+    # Determine the field this specialization belongs to
+    field = get_field_for_specialization(selected_path['title'], career_paths)
+    
     # Save user preferences and recommendations
     user_data = {
         'user_id': user_id,
+        'preferred_field': field,
         'preferred_specialization': selected_path['title'],
         'current_skills': current_skills,
         'lacking_skills': list(lacking_skills),

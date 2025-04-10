@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_ea8be9f1",
+        "rating": 5,
+        "comments": "The career path matches my interests.",
+        "suggestions": "None",
+        "timestamp": "2025-03-11T07:03:21.711235",
+        "is_positive": true,
+        "skills": "Thermal Systems, ANSYS, HVAC Systems, Pneumatics, Control Systems, SolidWorks, Geotechnical Surveying, Thermodynamics",
+        "current_role": "Aerospace Engineer",
+        "recommended_role": "Aerospace Engineer"
+    }
+]

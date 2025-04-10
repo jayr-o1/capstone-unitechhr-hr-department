@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_ebd96727",
+        "rating": 4,
+        "comments": "The training recommendations are useful.",
+        "suggestions": "None",
+        "timestamp": "2025-03-29T02:18:21.711235",
+        "is_positive": true,
+        "skills": "UI/UX Design, NoSQL, Kubernetes, JavaScript, Deep Learning, Cloud Computing, C#",
+        "current_role": "UI/UX Designer",
+        "recommended_role": "UI/UX Designer"
+    }
+]

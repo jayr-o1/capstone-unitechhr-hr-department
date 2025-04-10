@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_b4b91a3c",
+        "rating": 5,
+        "comments": "The training recommendations are useful.",
+        "suggestions": "None",
+        "timestamp": "2025-03-10T17:45:21.711235",
+        "is_positive": true,
+        "skills": "Nutrition Science, Medical Documentation, Epidemiology, Geriatric Care, Anatomy & Physiology",
+        "current_role": "Nephrologist",
+        "recommended_role": "Nephrologist"
+    }
+]

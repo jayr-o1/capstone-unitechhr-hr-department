@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_623ad803",
+        "rating": 5,
+        "comments": "The training recommendations are useful.",
+        "suggestions": "None",
+        "timestamp": "2025-03-22T11:45:21.711235",
+        "is_positive": true,
+        "skills": "ANSYS, Mechatronics, Robotics",
+        "current_role": "Materials Engineer",
+        "recommended_role": "Materials Engineer"
+    }
+]

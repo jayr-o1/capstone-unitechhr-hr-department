@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_28469bd4",
+        "rating": 5,
+        "comments": "The career path matches my interests.",
+        "suggestions": "None",
+        "timestamp": "2025-03-11T06:42:21.711235",
+        "is_positive": true,
+        "skills": "Quantum Computing, Python, Ethical Hacking, Computer Vision, Docker, Neural Networks",
+        "current_role": "IT Project Manager",
+        "recommended_role": "IT Project Manager"
+    }
+]

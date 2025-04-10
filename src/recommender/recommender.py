@@ -310,9 +310,8 @@ def recommend_field_and_career_paths(skills, experience, user_id=None):
     # Use consistent feature naming for skills columns
     X_skills_df.columns = [f'skill_{i}' for i in range(X_skills_df.shape[1])]
     
-    # Add experience column
+    # Use only skills features without adding experience
     X_input = X_skills_df.copy()
-    X_input['experience'] = experience_num
     
     # Check for and handle NaN values
     if X_input.isna().any().any():

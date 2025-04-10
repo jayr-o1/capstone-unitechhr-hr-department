@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_b200f0d4",
+        "rating": 4,
+        "comments": "This recommendation aligns with my career goals.",
+        "suggestions": "None",
+        "timestamp": "2025-04-09T05:07:21.711235",
+        "is_positive": true,
+        "skills": "Developmental Psychology, Trauma Therapy, Crisis Intervention, Behavioral Neuroscience, Cognitive Behavioral Therapy (CBT)",
+        "current_role": "Cognitive Behavioral Therapist",
+        "recommended_role": "Cognitive Behavioral Therapist"
+    }
+]

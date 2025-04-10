@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_e2a1e8a1",
+        "rating": 3,
+        "comments": "The training recommendations are useful.",
+        "suggestions": "None",
+        "timestamp": "2025-03-31T17:20:21.711235",
+        "is_positive": false,
+        "skills": "Public Health Policy, Radiology, Clinical Research, Medical Documentation, Anatomy & Physiology",
+        "current_role": "Veterinarian",
+        "recommended_role": "Veterinarian"
+    }
+]

@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_2121b892",
+        "rating": 3,
+        "comments": "This recommendation aligns with my career goals.",
+        "suggestions": "None",
+        "timestamp": "2025-04-01T04:01:21.711235",
+        "is_positive": false,
+        "skills": "UI/UX Design, Web Development, Deep Learning, PyTorch, React.js, Neural Networks, Cybersecurity",
+        "current_role": "Full-Stack Developer",
+        "recommended_role": "Full-Stack Developer"
+    }
+]

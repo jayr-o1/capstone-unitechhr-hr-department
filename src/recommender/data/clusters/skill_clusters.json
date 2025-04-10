@@ -1,333 +1,17 @@
 {
-    "Investigation Techniques": [
+    "Statistical Modeling": [
         {
-            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
-            "preferred_specialization": "Law Enforcement",
-            "current_skills": [
-                "Law"
-            ]
-        }
-    ],
-    "Self Defense": [
-        {
-            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
-            "preferred_specialization": "Law Enforcement",
-            "current_skills": [
-                "Law"
-            ]
-        }
-    ],
-    "Legal Knowledge": [
-        {
-            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
-            "preferred_specialization": "Law Enforcement",
-            "current_skills": [
-                "Law"
-            ]
-        }
-    ],
-    "Criminal Procedure": [
-        {
-            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
-            "preferred_specialization": "Law Enforcement",
-            "current_skills": [
-                "Law"
-            ]
-        }
-    ],
-    "Firearms Training": [
-        {
-            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
-            "preferred_specialization": "Law Enforcement",
-            "current_skills": [
-                "Law"
-            ]
-        }
-    ],
-    "De-escalation": [
-        {
-            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
-            "preferred_specialization": "Law Enforcement",
-            "current_skills": [
-                "Law"
-            ]
-        }
-    ],
-    "Crisis Management": [
-        {
-            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
-            "preferred_specialization": "Law Enforcement",
-            "current_skills": [
-                "Law"
-            ]
-        }
-    ],
-    "Report Writing": [
-        {
-            "user_id": "21c4d17b-5379-48bc-863c-3ba396163a34",
-            "preferred_specialization": "Law Enforcement",
-            "current_skills": [
-                "Law"
-            ]
-        }
-    ],
-    "Pharmacology": [
-        {
-            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
-            "preferred_specialization": "Nursing",
-            "current_skills": [
-                "IV"
-            ]
-        }
-    ],
-    "Infection Control": [
-        {
-            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
-            "preferred_specialization": "Nursing",
-            "current_skills": [
-                "IV"
-            ]
-        }
-    ],
-    "Documentation": [
-        {
-            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
-            "preferred_specialization": "Nursing",
-            "current_skills": [
-                "IV"
-            ]
-        }
-    ],
-    "Medical Terminology": [
-        {
-            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
-            "preferred_specialization": "Nursing",
-            "current_skills": [
-                "IV"
-            ]
-        }
-    ],
-    "Communication": [
-        {
-            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
-            "preferred_specialization": "Nursing",
-            "current_skills": [
-                "IV"
-            ]
-        }
-    ],
-    "Care Planning": [
-        {
-            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
-            "preferred_specialization": "Nursing",
-            "current_skills": [
-                "IV"
-            ]
-        }
-    ],
-    "Patient Assessment": [
-        {
-            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
-            "preferred_specialization": "Nursing",
-            "current_skills": [
-                "IV"
-            ]
-        }
-    ],
-    "Patient Education": [
-        {
-            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
-            "preferred_specialization": "Nursing",
-            "current_skills": [
-                "IV"
-            ]
-        }
-    ],
-    "Evidence-Based Practice": [
-        {
-            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
-            "preferred_specialization": "Nursing",
-            "current_skills": [
-                "IV"
-            ]
-        }
-    ],
-    "Clinical Skills": [
-        {
-            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
-            "preferred_specialization": "Nursing",
-            "current_skills": [
-                "IV"
-            ]
-        }
-    ],
-    "Critical Thinking": [
-        {
-            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
-            "preferred_specialization": "Nursing",
-            "current_skills": [
-                "IV"
-            ]
-        }
-    ],
-    "Emergency Response": [
-        {
-            "user_id": "2853fc89-bcd1-4c66-b7e4-a35dfdcafb59",
-            "preferred_specialization": "Nursing",
-            "current_skills": [
-                "IV"
-            ]
-        }
-    ],
-    "Information Security": [
-        {
-            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "PicoCTF",
-                "Bruteforce",
-                "Pentesting"
-            ]
-        },
-        {
-            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
-            "preferred_specialization": "Cybersecurity",
+            "user_id": "user1",
+            "preferred_specialization": "Data Science",
             "current_skills": [
                 "Python",
-                "Kali Linux"
-            ]
-        }
-    ],
-    "Cryptography": [
-        {
-            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "PicoCTF",
-                "Bruteforce",
-                "Pentesting"
-            ]
-        },
-        {
-            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python",
-                "Kali Linux"
-            ]
-        }
-    ],
-    "Ethical Hacking": [
-        {
-            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "PicoCTF",
-                "Bruteforce",
-                "Pentesting"
-            ]
-        },
-        {
-            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python",
-                "Kali Linux"
-            ]
-        }
-    ],
-    "Security Tools": [
-        {
-            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "PicoCTF",
-                "Bruteforce",
-                "Pentesting"
-            ]
-        },
-        {
-            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python",
-                "Kali Linux"
-            ]
-        }
-    ],
-    "Risk Management": [
-        {
-            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "PicoCTF",
-                "Bruteforce",
-                "Pentesting"
-            ]
-        },
-        {
-            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python",
-                "Kali Linux"
-            ]
-        }
-    ],
-    "Network Security": [
-        {
-            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "PicoCTF",
-                "Bruteforce",
-                "Pentesting"
-            ]
-        },
-        {
-            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python",
-                "Kali Linux"
-            ]
-        }
-    ],
-    "Incident Response": [
-        {
-            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "PicoCTF",
-                "Bruteforce",
-                "Pentesting"
-            ]
-        },
-        {
-            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python",
-                "Kali Linux"
-            ]
-        }
-    ],
-    "Security Auditing": [
-        {
-            "user_id": "3bd6d2dc-66eb-4c9f-8696-b1ac2a47ae4a",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "PicoCTF",
-                "Bruteforce",
-                "Pentesting"
-            ]
-        },
-        {
-            "user_id": "de89f82b-653b-4ecb-8ac4-87efd1412e32",
-            "preferred_specialization": "Cybersecurity",
-            "current_skills": [
-                "Python",
-                "Kali Linux"
+                "Data Analysis",
+                "Machine Learning",
+                "SQL",
+                "Statistics",
+                "Data Visualization",
+                "Deep Learning",
+                "Natural Language Processing"
             ]
         }
     ],
@@ -337,57 +21,13 @@
             "preferred_specialization": "Data Science",
             "current_skills": [
                 "Python",
-                "Problem Solving",
-                "Cloud Platforms",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Data Visualization": [
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Problem Solving",
-                "Cloud Platforms",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Experimental Design": [
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Problem Solving",
-                "Cloud Platforms",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Machine Learning": [
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Problem Solving",
-                "Cloud Platforms",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Deep Learning": [
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Problem Solving",
-                "Cloud Platforms",
-                "Data Analysis"
+                "Data Analysis",
+                "Machine Learning",
+                "SQL",
+                "Statistics",
+                "Data Visualization",
+                "Deep Learning",
+                "Natural Language Processing"
             ]
         }
     ],
@@ -397,93 +37,29 @@
             "preferred_specialization": "Data Science",
             "current_skills": [
                 "Python",
-                "Problem Solving",
-                "Cloud Platforms",
-                "Data Analysis"
+                "Data Analysis",
+                "Machine Learning",
+                "SQL",
+                "Statistics",
+                "Data Visualization",
+                "Deep Learning",
+                "Natural Language Processing"
             ]
         }
     ],
-    "Statistics": [
+    "Experimental Design": [
         {
             "user_id": "user1",
             "preferred_specialization": "Data Science",
             "current_skills": [
                 "Python",
-                "Problem Solving",
-                "Cloud Platforms",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Natural Language Processing": [
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Problem Solving",
-                "Cloud Platforms",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "SQL": [
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Problem Solving",
-                "Cloud Platforms",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Statistical Modeling": [
-        {
-            "user_id": "user1",
-            "preferred_specialization": "Data Science",
-            "current_skills": [
-                "Python",
-                "Problem Solving",
-                "Cloud Platforms",
-                "Data Analysis"
-            ]
-        }
-    ],
-    "Criminal Profiling": [
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Criminology",
-            "current_skills": [
-                "Research Methods",
-                "Statistical Analysis",
-                "Criminal Psychology",
-                "Interviewing"
-            ]
-        }
-    ],
-    "Crime Prevention": [
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Criminology",
-            "current_skills": [
-                "Research Methods",
-                "Statistical Analysis",
-                "Criminal Psychology",
-                "Interviewing"
-            ]
-        }
-    ],
-    "White-Collar Crime": [
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Criminology",
-            "current_skills": [
-                "Research Methods",
-                "Statistical Analysis",
-                "Criminal Psychology",
-                "Interviewing"
+                "Data Analysis",
+                "Machine Learning",
+                "SQL",
+                "Statistics",
+                "Data Visualization",
+                "Deep Learning",
+                "Natural Language Processing"
             ]
         }
     ],
@@ -495,11 +71,14 @@
                 "Research Methods",
                 "Statistical Analysis",
                 "Criminal Psychology",
-                "Interviewing"
+                "Criminal Theory",
+                "Crime Prevention",
+                "Criminal Law",
+                "Victimology"
             ]
         }
     ],
-    "Criminal Theory": [
+    "White-Collar Crime": [
         {
             "user_id": "user2",
             "preferred_specialization": "Criminology",
@@ -507,31 +86,10 @@
                 "Research Methods",
                 "Statistical Analysis",
                 "Criminal Psychology",
-                "Interviewing"
-            ]
-        }
-    ],
-    "Criminal Law": [
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Criminology",
-            "current_skills": [
-                "Research Methods",
-                "Statistical Analysis",
-                "Criminal Psychology",
-                "Interviewing"
-            ]
-        }
-    ],
-    "Victimology": [
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Criminology",
-            "current_skills": [
-                "Research Methods",
-                "Statistical Analysis",
-                "Criminal Psychology",
-                "Interviewing"
+                "Criminal Theory",
+                "Crime Prevention",
+                "Criminal Law",
+                "Victimology"
             ]
         }
     ],
@@ -543,7 +101,10 @@
                 "Research Methods",
                 "Statistical Analysis",
                 "Criminal Psychology",
-                "Interviewing"
+                "Criminal Theory",
+                "Crime Prevention",
+                "Criminal Law",
+                "Victimology"
             ]
         }
     ],
@@ -555,7 +116,224 @@
                 "Research Methods",
                 "Statistical Analysis",
                 "Criminal Psychology",
-                "Interviewing"
+                "Criminal Theory",
+                "Crime Prevention",
+                "Criminal Law",
+                "Victimology"
+            ]
+        }
+    ],
+    "Database Management": [
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Web Development",
+                "API Design",
+                "Debugging"
+            ]
+        }
+    ],
+    "Problem Solving": [
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Web Development",
+                "API Design",
+                "Debugging"
+            ]
+        }
+    ],
+    "System Architecture": [
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Web Development",
+                "API Design",
+                "Debugging"
+            ]
+        }
+    ],
+    "Unit Testing": [
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Web Development",
+                "API Design",
+                "Debugging"
+            ]
+        }
+    ],
+    "Cryptography": [
+        {
+            "user_id": "user4",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security",
+                "Ethical Hacking",
+                "Risk Management",
+                "Incident Response",
+                "Security Tools",
+                "Cloud Security"
+            ]
+        }
+    ],
+    "Digital Forensics": [
+        {
+            "user_id": "user4",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security",
+                "Ethical Hacking",
+                "Risk Management",
+                "Incident Response",
+                "Security Tools",
+                "Cloud Security"
+            ]
+        }
+    ],
+    "Penetration Testing": [
+        {
+            "user_id": "user4",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security",
+                "Ethical Hacking",
+                "Risk Management",
+                "Incident Response",
+                "Security Tools",
+                "Cloud Security"
+            ]
+        }
+    ],
+    "Security Auditing": [
+        {
+            "user_id": "user4",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security",
+                "Ethical Hacking",
+                "Risk Management",
+                "Incident Response",
+                "Security Tools",
+                "Cloud Security"
+            ]
+        }
+    ],
+    "Malware Analysis": [
+        {
+            "user_id": "user4",
+            "preferred_specialization": "Cybersecurity",
+            "current_skills": [
+                "Network Security",
+                "Information Security",
+                "Ethical Hacking",
+                "Risk Management",
+                "Incident Response",
+                "Security Tools",
+                "Cloud Security"
+            ]
+        }
+    ],
+    "Networking": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Infrastructure as Code",
+                "Containerization",
+                "DevOps",
+                "Microservices",
+                "Serverless Architecture",
+                "Automation"
+            ]
+        }
+    ],
+    "Security": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Infrastructure as Code",
+                "Containerization",
+                "DevOps",
+                "Microservices",
+                "Serverless Architecture",
+                "Automation"
+            ]
+        }
+    ],
+    "System Administration": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Infrastructure as Code",
+                "Containerization",
+                "DevOps",
+                "Microservices",
+                "Serverless Architecture",
+                "Automation"
+            ]
+        }
+    ],
+    "Virtualization": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Infrastructure as Code",
+                "Containerization",
+                "DevOps",
+                "Microservices",
+                "Serverless Architecture",
+                "Automation"
+            ]
+        }
+    ],
+    "Load Balancing": [
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Infrastructure as Code",
+                "Containerization",
+                "DevOps",
+                "Microservices",
+                "Serverless Architecture",
+                "Automation"
             ]
         }
     ]

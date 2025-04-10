@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_331b53fc",
+        "rating": 3,
+        "comments": "I appreciate the skill gap analysis.",
+        "suggestions": "None",
+        "timestamp": "2025-04-01T23:00:21.711235",
+        "is_positive": false,
+        "skills": "Node.js, PyTorch, Quantum Computing, Web Development, C#, Python",
+        "current_role": "Big Data Engineer",
+        "recommended_role": "Big Data Engineer"
+    }
+]

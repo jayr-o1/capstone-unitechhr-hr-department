@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_bcfae670",
+        "rating": 4,
+        "comments": "I appreciate the skill gap analysis.",
+        "suggestions": "None",
+        "timestamp": "2025-03-16T09:00:21.711235",
+        "is_positive": true,
+        "skills": "Data Analysis, Taxation, Internal Controls, Payroll Management, Investment Analysis",
+        "current_role": "Chartered Accountant",
+        "recommended_role": "Chartered Accountant"
+    }
+]

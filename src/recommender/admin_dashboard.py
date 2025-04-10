@@ -262,71 +262,44 @@ def retrain_model():
         print(f"\nRetraining conditions met: {len(feedback_entries)} feedback entries and {days_since} days since last training.")
         should_retrain = True
     
-    # Function to show continuous progress indicator
-    def show_progress():
-        indicators = ['|', '/', '-', '\\']
-        i = 0
-        phases = [
-            "Loading model components",
-            "Processing feedback data",
-            "Preparing features",
-            "Training model",
-            "Evaluating performance",
-            "Saving updated model"
-        ]
-        current_phase = 0
-        
-        while not stop_event.is_set():
-            phase_text = phases[current_phase % len(phases)]
-            sys.stdout.write(f"\rRetraining in progress {indicators[i % len(indicators)]} {phase_text}... ")
-            sys.stdout.flush()
-            i += 1
-            
-            # Change phase every few iterations to simulate progress through different stages
-            if i % 20 == 0:
-                current_phase = (current_phase + 1) % len(phases)
-                
-            time.sleep(0.2)
-        sys.stdout.write("\rRetraining completed!                                           \n")
-        sys.stdout.flush()
-    
     # Retrain the model if needed
     if should_retrain:
-        # Start time for tracking duration
-        start_time = time.time()
-        
-        # Set up progress indicator thread
-        stop_event = threading.Event()
-        progress_thread = threading.Thread(target=show_progress)
-        progress_thread.daemon = True
-        
         try:
-            # Start progress indicator
-            progress_thread.start()
+            # Start time for tracking duration
+            start_time = time.time()
             
-            # Create a simple mechanism to track progress across threads
-            progress_info = {'current_step': 'Initializing', 'percentage': 0}
+            # Create progress indicator
+            def show_progress():
+                indicators = ['|', '/', '-', '\\']
+                i = 0
+                while True:
+                    sys.stdout.write(f"\rRetraining in progress {indicators[i % len(indicators)]} ")
+                    sys.stdout.flush()
+                    i += 1
+                    time.sleep(0.2)
             
-            def progress_callback(step, percent=None):
-                """Update progress information during retraining"""
-                progress_info['current_step'] = step
-                if percent is not None:
-                    progress_info['percentage'] = percent
-                # Print specific update messages when key steps complete
-                if percent is not None and percent % 25 == 0:
-                    # Write to a new line to avoid interference with spinner
-                    print(f"\n>> {step} - {percent}% complete")
+            # Try to start progress thread
+            try:
+                import threading
+                stop_event = threading.Event()
+                progress_thread = threading.Thread(target=show_progress)
+                progress_thread.daemon = True
+                progress_thread.start()
+            except ImportError:
+                progress_thread = None
+                stop_event = None
             
-            # Run retraining directly with progress callback
-            success = model_retrain(verbose=False, progress_callback=progress_callback)
+            # Run retraining
+            success = model_retrain(verbose=True)
+            
+            # Stop progress indicator
+            if progress_thread and stop_event:
+                stop_event.set()
+                progress_thread.join(timeout=1.0)
             
             # Calculate duration
             duration = time.time() - start_time
             minutes, seconds = divmod(duration, 60)
-            
-            # Stop progress indicator
-            stop_event.set()
-            progress_thread.join(timeout=1.0)
             
             if success:
                 print(f"\nModel retraining completed successfully! (Took {int(minutes)}m {int(seconds)}s)")
@@ -346,9 +319,11 @@ def retrain_model():
                 print("\nModel retraining failed.")
         except Exception as e:
             # Stop the progress indicator
-            stop_event.set()
-            if progress_thread.is_alive():
-                progress_thread.join(timeout=1.0)
+            if 'stop_event' in locals() and 'progress_thread' in locals():
+                if stop_event and progress_thread:
+                    stop_event.set()
+                    if progress_thread.is_alive():
+                        progress_thread.join(timeout=1.0)
             print(f"\nError during retraining: {e}")
     else:
         print("\nSkipping model retraining based on conditions.")
@@ -445,7 +420,7 @@ def run_initial_training():
     input("\nPress Enter to continue...")
 
 def generate_synthetic_feedback():
-    """Generate synthetic feedback data."""
+    """Generate synthetic feedback data optimized for model retraining."""
     print_header("GENERATING SYNTHETIC FEEDBACK")
     
     # Check if we have the synthetic feedback script
@@ -456,8 +431,8 @@ def generate_synthetic_feedback():
         input("\nPress Enter to continue...")
         return
     
-    print("\nThis will generate synthetic feedback data.")
-    print("Note: This operation will overwrite any existing synthetic feedback data.\n")
+    print("\nThis will generate synthetic feedback data optimized for model retraining.")
+    print("Note: You'll have the option to clear existing feedback data before generating new data.\n")
     
     confirm = get_validated_string("\nDo you want to continue? (y/n): ", required=True).lower()
     if confirm != 'y':
@@ -468,18 +443,33 @@ def generate_synthetic_feedback():
     print("\nStarting synthetic feedback generation...\n")
     print("-" * 60)
     
-    # Run the synthetic feedback generation process using a simpler approach
+    # Run the synthetic feedback generation process
     try:
-        # Use subprocess.run instead of Popen for simplicity
-        result = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
+        # Run the script as a subprocess with interactive input
+        process = subprocess.Popen([sys.executable, script_path], 
+                                  stdin=subprocess.PIPE,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE,
+                                  universal_newlines=True)
         
-        # Display the output
-        print(result.stdout)
+        # Define the inputs we want to send
+        clear_feedback = get_validated_string("Do you want to clear existing feedback data? (y/n): ", required=True).lower() == 'y'
+        num_entries = get_validated_integer("How many feedback entries to generate? (default: 15): ", min_value=1, max_value=100, default_value=15)
+        
+        # Send inputs to the process
+        inputs = f"{'y' if clear_feedback else 'n'}\n{num_entries}\n"
+        stdout, stderr = process.communicate(inputs)
+        
+        # Display output
+        print(stdout)
         
         # Check for errors
-        if result.returncode != 0:
-            print(f"\nError during synthetic feedback generation (code {result.returncode}):")
-            print(result.stderr)
+        if process.returncode != 0:
+            print(f"\nError during synthetic feedback generation (code {process.returncode}):")
+            print(stderr)
+        else:
+            print("\nSynthetic feedback generation completed successfully!")
+            print("\nYou can now use this feedback data to retrain your model.")
     except Exception as e:
         print(f"\nError executing synthetic feedback generation script: {e}")
     

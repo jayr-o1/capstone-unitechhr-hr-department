@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_a74de5c2",
+        "rating": 5,
+        "comments": "The recommendation reflects my capabilities well.",
+        "suggestions": "None",
+        "timestamp": "2025-03-27T03:27:21.711235",
+        "is_positive": true,
+        "skills": "Criminal Law, Intellectual Property Law, Corporate Law, Civil Litigation, Contract Law, Trial Advocacy, Legal Writing, Constitutional Law",
+        "current_role": "Paralegal",
+        "recommended_role": "Paralegal"
+    }
+]

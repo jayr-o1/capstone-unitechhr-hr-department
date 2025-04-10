@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_cb7553f0",
+        "rating": 4,
+        "comments": "The training recommendations are useful.",
+        "suggestions": "None",
+        "timestamp": "2025-04-08T13:33:21.711235",
+        "is_positive": true,
+        "skills": "Cost Accounting, IFRS (International Financial Reporting Standards), Internal Controls, Risk Management, Managerial Accounting",
+        "current_role": "Chartered Accountant",
+        "recommended_role": "Chartered Accountant"
+    }
+]

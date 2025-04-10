@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_df26abd7",
+        "rating": 4,
+        "comments": "The recommendation reflects my capabilities well.",
+        "suggestions": "None",
+        "timestamp": "2025-03-14T05:55:21.711235",
+        "is_positive": true,
+        "skills": "Finite Volume Method, HVAC Systems, Thermal Systems, Circuit Design, Engineering Economics",
+        "current_role": "HVAC Engineer",
+        "recommended_role": "HVAC Engineer"
+    }
+]

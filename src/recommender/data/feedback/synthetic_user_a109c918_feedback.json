@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_a109c918",
+        "rating": 3,
+        "comments": "I'm going to focus on developing these skills.",
+        "suggestions": "None",
+        "timestamp": "2025-03-17T18:56:21.711235",
+        "is_positive": false,
+        "skills": "Risk Management, IFRS (International Financial Reporting Standards), Financial Reporting, Forensic Accounting, Corporate Finance, Cost Accounting",
+        "current_role": "Actuary",
+        "recommended_role": "Actuary"
+    }
+]

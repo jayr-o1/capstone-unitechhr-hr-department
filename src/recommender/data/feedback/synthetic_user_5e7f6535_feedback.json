@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_5e7f6535",
+        "rating": 3,
+        "comments": "The recommendation reflects my capabilities well.",
+        "suggestions": "None",
+        "timestamp": "2025-04-06T20:33:21.711235",
+        "is_positive": false,
+        "skills": "SolidWorks, Fluid Mechanics, Electromagnetics",
+        "current_role": "Chemical Engineer",
+        "recommended_role": "Chemical Engineer"
+    }
+]

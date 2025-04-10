@@ -62,22 +62,11 @@ def process_feedback_data(feedback_data):
     for entry in feedback_data.get("feedback_entries", []):
         # Extract features from the entry
         skills = entry.get("skills", "")
-        experience = entry.get("experience", "0+ years")
         
-        # Skip entries with empty skills or experience
-        if not skills or not experience:
+        # Skip entries with empty skills
+        if not skills:
             continue
             
-        # Extract numeric experience value with error handling
-        try:
-            # Remove "+" and "years" for consistent extraction
-            exp_value = experience.replace("+", "").replace("years", "").strip()
-            # Convert to numeric
-            exp_numeric = float(exp_value)
-        except (ValueError, TypeError):
-            # Default to 0 if conversion fails
-            exp_numeric = 0
-        
         # Ensure skills is a string
         if not isinstance(skills, str):
             try:
@@ -85,10 +74,9 @@ def process_feedback_data(feedback_data):
             except:
                 skills = ""
         
-        # Combine features
+        # Create feature with only skills
         feature = {
-            "skills": skills,
-            "experience": exp_numeric  # Store as numeric value
+            "skills": skills
         }
         
         # Get the target (selected path from feedback)
@@ -115,14 +103,6 @@ def process_feedback_data(feedback_data):
             # Fill NaN values in skills with empty string
             if 'skills' in df_features.columns:
                 df_features['skills'].fillna("", inplace=True)
-                
-            # Fill NaN values in experience with median or 0
-            if 'experience' in df_features.columns:
-                if not df_features['experience'].isna().all():
-                    median_experience = df_features['experience'].median()
-                    df_features['experience'].fillna(median_experience, inplace=True)
-                else:
-                    df_features['experience'].fillna(0, inplace=True)
         
         # Convert back to list of dictionaries
         features = df_features.to_dict('records')

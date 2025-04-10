@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_767c6537",
+        "rating": 4,
+        "comments": "The training recommendations are useful.",
+        "suggestions": "None",
+        "timestamp": "2025-04-05T07:35:21.711235",
+        "is_positive": true,
+        "skills": "Addiction Counseling, Suicidology, Emotional Intelligence, Crisis Intervention",
+        "current_role": "Grief Counselor",
+        "recommended_role": "Grief Counselor"
+    }
+]

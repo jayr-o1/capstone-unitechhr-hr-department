@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_7be98ae1",
+        "rating": 5,
+        "comments": "This recommendation aligns with my career goals.",
+        "suggestions": "None",
+        "timestamp": "2025-04-03T05:47:21.711235",
+        "is_positive": true,
+        "skills": "Nutrition Science, Medical Ethics, Radiology",
+        "current_role": "Genetic Counselor",
+        "recommended_role": "Genetic Counselor"
+    }
+]

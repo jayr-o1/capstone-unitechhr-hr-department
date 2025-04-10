@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_c0b3f22c",
+        "rating": 3,
+        "comments": "The training recommendations are useful.",
+        "suggestions": "None",
+        "timestamp": "2025-03-23T20:35:21.711235",
+        "is_positive": false,
+        "skills": "Family Law, Intellectual Property Law, Mediation, Contract Law, Taxation Law, International Law, Corporate Law, Trial Advocacy",
+        "current_role": "Lawyer",
+        "recommended_role": "Lawyer"
+    }
+]

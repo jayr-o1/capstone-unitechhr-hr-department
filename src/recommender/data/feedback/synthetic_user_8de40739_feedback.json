@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_8de40739",
+        "rating": 4,
+        "comments": "I appreciate the skill gap analysis.",
+        "suggestions": "None",
+        "timestamp": "2025-03-19T11:35:21.711235",
+        "is_positive": true,
+        "skills": "Research Methodology, Grant Writing, Academic Writing, Qualitative Research, Data Analysis, Scientific Communication, Statistical Analysis, Experimental Design",
+        "current_role": "University Professor",
+        "recommended_role": "University Professor"
+    }
+]

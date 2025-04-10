@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_65bcffff",
+        "rating": 4,
+        "comments": "The training recommendations are useful.",
+        "suggestions": "None",
+        "timestamp": "2025-04-02T20:24:21.711235",
+        "is_positive": true,
+        "skills": "Scientific Communication, Data Analysis, Grant Writing, Peer Review, Research Methodology",
+        "current_role": "Think Tank Analyst",
+        "recommended_role": "Think Tank Analyst"
+    }
+]
