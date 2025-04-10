@@ -1,0 +1,22 @@
+{
+    "user_id": "cluster_user_19",
+    "preferred_field": "Criminal Justice",
+    "preferred_specialization": "Forensic Science",
+    "current_skills": [
+        "Forensic Anthropology",
+        "Toxicology",
+        "Chain of Custody",
+        "Trace Evidence Analysis",
+        "Forensic Photography",
+        "Fingerprint Analysis",
+        "Evidence Collection",
+        "Court Testimony",
+        "DNA Analysis",
+        "Bloodstain Pattern Analysis"
+    ],
+    "lacking_skills": [
+        "Ballistics",
+        "Crime Scene Processing"
+    ],
+    "timestamp": "2025-04-10T14:10:45.324868"
+}

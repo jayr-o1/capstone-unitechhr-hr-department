@@ -13,9 +13,10 @@
         "Natural Language Processing"
     ],
     "lacking_skills": [
-        "Experimental Design",
+        "Statistical Modeling",
         "Data Mining",
         "Big Data",
-        "Statistical Modeling"
-    ]
+        "Experimental Design"
+    ],
+    "timestamp": "2025-04-09T20:40:47.950380"
 }

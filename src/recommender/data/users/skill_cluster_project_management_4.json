@@ -1,0 +1,22 @@
+{
+    "user_id": "skill_cluster_project_management_4",
+    "preferred_field": "Design",
+    "preferred_specialization": "Architecture",
+    "current_skills": [
+        "3D Modeling",
+        "Material Selection",
+        "Sustainable Design",
+        "Client Communication",
+        "Architectural Drawing",
+        "Building Design",
+        "Site Planning",
+        "AutoCAD"
+    ],
+    "lacking_skills": [
+        "Project Management",
+        "Building Codes",
+        "Construction Documentation",
+        "Structural Principles"
+    ],
+    "timestamp": "2025-04-10T14:10:45.693154"
+}

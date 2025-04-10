@@ -17,8 +17,21 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.feedback_handler import get_all_feedback
 from utils.data_loader import load_user_preferences, load_career_paths
-from utils.cluster_manager import load_clusters
-from utils.input_validator import get_validated_integer, get_validated_string
+from utils.cluster_manager import load_clusters, get_skills_by_popularity, get_cluster_statistics, visualize_clusters_text
+from utils.input_validator import get_validated_integer, get_validated_string, get_validated_list
+
+# Try to import skill analyzer
+try:
+    from utils.skill_analyzer import (
+        recommend_fields_based_on_skills, 
+        recommend_specializations_for_field,
+        analyze_skill_gap,
+        get_training_recommendations_for_skills,
+        group_users_by_missing_skills
+    )
+    SKILL_ANALYZER_AVAILABLE = True
+except ImportError:
+    SKILL_ANALYZER_AVAILABLE = False
 
 # Try to import model evaluation function
 try:
@@ -38,9 +51,9 @@ def clear_screen():
     time.sleep(0.1)
 
 def print_header(title):
-    """Print a header with a title."""
+    """Print a formatted header."""
     print("\n" + "="*60)
-    print(title)
+    print(title.center(60))
     print("="*60 + "\n")
 
 def view_all_feedback():
@@ -117,30 +130,177 @@ def view_user_statistics():
     input("\nPress Enter to continue...")
 
 def view_skill_clusters():
-    """View skill clusters and user groups."""
+    """View skill clusters and user groups - ADMIN DASHBOARD VIEW."""
     clusters = load_clusters()
     
     if not clusters:
         print("No skill clusters available.")
+        input("\nPress Enter to continue...")
         return
     
-    print_header("SKILL CLUSTERS")
+    print_header("SKILL CLUSTERS - ADMIN VIEW")
     
-    # Sort clusters by number of users
-    sorted_clusters = sorted(clusters.items(), key=lambda x: len(x[1]), reverse=True)
+    # Get cluster statistics
+    try:
+        stats = get_cluster_statistics()
+        print(f"Total unique skills: {stats['total_skills']}")
+        print(f"Total unique users: {stats['total_unique_users']}")
+        print(f"Average missing skills per user: {stats['avg_missing_skills_per_user']:.2f}")
+        
+        print("\nMost Common Skill Gaps:")
+        for i, (skill, count) in enumerate(stats['most_common_skill_gaps'][:10], 1):
+            print(f"{i}. {skill}: {count} users")
+        
+        print("\nUser Distribution by Specialization:")
+        for spec, count in sorted(stats['users_by_specialization'].items(), key=lambda x: x[1], reverse=True):
+            print(f"{spec}: {count} users")
+    except Exception as e:
+        print(f"Error getting cluster statistics: {e}")
     
-    for skill, users in sorted_clusters:
-        print(f"\nSkill: {skill} ({len(users)} users)")
-        print("-" * 40)
+    # Offer different view options
+    print("\nView options:")
+    print("1. Summary view")
+    print("2. Detailed clusters view")
+    print("3. Skill-focused view")
+    print("4. Specialization-focused view")
+    print("5. Training recommendation clusters")
+    view_choice = get_validated_integer("\nSelect view option (1-5): ", 1, 5)
+    
+    if view_choice == 1:
+        # Summary view already shown above
+        pass
+    
+    elif view_choice == 2:
+        # Detailed clusters view
+        sorted_clusters = sorted(clusters.items(), key=lambda x: len(x[1]), reverse=True)
         
-        # Group users by specialization
-        by_specialization = defaultdict(list)
-        for user in users:
-            by_specialization[user['preferred_specialization']].append(user)
+        # Ask how many clusters to show
+        cluster_limit = get_validated_integer("\nHow many top clusters to display? (default 10): ", 
+                                            default_value=10, min_value=1, max_value=len(sorted_clusters))
         
-        # Display users by specialization
-        for spec, spec_users in by_specialization.items():
-            print(f"  {spec}: {len(spec_users)} users")
+        for skill, users in sorted_clusters[:cluster_limit]:
+            print(f"\nSkill: {skill} ({len(users)} users)")
+            print("-" * 40)
+            
+            # Group users by specialization
+            by_specialization = defaultdict(list)
+            for user in users:
+                by_specialization[user.get('preferred_specialization', 'Unknown')].append(user)
+            
+            # Display users by specialization
+            for spec, spec_users in by_specialization.items():
+                print(f"  {spec}: {len(spec_users)} users")
+                
+                # Ask if we should show user details
+                if len(spec_users) > 5:
+                    show_details = get_validated_string(f"  Show all {len(spec_users)} users for {spec}? (y/n): ", required=True).lower() == 'y'
+                else:
+                    show_details = True
+                
+                if show_details:
+                    for user in spec_users:
+                        print(f"    - User ID: {user.get('user_id')}")
+                        print(f"      Current Skills: {', '.join(user.get('current_skills', []))[:100]}{'...' if len(', '.join(user.get('current_skills', []))) > 100 else ''}")
+                        
+                        # Option to view full user details
+                        if get_validated_string(f"      View complete user details? (y/n): ", required=True).lower() == 'y':
+                            user_data = load_user_preferences(user.get('user_id'))
+                            if user_data:
+                                print(f"      Full User Data:")
+                                for key, value in user_data.items():
+                                    if isinstance(value, list):
+                                        print(f"        {key}: {', '.join(value)}")
+                                    else:
+                                        print(f"        {key}: {value}")
+    
+    elif view_choice == 3:
+        # Skill-focused view
+        # Let admin search for a specific skill
+        search_skill = get_validated_string("\nEnter skill to search for (or press Enter to list all): ", required=False)
+        
+        if search_skill:
+            # Show users who need this skill
+            if search_skill in clusters:
+                users = clusters[search_skill]
+                print(f"\nUsers needing training in {search_skill} ({len(users)} users):")
+                
+                # Group by specialization
+                by_specialization = defaultdict(list)
+                for user in users:
+                    by_specialization[user.get('preferred_specialization', 'Unknown')].append(user)
+                
+                # Show by specialization
+                for spec, spec_users in by_specialization.items():
+                    print(f"\n  {spec} ({len(spec_users)} users)")
+                    for user in spec_users:
+                        print(f"    - User ID: {user.get('user_id')}")
+                        print(f"      Current Skills: {', '.join(user.get('current_skills', []))[:100]}{'...' if len(', '.join(user.get('current_skills', []))) > 100 else ''}")
+            else:
+                print(f"\nNo users found needing training in '{search_skill}'")
+        else:
+            # List all skills with user counts
+            print("\nAll skills by popularity:")
+            skills_by_popularity = get_skills_by_popularity()
+            for i, (skill, count) in enumerate(skills_by_popularity, 1):
+                print(f"{i}. {skill}: {count} users")
+    
+    elif view_choice == 4:
+        # Specialization-focused view
+        specializations = set()
+        for skill, users in clusters.items():
+            for user in users:
+                specializations.add(user.get('preferred_specialization', 'Unknown'))
+        
+        print("\nAvailable specializations:")
+        specialization_list = sorted(list(specializations))
+        for i, spec in enumerate(specialization_list, 1):
+            print(f"{i}. {spec}")
+        
+        spec_choice = get_validated_integer("\nSelect specialization number (1-{}): ".format(len(specialization_list)), 
+                                          1, len(specialization_list))
+        selected_spec = specialization_list[spec_choice-1]
+        
+        print(f"\nSkill gaps for {selected_spec} specialization:")
+        spec_skills = defaultdict(list)
+        
+        for skill, users in clusters.items():
+            for user in users:
+                if user.get('preferred_specialization') == selected_spec:
+                    spec_skills[skill].append(user)
+        
+        sorted_spec_skills = sorted(spec_skills.items(), key=lambda x: len(x[1]), reverse=True)
+        for skill, users in sorted_spec_skills:
+            print(f"  {skill}: {len(users)} users")
+            
+            if get_validated_string(f"  Show users for {skill}? (y/n): ", required=True).lower() == 'y':
+                for user in users:
+                    print(f"    - User ID: {user.get('user_id')}")
+    
+    elif view_choice == 5:
+        # Training recommendation clusters
+        if SKILL_ANALYZER_AVAILABLE:
+            # Group users by missing skills for training clusters
+            training_groups = group_users_by_missing_skills()
+            
+            print("\nTraining recommendation clusters:")
+            for skill, users in sorted(training_groups.items(), key=lambda x: len(x[1]), reverse=True)[:15]:
+                print(f"\n{skill} ({len(users)} users)")
+                print("-" * 40)
+                
+                # Get training recommendations for this skill
+                recs = get_training_recommendations_for_skills([skill])
+                if skill in recs:
+                    print("  Recommended training:")
+                    for i, rec in enumerate(recs[skill], 1):
+                        print(f"    {i}. {rec}")
+                
+                # Show users who need this training
+                if get_validated_string(f"  Show users who need {skill} training? (y/n): ", required=True).lower() == 'y':
+                    for user in users:
+                        print(f"    - User ID: {user.get('user_id')}")
+                        print(f"      Specialization: {user.get('preferred_specialization', 'Unknown')}")
+        else:
+            print("\nSkill analyzer module is not available. Cannot generate training clusters.")
     
     input("\nPress Enter to continue...")
 
@@ -621,63 +781,252 @@ def generate_diverse_training_data():
     print("-" * 60)
     input("\nPress Enter to continue...")
 
-def display_menu():
-    """Display the main menu options."""
-    # Print the entire menu as a single string to avoid buffer issues
-    menu = """
-============================================================
-ADMIN DASHBOARD - MAIN MENU
-============================================================
-
-1. View Model Status
-2. View User Statistics
-3. View All Feedback
-4. View Skill Clusters
-5. Generate Synthetic Feedback
-6. Retrain Model
-7. Run Initial Model Training
-8. Generate Diverse Training Data
-9. Exit
-"""
-    print(menu)
+def analyze_skill_gaps():
+    """Analyze skill gaps for users and specializations."""
+    if not SKILL_ANALYZER_AVAILABLE:
+        print("\nSkill analyzer functionality is not available.")
+        print("Please make sure the utils.skill_analyzer module is installed.")
+        input("\nPress Enter to continue...")
+        return
     
-    return get_validated_integer("Select an option (1-9): ", 1, 9)
+    print_header("SKILL GAP ANALYSIS")
+    
+    # Options submenu
+    print("1. Analyze skill gap for a specific user")
+    print("2. Analyze skill gap for a specialization")
+    print("3. Generate field recommendations based on skills")
+    print("4. Generate specialization recommendations for a field")
+    print("5. View training recommendations for skills")
+    print("6. Back to main menu")
+    
+    choice = get_validated_integer("\nSelect an option (1-6): ", 1, 6)
+    
+    if choice == 1:
+        # Analyze skill gap for a specific user
+        user_id = get_validated_string("\nEnter user ID: ", required=True)
+        try:
+            user_data = load_user_preferences(user_id)
+            if not user_data:
+                print(f"User {user_id} not found.")
+                input("\nPress Enter to continue...")
+                return
+            
+            # Get user's current skills and preferred specialization
+            current_skills = user_data.get('current_skills', [])
+            preferred_specialization = user_data.get('preferred_specialization')
+            
+            if not preferred_specialization:
+                print(f"User {user_id} does not have a preferred specialization.")
+                input("\nPress Enter to continue...")
+                return
+            
+            # Analyze skill gap
+            analysis = analyze_skill_gap(current_skills, preferred_specialization)
+            
+            print(f"\nSkill Gap Analysis for User {user_id}")
+            print(f"Preferred Specialization: {preferred_specialization}")
+            print(f"Match Percentage: {analysis['match_percentage']}%")
+            print(f"\nCurrent Skills ({len(current_skills)}):")
+            for skill in current_skills:
+                print(f"  - {skill}")
+            
+            print(f"\nMissing Skills ({len(analysis['missing_skills'])}):")
+            for skill in analysis['missing_skills']:
+                print(f"  - {skill}")
+            
+            # Get training recommendations for missing skills
+            if analysis['missing_skills']:
+                print("\nTraining Recommendations:")
+                training_recs = get_training_recommendations_for_skills(analysis['missing_skills'])
+                for skill, recommendations in training_recs.items():
+                    print(f"\n  {skill}:")
+                    for i, rec in enumerate(recommendations, 1):
+                        print(f"    {i}. {rec}")
+        except Exception as e:
+            print(f"Error analyzing skill gap: {e}")
+    
+    elif choice == 2:
+        # Analyze skill gap for a specialization
+        career_paths = load_career_paths()
+        specializations = [path['title'] for path in career_paths]
+        
+        print("\nAvailable Specializations:")
+        for i, spec in enumerate(specializations, 1):
+            print(f"{i}. {spec}")
+        
+        spec_choice = get_validated_integer("\nSelect a specialization (1-{}): ".format(len(specializations)), 1, len(specializations))
+        selected_specialization = specializations[spec_choice-1]
+        
+        # Get all users with this specialization
+        clusters = load_clusters()
+        users_with_spec = []
+        
+        for skill, users in clusters.items():
+            for user in users:
+                if user.get('preferred_specialization') == selected_specialization and user.get('user_id') not in [u.get('user_id') for u in users_with_spec]:
+                    users_with_spec.append(user)
+        
+        print(f"\nUsers with {selected_specialization} specialization: {len(users_with_spec)}")
+        
+        # Get common missing skills
+        skill_counts = Counter()
+        for skill, users in clusters.items():
+            for user in users:
+                if user.get('preferred_specialization') == selected_specialization:
+                    skill_counts[skill] += 1
+        
+        print("\nCommon Missing Skills:")
+        for skill, count in skill_counts.most_common(10):
+            percentage = (count / len(users_with_spec)) * 100 if users_with_spec else 0
+            print(f"  - {skill}: {count} users ({percentage:.1f}%)")
+        
+        # Show training recommendations for top skills
+        if skill_counts:
+            top_skills = [skill for skill, _ in skill_counts.most_common(3)]
+            print("\nTraining Recommendations for Top Skills:")
+            training_recs = get_training_recommendations_for_skills(top_skills)
+            for skill, recommendations in training_recs.items():
+                print(f"\n  {skill}:")
+                for i, rec in enumerate(recommendations, 1):
+                    print(f"    {i}. {rec}")
+    
+    elif choice == 3:
+        # Generate field recommendations based on skills
+        skills = get_validated_list("\nEnter skills (comma-separated): ", min_items=1)
+        field_recommendations = recommend_fields_based_on_skills(skills)
+        
+        print("\nField Recommendations:")
+        for i, field_rec in enumerate(field_recommendations[:5], 1):
+            print(f"{i}. {field_rec['field']} (Match: {field_rec['match_percentage']}%)")
+            print(f"   Specializations: {', '.join(field_rec['specializations'])}")
+            print(f"   Matching Skills: {', '.join(field_rec['matching_skills'])}")
+            print(f"   Missing Skills: {', '.join(field_rec['missing_skills'][:5])}{'...' if len(field_rec['missing_skills']) > 5 else ''}")
+    
+    elif choice == 4:
+        # Generate specialization recommendations for a field
+        # First show available fields
+        fields = {
+            "Technology": ["Software Development", "Data Science", "Cybersecurity", "Cloud Computing"],
+            "Criminal Justice": ["Criminology", "Forensic Science", "Law Enforcement", "Criminal Justice"],
+            "Healthcare": ["Healthcare Administration", "Nursing", "Clinical Psychology", "Industrial-Organizational Psychology"],
+            "Business": ["Marketing", "Finance", "Human Resources"],
+            "Engineering": ["Mechanical Engineering", "Civil Engineering"],
+            "Education": ["Elementary Education", "Secondary Education"],
+            "Creative Arts": ["Graphic Design", "Film Production"],
+            "Legal": ["Legal Practice"],
+            "Science": ["Environmental Science"],
+            "Media": ["Journalism"],
+            "Social Services": ["Social Work"],
+            "Healthcare Specialists": ["Physical Therapy", "Speech-Language Pathology"],
+            "Design": ["Architecture", "Interior Design"],
+            "Agriculture": ["Agriculture"],
+            "Hospitality": ["Hospitality Management"],
+            "Medical": ["Dentistry", "Pharmacy", "Veterinary Medicine"],
+            "Urban Development": ["Urban Planning"]
+        }
+        
+        print("\nAvailable Fields:")
+        field_list = list(fields.keys())
+        for i, field in enumerate(field_list, 1):
+            print(f"{i}. {field}")
+        
+        field_choice = get_validated_integer("\nSelect a field (1-{}): ".format(len(field_list)), 1, len(field_list))
+        selected_field = field_list[field_choice-1]
+        
+        # Get user skills
+        skills = get_validated_list("\nEnter skills (comma-separated): ", min_items=1)
+        
+        # Get specialization recommendations
+        spec_recommendations = recommend_specializations_for_field(skills, selected_field)
+        
+        print(f"\nSpecialization Recommendations for {selected_field}:")
+        for i, spec_rec in enumerate(spec_recommendations, 1):
+            print(f"{i}. {spec_rec['specialization']} (Match: {spec_rec['match_percentage']}%)")
+            print(f"   Matching Skills: {', '.join(spec_rec['matching_skills'])}")
+            print(f"   Missing Skills: {', '.join(spec_rec['missing_skills'])}")
+    
+    elif choice == 5:
+        # View training recommendations for skills
+        # First show popular skills
+        popular_skills = get_skills_by_popularity()
+        
+        print("\nPopular Skills:")
+        for i, (skill, count) in enumerate(popular_skills[:20], 1):
+            print(f"{i}. {skill} ({count} users)")
+        
+        skill_choice = get_validated_string("\nEnter skill to view training recommendations: ", required=True)
+        
+        # Get training recommendations
+        training_recs = get_training_recommendations_for_skills([skill_choice])
+        
+        if skill_choice in training_recs:
+            print(f"\nTraining Recommendations for {skill_choice}:")
+            for i, rec in enumerate(training_recs[skill_choice], 1):
+                print(f"{i}. {rec}")
+        else:
+            print(f"\nNo specific training recommendations found for {skill_choice}.")
+    
+    input("\nPress Enter to continue...")
+
+def display_menu():
+    """Display admin dashboard menu."""
+    clear_screen()
+    
+    print_header("CAREER RECOMMENDER SYSTEM - ADMIN DASHBOARD")
+    
+    print("1. View User Statistics")
+    print("2. View All Feedback")
+    print("3. View Model Status")
+    print("4. View Skill Clusters (Admin Only)")
+    print("5. Run Initial Model Training")
+    print("6. Retrain Model")
+    print("7. Generate Synthetic Feedback")
+    print("8. Generate Diverse Training Data")
+    print("9. Analyze Skill Gaps")
+    print("0. Exit")
+    
+    choice = get_validated_integer("\nEnter your choice (0-9): ", 0, 9)
+    
+    # Add a warning when accessing admin-only features
+    if choice == 4:
+        print("\n⚠️ NOTE: Skill clusters are only visible in the admin dashboard.")
+        print("   Regular users will not see these clusters in the recommender interface.")
+        proceed = get_validated_string("   Continue? (y/n): ", required=True).lower()
+        if proceed != 'y':
+            return display_menu()  # Show menu again if user aborts
+    
+    return choice
 
 def main():
-    """Main function to run the admin dashboard."""
-    # Set working directory to the recommender root
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    
-    print("\nWelcome to the Career Recommender Admin Dashboard\n")
-    
+    """Main function for admin dashboard."""
     run_dashboard = True
+    
     while run_dashboard:
-        # Clear screen for better UI
-        clear_screen()
         choice = display_menu()
         
         if choice == 1:
-            view_model_status()
-        elif choice == 2:
             view_user_statistics()
-        elif choice == 3:
+        elif choice == 2:
             view_all_feedback()
+        elif choice == 3:
+            view_model_status()
         elif choice == 4:
             view_skill_clusters()
         elif choice == 5:
-            generate_synthetic_feedback()
+            run_initial_training()
         elif choice == 6:
             retrain_model()
         elif choice == 7:
-            run_initial_training()
+            generate_synthetic_feedback()
         elif choice == 8:
             generate_diverse_training_data()
         elif choice == 9:
+            analyze_skill_gaps()
+        elif choice == 0:
             run_dashboard = False
             print("\nExiting Admin Dashboard...")
-        else:
-            print("Invalid option. Please try again.")
-            input("\nPress Enter to continue...")
+    
+    print("\nThank you for using the Admin Dashboard!")
 
 if __name__ == "__main__":
     main() 

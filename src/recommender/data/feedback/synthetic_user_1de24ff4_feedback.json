@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_1de24ff4",
+        "rating": 5,
+        "comments": "The recommendation reflects my capabilities well.",
+        "suggestions": "None",
+        "timestamp": "2025-04-08T10:50:16.983138",
+        "is_positive": true,
+        "skills": "Compliance & Regulation, Data Analysis, Financial Modeling, ERP Systems (e.g., SAP)",
+        "current_role": "Budget Analyst",
+        "recommended_role": "Budget Analyst"
+    }
+]

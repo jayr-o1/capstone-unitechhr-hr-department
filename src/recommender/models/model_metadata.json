@@ -1,8 +1,8 @@
 {
   "original_model": "models/career_path_recommendation_model.pkl",
-  "backup_path": "models/history\\career_path_recommendation_model_backup_2025-04-09T22-03-35.191086.pkl",
-  "backup_time": "2025-04-09T22-03-35.191086",
-  "trained_at": "2025-04-09T22:03:35.191086",
-  "accuracy": 0.9025,
-  "feedback_entries_used": 74
+  "backup_path": "models/history\\career_path_recommendation_model_backup_2025-04-10T14-08-29.192701.pkl",
+  "backup_time": "2025-04-10T14-08-29.192701",
+  "trained_at": "2025-04-10T14:08:29.192701",
+  "accuracy": 0.8881,
+  "feedback_entries_used": 17
 }

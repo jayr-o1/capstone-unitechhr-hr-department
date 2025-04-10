@@ -1,0 +1,22 @@
+{
+    "user_id": "skill_cluster_programming_4",
+    "preferred_field": "Technology",
+    "preferred_specialization": "Software Development",
+    "current_skills": [
+        "Debugging",
+        "Version Control",
+        "Web Development",
+        "Algorithms",
+        "Data Structures",
+        "System Architecture",
+        "Database Management",
+        "API Design",
+        "Problem Solving"
+    ],
+    "lacking_skills": [
+        "Programming",
+        "Software Testing",
+        "Unit Testing"
+    ],
+    "timestamp": "2025-04-10T14:10:45.653144"
+}

@@ -1,0 +1,22 @@
+{
+    "user_id": "skill_cluster_security_1",
+    "preferred_field": "Technology",
+    "preferred_specialization": "Cloud Computing",
+    "current_skills": [
+        "Microservices",
+        "Automation",
+        "Networking",
+        "Infrastructure as Code",
+        "System Administration",
+        "DevOps",
+        "Cloud Platforms",
+        "Load Balancing"
+    ],
+    "lacking_skills": [
+        "Security",
+        "Serverless Architecture",
+        "Virtualization",
+        "Containerization"
+    ],
+    "timestamp": "2025-04-10T14:10:45.717147"
+}

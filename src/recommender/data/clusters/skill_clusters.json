@@ -1,21 +1,3022 @@
 {
-    "Statistical Modeling": [
+    "Sociology": [
         {
-            "user_id": "user1",
+            "user_id": "cluster_user_1",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Investigative Techniques",
+                "Criminal Psychology",
+                "Victimology",
+                "Criminal Theory",
+                "Research Methods",
+                "Criminal Profiling",
+                "Criminal Law",
+                "Crime Prevention"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Research Methods",
+                "Statistical Analysis",
+                "Criminal Psychology",
+                "Criminal Theory",
+                "Crime Prevention",
+                "Criminal Law",
+                "Victimology"
+            ]
+        }
+    ],
+    "Juvenile Delinquency": [
+        {
+            "user_id": "cluster_user_1",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Investigative Techniques",
+                "Criminal Psychology",
+                "Victimology",
+                "Criminal Theory",
+                "Research Methods",
+                "Criminal Profiling",
+                "Criminal Law",
+                "Crime Prevention"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Research Methods",
+                "Statistical Analysis",
+                "Criminal Psychology",
+                "Criminal Theory",
+                "Crime Prevention",
+                "Criminal Law",
+                "Victimology"
+            ]
+        }
+    ],
+    "Statistical Analysis": [
+        {
+            "user_id": "cluster_user_1",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Investigative Techniques",
+                "Criminal Psychology",
+                "Victimology",
+                "Criminal Theory",
+                "Research Methods",
+                "Criminal Profiling",
+                "Criminal Law",
+                "Crime Prevention"
+            ]
+        }
+    ],
+    "White-Collar Crime": [
+        {
+            "user_id": "cluster_user_1",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Investigative Techniques",
+                "Criminal Psychology",
+                "Victimology",
+                "Criminal Theory",
+                "Research Methods",
+                "Criminal Profiling",
+                "Criminal Law",
+                "Crime Prevention"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Criminology",
+            "current_skills": [
+                "Research Methods",
+                "Statistical Analysis",
+                "Criminal Psychology",
+                "Criminal Theory",
+                "Crime Prevention",
+                "Criminal Law",
+                "Victimology"
+            ]
+        }
+    ],
+    "Building Codes": [
+        {
+            "user_id": "cluster_user_10",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Materials Knowledge",
+                "Construction Documents",
+                "Space Planning",
+                "Lighting Design",
+                "AutoCAD",
+                "3D Visualization",
+                "Client Communication",
+                "Color Theory"
+            ]
+        },
+        {
+            "user_id": "cluster_user_9",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Client Communication",
+                "Construction Documents",
+                "Furniture Selection",
+                "Design Principles",
+                "AutoCAD",
+                "Sustainable Design",
+                "3D Visualization"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_project_management_4",
+            "preferred_specialization": "Architecture",
+            "current_skills": [
+                "3D Modeling",
+                "Material Selection",
+                "Sustainable Design",
+                "Client Communication",
+                "Architectural Drawing",
+                "Building Design",
+                "Site Planning",
+                "AutoCAD"
+            ]
+        }
+    ],
+    "Design Principles": [
+        {
+            "user_id": "cluster_user_10",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Materials Knowledge",
+                "Construction Documents",
+                "Space Planning",
+                "Lighting Design",
+                "AutoCAD",
+                "3D Visualization",
+                "Client Communication",
+                "Color Theory"
+            ]
+        },
+        {
+            "user_id": "cluster_user_14",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Client Communication",
+                "Color Theory",
+                "Space Planning",
+                "Furniture Selection",
+                "Sustainable Design",
+                "Building Codes",
+                "3D Visualization",
+                "Construction Documents"
+            ]
+        }
+    ],
+    "Sustainable Design": [
+        {
+            "user_id": "cluster_user_10",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Materials Knowledge",
+                "Construction Documents",
+                "Space Planning",
+                "Lighting Design",
+                "AutoCAD",
+                "3D Visualization",
+                "Client Communication",
+                "Color Theory"
+            ]
+        },
+        {
+            "user_id": "cluster_user_17",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Building Codes",
+                "Environmental Engineering",
+                "Hydraulics",
+                "Infrastructure Design",
+                "Surveying",
+                "Geotechnical Engineering",
+                "Construction Management",
+                "Structural Analysis",
+                "AutoCAD"
+            ]
+        }
+    ],
+    "Furniture Selection": [
+        {
+            "user_id": "cluster_user_10",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Materials Knowledge",
+                "Construction Documents",
+                "Space Planning",
+                "Lighting Design",
+                "AutoCAD",
+                "3D Visualization",
+                "Client Communication",
+                "Color Theory"
+            ]
+        }
+    ],
+    "Client Counseling": [
+        {
+            "user_id": "cluster_user_11",
+            "preferred_specialization": "Legal Practice",
+            "current_skills": [
+                "Contract Drafting",
+                "Negotiation",
+                "Legal Reasoning",
+                "Legal Writing",
+                "Case Analysis",
+                "Statutory Interpretation",
+                "Dispute Resolution",
+                "Legal Research",
+                "Courtroom Procedures",
+                "Professional Responsibility"
+            ]
+        }
+    ],
+    "Legal Ethics": [
+        {
+            "user_id": "cluster_user_11",
+            "preferred_specialization": "Legal Practice",
+            "current_skills": [
+                "Contract Drafting",
+                "Negotiation",
+                "Legal Reasoning",
+                "Legal Writing",
+                "Case Analysis",
+                "Statutory Interpretation",
+                "Dispute Resolution",
+                "Legal Research",
+                "Courtroom Procedures",
+                "Professional Responsibility"
+            ]
+        }
+    ],
+    "Pollution Control": [
+        {
+            "user_id": "cluster_user_12",
+            "preferred_specialization": "Environmental Science",
+            "current_skills": [
+                "Scientific Writing",
+                "Sustainability Practices",
+                "GIS Mapping",
+                "Ecosystem Analysis",
+                "Climate Science",
+                "Data Analysis",
+                "Environmental Sampling",
+                "Environmental Regulations",
+                "Laboratory Techniques",
+                "Environmental Impact Assessment"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_data_analysis_1",
+            "preferred_specialization": "Environmental Science",
+            "current_skills": [
+                "Environmental Regulations",
+                "Sustainability Practices",
+                "Ecosystem Analysis",
+                "Environmental Sampling",
+                "Laboratory Techniques",
+                "Climate Science",
+                "GIS Mapping",
+                "Field Research",
+                "Environmental Impact Assessment"
+            ]
+        }
+    ],
+    "Field Research": [
+        {
+            "user_id": "cluster_user_12",
+            "preferred_specialization": "Environmental Science",
+            "current_skills": [
+                "Scientific Writing",
+                "Sustainability Practices",
+                "GIS Mapping",
+                "Ecosystem Analysis",
+                "Climate Science",
+                "Data Analysis",
+                "Environmental Sampling",
+                "Environmental Regulations",
+                "Laboratory Techniques",
+                "Environmental Impact Assessment"
+            ]
+        }
+    ],
+    "Zoning Regulations": [
+        {
+            "user_id": "cluster_user_13",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Demographic Analysis",
+                "GIS Mapping",
+                "Policy Analysis",
+                "Transportation Planning",
+                "Environmental Analysis",
+                "Land Use Planning",
+                "Public Engagement",
+                "Community Development",
+                "Sustainable Development",
+                "Urban Design"
+            ]
+        },
+        {
+            "user_id": "cluster_user_18",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Project Management",
+                "GIS Mapping",
+                "Community Development",
+                "Policy Analysis",
+                "Transportation Planning",
+                "Environmental Analysis",
+                "Urban Design",
+                "Demographic Analysis"
+            ]
+        }
+    ],
+    "Project Management": [
+        {
+            "user_id": "cluster_user_13",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Demographic Analysis",
+                "GIS Mapping",
+                "Policy Analysis",
+                "Transportation Planning",
+                "Environmental Analysis",
+                "Land Use Planning",
+                "Public Engagement",
+                "Community Development",
+                "Sustainable Development",
+                "Urban Design"
+            ]
+        },
+        {
+            "user_id": "cluster_user_6",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Land Use Planning",
+                "Public Engagement",
+                "Demographic Analysis",
+                "Sustainable Development",
+                "Policy Analysis",
+                "Environmental Analysis",
+                "Community Development",
+                "Zoning Regulations",
+                "GIS Mapping",
+                "Urban Design"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_project_management_1",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Transportation Planning",
+                "Zoning Regulations",
+                "Community Development",
+                "Urban Design",
+                "Land Use Planning",
+                "GIS Mapping",
+                "Sustainable Development",
+                "Public Engagement",
+                "Policy Analysis"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_project_management_2",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Environmental Analysis",
+                "Transportation Planning",
+                "Zoning Regulations",
+                "Urban Design",
+                "Land Use Planning",
+                "GIS Mapping",
+                "Sustainable Development",
+                "Public Engagement",
+                "Policy Analysis"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_project_management_3",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Zoning Regulations",
+                "Community Development",
+                "Urban Design",
+                "Land Use Planning",
+                "GIS Mapping",
+                "Sustainable Development",
+                "Policy Analysis"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_project_management_4",
+            "preferred_specialization": "Architecture",
+            "current_skills": [
+                "3D Modeling",
+                "Material Selection",
+                "Sustainable Design",
+                "Client Communication",
+                "Architectural Drawing",
+                "Building Design",
+                "Site Planning",
+                "AutoCAD"
+            ]
+        }
+    ],
+    "AutoCAD": [
+        {
+            "user_id": "cluster_user_14",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Client Communication",
+                "Color Theory",
+                "Space Planning",
+                "Furniture Selection",
+                "Sustainable Design",
+                "Building Codes",
+                "3D Visualization",
+                "Construction Documents"
+            ]
+        }
+    ],
+    "Materials Knowledge": [
+        {
+            "user_id": "cluster_user_14",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Client Communication",
+                "Color Theory",
+                "Space Planning",
+                "Furniture Selection",
+                "Sustainable Design",
+                "Building Codes",
+                "3D Visualization",
+                "Construction Documents"
+            ]
+        },
+        {
+            "user_id": "cluster_user_9",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Client Communication",
+                "Construction Documents",
+                "Furniture Selection",
+                "Design Principles",
+                "AutoCAD",
+                "Sustainable Design",
+                "3D Visualization"
+            ]
+        }
+    ],
+    "Lighting Design": [
+        {
+            "user_id": "cluster_user_14",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Client Communication",
+                "Color Theory",
+                "Space Planning",
+                "Furniture Selection",
+                "Sustainable Design",
+                "Building Codes",
+                "3D Visualization",
+                "Construction Documents"
+            ]
+        },
+        {
+            "user_id": "cluster_user_9",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Client Communication",
+                "Construction Documents",
+                "Furniture Selection",
+                "Design Principles",
+                "AutoCAD",
+                "Sustainable Design",
+                "3D Visualization"
+            ]
+        }
+    ],
+    "Report Writing": [
+        {
+            "user_id": "cluster_user_15",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Community Policing",
+                "Firearms Training",
+                "De-escalation",
+                "Crisis Management",
+                "Evidence Handling",
+                "Interviewing",
+                "Self Defense",
+                "Criminal Procedure"
+            ]
+        }
+    ],
+    "Surveillance": [
+        {
+            "user_id": "cluster_user_15",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Community Policing",
+                "Firearms Training",
+                "De-escalation",
+                "Crisis Management",
+                "Evidence Handling",
+                "Interviewing",
+                "Self Defense",
+                "Criminal Procedure"
+            ]
+        },
+        {
+            "user_id": "cluster_user_8",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Criminal Procedure",
+                "Report Writing",
+                "Evidence Handling",
+                "Community Policing",
+                "Investigation Techniques",
+                "Self Defense",
+                "Firearms Training"
+            ]
+        }
+    ],
+    "Investigation Techniques": [
+        {
+            "user_id": "cluster_user_15",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Community Policing",
+                "Firearms Training",
+                "De-escalation",
+                "Crisis Management",
+                "Evidence Handling",
+                "Interviewing",
+                "Self Defense",
+                "Criminal Procedure"
+            ]
+        }
+    ],
+    "Legal Knowledge": [
+        {
+            "user_id": "cluster_user_15",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Community Policing",
+                "Firearms Training",
+                "De-escalation",
+                "Crisis Management",
+                "Evidence Handling",
+                "Interviewing",
+                "Self Defense",
+                "Criminal Procedure"
+            ]
+        },
+        {
+            "user_id": "cluster_user_8",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Criminal Procedure",
+                "Report Writing",
+                "Evidence Handling",
+                "Community Policing",
+                "Investigation Techniques",
+                "Self Defense",
+                "Firearms Training"
+            ]
+        }
+    ],
+    "Event Planning": [
+        {
+            "user_id": "cluster_user_16",
+            "preferred_specialization": "Hospitality Management",
+            "current_skills": [
+                "Facility Management",
+                "Marketing",
+                "Budgeting",
+                "Revenue Management",
+                "Inventory Control",
+                "Food and Beverage",
+                "Guest Relations"
+            ]
+        }
+    ],
+    "Customer Service": [
+        {
+            "user_id": "cluster_user_16",
+            "preferred_specialization": "Hospitality Management",
+            "current_skills": [
+                "Facility Management",
+                "Marketing",
+                "Budgeting",
+                "Revenue Management",
+                "Inventory Control",
+                "Food and Beverage",
+                "Guest Relations"
+            ]
+        }
+    ],
+    "Crisis Management": [
+        {
+            "user_id": "cluster_user_16",
+            "preferred_specialization": "Hospitality Management",
+            "current_skills": [
+                "Facility Management",
+                "Marketing",
+                "Budgeting",
+                "Revenue Management",
+                "Inventory Control",
+                "Food and Beverage",
+                "Guest Relations"
+            ]
+        },
+        {
+            "user_id": "cluster_user_8",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Criminal Procedure",
+                "Report Writing",
+                "Evidence Handling",
+                "Community Policing",
+                "Investigation Techniques",
+                "Self Defense",
+                "Firearms Training"
+            ]
+        }
+    ],
+    "Staff Supervision": [
+        {
+            "user_id": "cluster_user_16",
+            "preferred_specialization": "Hospitality Management",
+            "current_skills": [
+                "Facility Management",
+                "Marketing",
+                "Budgeting",
+                "Revenue Management",
+                "Inventory Control",
+                "Food and Beverage",
+                "Guest Relations"
+            ]
+        }
+    ],
+    "Quality Assurance": [
+        {
+            "user_id": "cluster_user_16",
+            "preferred_specialization": "Hospitality Management",
+            "current_skills": [
+                "Facility Management",
+                "Marketing",
+                "Budgeting",
+                "Revenue Management",
+                "Inventory Control",
+                "Food and Beverage",
+                "Guest Relations"
+            ]
+        }
+    ],
+    "Materials Testing": [
+        {
+            "user_id": "cluster_user_17",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Building Codes",
+                "Environmental Engineering",
+                "Hydraulics",
+                "Infrastructure Design",
+                "Surveying",
+                "Geotechnical Engineering",
+                "Construction Management",
+                "Structural Analysis",
+                "AutoCAD"
+            ]
+        }
+    ],
+    "Project Planning": [
+        {
+            "user_id": "cluster_user_17",
+            "preferred_specialization": "Civil Engineering",
+            "current_skills": [
+                "Building Codes",
+                "Environmental Engineering",
+                "Hydraulics",
+                "Infrastructure Design",
+                "Surveying",
+                "Geotechnical Engineering",
+                "Construction Management",
+                "Structural Analysis",
+                "AutoCAD"
+            ]
+        }
+    ],
+    "Public Engagement": [
+        {
+            "user_id": "cluster_user_18",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Project Management",
+                "GIS Mapping",
+                "Community Development",
+                "Policy Analysis",
+                "Transportation Planning",
+                "Environmental Analysis",
+                "Urban Design",
+                "Demographic Analysis"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_project_management_3",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Zoning Regulations",
+                "Community Development",
+                "Urban Design",
+                "Land Use Planning",
+                "GIS Mapping",
+                "Sustainable Development",
+                "Policy Analysis"
+            ]
+        }
+    ],
+    "Land Use Planning": [
+        {
+            "user_id": "cluster_user_18",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Project Management",
+                "GIS Mapping",
+                "Community Development",
+                "Policy Analysis",
+                "Transportation Planning",
+                "Environmental Analysis",
+                "Urban Design",
+                "Demographic Analysis"
+            ]
+        }
+    ],
+    "Sustainable Development": [
+        {
+            "user_id": "cluster_user_18",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Project Management",
+                "GIS Mapping",
+                "Community Development",
+                "Policy Analysis",
+                "Transportation Planning",
+                "Environmental Analysis",
+                "Urban Design",
+                "Demographic Analysis"
+            ]
+        }
+    ],
+    "Ballistics": [
+        {
+            "user_id": "cluster_user_19",
+            "preferred_specialization": "Forensic Science",
+            "current_skills": [
+                "Forensic Anthropology",
+                "Toxicology",
+                "Chain of Custody",
+                "Trace Evidence Analysis",
+                "Forensic Photography",
+                "Fingerprint Analysis",
+                "Evidence Collection",
+                "Court Testimony",
+                "DNA Analysis",
+                "Bloodstain Pattern Analysis"
+            ]
+        }
+    ],
+    "Crime Scene Processing": [
+        {
+            "user_id": "cluster_user_19",
+            "preferred_specialization": "Forensic Science",
+            "current_skills": [
+                "Forensic Anthropology",
+                "Toxicology",
+                "Chain of Custody",
+                "Trace Evidence Analysis",
+                "Forensic Photography",
+                "Fingerprint Analysis",
+                "Evidence Collection",
+                "Court Testimony",
+                "DNA Analysis",
+                "Bloodstain Pattern Analysis"
+            ]
+        }
+    ],
+    "Data Structures": [
+        {
+            "user_id": "cluster_user_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "System Architecture",
+                "Version Control",
+                "Unit Testing",
+                "API Design",
+                "Software Testing",
+                "Algorithms",
+                "Database Management",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "System Architecture",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_4",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        }
+    ],
+    "Problem Solving": [
+        {
+            "user_id": "cluster_user_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "System Architecture",
+                "Version Control",
+                "Unit Testing",
+                "API Design",
+                "Software Testing",
+                "Algorithms",
+                "Database Management",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Web Development",
+                "API Design",
+                "Debugging"
+            ]
+        }
+    ],
+    "Screenwriting": [
+        {
+            "user_id": "cluster_user_20",
+            "preferred_specialization": "Film Production",
+            "current_skills": [
+                "Directing",
+                "Visual Storytelling",
+                "Camera Operation",
+                "Sound Design",
+                "Project Planning",
+                "Post-Production",
+                "Production Management"
+            ]
+        }
+    ],
+    "Lighting Techniques": [
+        {
+            "user_id": "cluster_user_20",
+            "preferred_specialization": "Film Production",
+            "current_skills": [
+                "Directing",
+                "Visual Storytelling",
+                "Camera Operation",
+                "Sound Design",
+                "Project Planning",
+                "Post-Production",
+                "Production Management"
+            ]
+        }
+    ],
+    "Cinematography": [
+        {
+            "user_id": "cluster_user_20",
+            "preferred_specialization": "Film Production",
+            "current_skills": [
+                "Directing",
+                "Visual Storytelling",
+                "Camera Operation",
+                "Sound Design",
+                "Project Planning",
+                "Post-Production",
+                "Production Management"
+            ]
+        }
+    ],
+    "Video Editing": [
+        {
+            "user_id": "cluster_user_20",
+            "preferred_specialization": "Film Production",
+            "current_skills": [
+                "Directing",
+                "Visual Storytelling",
+                "Camera Operation",
+                "Sound Design",
+                "Project Planning",
+                "Post-Production",
+                "Production Management"
+            ]
+        }
+    ],
+    "Set Design": [
+        {
+            "user_id": "cluster_user_20",
+            "preferred_specialization": "Film Production",
+            "current_skills": [
+                "Directing",
+                "Visual Storytelling",
+                "Camera Operation",
+                "Sound Design",
+                "Project Planning",
+                "Post-Production",
+                "Production Management"
+            ]
+        }
+    ],
+    "Forensic Anthropology": [
+        {
+            "user_id": "cluster_user_3",
+            "preferred_specialization": "Forensic Science",
+            "current_skills": [
+                "Ballistics",
+                "Trace Evidence Analysis",
+                "Evidence Collection",
+                "Bloodstain Pattern Analysis",
+                "Court Testimony",
+                "Toxicology",
+                "DNA Analysis",
+                "Fingerprint Analysis",
+                "Chain of Custody",
+                "Crime Scene Processing"
+            ]
+        }
+    ],
+    "Forensic Photography": [
+        {
+            "user_id": "cluster_user_3",
+            "preferred_specialization": "Forensic Science",
+            "current_skills": [
+                "Ballistics",
+                "Trace Evidence Analysis",
+                "Evidence Collection",
+                "Bloodstain Pattern Analysis",
+                "Court Testimony",
+                "Toxicology",
+                "DNA Analysis",
+                "Fingerprint Analysis",
+                "Chain of Custody",
+                "Crime Scene Processing"
+            ]
+        }
+    ],
+    "Movement Assessment": [
+        {
+            "user_id": "cluster_user_4",
+            "preferred_specialization": "Physical Therapy",
+            "current_skills": [
+                "Treatment Planning",
+                "Rehabilitation Techniques",
+                "Patient Education",
+                "Evidence-Based Practice",
+                "Therapeutic Exercise",
+                "Manual Therapy",
+                "Gait Analysis"
+            ]
+        }
+    ],
+    "Anatomy Knowledge": [
+        {
+            "user_id": "cluster_user_4",
+            "preferred_specialization": "Physical Therapy",
+            "current_skills": [
+                "Treatment Planning",
+                "Rehabilitation Techniques",
+                "Patient Education",
+                "Evidence-Based Practice",
+                "Therapeutic Exercise",
+                "Manual Therapy",
+                "Gait Analysis"
+            ]
+        }
+    ],
+    "Mobility Assessment": [
+        {
+            "user_id": "cluster_user_4",
+            "preferred_specialization": "Physical Therapy",
+            "current_skills": [
+                "Treatment Planning",
+                "Rehabilitation Techniques",
+                "Patient Education",
+                "Evidence-Based Practice",
+                "Therapeutic Exercise",
+                "Manual Therapy",
+                "Gait Analysis"
+            ]
+        }
+    ],
+    "Pain Management": [
+        {
+            "user_id": "cluster_user_4",
+            "preferred_specialization": "Physical Therapy",
+            "current_skills": [
+                "Treatment Planning",
+                "Rehabilitation Techniques",
+                "Patient Education",
+                "Evidence-Based Practice",
+                "Therapeutic Exercise",
+                "Manual Therapy",
+                "Gait Analysis"
+            ]
+        }
+    ],
+    "Documentation": [
+        {
+            "user_id": "cluster_user_4",
+            "preferred_specialization": "Physical Therapy",
+            "current_skills": [
+                "Treatment Planning",
+                "Rehabilitation Techniques",
+                "Patient Education",
+                "Evidence-Based Practice",
+                "Therapeutic Exercise",
+                "Manual Therapy",
+                "Gait Analysis"
+            ]
+        }
+    ],
+    "Story Development": [
+        {
+            "user_id": "cluster_user_5",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Research",
+                "Deadline Management",
+                "Content Planning",
+                "Fact-Checking",
+                "Social Media",
+                "Investigative Techniques",
+                "Editing",
+                "News Writing"
+            ]
+        }
+    ],
+    "Interviewing": [
+        {
+            "user_id": "cluster_user_5",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Research",
+                "Deadline Management",
+                "Content Planning",
+                "Fact-Checking",
+                "Social Media",
+                "Investigative Techniques",
+                "Editing",
+                "News Writing"
+            ]
+        },
+        {
+            "user_id": "cluster_user_8",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Criminal Procedure",
+                "Report Writing",
+                "Evidence Handling",
+                "Community Policing",
+                "Investigation Techniques",
+                "Self Defense",
+                "Firearms Training"
+            ]
+        }
+    ],
+    "Media Ethics": [
+        {
+            "user_id": "cluster_user_5",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Research",
+                "Deadline Management",
+                "Content Planning",
+                "Fact-Checking",
+                "Social Media",
+                "Investigative Techniques",
+                "Editing",
+                "News Writing"
+            ]
+        }
+    ],
+    "Multimedia Production": [
+        {
+            "user_id": "cluster_user_5",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Research",
+                "Deadline Management",
+                "Content Planning",
+                "Fact-Checking",
+                "Social Media",
+                "Investigative Techniques",
+                "Editing",
+                "News Writing"
+            ]
+        }
+    ],
+    "Transportation Planning": [
+        {
+            "user_id": "cluster_user_6",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Land Use Planning",
+                "Public Engagement",
+                "Demographic Analysis",
+                "Sustainable Development",
+                "Policy Analysis",
+                "Environmental Analysis",
+                "Community Development",
+                "Zoning Regulations",
+                "GIS Mapping",
+                "Urban Design"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_project_management_3",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Zoning Regulations",
+                "Community Development",
+                "Urban Design",
+                "Land Use Planning",
+                "GIS Mapping",
+                "Sustainable Development",
+                "Policy Analysis"
+            ]
+        }
+    ],
+    "Sustainable Practices": [
+        {
+            "user_id": "cluster_user_7",
+            "preferred_specialization": "Agriculture",
+            "current_skills": [
+                "Plant Pathology",
+                "Farm Management",
+                "Harvest Management",
+                "Animal Husbandry",
+                "Pest Management",
+                "Agricultural Economics",
+                "Agricultural Technology"
+            ]
+        }
+    ],
+    "Irrigation Systems": [
+        {
+            "user_id": "cluster_user_7",
+            "preferred_specialization": "Agriculture",
+            "current_skills": [
+                "Plant Pathology",
+                "Farm Management",
+                "Harvest Management",
+                "Animal Husbandry",
+                "Pest Management",
+                "Agricultural Economics",
+                "Agricultural Technology"
+            ]
+        }
+    ],
+    "Agricultural Machinery": [
+        {
+            "user_id": "cluster_user_7",
+            "preferred_specialization": "Agriculture",
+            "current_skills": [
+                "Plant Pathology",
+                "Farm Management",
+                "Harvest Management",
+                "Animal Husbandry",
+                "Pest Management",
+                "Agricultural Economics",
+                "Agricultural Technology"
+            ]
+        }
+    ],
+    "Soil Science": [
+        {
+            "user_id": "cluster_user_7",
+            "preferred_specialization": "Agriculture",
+            "current_skills": [
+                "Plant Pathology",
+                "Farm Management",
+                "Harvest Management",
+                "Animal Husbandry",
+                "Pest Management",
+                "Agricultural Economics",
+                "Agricultural Technology"
+            ]
+        }
+    ],
+    "Crop Management": [
+        {
+            "user_id": "cluster_user_7",
+            "preferred_specialization": "Agriculture",
+            "current_skills": [
+                "Plant Pathology",
+                "Farm Management",
+                "Harvest Management",
+                "Animal Husbandry",
+                "Pest Management",
+                "Agricultural Economics",
+                "Agricultural Technology"
+            ]
+        }
+    ],
+    "De-escalation": [
+        {
+            "user_id": "cluster_user_8",
+            "preferred_specialization": "Law Enforcement",
+            "current_skills": [
+                "Criminal Procedure",
+                "Report Writing",
+                "Evidence Handling",
+                "Community Policing",
+                "Investigation Techniques",
+                "Self Defense",
+                "Firearms Training"
+            ]
+        }
+    ],
+    "Space Planning": [
+        {
+            "user_id": "cluster_user_9",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Client Communication",
+                "Construction Documents",
+                "Furniture Selection",
+                "Design Principles",
+                "AutoCAD",
+                "Sustainable Design",
+                "3D Visualization"
+            ]
+        }
+    ],
+    "Color Theory": [
+        {
+            "user_id": "cluster_user_9",
+            "preferred_specialization": "Interior Design",
+            "current_skills": [
+                "Client Communication",
+                "Construction Documents",
+                "Furniture Selection",
+                "Design Principles",
+                "AutoCAD",
+                "Sustainable Design",
+                "3D Visualization"
+            ]
+        }
+    ],
+    "Cloud Platforms": [
+        {
+            "user_id": "skill_cluster_cloud_platforms_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "Serverless Architecture",
+                "DevOps",
+                "Security",
+                "Containerization"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_cloud_platforms_2",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "DevOps",
+                "Containerization",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_cloud_platforms_3",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "DevOps",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_cloud_platforms_4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Networking",
+                "System Administration",
+                "DevOps",
+                "Security",
+                "Containerization",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_2",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "DevOps",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_3",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Serverless Architecture",
+                "System Administration",
+                "Containerization",
+                "Load Balancing"
+            ]
+        }
+    ],
+    "System Administration": [
+        {
+            "user_id": "skill_cluster_cloud_platforms_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "Serverless Architecture",
+                "DevOps",
+                "Security",
+                "Containerization"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_networking_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Automation",
+                "Serverless Architecture",
+                "Cloud Platforms",
+                "Containerization",
+                "Load Balancing",
+                "Security"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Networking",
+                "Serverless Architecture",
+                "DevOps",
+                "Cloud Platforms",
+                "Containerization"
+            ]
+        },
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Infrastructure as Code",
+                "Containerization",
+                "DevOps",
+                "Microservices",
+                "Serverless Architecture",
+                "Automation"
+            ]
+        }
+    ],
+    "Load Balancing": [
+        {
+            "user_id": "skill_cluster_cloud_platforms_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "Serverless Architecture",
+                "DevOps",
+                "Security",
+                "Containerization"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_networking_2",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Infrastructure as Code",
+                "System Administration",
+                "DevOps",
+                "Cloud Platforms",
+                "Containerization",
+                "Security"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Networking",
+                "Serverless Architecture",
+                "DevOps",
+                "Cloud Platforms",
+                "Containerization"
+            ]
+        },
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Infrastructure as Code",
+                "Containerization",
+                "DevOps",
+                "Microservices",
+                "Serverless Architecture",
+                "Automation"
+            ]
+        }
+    ],
+    "Microservices": [
+        {
+            "user_id": "skill_cluster_cloud_platforms_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "Serverless Architecture",
+                "DevOps",
+                "Security",
+                "Containerization"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_cloud_platforms_2",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "DevOps",
+                "Containerization",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_networking_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Automation",
+                "Serverless Architecture",
+                "Cloud Platforms",
+                "Containerization",
+                "Load Balancing",
+                "Security"
+            ]
+        }
+    ],
+    "Automation": [
+        {
+            "user_id": "skill_cluster_cloud_platforms_2",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "DevOps",
+                "Containerization",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Networking",
+                "Serverless Architecture",
+                "DevOps",
+                "Cloud Platforms",
+                "Containerization"
+            ]
+        }
+    ],
+    "Virtualization": [
+        {
+            "user_id": "skill_cluster_cloud_platforms_2",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "DevOps",
+                "Containerization",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "DevOps",
+                "Cloud Platforms",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "Cloud Platforms",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Infrastructure as Code",
+                "Containerization",
+                "DevOps",
+                "Microservices",
+                "Serverless Architecture",
+                "Automation"
+            ]
+        }
+    ],
+    "Security": [
+        {
+            "user_id": "skill_cluster_cloud_platforms_2",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "DevOps",
+                "Containerization",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_cloud_platforms_3",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "DevOps",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "DevOps",
+                "Cloud Platforms",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_2",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "DevOps",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_3",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Serverless Architecture",
+                "System Administration",
+                "Containerization",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "Cloud Platforms",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Networking",
+                "Serverless Architecture",
+                "DevOps",
+                "Cloud Platforms",
+                "Containerization"
+            ]
+        },
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Infrastructure as Code",
+                "Containerization",
+                "DevOps",
+                "Microservices",
+                "Serverless Architecture",
+                "Automation"
+            ]
+        }
+    ],
+    "Containerization": [
+        {
+            "user_id": "skill_cluster_cloud_platforms_3",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "DevOps",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "DevOps",
+                "Cloud Platforms",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_2",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "DevOps",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "Cloud Platforms",
+                "Load Balancing"
+            ]
+        }
+    ],
+    "Infrastructure as Code": [
+        {
+            "user_id": "skill_cluster_cloud_platforms_4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Networking",
+                "System Administration",
+                "DevOps",
+                "Security",
+                "Containerization",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_networking_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Automation",
+                "Serverless Architecture",
+                "Cloud Platforms",
+                "Containerization",
+                "Load Balancing",
+                "Security"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_3",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Serverless Architecture",
+                "System Administration",
+                "Containerization",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Networking",
+                "Serverless Architecture",
+                "DevOps",
+                "Cloud Platforms",
+                "Containerization"
+            ]
+        }
+    ],
+    "Serverless Architecture": [
+        {
+            "user_id": "skill_cluster_cloud_platforms_4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Networking",
+                "System Administration",
+                "DevOps",
+                "Security",
+                "Containerization",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_networking_2",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Infrastructure as Code",
+                "System Administration",
+                "DevOps",
+                "Cloud Platforms",
+                "Containerization",
+                "Security"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "DevOps",
+                "Cloud Platforms",
+                "Load Balancing"
+            ]
+        }
+    ],
+    "Communication Skills": [
+        {
+            "user_id": "skill_cluster_communication_skills_1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Instructional Strategies",
+                "Mathematics Instruction",
+                "Child Development",
+                "Literacy Instruction",
+                "Special Education Awareness",
+                "Educational Technology"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_2",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Child Development",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_3",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Mathematics Instruction",
+                "Child Development",
+                "Behavior Management",
+                "Assessment Methods",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Behavior Management": [
+        {
+            "user_id": "skill_cluster_communication_skills_1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Instructional Strategies",
+                "Mathematics Instruction",
+                "Child Development",
+                "Literacy Instruction",
+                "Special Education Awareness",
+                "Educational Technology"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_2",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Child Development",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Differentiated Instruction": [
+        {
+            "user_id": "skill_cluster_communication_skills_1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Instructional Strategies",
+                "Mathematics Instruction",
+                "Child Development",
+                "Literacy Instruction",
+                "Special Education Awareness",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Assessment Methods": [
+        {
+            "user_id": "skill_cluster_communication_skills_1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Instructional Strategies",
+                "Mathematics Instruction",
+                "Child Development",
+                "Literacy Instruction",
+                "Special Education Awareness",
+                "Educational Technology"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_2",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Child Development",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Curriculum Development": [
+        {
+            "user_id": "skill_cluster_communication_skills_1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Instructional Strategies",
+                "Mathematics Instruction",
+                "Child Development",
+                "Literacy Instruction",
+                "Special Education Awareness",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Literacy Instruction": [
+        {
+            "user_id": "skill_cluster_communication_skills_2",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Child Development",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_3",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Mathematics Instruction",
+                "Child Development",
+                "Behavior Management",
+                "Assessment Methods",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Mathematics Instruction": [
+        {
+            "user_id": "skill_cluster_communication_skills_2",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Child Development",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Classroom Management": [
+        {
+            "user_id": "skill_cluster_communication_skills_3",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Mathematics Instruction",
+                "Child Development",
+                "Behavior Management",
+                "Assessment Methods",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Database Management": [
+        {
+            "user_id": "skill_cluster_database_management_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Web Development",
+                "API Design",
+                "Debugging"
+            ]
+        }
+    ],
+    "Debugging": [
+        {
+            "user_id": "skill_cluster_database_management_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        }
+    ],
+    "Version Control": [
+        {
+            "user_id": "skill_cluster_database_management_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Software Testing"
+            ]
+        }
+    ],
+    "API Design": [
+        {
+            "user_id": "skill_cluster_database_management_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "Problem Solving"
+            ]
+        }
+    ],
+    "Software Testing": [
+        {
+            "user_id": "skill_cluster_database_management_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_4",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        }
+    ],
+    "Web Development": [
+        {
+            "user_id": "skill_cluster_database_management_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_database_management_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "System Architecture",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Unit Testing",
+                "Problem Solving",
+                "Programming"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_4",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        }
+    ],
+    "Unit Testing": [
+        {
+            "user_id": "skill_cluster_database_management_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_4",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_4",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Web Development",
+                "API Design",
+                "Debugging"
+            ]
+        }
+    ],
+    "Algorithms": [
+        {
+            "user_id": "skill_cluster_database_management_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Problem Solving",
+                "Programming",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "System Architecture",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Programming",
+                "Software Testing"
+            ]
+        }
+    ],
+    "Data Analysis": [
+        {
+            "user_id": "skill_cluster_data_analysis_1",
+            "preferred_specialization": "Environmental Science",
+            "current_skills": [
+                "Environmental Regulations",
+                "Sustainability Practices",
+                "Ecosystem Analysis",
+                "Environmental Sampling",
+                "Laboratory Techniques",
+                "Climate Science",
+                "GIS Mapping",
+                "Field Research",
+                "Environmental Impact Assessment"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_data_analysis_2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Big Data",
+                "Statistical Modeling",
+                "Deep Learning",
+                "Data Mining"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_data_analysis_3",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Data Visualization",
+                "Big Data",
+                "Statistical Modeling",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_data_analysis_4",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Data Visualization",
+                "Statistical Modeling",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user 2",
             "preferred_specialization": "Data Science",
             "current_skills": [
                 "Python",
-                "Data Analysis",
-                "Machine Learning",
+                "Java",
+                "HTML",
+                "CSS",
+                "Javascript",
+                "ReactJS",
+                "NodeJS",
+                "C#"
+            ]
+        }
+    ],
+    "Scientific Writing": [
+        {
+            "user_id": "skill_cluster_data_analysis_1",
+            "preferred_specialization": "Environmental Science",
+            "current_skills": [
+                "Environmental Regulations",
+                "Sustainability Practices",
+                "Ecosystem Analysis",
+                "Environmental Sampling",
+                "Laboratory Techniques",
+                "Climate Science",
+                "GIS Mapping",
+                "Field Research",
+                "Environmental Impact Assessment"
+            ]
+        }
+    ],
+    "Statistics": [
+        {
+            "user_id": "skill_cluster_data_analysis_2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
                 "SQL",
-                "Statistics",
-                "Data Visualization",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Big Data",
+                "Statistical Modeling",
                 "Deep Learning",
-                "Natural Language Processing"
+                "Data Mining"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_data_analysis_3",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Data Visualization",
+                "Big Data",
+                "Statistical Modeling",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_machine_learning_1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Data Analysis",
+                "Data Visualization",
+                "Statistical Modeling",
+                "Python",
+                "Data Mining"
+            ]
+        },
+        {
+            "user_id": "user 2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Java",
+                "HTML",
+                "CSS",
+                "Javascript",
+                "ReactJS",
+                "NodeJS",
+                "C#"
+            ]
+        }
+    ],
+    "Python": [
+        {
+            "user_id": "skill_cluster_data_analysis_2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Big Data",
+                "Statistical Modeling",
+                "Deep Learning",
+                "Data Mining"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_data_analysis_4",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Data Visualization",
+                "Statistical Modeling",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_machine_learning_2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Natural Language Processing",
+                "Experimental Design",
+                "Data Analysis",
+                "Data Visualization",
+                "Big Data",
+                "Statistical Modeling",
+                "Deep Learning",
+                "Statistics"
+            ]
+        }
+    ],
+    "Data Visualization": [
+        {
+            "user_id": "skill_cluster_data_analysis_2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Big Data",
+                "Statistical Modeling",
+                "Deep Learning",
+                "Data Mining"
+            ]
+        },
+        {
+            "user_id": "user 2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Java",
+                "HTML",
+                "CSS",
+                "Javascript",
+                "ReactJS",
+                "NodeJS",
+                "C#"
+            ]
+        }
+    ],
+    "Deep Learning": [
+        {
+            "user_id": "skill_cluster_data_analysis_3",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Data Visualization",
+                "Big Data",
+                "Statistical Modeling",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_data_analysis_4",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Data Visualization",
+                "Statistical Modeling",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_machine_learning_1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Data Analysis",
+                "Data Visualization",
+                "Statistical Modeling",
+                "Python",
+                "Data Mining"
+            ]
+        },
+        {
+            "user_id": "user 2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Java",
+                "HTML",
+                "CSS",
+                "Javascript",
+                "ReactJS",
+                "NodeJS",
+                "C#"
             ]
         }
     ],
     "Data Mining": [
+        {
+            "user_id": "skill_cluster_data_analysis_3",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Data Visualization",
+                "Big Data",
+                "Statistical Modeling",
+                "Python"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_data_analysis_4",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Data Visualization",
+                "Statistical Modeling",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_machine_learning_2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Natural Language Processing",
+                "Experimental Design",
+                "Data Analysis",
+                "Data Visualization",
+                "Big Data",
+                "Statistical Modeling",
+                "Deep Learning",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user 2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Java",
+                "HTML",
+                "CSS",
+                "Javascript",
+                "ReactJS",
+                "NodeJS",
+                "C#"
+            ]
+        },
         {
             "user_id": "user1",
             "preferred_specialization": "Data Science",
@@ -33,6 +3034,46 @@
     ],
     "Big Data": [
         {
+            "user_id": "skill_cluster_data_analysis_4",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Machine Learning",
+                "Experimental Design",
+                "Data Visualization",
+                "Statistical Modeling",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_machine_learning_1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Data Analysis",
+                "Data Visualization",
+                "Statistical Modeling",
+                "Python",
+                "Data Mining"
+            ]
+        },
+        {
+            "user_id": "user 2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Java",
+                "HTML",
+                "CSS",
+                "Javascript",
+                "ReactJS",
+                "NodeJS",
+                "C#"
+            ]
+        },
+        {
             "user_id": "user1",
             "preferred_specialization": "Data Science",
             "current_skills": [
@@ -47,7 +3088,502 @@
             ]
         }
     ],
+    "Machine Learning": [
+        {
+            "user_id": "skill_cluster_machine_learning_1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Data Analysis",
+                "Data Visualization",
+                "Statistical Modeling",
+                "Python",
+                "Data Mining"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_machine_learning_2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Natural Language Processing",
+                "Experimental Design",
+                "Data Analysis",
+                "Data Visualization",
+                "Big Data",
+                "Statistical Modeling",
+                "Deep Learning",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user 2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Java",
+                "HTML",
+                "CSS",
+                "Javascript",
+                "ReactJS",
+                "NodeJS",
+                "C#"
+            ]
+        }
+    ],
     "Experimental Design": [
+        {
+            "user_id": "skill_cluster_machine_learning_1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "SQL",
+                "Natural Language Processing",
+                "Data Analysis",
+                "Data Visualization",
+                "Statistical Modeling",
+                "Python",
+                "Data Mining"
+            ]
+        },
+        {
+            "user_id": "user 2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Java",
+                "HTML",
+                "CSS",
+                "Javascript",
+                "ReactJS",
+                "NodeJS",
+                "C#"
+            ]
+        },
+        {
+            "user_id": "user1",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Data Analysis",
+                "Machine Learning",
+                "SQL",
+                "Statistics",
+                "Data Visualization",
+                "Deep Learning",
+                "Natural Language Processing"
+            ]
+        }
+    ],
+    "SQL": [
+        {
+            "user_id": "skill_cluster_machine_learning_2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Natural Language Processing",
+                "Experimental Design",
+                "Data Analysis",
+                "Data Visualization",
+                "Big Data",
+                "Statistical Modeling",
+                "Deep Learning",
+                "Statistics"
+            ]
+        },
+        {
+            "user_id": "user 2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Java",
+                "HTML",
+                "CSS",
+                "Javascript",
+                "ReactJS",
+                "NodeJS",
+                "C#"
+            ]
+        }
+    ],
+    "Networking": [
+        {
+            "user_id": "skill_cluster_networking_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Automation",
+                "Serverless Architecture",
+                "Cloud Platforms",
+                "Containerization",
+                "Load Balancing",
+                "Security"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_networking_2",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Infrastructure as Code",
+                "System Administration",
+                "DevOps",
+                "Cloud Platforms",
+                "Containerization",
+                "Security"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_3",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Serverless Architecture",
+                "System Administration",
+                "Containerization",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "user5",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Cloud Platforms",
+                "Infrastructure as Code",
+                "Containerization",
+                "DevOps",
+                "Microservices",
+                "Serverless Architecture",
+                "Automation"
+            ]
+        }
+    ],
+    "DevOps": [
+        {
+            "user_id": "skill_cluster_networking_1",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Automation",
+                "Serverless Architecture",
+                "Cloud Platforms",
+                "Containerization",
+                "Load Balancing",
+                "Security"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_3",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Virtualization",
+                "Microservices",
+                "Automation",
+                "Serverless Architecture",
+                "System Administration",
+                "Containerization",
+                "Load Balancing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_security_4",
+            "preferred_specialization": "Cloud Computing",
+            "current_skills": [
+                "Microservices",
+                "Automation",
+                "Networking",
+                "Infrastructure as Code",
+                "System Administration",
+                "Serverless Architecture",
+                "Cloud Platforms",
+                "Load Balancing"
+            ]
+        }
+    ],
+    "Programming": [
+        {
+            "user_id": "skill_cluster_programming_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_2",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "API Design",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_4",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "Algorithms",
+                "Data Structures",
+                "System Architecture",
+                "Database Management",
+                "API Design",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_programming_5",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "System Architecture",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Software Testing"
+            ]
+        }
+    ],
+    "System Architecture": [
+        {
+            "user_id": "skill_cluster_programming_1",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Web Development",
+                "API Design",
+                "Database Management",
+                "Unit Testing",
+                "Problem Solving"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_web_development_3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Debugging",
+                "Version Control",
+                "Algorithms",
+                "Data Structures",
+                "Database Management",
+                "API Design",
+                "Unit Testing",
+                "Software Testing"
+            ]
+        },
+        {
+            "user_id": "user3",
+            "preferred_specialization": "Software Development",
+            "current_skills": [
+                "Programming",
+                "Data Structures",
+                "Algorithms",
+                "Version Control",
+                "Software Testing",
+                "Web Development",
+                "API Design",
+                "Debugging"
+            ]
+        }
+    ],
+    "Environmental Analysis": [
+        {
+            "user_id": "skill_cluster_project_management_1",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Transportation Planning",
+                "Zoning Regulations",
+                "Community Development",
+                "Urban Design",
+                "Land Use Planning",
+                "GIS Mapping",
+                "Sustainable Development",
+                "Public Engagement",
+                "Policy Analysis"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_project_management_3",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Zoning Regulations",
+                "Community Development",
+                "Urban Design",
+                "Land Use Planning",
+                "GIS Mapping",
+                "Sustainable Development",
+                "Policy Analysis"
+            ]
+        }
+    ],
+    "Demographic Analysis": [
+        {
+            "user_id": "skill_cluster_project_management_1",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Transportation Planning",
+                "Zoning Regulations",
+                "Community Development",
+                "Urban Design",
+                "Land Use Planning",
+                "GIS Mapping",
+                "Sustainable Development",
+                "Public Engagement",
+                "Policy Analysis"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_project_management_2",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Environmental Analysis",
+                "Transportation Planning",
+                "Zoning Regulations",
+                "Urban Design",
+                "Land Use Planning",
+                "GIS Mapping",
+                "Sustainable Development",
+                "Public Engagement",
+                "Policy Analysis"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_project_management_3",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Zoning Regulations",
+                "Community Development",
+                "Urban Design",
+                "Land Use Planning",
+                "GIS Mapping",
+                "Sustainable Development",
+                "Policy Analysis"
+            ]
+        }
+    ],
+    "Community Development": [
+        {
+            "user_id": "skill_cluster_project_management_2",
+            "preferred_specialization": "Urban Planning",
+            "current_skills": [
+                "Environmental Analysis",
+                "Transportation Planning",
+                "Zoning Regulations",
+                "Urban Design",
+                "Land Use Planning",
+                "GIS Mapping",
+                "Sustainable Development",
+                "Public Engagement",
+                "Policy Analysis"
+            ]
+        }
+    ],
+    "Construction Documentation": [
+        {
+            "user_id": "skill_cluster_project_management_4",
+            "preferred_specialization": "Architecture",
+            "current_skills": [
+                "3D Modeling",
+                "Material Selection",
+                "Sustainable Design",
+                "Client Communication",
+                "Architectural Drawing",
+                "Building Design",
+                "Site Planning",
+                "AutoCAD"
+            ]
+        }
+    ],
+    "Structural Principles": [
+        {
+            "user_id": "skill_cluster_project_management_4",
+            "preferred_specialization": "Architecture",
+            "current_skills": [
+                "3D Modeling",
+                "Material Selection",
+                "Sustainable Design",
+                "Client Communication",
+                "Architectural Drawing",
+                "Building Design",
+                "Site Planning",
+                "AutoCAD"
+            ]
+        }
+    ],
+    "Natural Language Processing": [
+        {
+            "user_id": "user 2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Java",
+                "HTML",
+                "CSS",
+                "Javascript",
+                "ReactJS",
+                "NodeJS",
+                "C#"
+            ]
+        }
+    ],
+    "Statistical Modeling": [
+        {
+            "user_id": "user 2",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Java",
+                "HTML",
+                "CSS",
+                "Javascript",
+                "ReactJS",
+                "NodeJS",
+                "C#"
+            ]
+        },
         {
             "user_id": "user1",
             "preferred_specialization": "Data Science",
@@ -75,115 +3611,6 @@
                 "Crime Prevention",
                 "Criminal Law",
                 "Victimology"
-            ]
-        }
-    ],
-    "White-Collar Crime": [
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Criminology",
-            "current_skills": [
-                "Research Methods",
-                "Statistical Analysis",
-                "Criminal Psychology",
-                "Criminal Theory",
-                "Crime Prevention",
-                "Criminal Law",
-                "Victimology"
-            ]
-        }
-    ],
-    "Juvenile Delinquency": [
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Criminology",
-            "current_skills": [
-                "Research Methods",
-                "Statistical Analysis",
-                "Criminal Psychology",
-                "Criminal Theory",
-                "Crime Prevention",
-                "Criminal Law",
-                "Victimology"
-            ]
-        }
-    ],
-    "Sociology": [
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Criminology",
-            "current_skills": [
-                "Research Methods",
-                "Statistical Analysis",
-                "Criminal Psychology",
-                "Criminal Theory",
-                "Crime Prevention",
-                "Criminal Law",
-                "Victimology"
-            ]
-        }
-    ],
-    "Database Management": [
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Data Structures",
-                "Algorithms",
-                "Version Control",
-                "Software Testing",
-                "Web Development",
-                "API Design",
-                "Debugging"
-            ]
-        }
-    ],
-    "Problem Solving": [
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Data Structures",
-                "Algorithms",
-                "Version Control",
-                "Software Testing",
-                "Web Development",
-                "API Design",
-                "Debugging"
-            ]
-        }
-    ],
-    "System Architecture": [
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Data Structures",
-                "Algorithms",
-                "Version Control",
-                "Software Testing",
-                "Web Development",
-                "API Design",
-                "Debugging"
-            ]
-        }
-    ],
-    "Unit Testing": [
-        {
-            "user_id": "user3",
-            "preferred_specialization": "Software Development",
-            "current_skills": [
-                "Programming",
-                "Data Structures",
-                "Algorithms",
-                "Version Control",
-                "Software Testing",
-                "Web Development",
-                "API Design",
-                "Debugging"
             ]
         }
     ],
@@ -259,81 +3686,6 @@
                 "Incident Response",
                 "Security Tools",
                 "Cloud Security"
-            ]
-        }
-    ],
-    "Networking": [
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Infrastructure as Code",
-                "Containerization",
-                "DevOps",
-                "Microservices",
-                "Serverless Architecture",
-                "Automation"
-            ]
-        }
-    ],
-    "Security": [
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Infrastructure as Code",
-                "Containerization",
-                "DevOps",
-                "Microservices",
-                "Serverless Architecture",
-                "Automation"
-            ]
-        }
-    ],
-    "System Administration": [
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Infrastructure as Code",
-                "Containerization",
-                "DevOps",
-                "Microservices",
-                "Serverless Architecture",
-                "Automation"
-            ]
-        }
-    ],
-    "Virtualization": [
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Infrastructure as Code",
-                "Containerization",
-                "DevOps",
-                "Microservices",
-                "Serverless Architecture",
-                "Automation"
-            ]
-        }
-    ],
-    "Load Balancing": [
-        {
-            "user_id": "user5",
-            "preferred_specialization": "Cloud Computing",
-            "current_skills": [
-                "Cloud Platforms",
-                "Infrastructure as Code",
-                "Containerization",
-                "DevOps",
-                "Microservices",
-                "Serverless Architecture",
-                "Automation"
             ]
         }
     ]

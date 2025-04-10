@@ -1,0 +1,22 @@
+{
+    "user_id": "skill_cluster_database_management_1",
+    "preferred_field": "Technology",
+    "preferred_specialization": "Software Development",
+    "current_skills": [
+        "Web Development",
+        "Algorithms",
+        "Data Structures",
+        "System Architecture",
+        "Unit Testing",
+        "Problem Solving",
+        "Programming"
+    ],
+    "lacking_skills": [
+        "Database Management",
+        "Debugging",
+        "Version Control",
+        "API Design",
+        "Software Testing"
+    ],
+    "timestamp": "2025-04-10T14:10:45.733170"
+}
