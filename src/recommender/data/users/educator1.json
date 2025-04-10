@@ -1,0 +1,28 @@
+{
+    "user_id": "educator1",
+    "preferred_field": "Education",
+    "preferred_specialization": "Elementary Education",
+    "current_skills": [
+        "Communication",
+        "Patience",
+        "Critical Thinking",
+        "Organization",
+        "Leadership",
+        "Teamwork",
+        "Time Management",
+        "Computer Skills",
+        "Conflict Resolution",
+        "Imaginative Thinking"
+    ],
+    "lacking_skills": [
+        "Curriculum Development",
+        "Classroom Management",
+        "Child Development",
+        "Instructional Strategies",
+        "Assessment Methods",
+        "Literacy Instruction",
+        "Mathematics Instruction",
+        "Special Education Awareness",
+        "Behavior Management"
+    ]
+}

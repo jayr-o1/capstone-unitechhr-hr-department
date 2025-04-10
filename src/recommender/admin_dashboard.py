@@ -746,7 +746,11 @@ def generate_diverse_training_data():
                             "Field": field,
                             "Career Goal": career_goal,
                             "Skills": skills_string,
-                            "Experience": f"{random.randint(0, 20)}+ years"
+                            "Experience": f"{random.randint(0, 20)}+ years",
+                            "Education": random.choice(["Bachelor's", "Master's", "PhD", "High School", "Associate's"]),
+                            "Gender": random.choice(["Male", "Female", "Non-binary"]),
+                            "Location": random.choice(["New York", "San Francisco", "Chicago", "Boston", "Seattle", 
+                                                     "Austin", "Los Angeles", "Miami", "Denver", "Atlanta"])
                         }
                         records.append(record)
                     

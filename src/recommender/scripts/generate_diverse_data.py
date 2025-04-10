@@ -89,9 +89,21 @@ def generate_diverse_employee_data(num_samples=500):
         # Generate salary based on experience and field (adding some randomness)
         base_salary = 50000
         experience_factor = int(experience.split("+")[0]) * 2000
-        field_factor = {"Computer Science": 20000, "Engineering": 18000, 
-                        "Healthcare & Medicine": 25000, "Law & Legal Studies": 22000, 
-                        "Accountancy": 15000}.get(field, 10000)
+        field_factor = {
+            "Computer Science": 20000, 
+            "Engineering": 18000, 
+            "Healthcare & Medicine": 25000, 
+            "Law & Legal Studies": 22000, 
+            "Accountancy": 15000,
+            "Marketing": 12000,
+            "Education": 10000,
+            "Finance": 25000,
+            "Arts & Design": 8000,
+            "Hospitality": 7000,
+            "Information Technology": 18000,
+            "Media & Communications": 10000,
+            "Environmental Sciences": 12000
+        }.get(field, 10000)
         random_factor = random.randint(-10000, 10000)
         salary = base_salary + experience_factor + field_factor + random_factor
         
@@ -153,9 +165,21 @@ def generate_diverse_career_path_data():
                 base_min += 30000
                 base_max += 60000
             
-            field_factor = {"Computer Science": 15000, "Engineering": 12000, 
-                           "Healthcare & Medicine": 20000, "Law & Legal Studies": 18000, 
-                           "Accountancy": 8000}.get(field, 5000)
+            field_factor = {
+                "Computer Science": 15000, 
+                "Engineering": 12000, 
+                "Healthcare & Medicine": 20000, 
+                "Law & Legal Studies": 18000, 
+                "Accountancy": 8000,
+                "Marketing": 10000,
+                "Education": 5000,
+                "Finance": 20000,
+                "Arts & Design": 5000,
+                "Hospitality": 3000,
+                "Information Technology": 15000,
+                "Media & Communications": 8000,
+                "Environmental Sciences": 8000
+            }.get(field, 5000)
                 
             min_salary = base_min + field_factor + random.randint(-5000, 5000)
             max_salary = base_max + field_factor + random.randint(10000, 30000)

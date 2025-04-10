@@ -13,19 +13,6 @@
                 "Criminal Law",
                 "Crime Prevention"
             ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Criminology",
-            "current_skills": [
-                "Research Methods",
-                "Statistical Analysis",
-                "Criminal Psychology",
-                "Criminal Theory",
-                "Crime Prevention",
-                "Criminal Law",
-                "Victimology"
-            ]
         }
     ],
     "Juvenile Delinquency": [
@@ -41,19 +28,6 @@
                 "Criminal Profiling",
                 "Criminal Law",
                 "Crime Prevention"
-            ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Criminology",
-            "current_skills": [
-                "Research Methods",
-                "Statistical Analysis",
-                "Criminal Psychology",
-                "Criminal Theory",
-                "Crime Prevention",
-                "Criminal Law",
-                "Victimology"
             ]
         }
     ],
@@ -86,19 +60,6 @@
                 "Criminal Profiling",
                 "Criminal Law",
                 "Crime Prevention"
-            ]
-        },
-        {
-            "user_id": "user2",
-            "preferred_specialization": "Criminology",
-            "current_skills": [
-                "Research Methods",
-                "Statistical Analysis",
-                "Criminal Psychology",
-                "Criminal Theory",
-                "Crime Prevention",
-                "Criminal Law",
-                "Victimology"
             ]
         }
     ],
@@ -1149,6 +1110,16 @@
                 "Editing",
                 "News Writing"
             ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Marketing",
+                "Social Media",
+                "Content Creation",
+                "Project Management"
+            ]
         }
     ],
     "Interviewing": [
@@ -1178,6 +1149,16 @@
                 "Self Defense",
                 "Firearms Training"
             ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Marketing",
+                "Social Media",
+                "Content Creation",
+                "Project Management"
+            ]
         }
     ],
     "Media Ethics": [
@@ -1194,6 +1175,16 @@
                 "Editing",
                 "News Writing"
             ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Marketing",
+                "Social Media",
+                "Content Creation",
+                "Project Management"
+            ]
         }
     ],
     "Multimedia Production": [
@@ -1209,6 +1200,16 @@
                 "Investigative Techniques",
                 "Editing",
                 "News Writing"
+            ]
+        },
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Marketing",
+                "Social Media",
+                "Content Creation",
+                "Project Management"
             ]
         }
     ],
@@ -1360,6 +1361,433 @@
                 "AutoCAD",
                 "Sustainable Design",
                 "3D Visualization"
+            ]
+        }
+    ],
+    "Curriculum Development": [
+        {
+            "user_id": "df22139d-8fb8-425d-a9c1-1e4b9566019b",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Critical Thinking",
+                "Patience",
+                "Communication",
+                "Organization",
+                "Imaginative Thinking",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution"
+            ]
+        },
+        {
+            "user_id": "educator1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Communication",
+                "Patience",
+                "Critical Thinking",
+                "Organization",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution",
+                "Imaginative Thinking"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Instructional Strategies",
+                "Mathematics Instruction",
+                "Child Development",
+                "Literacy Instruction",
+                "Special Education Awareness",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Classroom Management": [
+        {
+            "user_id": "df22139d-8fb8-425d-a9c1-1e4b9566019b",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Critical Thinking",
+                "Patience",
+                "Communication",
+                "Organization",
+                "Imaginative Thinking",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution"
+            ]
+        },
+        {
+            "user_id": "educator1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Communication",
+                "Patience",
+                "Critical Thinking",
+                "Organization",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution",
+                "Imaginative Thinking"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_3",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Mathematics Instruction",
+                "Child Development",
+                "Behavior Management",
+                "Assessment Methods",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Child Development": [
+        {
+            "user_id": "df22139d-8fb8-425d-a9c1-1e4b9566019b",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Critical Thinking",
+                "Patience",
+                "Communication",
+                "Organization",
+                "Imaginative Thinking",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution"
+            ]
+        },
+        {
+            "user_id": "educator1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Communication",
+                "Patience",
+                "Critical Thinking",
+                "Organization",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution",
+                "Imaginative Thinking"
+            ]
+        }
+    ],
+    "Instructional Strategies": [
+        {
+            "user_id": "df22139d-8fb8-425d-a9c1-1e4b9566019b",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Critical Thinking",
+                "Patience",
+                "Communication",
+                "Organization",
+                "Imaginative Thinking",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution"
+            ]
+        },
+        {
+            "user_id": "educator1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Communication",
+                "Patience",
+                "Critical Thinking",
+                "Organization",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution",
+                "Imaginative Thinking"
+            ]
+        }
+    ],
+    "Assessment Methods": [
+        {
+            "user_id": "df22139d-8fb8-425d-a9c1-1e4b9566019b",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Critical Thinking",
+                "Patience",
+                "Communication",
+                "Organization",
+                "Imaginative Thinking",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution"
+            ]
+        },
+        {
+            "user_id": "educator1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Communication",
+                "Patience",
+                "Critical Thinking",
+                "Organization",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution",
+                "Imaginative Thinking"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Instructional Strategies",
+                "Mathematics Instruction",
+                "Child Development",
+                "Literacy Instruction",
+                "Special Education Awareness",
+                "Educational Technology"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_2",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Child Development",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Literacy Instruction": [
+        {
+            "user_id": "df22139d-8fb8-425d-a9c1-1e4b9566019b",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Critical Thinking",
+                "Patience",
+                "Communication",
+                "Organization",
+                "Imaginative Thinking",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution"
+            ]
+        },
+        {
+            "user_id": "educator1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Communication",
+                "Patience",
+                "Critical Thinking",
+                "Organization",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution",
+                "Imaginative Thinking"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_2",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Child Development",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_3",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Mathematics Instruction",
+                "Child Development",
+                "Behavior Management",
+                "Assessment Methods",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Mathematics Instruction": [
+        {
+            "user_id": "df22139d-8fb8-425d-a9c1-1e4b9566019b",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Critical Thinking",
+                "Patience",
+                "Communication",
+                "Organization",
+                "Imaginative Thinking",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution"
+            ]
+        },
+        {
+            "user_id": "educator1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Communication",
+                "Patience",
+                "Critical Thinking",
+                "Organization",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution",
+                "Imaginative Thinking"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_2",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Child Development",
+                "Curriculum Development",
+                "Educational Technology"
+            ]
+        }
+    ],
+    "Special Education Awareness": [
+        {
+            "user_id": "df22139d-8fb8-425d-a9c1-1e4b9566019b",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Critical Thinking",
+                "Patience",
+                "Communication",
+                "Organization",
+                "Imaginative Thinking",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution"
+            ]
+        },
+        {
+            "user_id": "educator1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Communication",
+                "Patience",
+                "Critical Thinking",
+                "Organization",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution",
+                "Imaginative Thinking"
+            ]
+        }
+    ],
+    "Behavior Management": [
+        {
+            "user_id": "df22139d-8fb8-425d-a9c1-1e4b9566019b",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Critical Thinking",
+                "Patience",
+                "Communication",
+                "Organization",
+                "Imaginative Thinking",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution"
+            ]
+        },
+        {
+            "user_id": "educator1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Communication",
+                "Patience",
+                "Critical Thinking",
+                "Organization",
+                "Leadership",
+                "Teamwork",
+                "Time Management",
+                "Computer Skills",
+                "Conflict Resolution",
+                "Imaginative Thinking"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_1",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Instructional Strategies",
+                "Mathematics Instruction",
+                "Child Development",
+                "Literacy Instruction",
+                "Special Education Awareness",
+                "Educational Technology"
+            ]
+        },
+        {
+            "user_id": "skill_cluster_communication_skills_2",
+            "preferred_specialization": "Elementary Education",
+            "current_skills": [
+                "Classroom Management",
+                "Differentiated Instruction",
+                "Instructional Strategies",
+                "Special Education Awareness",
+                "Child Development",
+                "Curriculum Development",
+                "Educational Technology"
             ]
         }
     ],
@@ -2005,34 +2433,6 @@
             ]
         }
     ],
-    "Behavior Management": [
-        {
-            "user_id": "skill_cluster_communication_skills_1",
-            "preferred_specialization": "Elementary Education",
-            "current_skills": [
-                "Classroom Management",
-                "Instructional Strategies",
-                "Mathematics Instruction",
-                "Child Development",
-                "Literacy Instruction",
-                "Special Education Awareness",
-                "Educational Technology"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_communication_skills_2",
-            "preferred_specialization": "Elementary Education",
-            "current_skills": [
-                "Classroom Management",
-                "Differentiated Instruction",
-                "Instructional Strategies",
-                "Special Education Awareness",
-                "Child Development",
-                "Curriculum Development",
-                "Educational Technology"
-            ]
-        }
-    ],
     "Differentiated Instruction": [
         {
             "user_id": "skill_cluster_communication_skills_1",
@@ -2044,111 +2444,6 @@
                 "Child Development",
                 "Literacy Instruction",
                 "Special Education Awareness",
-                "Educational Technology"
-            ]
-        }
-    ],
-    "Assessment Methods": [
-        {
-            "user_id": "skill_cluster_communication_skills_1",
-            "preferred_specialization": "Elementary Education",
-            "current_skills": [
-                "Classroom Management",
-                "Instructional Strategies",
-                "Mathematics Instruction",
-                "Child Development",
-                "Literacy Instruction",
-                "Special Education Awareness",
-                "Educational Technology"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_communication_skills_2",
-            "preferred_specialization": "Elementary Education",
-            "current_skills": [
-                "Classroom Management",
-                "Differentiated Instruction",
-                "Instructional Strategies",
-                "Special Education Awareness",
-                "Child Development",
-                "Curriculum Development",
-                "Educational Technology"
-            ]
-        }
-    ],
-    "Curriculum Development": [
-        {
-            "user_id": "skill_cluster_communication_skills_1",
-            "preferred_specialization": "Elementary Education",
-            "current_skills": [
-                "Classroom Management",
-                "Instructional Strategies",
-                "Mathematics Instruction",
-                "Child Development",
-                "Literacy Instruction",
-                "Special Education Awareness",
-                "Educational Technology"
-            ]
-        }
-    ],
-    "Literacy Instruction": [
-        {
-            "user_id": "skill_cluster_communication_skills_2",
-            "preferred_specialization": "Elementary Education",
-            "current_skills": [
-                "Classroom Management",
-                "Differentiated Instruction",
-                "Instructional Strategies",
-                "Special Education Awareness",
-                "Child Development",
-                "Curriculum Development",
-                "Educational Technology"
-            ]
-        },
-        {
-            "user_id": "skill_cluster_communication_skills_3",
-            "preferred_specialization": "Elementary Education",
-            "current_skills": [
-                "Differentiated Instruction",
-                "Instructional Strategies",
-                "Special Education Awareness",
-                "Mathematics Instruction",
-                "Child Development",
-                "Behavior Management",
-                "Assessment Methods",
-                "Curriculum Development",
-                "Educational Technology"
-            ]
-        }
-    ],
-    "Mathematics Instruction": [
-        {
-            "user_id": "skill_cluster_communication_skills_2",
-            "preferred_specialization": "Elementary Education",
-            "current_skills": [
-                "Classroom Management",
-                "Differentiated Instruction",
-                "Instructional Strategies",
-                "Special Education Awareness",
-                "Child Development",
-                "Curriculum Development",
-                "Educational Technology"
-            ]
-        }
-    ],
-    "Classroom Management": [
-        {
-            "user_id": "skill_cluster_communication_skills_3",
-            "preferred_specialization": "Elementary Education",
-            "current_skills": [
-                "Differentiated Instruction",
-                "Instructional Strategies",
-                "Special Education Awareness",
-                "Mathematics Instruction",
-                "Child Development",
-                "Behavior Management",
-                "Assessment Methods",
-                "Curriculum Development",
                 "Educational Technology"
             ]
         }
@@ -3599,18 +3894,87 @@
             ]
         }
     ],
+    "News Writing": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Marketing",
+                "Social Media",
+                "Content Creation",
+                "Project Management"
+            ]
+        }
+    ],
+    "Research": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Marketing",
+                "Social Media",
+                "Content Creation",
+                "Project Management"
+            ]
+        }
+    ],
+    "Fact-Checking": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Marketing",
+                "Social Media",
+                "Content Creation",
+                "Project Management"
+            ]
+        }
+    ],
+    "Editing": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Marketing",
+                "Social Media",
+                "Content Creation",
+                "Project Management"
+            ]
+        }
+    ],
     "Investigative Techniques": [
         {
             "user_id": "user2",
-            "preferred_specialization": "Criminology",
+            "preferred_specialization": "Journalism",
             "current_skills": [
-                "Research Methods",
-                "Statistical Analysis",
-                "Criminal Psychology",
-                "Criminal Theory",
-                "Crime Prevention",
-                "Criminal Law",
-                "Victimology"
+                "Marketing",
+                "Social Media",
+                "Content Creation",
+                "Project Management"
+            ]
+        }
+    ],
+    "Content Planning": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Marketing",
+                "Social Media",
+                "Content Creation",
+                "Project Management"
+            ]
+        }
+    ],
+    "Deadline Management": [
+        {
+            "user_id": "user2",
+            "preferred_specialization": "Journalism",
+            "current_skills": [
+                "Marketing",
+                "Social Media",
+                "Content Creation",
+                "Project Management"
             ]
         }
     ],

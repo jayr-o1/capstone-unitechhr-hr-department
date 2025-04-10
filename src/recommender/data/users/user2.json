@@ -1,21 +1,24 @@
 {
     "user_id": "user2",
-    "preferred_field": "Criminal Justice",
-    "preferred_specialization": "Criminology",
+    "preferred_field": "Media",
+    "preferred_specialization": "Journalism",
     "current_skills": [
-        "Research Methods",
-        "Statistical Analysis",
-        "Criminal Psychology",
-        "Criminal Theory",
-        "Crime Prevention",
-        "Criminal Law",
-        "Victimology"
+        "Marketing",
+        "Social Media",
+        "Content Creation",
+        "Project Management"
     ],
     "lacking_skills": [
+        "Interviewing",
+        "News Writing",
+        "Research",
+        "Fact-Checking",
+        "Editing",
+        "Media Ethics",
+        "Multimedia Production",
         "Investigative Techniques",
-        "White-Collar Crime",
-        "Juvenile Delinquency",
-        "Sociology"
-    ],
-    "timestamp": "2025-04-09T11:45:30.000000"
-} 
+        "Content Planning",
+        "Story Development",
+        "Deadline Management"
+    ]
+}

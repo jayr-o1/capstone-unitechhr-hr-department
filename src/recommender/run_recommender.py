@@ -40,7 +40,10 @@ try:
         recommend_specializations_for_field,
         analyze_skill_gap,
         get_training_recommendations_for_skills,
-        update_user_skills_and_recommendations
+        update_user_skills_and_recommendations,
+        calculate_skill_similarity,
+        enhanced_analyze_skill_gap,
+        enhanced_recommend_fields_based_on_skills
     )
     SKILL_ANALYZER_AVAILABLE = True
 except ImportError:
@@ -173,17 +176,26 @@ def run_enhanced_analysis(user_id, selected_path, user_skills):
     print("\nAnalyzing your skills for:", selected_path['title'])
     print("-" * 60)
     
-    # Perform skill gap analysis
-    analysis = analyze_skill_gap(user_skills, selected_path['title'])
+    # Perform enhanced skill gap analysis
+    analysis = enhanced_analyze_skill_gap(user_skills, selected_path['title'])
     
     # Display results
     print(f"\nSkill Match: {analysis['match_percentage']}%")
     
-    # Show current skills that are relevant
+    # Show current skills that are directly relevant
     if analysis['matching_skills']:
-        print("\nYour relevant skills:")
+        print("\nYour directly relevant skills:")
         for skill in analysis['matching_skills']:
             print(f"- {skill}")
+    
+    # Show similar skills that are considered relevant
+    if analysis['similar_skills']:
+        print("\nYour transferable skills:")
+        for req_skill, skill_info in analysis['similar_skills'].items():
+            user_skill = skill_info['user_skill']
+            similarity = skill_info['similarity']
+            similarity_pct = int(similarity * 100)
+            print(f"- Your '{user_skill}' is {similarity_pct}% similar to '{req_skill}'")
     
     # Show missing skills with training recommendations
     if analysis['missing_skills']:
@@ -224,7 +236,8 @@ def run_enhanced_analysis(user_id, selected_path, user_skills):
         'user_id': user_id,
         'missing_skills': analysis['missing_skills'],
         'match_percentage': analysis['match_percentage'],
-        'matching_skills': analysis['matching_skills']
+        'matching_skills': analysis['matching_skills'],
+        'similar_skills': analysis['similar_skills']
     }
 
 def handle_undecided_user(user_id, user_name, user_skills, career_paths, skills_data):
@@ -293,50 +306,68 @@ def handle_undecided_user(user_id, user_name, user_skills, career_paths, skills_
 
 def handle_enhanced_undecided_user(user_id, user_name, user_skills):
     """
-    Enhanced handling of undecided users using the skill analyzer functionality.
-    
-    Args:
-        user_id (str): User ID
-        user_name (str): User name
-        user_skills (list): User's current skills
-        
-    Returns:
-        dict: Analysis results
+    Enhanced handling of an undecided user by recommending fields and specializations 
+    based on skills, using similarity matching.
     """
     print(f"\nHello {user_name}!")
     print("I'll help you explore career fields and specializations based on your skills.")
+    print("This system now recognizes transferable skills for more accurate recommendations!")
     
-    # Get field recommendations
-    field_recommendations = recommend_fields_based_on_skills(user_skills)
+    # Recommend fields based on skills with the enhanced algorithm
+    field_matches = enhanced_recommend_fields_based_on_skills(user_skills)
     
-    # Show top fields with match percentages
-    print("\nRecommended Fields:")
-    for i, field_rec in enumerate(field_recommendations[:10], 1):
-        print(f"{i}. {field_rec['field']} (Match: {field_rec['match_percentage']}%)")
+    # Display top 3 recommended fields
+    print("\nBased on your skills, here are your top field matches:")
     
-    choice = get_validated_integer("\nEnter the number of your preferred field: ", 1, len(field_recommendations[:10]))
-    
-    # User selected a specific field
-    selected_field = field_recommendations[choice-1]['field']
-    
-    # Get specialization recommendations for the selected field
-    spec_recommendations = recommend_specializations_for_field(user_skills, selected_field)
-    
-    # Show specializations within the selected field
-    print(f"\nRecommended Specializations in {selected_field}:")
-    for i, spec_rec in enumerate(spec_recommendations, 1):
-        print(f"{i}. {spec_rec['specialization']} (Match: {spec_rec['match_percentage']}%)")
+    for i, match in enumerate(field_matches[:3], 1):
+        print(f"\n{i}. {match['field']} ({match['match_percentage']}% match)")
         
-        # Show top missing skills for this specialization
-        if spec_rec['missing_skills']:
-            print(f"   Missing skills: {', '.join(spec_rec['missing_skills'][:3])}{'...' if len(spec_rec['missing_skills']) > 3 else ''}")
+        # Show matching skills for this field
+        if match['matching_skills']:
+            print("   Directly matching skills:")
+            for skill in sorted(match['matching_skills'])[:3]:  # Show top 3
+                print(f"   - {skill}")
+        
+        # Show similar skills
+        if match['similar_skills']:
+            print("   Transferable skills:")
+            similar_items = list(match['similar_skills'].items())
+            for req_skill, info in similar_items[:2]:  # Show top 2
+                user_skill = info['user_skill']
+                similarity = int(info['similarity'] * 100)
+                print(f"   - Your '{user_skill}' is {similarity}% similar to '{req_skill}'")
     
-    spec_choice = get_validated_integer("\nEnter the number of your preferred specialization: ", 1, len(spec_recommendations))
+    # Ask user which field they want to explore
+    print("\nWhich field would you like to explore?")
+    for i, match in enumerate(field_matches[:5], 1):
+        print(f"{i}. {match['field']} ({match['match_percentage']}% match)")
     
-    # User selected a specific specialization
-    selected_specialization = spec_recommendations[spec_choice-1]['specialization']
+    field_index = get_validated_integer("\nEnter number (or 0 to see all fields): ", 0, len(field_matches[:5]))
     
-    # Load career paths to get the selected path details
+    if field_index == 0:
+        # Show all fields
+        print("\nAll field matches:")
+        for i, match in enumerate(field_matches, 1):
+            print(f"{i}. {match['field']} ({match['match_percentage']}% match)")
+        
+        field_index = get_validated_integer("\nEnter number: ", 1, len(field_matches))
+        selected_field = field_matches[field_index - 1]['field']
+    else:
+        selected_field = field_matches[field_index - 1]['field']
+    
+    # Now recommend specializations for that field
+    specialization_matches = recommend_specializations_for_field(user_skills, selected_field)
+    
+    # Display specialization recommendations
+    print(f"\nFor {selected_field}, here are recommended specializations:")
+    for i, spec in enumerate(specialization_matches, 1):
+        print(f"{i}. {spec['specialization']} ({spec['match_percentage']}% match)")
+    
+    # Ask user which specialization they want to select
+    spec_index = get_validated_integer("\nWhich specialization interests you? Enter number: ", 1, len(specialization_matches))
+    selected_specialization = specialization_matches[spec_index - 1]['specialization']
+    
+    # Get career path data for this specialization
     career_paths = load_career_paths()
     selected_path = None
     for path in career_paths:
@@ -344,12 +375,12 @@ def handle_enhanced_undecided_user(user_id, user_name, user_skills):
             selected_path = path
             break
     
-    if not selected_path:
-        print(f"Error: Could not find specialization '{selected_specialization}' in career paths.")
-        selected_path = {'title': selected_specialization, 'required_skills': []}
-    
-    # Run analysis and display recommendations
-    return run_enhanced_analysis(user_id, selected_path, user_skills)
+    if selected_path:
+        # Perform detailed analysis
+        return run_enhanced_analysis(user_id, selected_path, user_skills)
+    else:
+        print("Could not find data for the selected specialization.")
+        return None
 
 def get_field_for_specialization(specialization, career_paths):
     """Determine which field a specialization belongs to."""
@@ -387,114 +418,155 @@ def get_field_for_specialization(specialization, career_paths):
     # Default return if not found
     return "Other"
 
-def main():
-    """Main function to run the recommender system."""
-    print("\n" + "="*60)
-    print("CAREER RECOMMENDER SYSTEM WITH LEARNING CAPABILITY")
-    print("="*60 + "\n")
+def update_clusters():
+    """Wrapper for updating clusters."""
+    try:
+        from utils.cluster_manager import update_clusters as update_clusters_func
+        update_clusters_func()
+    except (ImportError, AttributeError):
+        print("Warning: Could not update clusters.")
+
+def get_user_id():
+    """
+    Get user ID, creating a new one if necessary.
     
-    # Check and install required packages
-    check_install_packages()
-    
+    Returns:
+        tuple: (user_id, is_new_user, is_predefined)
+    """
     # Load all predefined users and display them
     predefined_users = display_predefined_users()
     
-    # Load or create user preferences
+    # Get user ID
     user_id = get_validated_string("\nEnter your user ID (or press Enter for a new user): ", min_length=0, required=False)
     
-    # Initialize variables
-    existing_user_data = None
-    predefined_user = None
-    
-    # Load career paths and skills data
-    career_paths = load_career_paths()
-    skills_data = load_skills_data()
-    
     # Check if this is a predefined user
+    is_predefined = False
     if user_id:
         predefined_user = get_predefined_user(user_id)
         if predefined_user:
             print(f"\nWelcome, {predefined_user['name']}!")
             print(f"Your skills: {', '.join(predefined_user['skills'])}")
-        
-        # Also check for existing user data
-        existing_user_data = load_user_preferences(user_id)
-        
-        if existing_user_data:
-            print(f"\nWelcome back! We found your saved preferences.")
-            
-            if 'preferred_specialization' in existing_user_data:
-                print(f"Your preferred specialization: {existing_user_data['preferred_specialization']}")
-            
-            if 'current_skills' in existing_user_data:
-                current_skills = existing_user_data['current_skills']
-                print(f"Your current skills: {', '.join(current_skills)}")
-            
-            if 'lacking_skills' in existing_user_data:
-                lacking_skills = existing_user_data['lacking_skills']
-                if lacking_skills:
-                    print(f"Skills you could develop: {', '.join(lacking_skills)}")
+            is_predefined = True
     
     # If no user_id provided, create a new user
+    is_new_user = False
     if not user_id:
         user_id = str(uuid.uuid4())
         print(f"\nNew user ID assigned: {user_id}")
+        is_new_user = True
     
-    # Interactive Mode - Get user's skills
-    # Only ask for skills if we don't have them already from existing data
-    if 'current_skills' not in locals() or not current_skills:
-        if predefined_user:
-            current_skills = predefined_user['skills']
-            print(f"\nUsing predefined skills: {', '.join(current_skills)}")
-        else:
-            current_skills = get_validated_list("\nPlease enter your current skills (comma-separated): ", min_items=1)
+    # If not new and not predefined, check if we have existing data
+    if not is_new_user and not is_predefined:
+        existing_data = load_user_preferences(user_id)
+        is_new_user = existing_data is None
     
-    # If we have existing user data with a preferred specialization, use it
-    if existing_user_data and 'preferred_specialization' in existing_user_data:
-        preferred_specialization = existing_user_data['preferred_specialization']
+    return user_id, is_new_user, is_predefined
+
+def main():
+    """Run the main program."""
+    print("\n" + "=" * 60)
+    print("CAREER RECOMMENDER SYSTEM WITH LEARNING CAPABILITY")
+    print("=" * 60)
+    
+    # Check and install packages
+    check_install_packages()
+    
+    # Get user ID or create a new one
+    user_id, is_new_user, is_predefined = get_user_id()
+    
+    if is_predefined:
+        # Load predefined user data
+        predefined_user = get_predefined_user(user_id)
+        if not predefined_user:
+            print("Error: Predefined user not found.")
+            sys.exit(1)
         
-        # Find the career path for this specialization
-        selected_path = None
-        for path in career_paths:
-            if path['title'] == preferred_specialization:
-                selected_path = path
+        user_name = predefined_user.get('name', 'User')
+        user_skills = predefined_user.get('skills', [])
+    else:
+        # For non-predefined users
+        user_preferences = None if is_new_user else load_user_preferences(user_id)
+        
+        if user_preferences:
+            # Returning user
+            user_name = user_preferences.get('user_name', 'User')
+            print(f"\nWelcome back, {user_name}!")
+            
+            # User already made a selection
+            if 'preferred_specialization' in user_preferences:
+                preferred_spec = user_preferences['preferred_specialization']
+                print(f"You previously selected: {preferred_spec}")
+                
+                # Ask if they want to continue with the same path
+                if get_validated_yes_no("Would you like to continue with the same specialization? (y/n): "):
+                    career_paths = load_career_paths()
+                    selected_path = None
+                    for path in career_paths:
+                        if path['title'] == preferred_spec:
+                            selected_path = path
+                            break
+                    
+                    if selected_path:
+                        user_skills = user_preferences.get('current_skills', [])
+                        run_analysis(user_id, selected_path, user_skills, career_paths, load_skills_data())
+                        return
+                    else:
+                        print("Your previously selected specialization could not be found. Let's explore new options.")
+            
+            # Get updated skills
+            print("\nYour previously entered skills:")
+            for skill in user_preferences.get('current_skills', []):
+                print(f"- {skill}")
+            
+            # Ask if they want to update skills
+            if get_validated_yes_no("Would you like to update your skills? (y/n): "):
+                user_skills = get_validated_list("Enter your skills (comma-separated): ")
+            else:
+                user_skills = user_preferences.get('current_skills', [])
+        else:
+            # New user
+            user_name = get_validated_string("Enter your name: ")
+            user_skills = get_validated_list("Enter your skills (comma-separated): ")
+    
+    # Present options to the user
+    print("\nWhat would you like to do?")
+    print("1. Get career recommendations with skill matching (ENHANCED)")
+    print("2. Explore career fields and specializations")
+    print("3. View skill clusters (admin)")
+    
+    choice = get_validated_integer("Enter your choice (1-3): ", 1, 3)
+    
+    career_paths = load_career_paths()
+    skills_data = load_skills_data()
+    
+    if choice == 1:
+        # NEW: Use enhanced recommendations
+        if SKILL_ANALYZER_AVAILABLE:
+            handle_enhanced_undecided_user(user_id, user_name, user_skills)
+        else:
+            print("Enhanced recommendations are not available. Using standard recommendations.")
+            handle_undecided_user(user_id, user_name, user_skills, career_paths, skills_data)
+    
+    elif choice == 2:
+        # Explore career fields and specializations
+        if SKILL_ANALYZER_AVAILABLE:
+            handle_undecided_user(user_id, user_name, user_skills, career_paths, skills_data)
+        else:
+            handle_undecided_user(user_id, user_name, user_skills, career_paths, skills_data)
+    
+    elif choice == 3:
+        # Admin function: View skill clusters
+        while True:
+            skill = get_validated_string("Enter skill to view user clusters (or 'exit' to quit): ")
+            if skill.lower() == 'exit':
                 break
-        
-        if not selected_path:
-            print(f"Error: Could not find your preferred specialization '{preferred_specialization}' in career paths.")
-            print("Please select a new specialization.")
-            selected_path = None
-    else:
-        selected_path = None
-    
-    # If user doesn't have a specialization yet, or we couldn't find it, ask them to select one
-    if not selected_path:
-        # First decision - is the user undecided?
-        is_undecided = get_validated_yes_no("\nAre you undecided about your career path? (y/n): ")
-        
-        if is_undecided:
-            # Handle undecided user - recommend fields and specializations
-            user_name = "there" if not predefined_user else predefined_user['name']
-            analysis_result = handle_undecided_user(user_id, user_name, current_skills, career_paths, skills_data)
-        else:
-            # Show all available career paths
-            print("\nAvailable Career Paths:")
-            for i, path in enumerate(career_paths, 1):
-                print(f"{i}. {path['title']}")
-            
-            choice = get_validated_integer("\nSelect a career path (1-{}): ".format(len(career_paths)), 1, len(career_paths))
-            
-            # User selected a specific path
-            selected_path = career_paths[choice-1]
-            
-            # Run analysis and display recommendations
-            analysis_result = run_analysis(user_id, selected_path, current_skills, career_paths, skills_data)
-    else:
-        # Run analysis with existing preferences
-        print(f"\nAnalyzing your skills for your preferred specialization: {preferred_specialization}")
-        analysis_result = run_analysis(user_id, selected_path, current_skills, career_paths, skills_data)
-    
-    input("\nPress Enter to exit...")
+            display_skill_clusters(skill)
 
 if __name__ == "__main__":
-    main() 
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\nProgram interrupted by user. Exiting gracefully...")
+    except Exception as e:
+        print(f"\nAn error occurred: {str(e)}")
+        print("Please try again later.") 

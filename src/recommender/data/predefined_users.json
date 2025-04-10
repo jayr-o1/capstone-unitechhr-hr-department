@@ -3,27 +3,32 @@
         {
             "id": "user1",
             "name": "John Doe",
-            "skills": ["Python", "Data Analysis", "Machine Learning", "SQL", "Statistics", "Data Visualization", "Deep Learning", "Natural Language Processing"]
+            "skills": ["Python", "Problem Solving", "Cloud Platforms", "Data Analysis"]
         },
         {
             "id": "user2",
             "name": "Jane Smith",
-            "skills": ["Research Methods", "Statistical Analysis", "Criminal Psychology", "Criminal Theory", "Crime Prevention", "Criminal Law", "Victimology"]
+            "skills": ["Marketing", "Social Media", "Content Creation", "Project Management"]
         },
         {
             "id": "user3",
             "name": "Alex Johnson",
-            "skills": ["Programming", "Data Structures", "Algorithms", "Version Control", "Software Testing", "Web Development", "API Design", "Debugging"]
+            "skills": ["Network Security", "Penetration Testing", "Threat Analysis", "System Administration"]
         },
         {
             "id": "user4",
             "name": "Maria Rodriguez",
-            "skills": ["Network Security", "Information Security", "Ethical Hacking", "Risk Management", "Incident Response", "Security Tools", "Cloud Security"]
+            "skills": ["Patient Care", "Medical Terminology", "Clinical Procedures", "Healthcare Documentation"]
         },
         {
             "id": "user5",
             "name": "David Chen",
-            "skills": ["Cloud Platforms", "Infrastructure as Code", "Containerization", "DevOps", "Microservices", "Serverless Architecture", "Automation"]
+            "skills": ["Financial Analysis", "Risk Management", "Investment Strategy", "Market Research"]
+        },
+        {
+            "id": "educator1",
+            "name": "Emma Taylor",
+            "skills": ["Communication", "Patience", "Critical Thinking", "Organization", "Leadership", "Teamwork", "Time Management", "Computer Skills", "Conflict Resolution", "Imaginative Thinking"]
         }
     ]
 } 
