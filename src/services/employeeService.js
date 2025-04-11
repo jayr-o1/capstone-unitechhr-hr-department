@@ -533,19 +533,17 @@ export const getEmployeeSkills = async (userId, universityId) => {
             }
         }
 
-        // Query for employee skills
-        const skillsRef = collection(db, 'universities', universityId, 'employees', employeeDocId, 'skills');
-        const skillsSnapshot = await getDocs(skillsRef);
+        // Get the employee document directly
+        const employeeRef = doc(db, 'universities', universityId, 'employees', employeeDocId);
+        const employeeDoc = await getDoc(employeeRef);
         
-        if (skillsSnapshot.empty) {
-            console.log("No skills found for employee");
-            return { success: true, skills: [] };
+        if (!employeeDoc.exists()) {
+            console.log("Employee document not found");
+            return { success: false, message: 'Employee not found', skills: [] };
         }
         
-        const skills = skillsSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        const employeeData = employeeDoc.data();
+        const skills = employeeData.skills || [];
         
         console.log("Found skills for employee:", skills.length);
         return { success: true, skills };
@@ -642,7 +640,7 @@ export const addEmployeeSkill = async (userId, universityId, skillData) => {
             category: skillData.category || 'technical',
             proficiency: skillData.proficiency || 50,
             notes: skillData.notes || '',
-            createdAt: serverTimestamp()
+            createdAt: new Date()
         };
         
         // Add the new skill to the array
@@ -722,7 +720,7 @@ export const updateEmployeeSkill = async (userId, universityId, skillId, skillDa
         updatedSkills[skillIndex] = {
             ...updatedSkills[skillIndex],
             ...skillData,
-            updatedAt: serverTimestamp()
+            updatedAt: new Date()
         };
         
         // Update the employee document
