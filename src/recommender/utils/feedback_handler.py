@@ -83,146 +83,127 @@ def save_feedback_db(db):
     with open(FEEDBACK_DB_PATH, 'w') as f:
         json.dump(json_safe_db, f, indent=4)
 
-def save_feedback(user_id, rating, comments, suggestions):
-    """Save user feedback on recommendations."""
-    # Create feedback directory if it doesn't exist
-    feedback_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'feedback')
-    os.makedirs(feedback_dir, exist_ok=True)
+def save_feedback(feedback_data):
+    """
+    Save user feedback to the feedback directory.
     
-    # Create feedback data
-    feedback_data = {
-        'user_id': user_id,
-        'rating': rating,
-        'comments': comments,
-        'suggestions': suggestions,
-        'timestamp': datetime.now().isoformat()
-    }
+    Args:
+        feedback_data (dict): Dictionary with feedback data
     
-    # Save feedback to file (append to existing feedback if any)
-    file_path = os.path.join(feedback_dir, f"{user_id}_feedback.json")
-    
-    existing_feedback = []
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as f:
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Create feedback directory if it doesn't exist
+        feedback_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'feedback')
+        os.makedirs(feedback_dir, exist_ok=True)
+        
+        # Generate a unique filename based on user ID and timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        user_id = feedback_data.get('user_id', 'unknown')
+        filename = f"feedback_{user_id}_{timestamp}.json"
+        filepath = os.path.join(feedback_dir, filename)
+        
+        # Save the feedback data
+        with open(filepath, 'w') as f:
+            json.dump(feedback_data, f, indent=2)
+        
+        # Also append to the main feedback file
+        main_feedback_file = os.path.join(feedback_dir, 'feedback.json')
+        all_feedback = {"feedback": []}
+        
+        # Load existing feedback if it exists
+        if os.path.exists(main_feedback_file):
             try:
-                existing_feedback = json.load(f)
-                if not isinstance(existing_feedback, list):
-                    existing_feedback = [existing_feedback]
+                with open(main_feedback_file, 'r') as f:
+                    all_feedback = json.load(f)
             except json.JSONDecodeError:
-                existing_feedback = []
+                # If the file is corrupted, start fresh
+                all_feedback = {"feedback": []}
+        
+        # Append the new feedback
+        all_feedback["feedback"].append(feedback_data)
+        
+        # Save the updated feedback file
+        with open(main_feedback_file, 'w') as f:
+            json.dump(all_feedback, f, indent=2)
+        
+        return True
     
-    existing_feedback.append(feedback_data)
-    
-    with open(file_path, 'w') as f:
-        json.dump(existing_feedback, f, indent=4)
-    
-    return feedback_data
+    except Exception as e:
+        print(f"Error saving feedback: {str(e)}")
+        return False
 
-def get_user_feedback(recommendations, user_id=None, skills=None, experience=None):
+def get_user_feedback(user_id=None):
     """
-    Gathers user feedback on recommendations and stores it for future improvement.
+    Get feedback data for a specific user or all feedback if user_id is None.
     
     Args:
-        recommendations (dict): The recommendations to get feedback on
-        user_id (str, optional): User ID for tracking feedback
-        skills (str, optional): User's skills (if already available)
-        experience (str, optional): User's experience (if already available)
+        user_id (str, optional): User ID to filter feedback for
         
     Returns:
-        str: The user_id used or created
+        list: Feedback data items
     """
-    print("\nWe'd like your feedback to improve future recommendations:")
+    try:
+        feedback_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'feedback')
+        main_feedback_file = os.path.join(feedback_dir, 'feedback.json')
+        
+        if not os.path.exists(main_feedback_file):
+            return []
+        
+        with open(main_feedback_file, 'r') as f:
+            all_feedback = json.load(f)
+        
+        if user_id:
+            # Filter feedback for the specified user
+            return [item for item in all_feedback.get("feedback", []) if item.get("user_id") == user_id]
+        else:
+            # Return all feedback
+            return all_feedback.get("feedback", [])
     
-    # Show the recommendations
-    print(f"Field: {recommendations['Recommended Field']} (Confidence: {recommendations['Field Confidence']}%)")
-    for i, path in enumerate(recommendations["Top 3 Career Paths"], 1):
-        print(f"{i}. {path}")
+    except Exception as e:
+        print(f"Error retrieving feedback: {str(e)}")
+        return []
+
+def analyze_feedback(min_rating=None, max_rating=None):
+    """
+    Analyze feedback data.
     
-    # Get selected path
-    selected_idx = input("\nWhich career path interests you the most? (1-3, or 0 if none): ")
-    selected_path = None
-    if selected_idx.isdigit() and 1 <= int(selected_idx) <= 3:
-        selected_path = recommendations["Top 3 Career Paths"][int(selected_idx) - 1]
+    Args:
+        min_rating (int, optional): Minimum rating to filter by
+        max_rating (int, optional): Maximum rating to filter by
+        
+    Returns:
+        dict: Analysis results
+    """
+    all_feedback = get_user_feedback()
     
-    # Get rating
-    rating = input("On a scale of 1-5, how helpful were these recommendations? ")
-    if not rating.isdigit():
-        rating = 0
+    # Filter by rating if specified
+    if min_rating is not None:
+        all_feedback = [f for f in all_feedback if f.get("satisfaction_rating", 0) >= min_rating]
+    
+    if max_rating is not None:
+        all_feedback = [f for f in all_feedback if f.get("satisfaction_rating", 0) <= max_rating]
+    
+    # Calculate average satisfaction
+    if all_feedback:
+        ratings = [f.get("satisfaction_rating", 0) for f in all_feedback if "satisfaction_rating" in f]
+        avg_rating = sum(ratings) / len(ratings) if ratings else None
     else:
-        rating = int(rating)
+        avg_rating = None
     
-    # Get comments
-    comments = input("Any additional feedback? (optional): ")
+    # Count feedback by recommendation type
+    field_feedback = [f for f in all_feedback if f.get("recommendation_type") == "field_recommendations"]
+    specialization_feedback = [f for f in all_feedback if "specialization" in f]
+    error_feedback = [f for f in all_feedback if "error_type" in f]
     
-    # Store the feedback
-    feedback = {
-        "selected_path": selected_path,
-        "rating": rating,
-        "comments": comments
+    return {
+        "total_feedback": len(all_feedback),
+        "average_rating": avg_rating,
+        "field_recommendations_count": len(field_feedback),
+        "specialization_recommendations_count": len(specialization_feedback),
+        "error_feedback_count": len(error_feedback)
     }
-    
-    return store_user_feedback(user_id, skills, experience, recommendations, feedback)
-
-def store_user_feedback(user_id, skills, experience, recommendations, feedback):
-    """
-    Stores user feedback about recommendations for future improvements.
-    
-    Args:
-        user_id (str): Unique identifier for the user
-        skills (str): User's skills
-        experience (str): User's experience
-        recommendations (dict): The recommendations provided to the user
-        feedback (dict): User feedback with format {"selected_path": str, "rating": int, "comments": str}
-        
-    Returns:
-        str: The user ID (generated if not provided)
-    """
-    if not user_id:
-        user_id = str(uuid.uuid4())
-    
-    feedback_db = load_feedback_db()
-    
-    # Store the feedback entry
-    feedback_entry = {
-        "user_id": user_id,
-        "timestamp": datetime.now().isoformat(),
-        "skills": skills,
-        "experience": experience,
-        "recommendations": recommendations,
-        "feedback": feedback
-    }
-    
-    feedback_db["feedback_entries"].append(feedback_entry)
-    
-    # If user rated the recommendation highly or provided a preferred path,
-    # store it as an improved recommendation for this user
-    if feedback.get("rating", 0) >= 4 or feedback.get("selected_path"):
-        # Create improved recommendation based on user feedback
-        improved_rec = recommendations.copy()
-        
-        # If user selected a specific path, prioritize it
-        if feedback.get("selected_path"):
-            selected_path = feedback["selected_path"]
-            # Find the selected path and move it to the top if it exists
-            if selected_path in improved_rec["Top 3 Career Paths"]:
-                idx = improved_rec["Top 3 Career Paths"].index(selected_path)
-                
-                # Move the selected path to the top
-                for key in ["Top 3 Career Paths", "Required Skills", "Confidence Percentages", 
-                           "Lacking Skills", "Training Recommendations"]:
-                    if idx > 0 and len(improved_rec[key]) > idx:
-                        improved_rec[key][0], improved_rec[key][idx] = improved_rec[key][idx], improved_rec[key][0]
-        
-        # Store the improved recommendation
-        feedback_db["improved_recommendations"][user_id] = {
-            "skills": skills,
-            "experience": experience,
-            "recommendation": improved_rec,
-            "last_updated": datetime.now().isoformat()
-        }
-    
-    save_feedback_db(feedback_db)
-    return user_id
 
 def get_user_specific_feedback(user_id):
     """Get all feedback from a specific user."""

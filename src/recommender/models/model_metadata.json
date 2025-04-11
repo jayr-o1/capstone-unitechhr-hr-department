@@ -1,28 +1,8 @@
 {
-  "current": {
-    "accuracy": 1.0,
-    "training_entries": 10,
-    "unique_fields": 4,
-    "timestamp": "2025-04-09T12:48:34.465559"
-  },
-  "history": [
-    {
-      "accuracy": 1.0,
-      "training_entries": 10,
-      "unique_fields": 4,
-      "timestamp": "2025-04-09T12:21:18.104220"
-    },
-    {
-      "accuracy": 1.0,
-      "training_entries": 10,
-      "unique_fields": 4,
-      "timestamp": "2025-04-09T12:43:04.785945"
-    },
-    {
-      "accuracy": 1.0,
-      "training_entries": 10,
-      "unique_fields": 4,
-      "timestamp": "2025-04-09T12:48:34.465559"
-    }
-  ]
+  "original_model": "models/career_path_recommendation_model.pkl",
+  "backup_path": "models/history\\career_path_recommendation_model_backup_2025-04-10T17-26-12.092696.pkl",
+  "backup_time": "2025-04-10T17-26-12.092696",
+  "trained_at": "2025-04-10T17:26:12.091698",
+  "accuracy": 0.84945,
+  "feedback_entries_used": 17
 }

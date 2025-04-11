@@ -178,6 +178,340 @@ career_fields = {
             "Corporate Finance", "Cash Flow Management", "Internal Controls",
             "Tax Planning", "Financial Modeling", "Data Analysis", "Excel Proficiency"
         ]
+    },
+    "Marketing": {
+        "roles": [
+            "Digital Marketing Specialist", "Brand Manager", "Market Research Analyst",
+            "Content Strategist", "Public Relations Manager", "SEO Specialist", 
+            "Social Media Manager"
+        ],
+        "skills": [
+            "Social Media Marketing", "Search Engine Optimization (SEO)", "Content Marketing",
+            "Data Analytics", "Email Marketing", "Paid Advertising", "Google Analytics",
+            "Consumer Behavior", "Brand Management", "Marketing Automation", "Market Research",
+            "Competitor Analysis", "Product Positioning", "Campaign Management", "Brand Strategy",
+            "Creative Direction", "Public Relations", "Consumer Psychology", "Visual Communications",
+            "Presentation Skills", "Survey Design", "Statistical Analysis", "Qualitative Research",
+            "Focus Group Moderation", "Consumer Insights", "Trend Analysis", "Demographic Profiling",
+            "Predictive Modeling", "Data Visualization", "Content Planning", "Copywriting"
+        ]
+    },
+    "Education": {
+        "roles": [
+            "Elementary School Teacher", "College Professor", "Educational Administrator",
+            "Special Education Teacher", "Educational Technologist"
+        ],
+        "skills": [
+            "Curriculum Development", "Classroom Management", "Child Psychology", 
+            "Lesson Planning", "Educational Technology", "Special Education", 
+            "Assessment Methods", "Differentiated Instruction", "Student Engagement", 
+            "Parental Communication", "Course Design", "Student Advising", 
+            "Scholarly Research", "Grant Writing", "Academic Publishing", 
+            "Lecture Preparation", "Assessment Design", "Educational Leadership", 
+            "Mentoring", "Professional Networking", "School Operations", 
+            "Educational Policy", "Staff Management", "Budget Administration", 
+            "Community Relations", "Curriculum Oversight", "Strategic Planning", 
+            "Conflict Resolution", "Performance Evaluation", "Regulatory Compliance",
+            "Critical Thinking", "Patience", "Communication", "Organization", 
+            "Imaginative Thinking", "Leadership", "Teamwork", "Time Management", 
+            "Computer Skills", "Problem Solving", "Creativity", "Adaptability",
+            "Emotional Intelligence", "Active Listening", "Presentation Skills"
+        ]
+    },
+    "Finance": {
+        "roles": [
+            "Investment Banker", "Portfolio Manager", "Risk Manager",
+            "Financial Advisor", "Hedge Fund Analyst"
+        ],
+        "skills": [
+            "Financial Modeling", "Valuation", "Mergers & Acquisitions", 
+            "Capital Markets", "Excel Proficiency", "Pitch Book Creation", 
+            "Due Diligence", "Financial Statement Analysis", "Deal Structuring", 
+            "Client Relationship Management", "Asset Allocation", "Risk Management", 
+            "Market Analysis", "Performance Attribution", "Investment Strategy", 
+            "Client Communication", "Financial Research", "Portfolio Construction", 
+            "Regulatory Compliance", "Alternative Investments", "Credit Risk Analysis", 
+            "Market Risk Assessment", "Operational Risk", "VaR Calculations", 
+            "Stress Testing", "Risk Modeling", "Hedging Strategies", 
+            "Regulatory Reporting", "Enterprise Risk Management", "Retirement Planning"
+        ]
+    },
+    "Arts & Design": {
+        "roles": [
+            "Graphic Designer", "Interior Designer", "UX/UI Designer",
+            "Fashion Designer", "Animator"
+        ],
+        "skills": [
+            "Adobe Creative Suite", "Typography", "Brand Identity", 
+            "Layout Design", "Color Theory", "Print Design", 
+            "Digital Media", "Visual Communication", "User Interface Design", 
+            "Design Thinking", "Space Planning", "CAD Software", 
+            "Material Selection", "Color Schemes", "Lighting Design", 
+            "Furniture Design", "Client Presentations", "Project Management", 
+            "Sustainable Design", "Architectural Elements", "User Research", 
+            "Wireframing", "Prototyping", "Interaction Design", 
+            "Usability Testing", "Information Architecture", "Responsive Design", 
+            "Design Systems", "Visual Design", "User Journey Mapping"
+        ]
+    },
+    "Hospitality": {
+        "roles": [
+            "Hotel Manager", "Executive Chef", "Event Planner"
+        ],
+        "skills": [
+            "Staff Management", "Budget Administration", "Customer Service", 
+            "Operations Management", "Revenue Management", "Marketing Strategy", 
+            "Event Coordination", "Food & Beverage Knowledge", "Crisis Management", 
+            "Facilities Maintenance", "Menu Development", "Kitchen Management", 
+            "Food Cost Control", "Culinary Techniques", "Inventory Management", 
+            "Staff Training", "Food Safety", "Plating & Presentation", 
+            "Supplier Relations", "Recipe Development", "Vendor Management", 
+            "Budget Planning", "Logistics Coordination", "Client Communication", 
+            "Marketing & Promotion", "Contract Negotiation", "Problem Solving", 
+            "Design & Decor", "Timeline Creation", "Risk Management"
+        ]
+    },
+    "Information Technology": {
+        "roles": [
+            "IT Support Specialist", "Product Manager", "Quality Assurance Analyst"
+        ],
+        "skills": [
+            "Troubleshooting", "Network Administration", "Hardware Maintenance", 
+            "Operating Systems", "User Support", "Technical Documentation", 
+            "Software Installation", "Security Compliance", "Remote Assistance", 
+            "System Updates", "Product Strategy", "Market Analysis", 
+            "User Stories", "Agile Methodologies", "Backlog Management", 
+            "Stakeholder Communication", "Product Roadmapping", "Requirements Gathering", 
+            "Prioritization", "Product Metrics", "Test Case Development", 
+            "Bug Tracking", "Regression Testing", "Automated Testing", 
+            "Test Planning", "User Acceptance Testing", "Performance Testing", 
+            "Quality Metrics", "Test Environments", "Documentation"
+        ]
+    },
+    "Media & Communications": {
+        "roles": [
+            "Technical Writer", "Journalist", "Public Speaker"
+        ],
+        "skills": [
+            "Documentation Planning", "Content Management", "API Documentation", 
+            "User Guide Creation", "Information Architecture", "Style Guides", 
+            "Technical Editing", "Content Strategy", "Research Skills", 
+            "Information Design", "Investigative Reporting", "Interview Techniques", 
+            "News Writing", "Fact-checking", "Media Ethics", 
+            "Multimedia Storytelling", "Source Development", "Editing", 
+            "Deadline Management", "Social Media", "Presentation Skills", 
+            "Audience Engagement", "Speech Writing", "Storytelling", 
+            "Voice Projection", "Visual Aids", "Stage Presence", 
+            "Topic Research", "Persuasive Communication", "Improvisational Speaking"
+        ]
+    },
+    "Environmental Sciences": {
+        "roles": [
+            "Environmental Scientist", "Sustainability Consultant", "Conservation Biologist",
+            "Marine Biologist", "Urban Planner"
+        ],
+        "skills": [
+            "Field Research", "Data Analysis", "Environmental Sampling", 
+            "GIS Mapping", "Regulatory Compliance", "Report Writing", 
+            "Ecological Assessment", "Impact Analysis", "Remediation Planning", 
+            "Sustainability", "Carbon Footprint Analysis", "Environmental Auditing", 
+            "Green Building Standards", "Renewable Energy", "Waste Management", 
+            "Corporate Sustainability", "Environmental Policy", "Stakeholder Engagement", 
+            "Climate Risk Assessment", "Circular Economy", "Wildlife Management", 
+            "Habitat Assessment", "Biodiversity Monitoring", "Species Identification", 
+            "Conservation Planning", "Grant Writing", "Data Collection", 
+            "Population Dynamics", "Ecological Restoration", "Research Design"
+        ]
+    },
+    "Construction & Trades": {
+        "roles": [
+            "General Contractor", "Electrician", "Plumber", "Carpenter",
+            "Construction Manager", "HVAC Technician", "Welder",
+            "Landscaper", "Roofer", "Painter", "Mason",
+            "Building Inspector", "Concrete Specialist", "Glazier",
+            "Flooring Installer", "Drywall Installer"
+        ],
+        "skills": [
+            "Blueprint Reading", "Building Codes", "Permit Processing", 
+            "Safety Procedures", "Project Scheduling", "Cost Estimation", 
+            "Equipment Operation", "Electrical Wiring", "Plumbing Systems", 
+            "Carpentry", "Masonry", "Welding", "HVAC Installation", 
+            "Roofing", "Concrete Work", "Flooring Installation", 
+            "Drywall Installation", "Painting Techniques", "Quality Control", 
+            "Construction Mathematics", "Technical Drawing", "Power Tools",
+            "Material Selection", "Site Preparation", "Framing", 
+            "Finishing Work", "Renovation", "Restoration",
+            "Preventative Maintenance", "Problem Diagnosis"
+        ]
+    },
+    "Public Service & Government": {
+        "roles": [
+            "City Manager", "Policy Analyst", "Urban Planner",
+            "Public Administrator", "Foreign Service Officer", "Legislator",
+            "Government Affairs Specialist", "Economic Development Director",
+            "Public Health Director", "Parks and Recreation Director",
+            "Transportation Planner", "Housing Coordinator", "Budget Analyst",
+            "Emergency Management Director", "Environmental Policy Analyst"
+        ],
+        "skills": [
+            "Public Policy", "Government Relations", "Regulatory Compliance", 
+            "Stakeholder Engagement", "Legislative Process", "Policy Analysis", 
+            "Program Evaluation", "Public Speaking", "Grant Management", 
+            "Budget Administration", "Community Outreach", "Strategic Planning", 
+            "Economic Development", "Public Health Administration", "Urban Planning", 
+            "Environmental Policy", "Crisis Management", "Intergovernmental Relations", 
+            "Public-Private Partnerships", "Social Services Administration", 
+            "Ethics and Transparency", "Policy Implementation", "Demographic Analysis",
+            "Public Finance", "Constitutional Law", "Diplomacy", "Political Analysis",
+            "Electoral Systems", "Administrative Law", "Public Service Ethics"
+        ]
+    },
+    "Sports & Recreation": {
+        "roles": [
+            "Athletic Director", "Sports Coach", "Personal Trainer",
+            "Sports Psychologist", "Physical Education Teacher", "Sports Nutritionist",
+            "Recreation Manager", "Fitness Instructor", "Sports Therapist",
+            "Professional Athlete", "Sports Scout", "Sports Agent",
+            "Sports Event Coordinator", "Outdoor Guide", "Sports Journalist"
+        ],
+        "skills": [
+            "Athletic Training", "Team Leadership", "Sports Psychology", 
+            "Exercise Physiology", "Strength and Conditioning", "Nutrition Planning", 
+            "Game Strategy", "Sports Medicine", "Injury Prevention", 
+            "Sports Rehabilitation", "Group Instruction", "Motivational Techniques", 
+            "Fitness Assessment", "Program Development", "Sports Administration", 
+            "Event Management", "Facility Management", "Equipment Maintenance", 
+            "Safety Protocols", "First Aid/CPR", "Competition Planning", 
+            "Performance Analysis", "Sports Officiating", "Recreation Programming",
+            "Outdoor Leadership", "Risk Management", "Biomechanics",
+            "Training Program Design", "Sports Marketing", "Team Building"
+        ]
+    },
+    "Culinary Arts & Food Service": {
+        "roles": [
+            "Executive Chef", "Pastry Chef", "Sous Chef", "Restaurant Manager",
+            "Food and Beverage Director", "Sommelier", "Nutritionist",
+            "Catering Manager", "Food Stylist", "Recipe Developer",
+            "Food Writer", "Culinary Instructor", "Butcher",
+            "Barista", "Bartender", "Brewery Manager"
+        ],
+        "skills": [
+            "Menu Planning", "Food Preparation", "Culinary Techniques", 
+            "Recipe Development", "Food Safety", "Kitchen Management", 
+            "Inventory Control", "Cost Management", "Wine Knowledge", 
+            "Food Presentation", "Baking", "Pastry Making", 
+            "Dietary Requirements", "Nutrition Analysis", "Flavor Pairing", 
+            "Ingredient Sourcing", "Staff Training", "Customer Service", 
+            "Event Catering", "Restaurant Operations", "Cultural Cuisines", 
+            "Food Photography", "Beverage Service", "Mixology",
+            "Coffee Preparation", "Sustainable Cooking", "Meal Planning",
+            "Portion Control", "Equipment Maintenance", "Food Trends"
+        ]
+    },
+    "Transportation & Logistics": {
+        "roles": [
+            "Logistics Manager", "Supply Chain Analyst", "Fleet Manager",
+            "Transportation Planner", "Warehouse Manager", "Distribution Director",
+            "Freight Forwarder", "Procurement Specialist", "Inventory Manager",
+            "Shipping Coordinator", "Customs Broker", "Air Traffic Controller",
+            "Railway Operations Manager", "Port Manager", "Commercial Pilot"
+        ],
+        "skills": [
+            "Supply Chain Management", "Logistics Planning", "Inventory Control", 
+            "Warehouse Operations", "Transportation Management", "Freight Forwarding", 
+            "Customs Clearance", "Procurement", "Vendor Management", 
+            "Distribution Planning", "Shipping Coordination", "Route Optimization", 
+            "Fleet Management", "Import/Export Procedures", "International Logistics", 
+            "Demand Planning", "Order Fulfillment", "Inventory Forecasting", 
+            "Logistics Software", "Regulatory Compliance", "Cross-docking", 
+            "Material Handling", "Cold Chain Management", "Just-in-Time Delivery",
+            "Reverse Logistics", "Load Planning", "Freight Negotiation",
+            "GPS Tracking", "Hazardous Materials Handling", "Last Mile Delivery"
+        ]
+    },
+    "Fashion & Beauty": {
+        "roles": [
+            "Fashion Designer", "Fashion Merchandiser", "Textile Designer",
+            "Fashion Buyer", "Stylist", "Makeup Artist", "Esthetician",
+            "Hair Stylist", "Cosmetic Chemist", "Beauty Editor",
+            "Fashion Photographer", "Fashion Marketing Manager", "Costume Designer",
+            "Runway Producer", "Visual Merchandiser", "Brand Ambassador"
+        ],
+        "skills": [
+            "Fashion Design", "Pattern Making", "Garment Construction", 
+            "Textile Knowledge", "Color Theory", "Fashion Illustration", 
+            "Trend Forecasting", "Fashion Photography", "Styling", 
+            "Makeup Application", "Skincare Knowledge", "Hair Styling", 
+            "Fashion Marketing", "Visual Merchandising", "Collection Development", 
+            "Fashion Show Production", "Retail Buying", "Brand Management", 
+            "Costume Design", "Sustainable Fashion", "Product Development", 
+            "Quality Control", "CAD for Fashion", "Fashion Writing",
+            "Beauty Product Knowledge", "Client Consultation", "Fashion History",
+            "Retail Operations", "Cosmetic Formulation", "Fashion Curation"
+        ]
+    },
+    "Real Estate & Property Management": {
+        "roles": [
+            "Real Estate Agent", "Property Manager", "Real Estate Appraiser",
+            "Mortgage Loan Officer", "Real Estate Developer", "Commercial Leasing Agent",
+            "Real Estate Attorney", "Real Estate Broker", "Home Inspector",
+            "Facilities Manager", "Property Assessor", "Real Estate Investor",
+            "Land Developer", "Real Estate Marketing Specialist", "Escrow Officer"
+        ],
+        "skills": [
+            "Property Valuation", "Real Estate Law", "Contract Negotiation", 
+            "Property Management", "Market Analysis", "Client Relations", 
+            "Property Inspection", "Mortgage Financing", "Building Maintenance", 
+            "Tenant Relations", "Lease Administration", "Real Estate Investment", 
+            "Property Marketing", "Sales Strategies", "Property Development", 
+            "Zoning Regulations", "Title Research", "Property Insurance", 
+            "Construction Management", "Closing Procedures", "Property Tax Assessment", 
+            "Real Estate Technology", "Land Use Planning", "Commercial Leasing",
+            "Real Estate Networking", "Escrow Management", "Vendor Management",
+            "Property Portfolio Analysis", "Environmental Regulations", "Property Acquisition"
+        ]
+    },
+    "Agriculture & Farming": {
+        "roles": [
+            "Farm Manager", "Agricultural Scientist", "Crop Specialist",
+            "Livestock Manager", "Agronomist", "Agricultural Engineer",
+            "Soil Scientist", "Horticulturist", "Precision Agriculture Technician",
+            "Organic Farmer", "Agricultural Economist", "Greenhouse Manager",
+            "Aquaculture Specialist", "Agricultural Consultant", "Viticulturist"
+        ],
+        "skills": [
+            "Crop Management", "Livestock Husbandry", "Soil Analysis", 
+            "Irrigation Systems", "Pest Management", "Fertilization Techniques", 
+            "Harvest Planning", "Farm Equipment Operation", "Agricultural Economics", 
+            "Sustainable Farming", "Organic Farming Practices", "Animal Health", 
+            "Plant Pathology", "Seed Selection", "Breeding Techniques", 
+            "Agricultural Technology", "Greenhouse Management", "Weather Analysis", 
+            "Water Conservation", "Precision Agriculture", "Farm Financial Management", 
+            "Agricultural Policy", "Crop Rotation", "Composting",
+            "Land Conservation", "Agribusiness Management", "Food Safety Protocols",
+            "Supply Chain Management", "Grant Writing", "Community Supported Agriculture"
+        ]
+    },
+    "Telecommunications": {
+        "roles": [
+            "Network Engineer", "Telecommunications Manager", "RF Engineer",
+            "Telecom Project Manager", "Fiber Optic Technician", "Wireless Communications Specialist",
+            "VoIP Engineer", "Telecommunications Analyst", "Satellite Communications Engineer",
+            "Telecommunications Consultant", "Network Operations Center Technician", "Cell Tower Technician",
+            "Data Communications Analyst", "Telecommunications Sales Representative", "Broadband Technician"
+        ],
+        "skills": [
+            "Network Architecture", "Telecommunications Infrastructure", "Wireless Communications", 
+            "Fiber Optics", "VoIP Systems", "Radio Frequency Engineering", 
+            "Broadband Technology", "Satellite Communications", "Network Security", 
+            "Telecommunications Protocols", "Circuit Design", "Signal Processing", 
+            "Network Troubleshooting", "Telecommunications Regulations", "Cable Installation", 
+            "Mobile Technologies", "Microwave Communications", "Data Transmission", 
+            "IP Networking", "PBX Systems", "Telecom Project Management", 
+            "5G Technology", "Network Performance Analysis", "Network Monitoring",
+            "Telecommunications Software", "IPv6", "Cloud Communications",
+            "Infrastructure Maintenance", "Telecommunications Testing", "Bandwidth Management"
+        ]
     }
 }
 
@@ -310,9 +644,8 @@ def recommend_field_and_career_paths(skills, experience, user_id=None):
     # Use consistent feature naming for skills columns
     X_skills_df.columns = [f'skill_{i}' for i in range(X_skills_df.shape[1])]
     
-    # Add experience column
+    # Use only skills features without adding experience
     X_input = X_skills_df.copy()
-    X_input['experience'] = experience_num
     
     # Check for and handle NaN values
     if X_input.isna().any().any():

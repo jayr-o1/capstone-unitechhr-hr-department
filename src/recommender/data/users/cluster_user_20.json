@@ -1,0 +1,22 @@
+{
+    "user_id": "cluster_user_20",
+    "preferred_field": "Creative Arts",
+    "preferred_specialization": "Film Production",
+    "current_skills": [
+        "Directing",
+        "Visual Storytelling",
+        "Camera Operation",
+        "Sound Design",
+        "Project Planning",
+        "Post-Production",
+        "Production Management"
+    ],
+    "lacking_skills": [
+        "Screenwriting",
+        "Lighting Techniques",
+        "Cinematography",
+        "Video Editing",
+        "Set Design"
+    ],
+    "timestamp": "2025-04-10T14:10:45.324868"
+}

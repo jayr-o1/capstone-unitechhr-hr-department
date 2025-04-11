@@ -1,0 +1,22 @@
+{
+    "user_id": "cluster_user_4",
+    "preferred_field": "Healthcare Specialists",
+    "preferred_specialization": "Physical Therapy",
+    "current_skills": [
+        "Treatment Planning",
+        "Rehabilitation Techniques",
+        "Patient Education",
+        "Evidence-Based Practice",
+        "Therapeutic Exercise",
+        "Manual Therapy",
+        "Gait Analysis"
+    ],
+    "lacking_skills": [
+        "Movement Assessment",
+        "Anatomy Knowledge",
+        "Mobility Assessment",
+        "Pain Management",
+        "Documentation"
+    ],
+    "timestamp": "2025-04-10T14:10:45.276866"
+}

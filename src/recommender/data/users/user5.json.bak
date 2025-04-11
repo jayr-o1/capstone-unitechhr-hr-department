@@ -1,17 +1,22 @@
 {
     "user_id": "user5",
-    "preferred_specialization": "Software Development",
+    "preferred_field": "Technology",
+    "preferred_specialization": "Cloud Computing",
     "current_skills": [
-        "Programming",
-        "Algorithms",
-        "Data Structures"
+        "Cloud Platforms",
+        "Infrastructure as Code",
+        "Containerization",
+        "DevOps",
+        "Microservices",
+        "Serverless Architecture",
+        "Automation"
     ],
     "lacking_skills": [
-        "Version Control",
-        "Software Testing",
-        "Database Management",
-        "Web Development",
-        "Problem Solving"
+        "Networking",
+        "Security",
+        "System Administration",
+        "Virtualization",
+        "Load Balancing"
     ],
-    "timestamp": "2025-04-09T10:49:12.304831"
-}
+    "timestamp": "2025-04-09T08:30:15.000000"
+} 

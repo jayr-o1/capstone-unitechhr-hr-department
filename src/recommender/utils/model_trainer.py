@@ -28,6 +28,15 @@ EMPLOYEE_DATA_PATH = "data/synthetic_employee_data.csv"
 CAREER_PATH_DATA_PATH = "data/synthetic_career_path_data.csv"
 MODEL_HISTORY_DIR = "models/history"
 
+def report_progress(message, percent=None):
+    """Report progress for long-running operations."""
+    # In a real implementation, this might update a progress bar
+    # or send a notification to a user interface
+    if percent is not None:
+        print(f"{message} - {percent}% complete")
+    else:
+        print(message)
+
 def ensure_directory_exists(directory_path):
     """Ensure that a directory exists, create it if it doesn't."""
     if not os.path.exists(directory_path):
@@ -119,6 +128,33 @@ def load_career_fields():
             print(f"Error importing career_fields: {e}")
             raise
 
+def prepare_features(data):
+    """Prepare features for model training or prediction."""
+    # Check if necessary columns exist
+    if 'Skills' not in data.columns or 'Field' not in data.columns:
+        # Try to accommodate different column names
+        skills_col = next((col for col in data.columns if 'skill' in col.lower()), None)
+        field_col = next((col for col in data.columns if 'field' in col.lower() or 'career' in col.lower()), None)
+        
+        if not skills_col or not field_col:
+            raise ValueError(f"Required columns not found in data. Available columns: {data.columns.tolist()}")
+        
+        X = data[skills_col]
+        y = data[field_col]
+    else:
+        X = data['Skills']
+        y = data['Field']
+    
+    # Fill NaN values in X with empty string
+    X = X.fillna('')
+    
+    # Remove rows where y is NaN
+    valid_indices = ~pd.isna(y)
+    X = X[valid_indices]
+    y = y[valid_indices]
+    
+    return X, y
+
 def initial_model_training(verbose=True):
     """
     Perform initial model training using synthetic data.
@@ -126,7 +162,7 @@ def initial_model_training(verbose=True):
     
     Args:
         verbose (bool): If True, print detailed progress messages
-        
+    
     Returns:
         bool: True if training was successful, False otherwise
     """
@@ -165,13 +201,9 @@ def initial_model_training(verbose=True):
         X_skills = tfidf.fit_transform(employee_data["Skills"])
         print(f"Created {X_skills.shape[1]} skill features")
         
-        # Extract experience as a numerical value
-        print("Processing experience values...")
-        experience_values = employee_data["Experience"].str.extract("(\d+)").astype(float)
-        
-        # Combine features
-        print("Combining features...")
-        X = pd.concat([pd.DataFrame(X_skills.toarray()), experience_values], axis=1)
+        # Use only skills as features
+        X = X_skills.toarray()
+        X = pd.DataFrame(X)
         X.columns = [str(col) for col in X.columns]
         print(f"Final feature matrix shape: {X.shape}")
         
@@ -259,10 +291,7 @@ def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
         
         # Load original model to extract components
         model_path = os.path.join('models', 'career_path_recommendation_model.pkl')
-        model = None
-        tfidf = None
-        pca = None
-        label_encoder = None
+        model_components = None
         
         try:
             if verbose:
@@ -290,22 +319,6 @@ def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
                 if verbose:
                     print("No existing model found, will create new components")
                 model_components = None
-                
-            # Extract components if loaded successfully
-            if model_components is not None:
-                # Check if the model is in the expected dictionary format
-                if isinstance(model_components, dict) and 'model' in model_components:
-                    model = model_components['model']
-                    tfidf = model_components.get('tfidf')
-                    pca = model_components.get('pca')
-                    label_encoder = model_components.get('label_encoder')
-                    if verbose:
-                        print("Loaded existing model components successfully.")
-                else:
-                    # Legacy format - the file contains just the model
-                    model = model_components
-                    if verbose:
-                        print("Loaded legacy model format.")
         except Exception as e:
             if verbose:
                 print(f"Error loading model: {str(e)}")
@@ -313,7 +326,7 @@ def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
                 print("Will create new model components")
             model_components = None
         
-        # Load feedback data - direct method rather than using mock file
+        # Load feedback data
         try:
             report_progress("Loading feedback data", 10)
             
@@ -335,7 +348,6 @@ def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
                 traceback.print_exc()
             return False
         
-        # Continue with the rest of the function (unchanged)
         # Load employee data for training
         try:
             report_progress("Loading employee training data", 20)
@@ -395,6 +407,9 @@ def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
                 for entry in feedback_entries
             ])
             
+            # Replace any NaN values with empty strings
+            feedback_df = feedback_df.fillna('')
+            
             if verbose:
                 print(f"Prepared feedback DataFrame with {len(feedback_df)} entries")
                 
@@ -408,10 +423,15 @@ def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
         try:
             report_progress("Retraining model with feedback data", 50)
             
+            if model_components is None:
+                if verbose:
+                    print("No existing model components found, cannot retrain")
+                return False
+            
             # Load the existing model components
             existing_tfidf = model_components.get('tfidf')
             existing_pca = model_components.get('pca')
-            existing_knn = model_components.get('knn')
+            existing_model = model_components.get('model')
             existing_label_encoder = model_components.get('label_encoder')
             
             report_progress("Updating model based on feedback", 60)
@@ -436,20 +456,37 @@ def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
                         'current_role': feedback['current_role'],
                         'target_role': feedback['recommended_role']
                     }
-                    modified_employee_data = pd.concat([modified_employee_data, pd.DataFrame([new_entry])], ignore_index=True)
+                    
+                    # Add the same feedback multiple times to increase its weight (5x)
+                    for _ in range(5):
+                        modified_employee_data = pd.concat([modified_employee_data, pd.DataFrame([new_entry])], ignore_index=True)
                 
                 if verbose:
-                    print(f"Added {len(positive_feedback)} positive feedback entries to training data")
+                    print(f"Added {len(positive_feedback)*5} weighted positive feedback entries to training data")
                 
                 report_progress("Finalizing model retraining", 80)
                 
                 # Retrain the model with the modified data
                 X, y = prepare_features(modified_employee_data)
+                
+                # Handle NaN values
+                if isinstance(X, pd.Series) or isinstance(X, pd.DataFrame):
+                    X = X.fillna('')
+                
+                # Drop any rows where y is NaN
+                if isinstance(y, pd.Series):
+                    valid_indices = ~y.isna()
+                    if not valid_indices.all():
+                        if verbose:
+                            print(f"Dropping {(~valid_indices).sum()} rows with NaN target values")
+                        X = X[valid_indices] if isinstance(X, pd.Series) else X.loc[valid_indices]
+                        y = y[valid_indices]
+                
                 X_tfidf = existing_tfidf.transform(X)
                 X_pca = existing_pca.transform(X_tfidf.toarray())
                 
-                # Fit the KNN model with the updated data
-                existing_knn.fit(X_pca, y)
+                # Fit the model with the updated data
+                existing_model.fit(X_pca, y)
                 
                 if verbose:
                     print("Model retrained successfully with feedback")
@@ -457,7 +494,11 @@ def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
                 report_progress("Model retraining completed", 90)
                 
                 # Save the updated model
-                model_components['knn'] = existing_knn
+                model_components['model'] = existing_model
+                
+                # Add feedback information
+                model_components['feedback_entries_used'] = len(positive_feedback)
+                model_components['trained_at'] = datetime.now().isoformat()
                 
                 # Save the updated model components to disk
                 save_model_components(model_components, verbose=verbose)
@@ -473,12 +514,12 @@ def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
         except Exception as e:
             if verbose:
                 print(f"Error during model retraining: {str(e)}")
-                traceback.print_exc()
+            traceback.print_exc()
             return False
     except Exception as e:
         if verbose:
             print(f"Error in model retraining: {str(e)}")
-            traceback.print_exc()
+        traceback.print_exc()
         return False
 
 def evaluate_model(test_data_path=None, model_path=None, verbose=False):
@@ -489,7 +530,7 @@ def evaluate_model(test_data_path=None, model_path=None, verbose=False):
         test_data_path (str): Path to the test data file.
         model_path (str): Path to the saved model.
         verbose (bool): Whether to print detailed information.
-        
+    
     Returns:
         dict: Dictionary containing evaluation metrics.
     """
@@ -513,7 +554,7 @@ def evaluate_model(test_data_path=None, model_path=None, verbose=False):
             if verbose:
                 print(f"Error loading model: {str(e)}")
             return None
-            
+        
         # Load test data
         if test_data_path is None:
             test_data_path = EMPLOYEE_DATA_PATH
@@ -561,14 +602,12 @@ def evaluate_model(test_data_path=None, model_path=None, verbose=False):
                 tfidf = TfidfVectorizer(max_features=100)
                 tfidf.fit(test_data["Skills"])
             
-            # Transform the skills
+            # Transform the skills - only use skills for features
             X_skills = tfidf.transform(test_data["Skills"]).toarray()
             
-            # Add other features
-            X_other = test_data[["Experience", "Education Level"]].values
-            
-            # Combine features
-            X = np.hstack((X_skills, X_other))
+            # Use only skills as features - convert to DataFrame with named columns for consistency with training
+            X = pd.DataFrame(X_skills)
+            X.columns = [str(col) for col in X.columns]
             
             # Apply PCA if available
             if pca is not None and hasattr(pca, 'transform'):
@@ -581,12 +620,28 @@ def evaluate_model(test_data_path=None, model_path=None, verbose=False):
             
             # Encode the target variable
             try:
+                if verbose:
+                    print(f"Label encoder classes: {label_encoder.classes_}")
+                    print(f"Test data Field types: {test_data['Field'].apply(type).value_counts()}")
+                    print(f"First few test data Field values: {test_data['Field'].head(5).tolist()}")
+                
+                # Force everything to strings first
+                test_data["Field"] = test_data["Field"].astype(str)
+                if verbose:
+                    print(f"After conversion - test data Field types: {test_data['Field'].apply(type).value_counts()}")
+                    
+                # Then encode 
                 y_true = label_encoder.transform(test_data["Field"])
             except ValueError as e:
                 # Handle new categories by retraining the encoder
                 if verbose:
                     print("Retraining label encoder with test data categories...")
-                all_categories = set(test_data["Field"].unique()).union(set(test_data["Field"].unique()))
+                
+                # Convert all to strings
+                test_data["Field"] = test_data["Field"].astype(str)
+                
+                # Get all categories and retrain encoder
+                all_categories = set(test_data["Field"].unique()).union(set(label_encoder.classes_))
                 label_encoder.fit(list(all_categories))
                 y_true = label_encoder.transform(test_data["Field"])
                 
@@ -610,7 +665,7 @@ def evaluate_model(test_data_path=None, model_path=None, verbose=False):
             # Calculate metrics
             accuracy = accuracy_score(y_true, y_pred)
             class_report = classification_report(y_true, y_pred, output_dict=True, 
-                                         target_names=label_encoder.classes_)
+                                     target_names=label_encoder.classes_)
             
             # Get feature importances if available
             if hasattr(model, 'feature_importances_'):

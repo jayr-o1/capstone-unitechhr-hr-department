@@ -1,0 +1,22 @@
+{
+    "user_id": "skill_cluster_data_analysis_1",
+    "preferred_field": "Science",
+    "preferred_specialization": "Environmental Science",
+    "current_skills": [
+        "Environmental Regulations",
+        "Sustainability Practices",
+        "Ecosystem Analysis",
+        "Environmental Sampling",
+        "Laboratory Techniques",
+        "Climate Science",
+        "GIS Mapping",
+        "Field Research",
+        "Environmental Impact Assessment"
+    ],
+    "lacking_skills": [
+        "Data Analysis",
+        "Scientific Writing",
+        "Pollution Control"
+    ],
+    "timestamp": "2025-04-10T14:10:45.661148"
+}

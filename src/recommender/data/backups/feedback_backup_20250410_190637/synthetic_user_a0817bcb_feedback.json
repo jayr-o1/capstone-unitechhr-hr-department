@@ -1,0 +1,13 @@
+[
+    {
+        "user_id": "synthetic_user_a0817bcb",
+        "rating": 5,
+        "comments": "The recommendation reflects my capabilities well.",
+        "suggestions": "None",
+        "timestamp": "2025-03-28T23:00:16.983138",
+        "is_positive": true,
+        "skills": "Ballistics, Counterterrorism Strategies, Crime Scene Analysis, Emergency Response, Self-Defense Training",
+        "current_role": "Criminal Profiler",
+        "recommended_role": "Criminal Profiler"
+    }
+]

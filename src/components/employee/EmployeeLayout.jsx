@@ -103,8 +103,7 @@ const EmployeeLayout = () => {
   const navigation = [
     { name: 'Dashboard', icon: faTachometerAlt, path: '/employee/dashboard' },
     { name: 'Profile', icon: faUser, path: '/employee/profile' },
-    { name: 'Career Progress', icon: faChartLine, path: '/employee/career' },
-    { name: 'Documents', icon: faFileAlt, path: '/employee/documents' }
+    { name: 'Career Progress', icon: faChartLine, path: '/employee/career' }
   ];
 
   // Close sidebar when clicking a nav item on mobile

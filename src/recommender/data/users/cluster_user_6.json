@@ -1,0 +1,22 @@
+{
+    "user_id": "cluster_user_6",
+    "preferred_field": "Urban Development",
+    "preferred_specialization": "Urban Planning",
+    "current_skills": [
+        "Land Use Planning",
+        "Public Engagement",
+        "Demographic Analysis",
+        "Sustainable Development",
+        "Policy Analysis",
+        "Environmental Analysis",
+        "Community Development",
+        "Zoning Regulations",
+        "GIS Mapping",
+        "Urban Design"
+    ],
+    "lacking_skills": [
+        "Transportation Planning",
+        "Project Management"
+    ],
+    "timestamp": "2025-04-10T14:10:45.284865"
+}

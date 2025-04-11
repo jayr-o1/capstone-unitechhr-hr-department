@@ -1,0 +1,22 @@
+{
+    "user_id": "cluster_user_2",
+    "preferred_field": "Technology",
+    "preferred_specialization": "Software Development",
+    "current_skills": [
+        "Debugging",
+        "Web Development",
+        "System Architecture",
+        "Version Control",
+        "Unit Testing",
+        "API Design",
+        "Software Testing",
+        "Algorithms",
+        "Database Management",
+        "Programming"
+    ],
+    "lacking_skills": [
+        "Data Structures",
+        "Problem Solving"
+    ],
+    "timestamp": "2025-04-10T14:10:45.276866"
+}

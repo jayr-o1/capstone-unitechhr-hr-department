@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
 Feedback generation script for the career recommender system.
-This script generates synthetic feedback data based on existing users.
+This script generates synthetic feedback data that is compatible with model retraining.
+
+Usage:
+  python generate_feedback.py [num_entries]
+  
+  num_entries: Optional - Number of feedback entries to generate (default: 100)
 """
 
 import os
@@ -16,11 +21,36 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.feedback_handler import load_feedback_db, save_feedback_db
 from utils.data_loader import load_user_preferences
-from recommender import recommend_field_and_career_paths
+from recommender import recommend_field_and_career_paths, career_fields
 
-def generate_synthetic_feedback(num_entries=15):
+def clear_existing_feedback():
+    """Clear existing feedback data to start fresh."""
+    feedback_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'feedback')
+    
+    if os.path.exists(feedback_dir):
+        # Remove all feedback files
+        for filename in os.listdir(feedback_dir):
+            if filename.endswith('.json'):
+                os.remove(os.path.join(feedback_dir, filename))
+        print(f"Cleared existing feedback files from {feedback_dir}")
+    
+    # Reset the feedback database
+    feedback_db = {
+        "feedback_entries": [],
+        "improved_recommendations": {}
+    }
+    
+    # Save the empty feedback database
+    feedback_db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'feedback.json')
+    with open(feedback_db_path, 'w') as f:
+        json.dump(feedback_db, f, indent=4)
+    
+    print(f"Reset feedback database at {feedback_db_path}")
+    return True
+
+def generate_synthetic_feedback(num_entries=100):
     """
-    Generate synthetic feedback entries based on existing users.
+    Generate synthetic feedback entries that are compatible with model retraining.
     
     Args:
         num_entries (int): Number of feedback entries to generate
@@ -33,19 +63,16 @@ def generate_synthetic_feedback(num_entries=15):
     
     print(f"Generating {num_entries} synthetic feedback entries...")
     
+    # Create feedback directory if it doesn't exist
+    feedback_dir = os.path.join('data', 'feedback')
+    os.makedirs(feedback_dir, exist_ok=True)
+    
+    # Create detailed feedback directory if it doesn't exist
+    detailed_feedback_dir = os.path.join('data', 'detailed_feedback')
+    os.makedirs(detailed_feedback_dir, exist_ok=True)
+    
     # Load existing feedback database
     feedback_db = load_feedback_db()
-    
-    # Load users data
-    users_dir = os.path.join('data', 'users')
-    if not os.path.exists(users_dir):
-        print(f"Error: Users directory not found at {users_dir}")
-        return False
-    
-    user_files = [f for f in os.listdir(users_dir) if f.endswith('.json')]
-    if not user_files:
-        print("Error: No user files found")
-        return False
     
     # Prepare timestamps
     now = datetime.now()
@@ -61,122 +88,96 @@ def generate_synthetic_feedback(num_entries=15):
     # Sort timestamps chronologically
     timestamps.sort()
     
+    # List of all possible fields
+    all_fields = list(career_fields.keys())
+    
     # Generate feedback entries
     for i in range(num_entries):
-        # Randomly select a user file
-        user_file = random.choice(user_files)
-        user_id = user_file.replace('.json', '')
+        # Generate a user ID
+        user_id = f"synthetic_user_{uuid.uuid4().hex[:8]}"
         
-        # Load user data
-        user_data_path = os.path.join(users_dir, user_file)
-        try:
-            with open(user_data_path, 'r') as f:
-                user_data = json.load(f)
-        except (json.JSONDecodeError, IOError) as e:
-            print(f"Error loading user data from {user_file}: {e}")
-            continue
+        # Select a random field and role
+        field = random.choice(all_fields)
+        role = random.choice(career_fields[field]["roles"])
+        field_skills = career_fields[field]["skills"]
         
-        # Extract user information
-        preferred_specialization = user_data.get('preferred_specialization', '')
-        current_skills = user_data.get('current_skills', [])
+        # Select skills (between 3 and 8 skills)
+        num_skills = random.randint(3, 8)
+        selected_skills = random.sample(field_skills, min(num_skills, len(field_skills)))
+        skills_string = ", ".join(selected_skills)
         
-        # Generate skills string
-        skills = ", ".join(current_skills)
-        
-        # Generate random experience
-        experience = f"{random.randint(0, 15)}+ years"
-        
-        # Get recommendations based on user's skills and experience
-        try:
-            recommendations = recommend_field_and_career_paths(skills, experience)
-        except Exception as e:
-            print(f"Error generating recommendations for user {user_id}: {e}")
-            continue
-        
-        # Generate feedback
-        # Favor high ratings and preferred specialization to make feedback more useful for retraining
+        # Generate a rating (bias towards positive ratings)
         rating = random.choices([3, 4, 5], weights=[0.2, 0.3, 0.5])[0]
-        
-        # Select path from top 3 recommendations, with bias towards user's preferred specialization
-        selected_path = None
-        top_paths = recommendations["Top 3 Career Paths"]
-        
-        # Check if user's preferred specialization is in top 3 recommendations
-        if preferred_specialization in top_paths:
-            # 70% chance to select their preferred specialization
-            if random.random() < 0.7:
-                selected_path = preferred_specialization
-            else:
-                # Otherwise randomly select from top 3
-                selected_path = random.choice(top_paths)
-        else:
-            # Randomly select from top 3
-            selected_path = random.choice(top_paths)
         
         # Generate comments
         comment_templates = [
             "This recommendation aligns with my career goals.",
-            "I found these recommendations helpful.",
-            "Good suggestions for skills to develop.",
+            "I found these suggestions helpful for my development.",
             "The training recommendations are useful.",
-            "I'm interested in exploring the {path} path.",
-            "Not sure about {path}, but the other options are good.",
-            "The skill gap analysis is accurate.",
-            "Would like more specific training resources.",
-            "Perfect match for my skills and interests.",
-            "Need more information about {path} requirements."
+            "The career path matches my interests.",
+            "I appreciate the skill gap analysis.",
+            "The recommendation reflects my capabilities well.",
+            "This helped me identify areas to improve.",
+            "I'm going to focus on developing these skills."
         ]
+        comment = random.choice(comment_templates)
         
-        comment = random.choice(comment_templates).replace("{path}", selected_path)
+        # Create simple feedback entry
+        simple_feedback = {
+            'user_id': user_id,
+            'rating': rating,
+            'comments': comment,
+            'suggestions': "None",
+            'timestamp': timestamps[i],
+            'is_positive': rating >= 4,
+            'skills': skills_string,
+            'current_role': role,
+            'recommended_role': role  # For retraining, role matches recommendation
+        }
         
-        # Create feedback entry
-        feedback_entry = {
+        # Save individual feedback file
+        feedback_file = os.path.join(feedback_dir, f"{user_id}_feedback.json")
+        with open(feedback_file, 'w') as f:
+            json.dump([simple_feedback], f, indent=4)
+        
+        # Add to feedback database
+        feedback_db["feedback_entries"].append({
             "user_id": user_id,
             "timestamp": timestamps[i],
-            "skills": skills,
-            "experience": experience,
-            "recommendations": recommendations,
+            "skills": skills_string,
             "feedback": {
-                "selected_path": selected_path,
+                "rating": rating,
+                "comments": comment,
+                "is_positive": rating >= 4
+            }
+        })
+        
+        # Add detailed feedback entry for model retraining
+        if rating >= 4:  # Only use high-rated feedback for retraining
+            detailed_feedback = {
+                "user_id": user_id,
+                "timestamp": timestamps[i],
+                "skills": skills_string,
+                "interests": field,
+                "current_role": role,
+                "recommended_role": role,
+                "is_positive": True,
                 "rating": rating,
                 "comments": comment
             }
-        }
-        
-        # Add to feedback database
-        feedback_db["feedback_entries"].append(feedback_entry)
-        
-        # Generate improved recommendations for high ratings
-        if rating >= 4:
-            # Create improved recommendation based on user feedback
-            improved_rec = recommendations.copy()
             
-            # If user selected a specific path, prioritize it
-            if selected_path in improved_rec["Top 3 Career Paths"]:
-                idx = improved_rec["Top 3 Career Paths"].index(selected_path)
-                
-                # Move the selected path to the top
-                for key in ["Top 3 Career Paths", "Required Skills", "Confidence Percentages", 
-                           "Lacking Skills", "Training Recommendations"]:
-                    if idx > 0 and len(improved_rec[key]) > idx:
-                        improved_rec[key][0], improved_rec[key][idx] = improved_rec[key][idx], improved_rec[key][0]
-            
-            # Store the improved recommendation
-            feedback_db["improved_recommendations"][user_id] = {
-                "skills": skills,
-                "experience": experience,
-                "recommendation": improved_rec,
-                "last_updated": timestamps[i]
-            }
+            # Save detailed feedback for retraining
+            detailed_feedback_file = os.path.join(detailed_feedback_dir, f"{user_id}_detailed.json")
+            with open(detailed_feedback_file, 'w') as f:
+                json.dump(detailed_feedback, f, indent=4)
         
-        print(f"Generated feedback for user {user_id}: Rating {rating}/5, Selected path: {selected_path}")
+        print(f"Generated feedback for user {user_id}: Rating {rating}/5, Field: {field}, Role: {role}")
     
     # Save the updated feedback database
     save_feedback_db(feedback_db)
     
     print(f"\nSuccessfully generated {num_entries} feedback entries.")
-    print(f"Total feedback entries: {len(feedback_db['feedback_entries'])}")
-    print(f"Total improved recommendations: {len(feedback_db['improved_recommendations'])}")
+    print(f"Total feedback entries in database: {len(feedback_db['feedback_entries'])}")
     
     return True
 
@@ -186,25 +187,34 @@ def main():
     print("CAREER RECOMMENDER SYSTEM - FEEDBACK GENERATOR")
     print("=" * 60)
     
-    # Ask for number of entries to generate
-    try:
-        num_entries = int(input("\nHow many feedback entries to generate? (default: 15): ") or "15")
-        if num_entries <= 0:
-            print("Number must be positive. Using default (15).")
-            num_entries = 15
-    except ValueError:
-        print("Invalid input. Using default (15).")
-        num_entries = 15
+    # Clear existing feedback by default
+    print("\nClearing existing feedback data before generating new data...")
+    clear_existing_feedback()
+    
+    # Get number of entries from command line argument or use default
+    num_entries = 100  # Default to 100 entries
+    if len(sys.argv) > 1:
+        try:
+            arg_entries = int(sys.argv[1])
+            if arg_entries > 0:
+                num_entries = arg_entries
+            else:
+                print(f"Number must be positive. Using default ({num_entries}).")
+        except ValueError:
+            print(f"Invalid input. Using default ({num_entries}).")
+    
+    print(f"Will generate {num_entries} feedback entries")
     
     # Generate feedback
     success = generate_synthetic_feedback(num_entries)
     
     if success:
-        print("\nFeedback generation completed successfully!")
-        return 0
+        print("\nFeedback generation completed successfully.")
+        print("\nYou can now retrain the model with this synthetic feedback.")
     else:
-        print("\nFeedback generation failed.")
-        return 1
+        print("\nFeedback generation encountered errors.")
+    
+    return 0 if success else 1
 
 if __name__ == "__main__":
     sys.exit(main()) 

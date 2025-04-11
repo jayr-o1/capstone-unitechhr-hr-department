@@ -1,0 +1,22 @@
+{
+    "user_id": "cluster_user_17",
+    "preferred_field": "Engineering",
+    "preferred_specialization": "Civil Engineering",
+    "current_skills": [
+        "Building Codes",
+        "Environmental Engineering",
+        "Hydraulics",
+        "Infrastructure Design",
+        "Surveying",
+        "Geotechnical Engineering",
+        "Construction Management",
+        "Structural Analysis",
+        "AutoCAD"
+    ],
+    "lacking_skills": [
+        "Materials Testing",
+        "Project Planning",
+        "Sustainable Design"
+    ],
+    "timestamp": "2025-04-10T14:10:45.316870"
+}

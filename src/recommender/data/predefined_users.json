@@ -8,47 +8,27 @@
         {
             "id": "user2",
             "name": "Jane Smith",
-            "skills": ["Research Methods", "Statistical Analysis", "Criminal Psychology", "Interviewing"]
+            "skills": ["Marketing", "Social Media", "Content Creation", "Project Management"]
         },
         {
             "id": "user3",
-            "name": "Michael Johnson",
-            "skills": ["Patient Assessment", "Clinical Skills", "Pharmacology", "Documentation"]
+            "name": "Alex Johnson",
+            "skills": ["Network Security", "Penetration Testing", "Threat Analysis", "System Administration"]
         },
         {
             "id": "user4",
-            "name": "Emily Williams",
-            "skills": ["Architectural Drawing", "AutoCAD", "3D Modeling", "Sustainable Design"]
+            "name": "Maria Rodriguez",
+            "skills": ["Patient Care", "Medical Terminology", "Clinical Procedures", "Healthcare Documentation"]
         },
         {
             "id": "user5",
-            "name": "David Brown",
-            "skills": ["Market Research", "Digital Marketing", "Content Strategy", "Social Media Marketing"]
+            "name": "David Chen",
+            "skills": ["Financial Analysis", "Risk Management", "Investment Strategy", "Market Research"]
         },
         {
-            "id": "user6",
-            "name": "Sarah Miller",
-            "skills": ["Counseling", "Psychological Assessment", "Crisis Intervention", "Mental Health Treatment"]
-        },
-        {
-            "id": "user7",
-            "name": "Robert Wilson",
-            "skills": ["Legal Research", "Legal Writing", "Negotiation", "Case Analysis"]
-        },
-        {
-            "id": "user8",
-            "name": "Lisa Taylor",
-            "skills": ["Programming", "Web Development", "Database Management", "Version Control"]
-        },
-        {
-            "id": "user9",
-            "name": "Thomas Anderson",
-            "skills": ["Network Security", "Ethical Hacking", "Cryptography", "Security Auditing"]
-        },
-        {
-            "id": "user10",
-            "name": "Jennifer Martinez",
-            "skills": ["Curriculum Development", "Classroom Management", "Educational Technology", "Assessment Methods"]
+            "id": "educator1",
+            "name": "Emma Taylor",
+            "skills": ["Communication", "Patience", "Critical Thinking", "Organization", "Leadership", "Teamwork", "Time Management", "Computer Skills", "Conflict Resolution", "Imaginative Thinking"]
         }
     ]
 } 

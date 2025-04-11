@@ -1,0 +1,22 @@
+{
+    "user_id": "cluster_user_15",
+    "preferred_field": "Criminal Justice",
+    "preferred_specialization": "Law Enforcement",
+    "current_skills": [
+        "Community Policing",
+        "Firearms Training",
+        "De-escalation",
+        "Crisis Management",
+        "Evidence Handling",
+        "Interviewing",
+        "Self Defense",
+        "Criminal Procedure"
+    ],
+    "lacking_skills": [
+        "Report Writing",
+        "Surveillance",
+        "Investigation Techniques",
+        "Legal Knowledge"
+    ],
+    "timestamp": "2025-04-10T14:10:45.308885"
+}

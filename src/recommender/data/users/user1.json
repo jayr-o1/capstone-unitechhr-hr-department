@@ -1,23 +1,21 @@
 {
     "user_id": "user1",
+    "preferred_field": "Technology",
     "preferred_specialization": "Data Science",
     "current_skills": [
         "Python",
-        "Problem Solving",
-        "Cloud Platforms",
-        "Data Analysis"
+        "Data Analysis",
+        "Machine Learning",
+        "SQL",
+        "Statistics",
+        "Data Visualization",
+        "Deep Learning",
+        "Natural Language Processing"
     ],
     "lacking_skills": [
-        "Data Mining",
-        "Data Visualization",
         "Experimental Design",
-        "Machine Learning",
-        "Deep Learning",
+        "Data Mining",
         "Big Data",
-        "Statistics",
-        "Natural Language Processing",
-        "SQL",
         "Statistical Modeling"
-    ],
-    "timestamp": "2025-04-09T14:13:47.334919"
+    ]
 }
