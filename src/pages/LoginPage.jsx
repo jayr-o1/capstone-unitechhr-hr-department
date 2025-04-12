@@ -48,6 +48,26 @@ const LoginPage = () => {
     }
   }, []);
 
+  // Add safety timeout for loading state
+  useEffect(() => {
+    let timeoutId;
+    
+    if (loading) {
+      // Set a timeout to show a message if loading takes too long
+      timeoutId = setTimeout(() => {
+        console.log("Login has been in loading state for too long");
+        toast.error(
+          "Login is taking longer than expected. You may need to refresh the page.",
+          { duration: 5000 }
+        );
+      }, 10000); // 10 seconds
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [loading]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -128,11 +148,23 @@ const LoginPage = () => {
             console.log("Navigating to employee dashboard");
             navigate("/employee/dashboard", { replace: true });
           }, 800);
-        } else {
+        } else if (result.role === 'hr_head' || result.role === 'hr_personnel') {
           // For HR staff, navigate to HR dashboard with a small delay
           console.log("HR login successful, navigating to dashboard. Role:", result.role);
+          
+          // Set a timeout to force navigation if loading doesn't complete
+          const navigationTimeout = setTimeout(() => {
+            if (loading) {
+              console.log("HR login still loading after timeout, forcing navigation");
+              toast.success("Login successful! Redirecting to dashboard...");
+              navigate("/dashboard", { replace: true });
+            }
+          }, 5000); // 5 seconds
+          
+          // Normal flow - wait for loading to complete naturally
           setTimeout(() => {
             console.log("Navigating to HR dashboard");
+            clearTimeout(navigationTimeout);
             navigate("/dashboard", { replace: true });
           }, 800);
         }

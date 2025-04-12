@@ -21,7 +21,7 @@ import {
   faBriefcase,
   faTrophy
 } from '@fortawesome/free-solid-svg-icons';
-import PageLoader from '../../components/PageLoader';
+import EmployeePageLoader from '../../components/employee/EmployeePageLoader';
 
 const CareerProgress = () => {
   const { user, userDetails } = useAuth();
@@ -212,7 +212,7 @@ const CareerProgress = () => {
   };
   
   if (loading) {
-    return <PageLoader isLoading={true} message="Loading your career progress..." />;
+    return <EmployeePageLoader isLoading={true} message="Loading career progress..." />;
   }
   
   if (error) {

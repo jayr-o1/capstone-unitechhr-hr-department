@@ -35,7 +35,7 @@ import {
   faEdit
 } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
-import PageLoader from '../../components/PageLoader';
+import EmployeePageLoader from '../../components/employee/EmployeePageLoader';
 import { getStorage, ref } from 'firebase/storage';
 import { db, storage, auth } from '../../firebase';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
@@ -886,7 +886,7 @@ const EmployeeProfile = () => {
   };
 
   if (loading) {
-    return <PageLoader isLoading={true} message="Loading your profile..." />;
+    return <EmployeePageLoader isLoading={true} message="Loading your profile..." />;
   }
 
   if (error) {

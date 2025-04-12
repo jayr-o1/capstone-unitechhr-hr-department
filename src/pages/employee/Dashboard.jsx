@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBuilding, faIdCard, faGraduationCap, faClipboardList, faChartLine, faArrowRight, faIdBadge } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
-import PageLoader from '../../components/PageLoader';
+import EmployeePageLoader from '../../components/employee/EmployeePageLoader';
 
 const EmployeeDashboard = () => {
   const { user, userDetails, university } = useAuth();
@@ -194,7 +194,7 @@ const EmployeeDashboard = () => {
   if (loading) {
     // Check if this is a page refresh
     const isPageRefresh = sessionStorage.getItem("isPageRefresh") === "true";
-    return <PageLoader isLoading={true} fullscreen={isPageRefresh} message="Loading your dashboard..." />;
+    return <EmployeePageLoader isLoading={true} fullscreen={isPageRefresh} message="Loading your dashboard..." />;
   }
 
   if (error) {
