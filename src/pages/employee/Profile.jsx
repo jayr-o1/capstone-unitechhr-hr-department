@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthProvider';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   getEmployeeData, 
   updateEmployeeProfile,
@@ -53,6 +53,11 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
 
+  // Reset form completely when modal opens or closes
+  useEffect(() => {
+    resetForm();
+  }, [isOpen]);
+
   // Document type options
   const documentTypeOptions = [
     { value: 'certification', label: 'Certification' },
@@ -71,6 +76,7 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
       return;
     }
     
+    // Call upload and reset form upon success (handled in parent component)
     onUpload(selectedFile, documentType, documentDescription);
   };
   
@@ -103,6 +109,17 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
     return faFileAlt;
   };
 
+  // Function to format file size in a readable way
+  const formatFileSize = (sizeInBytes) => {
+    if (sizeInBytes < 1024) {
+      return `${sizeInBytes} B`;
+    } else if (sizeInBytes < 1024 * 1024) {
+      return `${(sizeInBytes / 1024).toFixed(1)} KB`;
+    } else {
+      return `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -116,10 +133,11 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
       <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
         {/* Modal Header */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Upload Document</h2>
+          <h2 className="text-xl font-bold text-gray-800">Upload Document</h2>
           <button 
             onClick={handleCancel}
-            className="text-gray-500 hover:text-gray-700 text-xl"
+            className="text-gray-500 hover:text-gray-700 text-xl focus:outline-none"
+            aria-label="Close"
           >
             ✕
           </button>
@@ -130,8 +148,11 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
         {/* Modal Body */}
         {error && (
           <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4 flex items-center justify-between">
-            <p className="text-sm">{error}</p>
-            <button onClick={() => setError(null)}>
+            <p className="text-sm flex items-center">
+              <FontAwesomeIcon icon={faTimes} className="mr-2" />
+              {error}
+            </p>
+            <button onClick={() => setError(null)} aria-label="Dismiss error" className="text-red-500 hover:text-red-700">
               <FontAwesomeIcon icon={faTimes} />
             </button>
           </div>
@@ -140,12 +161,13 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Document Type Field */}
           <div>
-            <label className="block text-gray-700 font-medium mb-1 text-sm">Document Type</label>
+            <label className="block text-gray-700 font-medium mb-1 text-sm">Document Type<span className="text-red-500">*</span></label>
             <select
               value={documentType}
               onChange={(e) => setDocumentType(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+              className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               disabled={loading}
+              required
             >
               {documentTypeOptions.map(option => (
                 <option key={option.value} value={option.value}>
@@ -153,6 +175,7 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
                 </option>
               ))}
             </select>
+            <p className="text-xs text-gray-500 mt-1">Select the type of document you're uploading</p>
           </div>
 
           {/* Description Field */}
@@ -162,15 +185,16 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
               type="text"
               value={documentDescription}
               onChange={(e) => setDocumentDescription(e.target.value)}
-              placeholder="Brief description of the document"
-              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+              placeholder="E.g., 'My resume updated May 2023' or 'Microsoft Certification'"
+              className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={loading}
             />
+            <p className="text-xs text-gray-500 mt-1">Add a short description to help identify this document later</p>
           </div>
 
           {/* File Upload Field */}
           <div>
-            <label className="block text-gray-700 font-medium mb-1 text-sm">File</label>
+            <label className="block text-gray-700 font-medium mb-1 text-sm">File<span className="text-red-500">*</span></label>
             <input
               type="file"
               ref={fileInputRef}
@@ -185,7 +209,10 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
             />
             
             <div 
-              className={`border border-dashed border-gray-300 rounded p-4 text-center cursor-pointer hover:bg-gray-50 ${selectedFile ? 'bg-blue-50' : ''}`}
+              className={`border-2 border-dashed rounded-lg p-5 text-center cursor-pointer transition-all duration-200 
+                ${selectedFile 
+                  ? 'border-blue-300 bg-blue-50 hover:bg-blue-100' 
+                  : 'border-gray-300 hover:border-blue-300 hover:bg-gray-50'}`}
               onClick={() => {
                 if (fileInputRef.current && !loading) {
                   fileInputRef.current.click();
@@ -193,42 +220,75 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
               }}
             >
               {selectedFile ? (
-                <div>
-                  <FontAwesomeIcon icon={getFileIcon(selectedFile.name)} className="text-blue-500 text-3xl mb-2" />
-                  <p className="text-sm font-medium break-all">{selectedFile.name}</p>
-                  <p className="text-xs text-gray-500 mt-1">{Math.round(selectedFile.size / 1024)} KB</p>
+                <div className="py-2">
+                  <FontAwesomeIcon icon={getFileIcon(selectedFile.name)} className="text-blue-500 text-4xl mb-3" />
+                  <p className="text-sm font-medium break-all text-gray-800">{selectedFile.name}</p>
+                  <div className="flex items-center justify-center mt-2">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {formatFileSize(selectedFile.size)}
+                    </span>
+                    <span className="mx-2 text-gray-400">•</span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      {selectedFile.name.split('.').pop().toUpperCase()}
+                    </span>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedFile(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                      }
+                    }}
+                    className="mt-3 text-sm text-red-500 hover:text-red-700 focus:outline-none"
+                    disabled={loading}
+                  >
+                    Remove file
+                  </button>
                 </div>
               ) : (
-                <div>
-                  <FontAwesomeIcon icon={faUpload} className="text-gray-400 text-2xl mb-2" />
-                  <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
+                <div className="py-6">
+                  <FontAwesomeIcon icon={faUpload} className="text-gray-400 text-3xl mb-3" />
+                  <p className="text-gray-500 font-medium mb-1">Click to browse files</p>
+                  <p className="text-gray-400 text-sm">or drag and drop</p>
+                  <p className="text-xs text-gray-400 mt-2">Supported files: PDF, Word, Excel, Images</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex space-x-3 mt-6">
+          {/* Form Buttons */}
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
             <button
               type="button"
               onClick={handleCancel}
-              className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
               disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors flex items-center justify-center"
+              className={`px-4 py-2 rounded-md text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
+                ${loading 
+                  ? 'bg-blue-400 cursor-not-allowed' 
+                  : 'bg-blue-600 hover:bg-blue-700'}`}
               disabled={loading || !selectedFile}
             >
               {loading ? (
-                <>
-                  <div className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
-                  <span>Uploading...</span>
-                </>
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Uploading...
+                </span>
               ) : (
-                "Upload"
+                <span className="flex items-center">
+                  <FontAwesomeIcon icon={faUpload} className="mr-2" />
+                  Upload Document
+                </span>
               )}
             </button>
           </div>
@@ -241,6 +301,7 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
 const EmployeeProfile = () => {
   const { user, userDetails } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [employeeData, setEmployeeData] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [skills, setSkills] = useState([]);
@@ -300,19 +361,43 @@ const EmployeeProfile = () => {
     console.log("===== END DEBUGGING =====");
   }, []);
   
-  // Check for active tab in navigation state
+  // Check for tab in URL query parameters
   useEffect(() => {
-    if (location.state?.activeTab) {
+    // Get tab from URL query parameters
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    
+    if (tabParam && ['personal', 'skills', 'documents'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    } else if (location.state?.activeTab) {
+      // Also support the previous approach with location state
       setActiveTab(location.state.activeTab);
       
-      // Small delay to ensure DOM elements are rendered
-      setTimeout(() => {
-        if (location.state.activeTab === 'skills' && skillsSectionRef.current) {
-          skillsSectionRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 300);
+      // Update URL to match the state
+      const params = new URLSearchParams(location.search);
+      params.set('tab', location.state.activeTab);
+      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
     }
-  }, [location.state]);
+  }, [location.search, location.state]);
+  
+  // Update URL when tab changes
+  useEffect(() => {
+    if (activeTab) {
+      const params = new URLSearchParams(location.search);
+      params.set('tab', activeTab);
+      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+    }
+  }, [activeTab]);
+  
+  // Check for active tab in navigation state
+  useEffect(() => {
+    // Small delay to ensure DOM elements are rendered
+    setTimeout(() => {
+      if (activeTab === 'skills' && skillsSectionRef.current) {
+        skillsSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 300);
+  }, [activeTab]);
   
   useEffect(() => {
     const loadData = async () => {
@@ -446,6 +531,24 @@ const EmployeeProfile = () => {
         return;
       }
       
+      // Get file extension and create additional metadata
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+      const fileSize = file.size;
+      const fileType = file.type || `application/${fileExtension}`;
+      
+      // Prepare metadata to enrich the document object
+      const documentMetadata = {
+        fileSize,
+        fileType,
+        originalName: file.name,
+        uploadedBy: user.displayName || user.email || "Employee",
+        type: docType,  // Document type from form
+        description: description || "",
+        createdAt: new Date().toISOString(),
+        uploadStatus: 'completed'
+      };
+      
+      // Upload the document
       const result = await uploadEmployeeDocument(
         user.uid, 
         userDetails.universityId, 
@@ -458,6 +561,42 @@ const EmployeeProfile = () => {
       console.log("===== END UPLOAD DEBUGGING =====");
       
       if (result.success) {
+        // Create a more complete document object by combining the result with our metadata
+        const enhancedDocument = {
+          ...result.document,  // This contains name, url, etc.
+          ...documentMetadata,
+          id: result.document.id || `doc_${Date.now()}`,
+        };
+        
+        // Update document in Firestore with the enhanced data
+        try {
+          const employeeRef = doc(db, 'universities', userDetails.universityId, 'employees', user.uid);
+          const employeeDoc = await getDoc(employeeRef);
+          
+          if (employeeDoc.exists()) {
+            const employeeData = employeeDoc.data();
+            const currentDocuments = employeeData.documents || [];
+            
+            // Find the document we just uploaded and update it with enhanced metadata
+            const updatedDocuments = currentDocuments.map(doc => {
+              if (doc.name === enhancedDocument.name) {
+                return enhancedDocument;
+              }
+              return doc;
+            });
+            
+            // Update Firestore
+            await updateDoc(employeeRef, {
+              documents: updatedDocuments
+            });
+            
+            console.log("Enhanced document metadata saved");
+          }
+        } catch (err) {
+          console.error("Warning: Could not save enhanced metadata", err);
+          // Continue anyway as the document was uploaded successfully
+        }
+        
         setSuccess('Document uploaded successfully');
         showSuccessAlert('Document uploaded successfully');
         
@@ -491,16 +630,16 @@ const EmployeeProfile = () => {
     showWarningAlert(
       'Are you sure you want to delete this document?',
       async () => {
-        try {
-          setError(null);
-          setSuccess(null);
-          
-          if (!userDetails || !userDetails.universityId) {
-            setError('User details not available');
+    try {
+      setError(null);
+      setSuccess(null);
+      
+      if (!userDetails || !userDetails.universityId) {
+        setError('User details not available');
             showErrorAlert('User details not available');
-            return;
-          }
-          
+        return;
+      }
+      
           // Find the document to check if it's using base64
           const docToDelete = documents.find(doc => doc.id === documentId);
           const isBase64Document = docToDelete && docToDelete.base64Content;
@@ -535,29 +674,29 @@ const EmployeeProfile = () => {
             }
           } else {
             // For regular Firebase Storage documents, use the deleteEmployeeDocument function
-            const result = await deleteEmployeeDocument(
-              user.uid,
-              userDetails.universityId,
-              documentId,
-              fileName
-            );
-            
-            if (result.success) {
-              setSuccess('Document deleted successfully');
+      const result = await deleteEmployeeDocument(
+        user.uid,
+        userDetails.universityId,
+        documentId,
+        fileName
+      );
+      
+      if (result.success) {
+        setSuccess('Document deleted successfully');
               showSuccessAlert('Document deleted successfully');
-              
-              // Update local state
-              setDocuments(prev => prev.filter(doc => doc.id !== documentId));
-            } else {
-              setError(result.message || 'Failed to delete document');
+        
+        // Update local state
+        setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+      } else {
+        setError(result.message || 'Failed to delete document');
               showErrorAlert(result.message || 'Failed to delete document');
             }
-          }
-        } catch (err) {
-          console.error("Error deleting document:", err);
-          setError("An error occurred while deleting document");
+      }
+    } catch (err) {
+      console.error("Error deleting document:", err);
+      setError("An error occurred while deleting document");
           showErrorAlert("An error occurred while deleting document");
-        }
+    }
       }
     );
   };
@@ -1287,57 +1426,86 @@ const EmployeeProfile = () => {
               {documents.map((document) => (
                 <div 
                   key={document.id} 
-                  className="border border-gray-200 rounded-lg p-4 flex flex-col hover:bg-gray-50 relative group"
+                  className="border border-gray-200 rounded-lg p-4 flex flex-col hover:bg-gray-50 relative group transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                  {/* Document Debug Info (for troubleshooting) */}
-                  <div className="absolute top-0 right-0 bg-yellow-100 text-xs p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                    ID: {document.id}
-                  </div>
-                  
-                  {/* Upload Status Indicator */}
+                  {/* Upload Status Badge */}
                   {document.uploadStatus === 'pending' && (
-                    <span className="absolute top-2 right-2 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
+                    <span className="absolute top-3 right-3 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium">
                       Processing...
                     </span>
                   )}
                   {document.uploadStatus === 'failed' && (
-                    <span className="absolute top-2 right-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                    <span className="absolute top-3 right-3 bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-medium">
                       Upload Failed
                     </span>
                   )}
+                  {!document.uploadStatus && document.url && (
+                    <span className="absolute top-3 right-3 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                      Ready
+                    </span>
+                  )}
                 
-                  <div className="flex items-start">
-                    <div className="bg-gray-100 p-3 rounded-lg mr-3">
+                  <div className="flex items-start mb-3">
+                    {/* File Icon (Larger) */}
+                    <div className="bg-blue-50 p-4 rounded-lg mr-4 flex items-center justify-center min-w-[60px] min-h-[60px]">
                       <FontAwesomeIcon 
                         icon={getFileIcon(document.name)} 
-                        className="text-2xl text-blue-500" 
+                        className="text-3xl text-blue-500" 
                       />
                     </div>
+                    
+                    {/* Document Details */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg truncate">{document.name}</h3>
-                      <p className="text-gray-500 text-sm mb-1">{document.type || "Document"}</p>
+                      {/* File Name */}
+                      <h3 className="font-semibold text-lg truncate text-gray-800">{document.name}</h3>
+                      
+                      {/* Document Type Badge */}
+                      <div className="mt-1 mb-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {document.type || "Document"}
+                        </span>
+                        
+                        {/* File extension badge */}
+                        {document.name && (
+                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            {document.name.split('.').pop().toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Description if available */}
                       {document.description && (
-                        <p className="text-gray-600 text-sm italic mb-2">{document.description}</p>
+                        <p className="text-gray-600 text-sm mb-2 italic line-clamp-2">{document.description}</p>
                       )}
-                      {document.url && (
-                        <p className="text-xs text-gray-400 truncate mb-1">URL: {document.url}</p>
-                      )}
-                      <p className="text-xs text-gray-400">
-                        Uploaded on {document.createdAt?.toLocaleDateString?.() || 'Unknown date'}
-                      </p>
+
+                      {/* Metadata with proper formatting and more readable date */}
+                      <div className="grid grid-cols-1 gap-1 mt-2">
+                        <p className="text-xs text-gray-500 flex items-center">
+                          <FontAwesomeIcon icon={faCalendarAlt} className="mr-1 text-gray-400" />
+                          Uploaded: {document.createdAt?.toLocaleDateString?.() || document.createdAt?.toDate?.()?.toLocaleDateString() || 'Recent upload'}
+                        </p>
+                        
+                        {/* Don't show URL in the interface for cleaner look */}
+                        {/* Document ID for tracing purposes - only show on hover */}
+                        <p className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                          ID: {document.id?.substring(0, 8)}...
+                        </p>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="mt-4 flex justify-end">
-                    {/* Show view button for documents with URL */}
+                  {/* Action buttons in a clearly separated section */}
+                  <div className="mt-3 pt-3 border-t border-gray-100 flex justify-end items-center gap-2">
+                    {/* View button for documents with URL */}
                     {document.url && document.url !== 'pending_upload' && (
                       <a 
                         href={document.url} 
                         target="_blank" 
                         rel="noopener noreferrer" 
-                        className="text-blue-600 hover:text-blue-800 text-sm mr-3"
+                        className="flex items-center justify-center bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-md transition-colors text-sm font-medium"
                       >
-                        View
+                        <FontAwesomeIcon icon={faFileAlt} className="mr-1" />
+                        View Document
                       </a>
                     )}
                     
@@ -1345,16 +1513,19 @@ const EmployeeProfile = () => {
                     {document.uploadStatus === 'failed' && (
                       <button
                         onClick={() => handleRetryUpload(document.id)}
-                        className="text-blue-600 hover:text-blue-800 text-sm mr-3"
+                        className="flex items-center justify-center bg-yellow-50 hover:bg-yellow-100 text-yellow-600 px-3 py-1.5 rounded-md transition-colors text-sm font-medium"
                       >
-                        Retry Upload
+                        <FontAwesomeIcon icon={faUpload} className="mr-1" />
+                        Retry
                       </button>
                     )}
                     
+                    {/* Delete button */}
                     <button 
                       onClick={() => handleDeleteDocument(document.id, document.fileName || document.name)}
-                      className="text-red-600 hover:text-red-800 text-sm"
+                      className="flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-md transition-colors text-sm font-medium"
                     >
+                      <FontAwesomeIcon icon={faTrashAlt} className="mr-1" />
                       Delete
                     </button>
                   </div>

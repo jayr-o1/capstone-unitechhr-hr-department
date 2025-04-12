@@ -4,7 +4,7 @@ import { getEmployeeData, getEmployeeSkills, getCareerPaths } from '../../servic
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBuilding, faIdCard, faGraduationCap, faClipboardList, faChartLine, faArrowRight, faIdBadge } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import PageLoader from '../../components/PageLoader';
 
 const EmployeeDashboard = () => {
@@ -14,7 +14,28 @@ const EmployeeDashboard = () => {
   const [careerPaths, setCareerPaths] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeSection, setActiveSection] = useState('overview');
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check for section in URL query parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const sectionParam = params.get('section');
+    
+    if (sectionParam && ['overview', 'career', 'skills', 'documents'].includes(sectionParam)) {
+      setActiveSection(sectionParam);
+    }
+  }, [location.search]);
+  
+  // Update URL when section changes
+  useEffect(() => {
+    if (activeSection) {
+      const params = new URLSearchParams(location.search);
+      params.set('section', activeSection);
+      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+    }
+  }, [activeSection]);
 
   // Debug log for component mount
   useEffect(() => {
@@ -142,20 +163,32 @@ const EmployeeDashboard = () => {
 
   // Navigation handlers
   const handleViewAllSkills = () => {
-    navigate('/employee/profile', { state: { activeTab: 'skills' } });
+    navigate('/employee/profile', { state: { activeTab: 'skills' } }, { 
+      search: new URLSearchParams({ tab: 'skills' }).toString() 
+    });
   };
 
   const handleViewPersonalInfo = () => {
-    navigate('/employee/profile', { state: { activeTab: 'personal' } });
+    navigate('/employee/profile', { state: { activeTab: 'personal' } }, { 
+      search: new URLSearchParams({ tab: 'personal' }).toString() 
+    });
   };
 
   const handleViewCareerDetails = () => {
-    navigate('/employee/career', { state: { fromDashboard: true } });
+    navigate('/employee/career', { state: { fromDashboard: true } }, { 
+      search: new URLSearchParams({ section: 'career-path' }).toString() 
+    });
   };
 
   const handleViewAllActivities = () => {
     // This could navigate to a dedicated activities page in the future
     toast.info('Activities page coming soon!');
+  };
+
+  const handleViewAllDocuments = () => {
+    navigate('/employee/profile', { state: { activeTab: 'documents' } }, { 
+      search: new URLSearchParams({ tab: 'documents' }).toString() 
+    });
   };
 
   if (loading) {
@@ -241,7 +274,7 @@ const EmployeeDashboard = () => {
         </div>
 
         {/* Documents */}
-        <div className="bg-white rounded-xl shadow-md p-4 flex items-center border border-gray-100 cursor-pointer hover:bg-gray-50" onClick={() => navigate('/employee/profile', { state: { activeTab: 'documents' } })}>
+        <div className="bg-white rounded-xl shadow-md p-4 flex items-center border border-gray-100 cursor-pointer hover:bg-gray-50" onClick={handleViewAllDocuments}>
           <div className="rounded-full bg-purple-100 p-2 md:p-3 mr-3">
             <FontAwesomeIcon icon={faClipboardList} className="text-purple-600 text-lg md:text-2xl" />
           </div>
