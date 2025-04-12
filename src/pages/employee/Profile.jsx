@@ -38,6 +38,12 @@ import toast from 'react-hot-toast';
 import PageLoader from '../../components/PageLoader';
 import { getStorage, ref } from 'firebase/storage';
 import { db, storage, auth } from '../../firebase';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+// Import custom alert components
+import showSuccessAlert from '../../components/Alerts/SuccessAlert';
+import showErrorAlert from '../../components/Alerts/ErrorAlert';
+import showWarningAlert from '../../components/Alerts/WarningAlert';
+import showDeleteConfirmation from '../../components/Alerts/DeleteAlert';
 
 // Document Upload Modal Component
 const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
@@ -287,9 +293,6 @@ const EmployeeProfile = () => {
       
       // Log Firebase auth state
       console.log("Current auth state:", auth.currentUser);
-      
-      // Log Firebase config
-      console.log("Firebase Storage bucket:", storage._service.app.options.storageBucket);
     } catch (err) {
       console.error("Firebase Storage Error:", err);
     }
@@ -340,7 +343,10 @@ const EmployeeProfile = () => {
           // Fetch documents
           const docsData = await getEmployeeDocuments(user.uid, userDetails.universityId);
           if (docsData.success) {
+            console.log("Documents loaded:", docsData.documents);
             setDocuments(docsData.documents);
+          } else {
+            console.error("Failed to load documents:", docsData.message);
           }
           
           // Fetch skills
@@ -415,7 +421,7 @@ const EmployeeProfile = () => {
   // Handle document upload
   const handleDocumentUpload = async (file, docType, description) => {
     if (!file || !userDetails?.universityId) {
-      toast.error(!file ? 'No file selected' : 'Cannot determine your university');
+      showErrorAlert(!file ? 'No file selected' : 'Cannot determine your university');
       return;
     }
     
@@ -431,6 +437,15 @@ const EmployeeProfile = () => {
       console.log("User ID:", user.uid);
       console.log("University ID:", userDetails.universityId);
       
+      // Check if the storage instance is valid
+      if (!storage) {
+        console.error("Storage instance is not available");
+        setError("Storage connection not available. Please refresh the page.");
+        showErrorAlert("Storage connection not available. Please refresh the page.");
+        setUploading(false);
+        return;
+      }
+      
       const result = await uploadEmployeeDocument(
         user.uid, 
         userDetails.universityId, 
@@ -444,7 +459,7 @@ const EmployeeProfile = () => {
       
       if (result.success) {
         setSuccess('Document uploaded successfully');
-        toast.success('Document uploaded successfully');
+        showSuccessAlert('Document uploaded successfully');
         
         // Refresh documents
         const docsData = await getEmployeeDocuments(user.uid, userDetails.universityId);
@@ -456,7 +471,7 @@ const EmployeeProfile = () => {
         setIsUploadModalOpen(false);
       } else {
         setError(result.message || 'Failed to upload document');
-        toast.error(result.message || 'Failed to upload document');
+        showErrorAlert(result.message || 'Failed to upload document');
       }
     } catch (err) {
       console.error("Error uploading document:", err);
@@ -466,52 +481,92 @@ const EmployeeProfile = () => {
         stack: err.stack
       });
       setError("An error occurred while uploading document");
-      toast.error("An error occurred while uploading document");
+      showErrorAlert("An error occurred while uploading document");
     } finally {
       setUploading(false);
     }
   };
 
   const handleDeleteDocument = async (documentId, fileName) => {
-    if (!window.confirm('Are you sure you want to delete this document?')) {
-      return;
-    }
-    
-    try {
-      setError(null);
-      setSuccess(null);
-      
-      if (!userDetails || !userDetails.universityId) {
-        setError('User details not available');
-        return;
+    showWarningAlert(
+      'Are you sure you want to delete this document?',
+      async () => {
+        try {
+          setError(null);
+          setSuccess(null);
+          
+          if (!userDetails || !userDetails.universityId) {
+            setError('User details not available');
+            showErrorAlert('User details not available');
+            return;
+          }
+          
+          // Find the document to check if it's using base64
+          const docToDelete = documents.find(doc => doc.id === documentId);
+          const isBase64Document = docToDelete && docToDelete.base64Content;
+          
+          // If it's a base64 document, we only need to update Firestore
+          if (isBase64Document) {
+            // Get the employee document
+            const employeeRef = doc(db, 'universities', userDetails.universityId, 'employees', user.uid);
+            const employeeDoc = await getDoc(employeeRef);
+            
+            if (employeeDoc.exists()) {
+              // Filter out the document from the array
+              const employeeData = employeeDoc.data();
+              const updatedDocuments = (employeeData.documents || []).filter(doc => {
+                // Use id field if it exists, otherwise compare whole document
+                return doc.id !== documentId;
+              });
+              
+              // Update Firestore
+              await updateDoc(employeeRef, {
+                documents: updatedDocuments,
+                updatedAt: serverTimestamp()
+              });
+              
+              setSuccess('Document deleted successfully');
+              showSuccessAlert('Document deleted successfully');
+              // Update local state
+              setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+            } else {
+              setError('Employee document not found');
+              showErrorAlert('Employee document not found');
+            }
+          } else {
+            // For regular Firebase Storage documents, use the deleteEmployeeDocument function
+            const result = await deleteEmployeeDocument(
+              user.uid,
+              userDetails.universityId,
+              documentId,
+              fileName
+            );
+            
+            if (result.success) {
+              setSuccess('Document deleted successfully');
+              showSuccessAlert('Document deleted successfully');
+              
+              // Update local state
+              setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+            } else {
+              setError(result.message || 'Failed to delete document');
+              showErrorAlert(result.message || 'Failed to delete document');
+            }
+          }
+        } catch (err) {
+          console.error("Error deleting document:", err);
+          setError("An error occurred while deleting document");
+          showErrorAlert("An error occurred while deleting document");
+        }
       }
-      
-      const result = await deleteEmployeeDocument(
-        user.uid,
-        userDetails.universityId,
-        documentId,
-        fileName
-      );
-      
-      if (result.success) {
-        setSuccess('Document deleted successfully');
-        
-        // Update local state
-        setDocuments(prev => prev.filter(doc => doc.id !== documentId));
-      } else {
-        setError(result.message || 'Failed to delete document');
-      }
-    } catch (err) {
-      console.error("Error deleting document:", err);
-      setError("An error occurred while deleting document");
-    }
+    );
   };
 
   // Handler for retrying failed uploads
   const handleRetryUpload = async (documentId) => {
     try {
       if (!userDetails?.universityId) {
-        toast.error('Cannot determine your university');
+        showErrorAlert('Cannot determine your university');
         return;
       }
       
@@ -520,19 +575,16 @@ const EmployeeProfile = () => {
       // Find the document in our local state
       const docToRetry = documents.find(doc => doc.id === documentId);
       if (!docToRetry) {
-        toast.error('Document not found');
+        showErrorAlert('Document not found');
         return;
       }
       
       // Set loading state
       setUploading(true);
-      toast.loading('Retrying upload...');
       
       // TODO: Implement server-side functionality to retry the upload
       // For now, we'll just show a message
-      
-      toast.dismiss();
-      toast('This feature is not yet implemented. Please delete the document and upload again.');
+      showWarningAlert('This feature is not yet implemented. Please delete the document and upload again.');
       
       // Refresh documents
       const docsData = await getEmployeeDocuments(user.uid, userDetails.universityId);
@@ -541,7 +593,7 @@ const EmployeeProfile = () => {
       }
     } catch (err) {
       console.error("Error retrying upload:", err);
-      toast.error("Failed to retry upload");
+      showErrorAlert("Failed to retry upload");
     } finally {
       setUploading(false);
     }
@@ -562,11 +614,13 @@ const EmployeeProfile = () => {
   };
 
   const handleRemoveSkill = (skillId) => {
-    if (!window.confirm('Are you sure you want to delete this skill?')) {
-      return;
-    }
-    
-    deleteSkill(skillId);
+    showWarningAlert(
+      'Are you sure you want to delete this skill?',
+      () => deleteSkill(skillId),
+      'Yes, Delete',
+      'Cancel',
+      'Skill deleted successfully'
+    );
   };
 
   const resetSkillForm = () => {
@@ -1165,7 +1219,33 @@ const EmployeeProfile = () => {
         <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Documents</h2>
-            <div>
+            <div className="flex space-x-2">
+              <button 
+                onClick={async () => {
+                  try {
+                    // Show loading state
+                    setLoading(true);
+                    
+                    const docsData = await getEmployeeDocuments(user.uid, userDetails.universityId);
+                    if (docsData.success) {
+                      setDocuments(docsData.documents);
+                      showSuccessAlert('Documents refreshed');
+                    } else {
+                      showErrorAlert('Failed to refresh documents');
+                    }
+                    // End loading state
+                    setLoading(false);
+                  } catch (err) {
+                    showErrorAlert('Error refreshing documents');
+                    console.error(err);
+                    setLoading(false);
+                  }
+                }}
+                className="flex items-center text-sm bg-gray-200 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-300 transition-colors mr-2"
+              >
+                <FontAwesomeIcon icon={faFileAlt} className="mr-1" />
+                Refresh
+              </button>
               <button 
                 onClick={handleUploadDocument} 
                 className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
@@ -1209,6 +1289,11 @@ const EmployeeProfile = () => {
                   key={document.id} 
                   className="border border-gray-200 rounded-lg p-4 flex flex-col hover:bg-gray-50 relative group"
                 >
+                  {/* Document Debug Info (for troubleshooting) */}
+                  <div className="absolute top-0 right-0 bg-yellow-100 text-xs p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                    ID: {document.id}
+                  </div>
+                  
                   {/* Upload Status Indicator */}
                   {document.uploadStatus === 'pending' && (
                     <span className="absolute top-2 right-2 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
@@ -1234,6 +1319,9 @@ const EmployeeProfile = () => {
                       {document.description && (
                         <p className="text-gray-600 text-sm italic mb-2">{document.description}</p>
                       )}
+                      {document.url && (
+                        <p className="text-xs text-gray-400 truncate mb-1">URL: {document.url}</p>
+                      )}
                       <p className="text-xs text-gray-400">
                         Uploaded on {document.createdAt?.toLocaleDateString?.() || 'Unknown date'}
                       </p>
@@ -1241,8 +1329,8 @@ const EmployeeProfile = () => {
                   </div>
                   
                   <div className="mt-4 flex justify-end">
-                    {/* Only show view button for documents that are ready */}
-                    {document.url && document.url !== 'pending_upload' && !document.uploadStatus === 'failed' && (
+                    {/* Show view button for documents with URL */}
+                    {document.url && document.url !== 'pending_upload' && (
                       <a 
                         href={document.url} 
                         target="_blank" 
@@ -1264,7 +1352,7 @@ const EmployeeProfile = () => {
                     )}
                     
                     <button 
-                      onClick={() => handleDeleteDocument(document.id, document.fileName)}
+                      onClick={() => handleDeleteDocument(document.id, document.fileName || document.name)}
                       className="text-red-600 hover:text-red-800 text-sm"
                     >
                       Delete

@@ -1,4 +1,5 @@
 import { db } from "../firebase";
+import { storage } from '../firebase'; // Import storage from firebase.js
 import {
     collection,
     addDoc,
@@ -11,15 +12,17 @@ import {
     getDoc,
     updateDoc,
     deleteDoc,
+    arrayUnion
 } from "firebase/firestore";
-import * as XLSX from "xlsx";
+import { utils, writeFile } from 'xlsx';
 import { 
-    getStorage, 
     ref, 
     uploadBytes, 
     getDownloadURL, 
-    deleteObject 
+    deleteObject,
+    getStorage 
 } from 'firebase/storage';
+import { readExcel } from '../utils/excelHelper';
 
 // Function to export employees to Excel
 export const exportEmployees = async (universityId) => {
@@ -66,14 +69,14 @@ export const exportEmployees = async (universityId) => {
         }));
 
         // Create workbook and worksheet
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = utils.book_new();
+        const ws = utils.json_to_sheet(exportData);
 
         // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(wb, ws, "Employees");
+        utils.book_append_sheet(wb, ws, "Employees");
 
         // Generate Excel file
-        XLSX.writeFile(wb, "employees.xlsx");
+        writeFile(wb, "employees.xlsx");
 
         return { success: true };
     } catch (error) {
@@ -89,98 +92,83 @@ export const importEmployees = async (file, universityId) => {
             return { success: false, message: "Missing university ID" };
         }
         
-        const reader = new FileReader();
+        try {
+            // Use our new utility function to read the Excel file
+            const jsonData = await readExcel(file);
+            
+            // Process and validate each row
+            const employeesRef = collection(db, "universities", universityId, "employees");
+            let successCount = 0;
+            let errorCount = 0;
 
-        return new Promise((resolve, reject) => {
-            reader.onload = async (e) => {
+            for (const row of jsonData) {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: "array" });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    // Transform Excel data to match your Firestore structure
+                    const employeeData = {
+                        universityId,
+                        employeeId: row["Employee ID"],
+                        name: row["Name"],
+                        email: row["Email"],
+                        phone: row["Phone"],
+                        position: row["Position"],
+                        department: row["Department"],
+                        dateHired: row["Date Hired"]
+                            ? new Date(row["Date Hired"])
+                            : serverTimestamp(),
+                        status: row["Status"] || "Active",
+                        salary: row["Salary"],
+                        emergencyContact: {
+                            name: row["Emergency Contact Name"],
+                            relationship:
+                                row["Emergency Contact Relationship"],
+                            phone: row["Emergency Contact Phone"],
+                        },
+                        bankDetails: {
+                            bankName: row["Bank Name"],
+                            accountNumber: row["Account Number"],
+                            accountName: row["Account Name"],
+                        },
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                    };
 
-                    // Process and validate each row
-                    const employeesRef = collection(db, "universities", universityId, "employees");
-                    let successCount = 0;
-                    let errorCount = 0;
-
-                    for (const row of jsonData) {
-                        try {
-                            // Transform Excel data to match your Firestore structure
-                            const employeeData = {
-                                universityId,
-                                employeeId: row["Employee ID"],
-                                name: row["Name"],
-                                email: row["Email"],
-                                phone: row["Phone"],
-                                position: row["Position"],
-                                department: row["Department"],
-                                dateHired: row["Date Hired"]
-                                    ? new Date(row["Date Hired"])
-                                    : serverTimestamp(),
-                                status: row["Status"] || "Active",
-                                salary: row["Salary"],
-                                emergencyContact: {
-                                    name: row["Emergency Contact Name"],
-                                    relationship:
-                                        row["Emergency Contact Relationship"],
-                                    phone: row["Emergency Contact Phone"],
-                                },
-                                bankDetails: {
-                                    bankName: row["Bank Name"],
-                                    accountNumber: row["Account Number"],
-                                    accountName: row["Account Name"],
-                                },
-                                createdAt: serverTimestamp(),
-                                updatedAt: serverTimestamp(),
-                            };
-
-                            // Validate required fields
-                            if (
-                                !employeeData.name ||
-                                !employeeData.email ||
-                                !employeeData.department ||
-                                !employeeData.position
-                            ) {
-                                throw new Error("Missing required fields");
-                            }
-
-                            // Add to university's employees subcollection
-                            const employeeDocRef = doc(collection(db, "universities", universityId, "employees"));
-                            await setDoc(employeeDocRef, employeeData);
-                            
-                            // Also add to main employees collection (for backwards compatibility)
-                            await setDoc(doc(db, "employees", employeeDocRef.id), {
-                                ...employeeData,
-                                id: employeeDocRef.id
-                            });
-                            
-                            successCount++;
-                        } catch (error) {
-                            console.error("Error importing row:", error);
-                            errorCount++;
-                        }
+                    // Validate required fields
+                    if (
+                        !employeeData.name ||
+                        !employeeData.email ||
+                        !employeeData.department ||
+                        !employeeData.position
+                    ) {
+                        throw new Error("Missing required fields");
                     }
 
-                    resolve({
-                        success: true,
-                        message: `Successfully imported ${successCount} employees. Failed to import ${errorCount} records.`,
+                    // Add to university's employees subcollection
+                    const employeeDocRef = doc(collection(db, "universities", universityId, "employees"));
+                    await setDoc(employeeDocRef, employeeData);
+                    
+                    // Also add to main employees collection (for backwards compatibility)
+                    await setDoc(doc(db, "employees", employeeDocRef.id), {
+                        ...employeeData,
+                        id: employeeDocRef.id
                     });
+                    
+                    successCount++;
                 } catch (error) {
-                    reject({ success: false, error: error.message });
+                    console.error("Error importing row:", error);
+                    errorCount++;
                 }
-            };
+            }
 
-            reader.onerror = (error) => {
-                reject({ success: false, error: error.message });
+            return {
+                success: true,
+                message: `Successfully imported ${successCount} employees. Failed to import ${errorCount} records.`,
             };
-
-            reader.readAsArrayBuffer(file);
-        });
+        } catch (error) {
+            return { success: false, message: error.message };
+        }
     } catch (error) {
         console.error("Error in import process:", error);
-        return { success: false, error: error.message };
+        return { success: false, message: error.message };
     }
 };
 
@@ -325,11 +313,15 @@ export const updateEmployeeProfile = async (userId, universityId, profileData) =
 };
 
 // Upload employee document (certifications, etc.)
-export const uploadEmployeeDocument = async (userId, universityId, file, documentType) => {
+export const uploadEmployeeDocument = async (userId, universityId, file, documentType, description = "") => {
     try {
         if (!userId || !universityId || !file) {
             return { success: false, message: 'Missing required parameters' };
         }
+        
+        console.log("[uploadEmployeeDocument] Starting document upload to Firebase Storage...");
+        console.log("[uploadEmployeeDocument] Parameters:", { userId, universityId, fileName: file.name, documentType });
+        console.log("[uploadEmployeeDocument] Firebase Storage instance:", storage);
         
         // Check if this is a mock user ID from direct employee login
         let employeeId = userId;
@@ -355,36 +347,70 @@ export const uploadEmployeeDocument = async (userId, universityId, file, documen
                 }
             }
         }
-        
-        // Create a reference to storage
-        const storage = getStorage();
-        const fileExtension = file.name.split('.').pop();
-        const fileName = `${employeeId}_${documentType}_${Date.now()}.${fileExtension}`;
-        const storageRef = ref(storage, `universities/${universityId}/employees/${employeeId}/documents/${fileName}`);
-        
-        // Upload file
-        await uploadBytes(storageRef, file);
-        
-        // Get the download URL
-        const downloadURL = await getDownloadURL(storageRef);
-        
-        // Add document record to Firestore
-        const employeeDocumentsRef = collection(db, 'universities', universityId, 'employees', employeeDocId, 'documents');
-        await addDoc(employeeDocumentsRef, {
-            name: file.name,
-            type: documentType,
-            url: downloadURL,
-            fileName: fileName,
-            employeeId: employeeId, // Store original employeeId for reference
-            createdAt: serverTimestamp()
+
+        try {
+            // Use a custom file extension handling to avoid issues
+            const fileName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+            console.log("[uploadEmployeeDocument] Using sanitized filename:", fileName);
+            
+            // Create storage reference
+            const fullPath = `universities/${universityId}/employees/${employeeId}/documents/${fileName}`;
+            console.log("[uploadEmployeeDocument] Full storage path:", fullPath);
+            
+            const storageRef = ref(storage, fullPath);
+            console.log("[uploadEmployeeDocument] Storage reference created:", storageRef);
+            
+            console.log("[uploadEmployeeDocument] Starting upload with uploadBytes...");
+            const snapshot = await uploadBytes(storageRef, file);
+            console.log("[uploadEmployeeDocument] Upload successful:", snapshot);
+            
+            // Get the download URL
+            console.log("[uploadEmployeeDocument] Getting download URL...");
+            const fileURL = await getDownloadURL(storageRef);
+            console.log("[uploadEmployeeDocument] Download URL:", fileURL);
+            
+            // Create the document object
+            const newDocument = {
+                name: fileName,
+                url: fileURL,
+                referenceLocator: description || ""
+            };
+            
+            // Add to employee documents array
+            const employeeRef = doc(db, 'universities', universityId, 'employees', employeeDocId);
+            const employeeDoc = await getDoc(employeeRef);
+            
+            if (employeeDoc.exists()) {
+                const employeeData = employeeDoc.data();
+                const currentDocuments = employeeData.documents || [];
+                
+                await updateDoc(employeeRef, {
+                    documents: [...currentDocuments, newDocument]
+                });
+                
+                console.log("[uploadEmployeeDocument] Document added to employee record");
+            }
+            
+            return { 
+                success: true, 
+                url: fileURL,
+                document: newDocument
+            };
+        } catch (error) {
+            console.error("[uploadEmployeeDocument] Error in Firebase Storage upload:", error);
+            console.error("[uploadEmployeeDocument] Error code:", error.code);
+            console.error("[uploadEmployeeDocument] Error message:", error.message);
+            throw error; // Re-throw for the outer catch
+        }
+    } catch (error) {
+        console.error('[uploadEmployeeDocument] Error uploading document:', error);
+        console.error('[uploadEmployeeDocument] Error details:', { 
+            code: error.code,
+            name: error.name,
+            message: error.message,
+            stack: error.stack
         });
         
-        return { 
-            success: true, 
-            url: downloadURL 
-        };
-    } catch (error) {
-        console.error('Error uploading document:', error);
         return { 
             success: false, 
             message: error.message 
@@ -398,6 +424,8 @@ export const getEmployeeDocuments = async (userId, universityId) => {
         if (!userId || !universityId) {
             return { success: false, message: 'User ID or University ID missing' };
         }
+        
+        console.log("[getEmployeeDocuments] Fetching documents for", userId, "in university", universityId);
         
         // Check if this is a mock user ID from direct employee login
         let employeeId = userId;
@@ -422,17 +450,41 @@ export const getEmployeeDocuments = async (userId, universityId) => {
             }
         }
         
+        // First, get documents from the employee record's documents array
+        const employeeRef = doc(db, 'universities', universityId, 'employees', employeeDocId);
+        const employeeDoc = await getDoc(employeeRef);
+        
+        let documents = [];
+        
+        if (employeeDoc.exists()) {
+            const employeeData = employeeDoc.data();
+            // If there's a documents array in the employee record, use it
+            if (Array.isArray(employeeData.documents)) {
+                console.log("[getEmployeeDocuments] Found", employeeData.documents.length, "documents in employee record");
+                // Add an ID to each document if it doesn't have one
+                documents = employeeData.documents.map((doc, index) => ({
+                    id: doc.id || `inline_doc_${index}`,
+                    ...doc
+                }));
+            }
+        }
+        
+        // Also get documents from the subcollection for backward compatibility
         const documentsRef = collection(db, 'universities', universityId, 'employees', employeeDocId, 'documents');
         const documentsSnapshot = await getDocs(documentsRef);
         
-        const documents = [];
-        documentsSnapshot.forEach(doc => {
-            documents.push({
-                id: doc.id,
-                ...doc.data()
+        if (!documentsSnapshot.empty) {
+            console.log("[getEmployeeDocuments] Found", documentsSnapshot.size, "documents in subcollection");
+            // Add documents from subcollection
+            documentsSnapshot.forEach(doc => {
+                documents.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
             });
-        });
+        }
         
+        console.log("[getEmployeeDocuments] Returning", documents.length, "total documents");
         return { 
             success: true, 
             documents 
@@ -450,9 +502,12 @@ export const getEmployeeDocuments = async (userId, universityId) => {
 // Delete employee document
 export const deleteEmployeeDocument = async (userId, universityId, documentId, fileName) => {
     try {
-        if (!userId || !universityId || !documentId || !fileName) {
+        if (!userId || !universityId || !fileName) {
             return { success: false, message: 'Missing required parameters' };
         }
+        
+        console.log("[deleteEmployeeDocument] Starting document deletion...");
+        console.log("[deleteEmployeeDocument] Parameters:", { userId, universityId, documentId, fileName });
         
         // Check if this is a mock user ID from direct employee login
         let employeeId = userId;
@@ -479,19 +534,35 @@ export const deleteEmployeeDocument = async (userId, universityId, documentId, f
             }
         }
         
-        // Delete from Firestore
-        const documentRef = doc(db, 'universities', universityId, 'employees', employeeDocId, 'documents', documentId);
-        await deleteDoc(documentRef);
-        
-        // Delete from Storage
-        const storage = getStorage();
-        // The storage path uses the original employeeId, not the document ID
-        const storageRef = ref(storage, `universities/${universityId}/employees/${employeeId}/documents/${fileName}`);
+        // IDENTICAL to EmployeeDetail component
+        const storageRef = ref(
+            storage,
+            `universities/${universityId}/employees/${employeeId}/documents/${fileName}`
+        );
         await deleteObject(storageRef);
+        
+        // Get current documents
+        const employeeRef = doc(db, 'universities', universityId, 'employees', employeeDocId);
+        const employeeDoc = await getDoc(employeeRef);
+        
+        if (employeeDoc.exists()) {
+            const updatedDocuments = employeeDoc.data().documents.filter(doc => doc.name !== fileName);
+            
+            // Update the document with the filtered array
+            await updateDoc(employeeRef, {
+                documents: updatedDocuments
+            });
+        }
         
         return { success: true };
     } catch (error) {
-        console.error('Error deleting document:', error);
+        console.error('[deleteEmployeeDocument] Error deleting document:', error);
+        console.error('[deleteEmployeeDocument] Error details:', { 
+            code: error.code,
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
         return { 
             success: false, 
             message: error.message 

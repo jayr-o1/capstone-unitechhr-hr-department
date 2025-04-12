@@ -21,7 +21,7 @@
     "@tailwindcss/vite": "^4.0.12",
     "bcryptjs": "^3.0.2",
     "dotenv": "^16.4.7",
-    "firebase": "^11.4.0",
+    "firebase": "^11.6.0",
     "framer-motion": "^12.4.11",
     "lucide-react": "^0.479.0",
     "react": "^19.0.0",
