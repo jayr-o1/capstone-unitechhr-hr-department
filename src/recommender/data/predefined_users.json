@@ -1,34 +1,174 @@
 {
     "users": [
         {
-            "id": "user1",
-            "name": "John Doe",
-            "skills": ["Python", "Problem Solving", "Cloud Platforms", "Data Analysis"]
+            "id": "tech1",
+            "name": "John Wilson",
+            "skills": [
+                "Programming",
+                "Python",
+                "Data Structures",
+                "Version Control",
+                "Problem Solving",
+                "Database Management",
+                "SQL",
+                "Web Development",
+                "JavaScript",
+                "API Design"
+            ]
         },
         {
-            "id": "user2",
-            "name": "Jane Smith",
-            "skills": ["Marketing", "Social Media", "Content Creation", "Project Management"]
+            "id": "tech2",
+            "name": "Sarah Johnson",
+            "skills": [
+                "Data Analysis",
+                "Statistics",
+                "Python",
+                "SQL",
+                "Data Visualization",
+                "Machine Learning",
+                "R",
+                "Excel",
+                "Statistical Modeling",
+                "Big Data"
+            ]
         },
         {
-            "id": "user3",
-            "name": "Alex Johnson",
-            "skills": ["Network Security", "Penetration Testing", "Threat Analysis", "System Administration"]
+            "id": "tech3",
+            "name": "Michael Chen",
+            "skills": [
+                "Cloud Platforms",
+                "AWS",
+                "Azure",
+                "Containerization",
+                "Virtualization",
+                "Networking",
+                "Security",
+                "Infrastructure as Code",
+                "DevOps",
+                "Microservices"
+            ]
         },
         {
-            "id": "user4",
-            "name": "Maria Rodriguez",
-            "skills": ["Patient Care", "Medical Terminology", "Clinical Procedures", "Healthcare Documentation"]
+            "id": "security1",
+            "name": "Alex Rodriguez",
+            "skills": [
+                "Network Security",
+                "Information Security",
+                "Security Tools",
+                "Ethical Hacking",
+                "Penetration Testing",
+                "Risk Management",
+                "Cryptography",
+                "Security Auditing"
+            ]
         },
         {
-            "id": "user5",
-            "name": "David Chen",
-            "skills": ["Financial Analysis", "Risk Management", "Investment Strategy", "Market Research"]
+            "id": "healthcare1",
+            "name": "Maria Garcia",
+            "skills": [
+                "Patient Assessment",
+                "Clinical Skills",
+                "Medical Terminology",
+                "Communication",
+                "Documentation",
+                "Patient Education",
+                "Infection Control",
+                "Critical Thinking"
+            ]
         },
         {
-            "id": "educator1",
+            "id": "healthcare2",
+            "name": "Robert Kim",
+            "skills": [
+                "Healthcare Regulations",
+                "Medical Terminology",
+                "Electronic Health Records",
+                "Healthcare Operations",
+                "Quality Improvement",
+                "Patient Experience",
+                "Data Analytics"
+            ]
+        },
+        {
+            "id": "criminal1",
+            "name": "David Thompson",
+            "skills": [
+                "Criminal Theory",
+                "Research Methods",
+                "Criminal Law",
+                "Investigative Techniques",
+                "Crime Prevention",
+                "Statistical Analysis",
+                "Criminal Psychology"
+            ]
+        },
+        {
+            "id": "criminal2",
+            "name": "Emily Martinez",
+            "skills": [
+                "Criminal Procedure",
+                "Investigation Techniques",
+                "Report Writing",
+                "Legal Knowledge",
+                "Evidence Handling",
+                "Interviewing",
+                "Crisis Management",
+                "De-escalation"
+            ]
+        },
+        {
+            "id": "psychology1",
+            "name": "James Williams",
+            "skills": [
+                "Psychological Assessment",
+                "Diagnostic Skills",
+                "Counseling",
+                "Research Methods",
+                "Ethics",
+                "Mental Health Treatment",
+                "Crisis Intervention"
+            ]
+        },
+        {
+            "id": "business1",
+            "name": "Sophia Anderson",
+            "skills": [
+                "Marketing",
+                "Social Media",
+                "Content Creation",
+                "Market Research",
+                "Strategic Planning",
+                "Project Management",
+                "Data Analysis",
+                "Customer Insights"
+            ]
+        },
+        {
+            "id": "business2",
+            "name": "Daniel Lee",
+            "skills": [
+                "Financial Analysis",
+                "Budgeting",
+                "Risk Management",
+                "Investment Strategy",
+                "Market Research",
+                "Financial Modeling",
+                "Strategic Planning",
+                "Excel"
+            ]
+        },
+        {
+            "id": "education1",
             "name": "Emma Taylor",
-            "skills": ["Communication", "Patience", "Critical Thinking", "Organization", "Leadership", "Teamwork", "Time Management", "Computer Skills", "Conflict Resolution", "Imaginative Thinking"]
+            "skills": [
+                "Curriculum Development",
+                "Lesson Planning",
+                "Educational Technology",
+                "Student Assessment",
+                "Classroom Management",
+                "Differentiated Instruction",
+                "Communication"
+            ]
         }
     ]
-} 
+}

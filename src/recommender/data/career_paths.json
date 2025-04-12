@@ -2,6 +2,8 @@
     "career_paths": [
         {
             "title": "Software Development",
+            "field": "Technology",
+            "description": "Design, create, test, and maintain computer software systems",
             "required_skills": [
                 "Programming",
                 "Data Structures",
@@ -15,10 +17,26 @@
                 "System Architecture",
                 "Debugging",
                 "Unit Testing"
+            ],
+            "recommended_skills": [
+                "DevOps",
+                "Agile Methodologies",
+                "Object-Oriented Design",
+                "Microservices",
+                "Cloud Platforms"
+            ],
+            "training_path": [
+                "Programming fundamentals",
+                "Database concepts",
+                "Software design patterns",
+                "API development",
+                "Testing methodologies"
             ]
         },
         {
             "title": "Data Science",
+            "field": "Technology",
+            "description": "Extract insights and knowledge from structured and unstructured data",
             "required_skills": [
                 "Python",
                 "Statistics",
@@ -32,10 +50,26 @@
                 "Natural Language Processing",
                 "Data Mining",
                 "Experimental Design"
+            ],
+            "recommended_skills": [
+                "Cloud Computing",
+                "Data Engineering",
+                "Business Intelligence",
+                "A/B Testing",
+                "Data Ethics"
+            ],
+            "training_path": [
+                "Statistical analysis",
+                "Machine learning algorithms",
+                "Data processing techniques",
+                "Visualization methods",
+                "Predictive modeling"
             ]
         },
         {
             "title": "Cybersecurity",
+            "field": "Technology",
+            "description": "Protect computer systems, networks, and data from security breaches",
             "required_skills": [
                 "Network Security",
                 "Information Security",
@@ -49,10 +83,26 @@
                 "Malware Analysis",
                 "Digital Forensics",
                 "Cloud Security"
+            ],
+            "recommended_skills": [
+                "Programming",
+                "Network Administration",
+                "Security Frameworks",
+                "Threat Intelligence",
+                "DevSecOps"
+            ],
+            "training_path": [
+                "Security fundamentals",
+                "Network protection",
+                "Penetration testing",
+                "Incident response",
+                "Security governance"
             ]
         },
         {
             "title": "Cloud Computing",
+            "field": "Technology",
+            "description": "Design and manage cloud-based infrastructure and services",
             "required_skills": [
                 "Cloud Platforms",
                 "Infrastructure as Code",
@@ -66,23 +116,218 @@
                 "Microservices",
                 "Serverless Architecture",
                 "Load Balancing"
+            ],
+            "recommended_skills": [
+                "Programming",
+                "Database Management",
+                "API Integration",
+                "Cost Optimization",
+                "Cloud Security"
+            ],
+            "training_path": [
+                "Cloud fundamentals",
+                "Infrastructure automation",
+                "Container orchestration",
+                "Cloud security",
+                "Scalable architecture"
             ]
         },
         {
-            "title": "Criminology",
+            "title": "Healthcare Administration",
+            "field": "Healthcare",
+            "description": "Manage healthcare facilities, services, and resources",
             "required_skills": [
-                "Criminal Theory",
-                "Sociology",
+                "Healthcare Regulations",
+                "Medical Terminology",
+                "Healthcare Operations",
+                "Financial Management",
+                "Quality Improvement",
+                "Electronic Health Records",
+                "Healthcare Policy",
+                "Risk Management",
+                "Patient Experience",
+                "Strategic Planning",
+                "Data Analytics",
+                "Healthcare Economics"
+            ],
+            "recommended_skills": [
+                "Leadership",
+                "Project Management",
+                "Healthcare Technology",
+                "Regulatory Compliance",
+                "Healthcare Marketing"
+            ],
+            "training_path": [
+                "Healthcare regulations",
+                "Operations management",
+                "Financial planning",
+                "Patient care systems",
+                "Healthcare informatics"
+            ]
+        },
+        {
+            "title": "Nursing",
+            "field": "Healthcare",
+            "description": "Provide patient care and health education in various healthcare settings",
+            "required_skills": [
+                "Patient Assessment",
+                "Clinical Skills",
+                "Pharmacology",
+                "Critical Thinking",
+                "Patient Education",
+                "Care Planning",
+                "Medical Terminology",
+                "Communication",
+                "Emergency Response",
+                "Infection Control",
+                "Documentation",
+                "Evidence-Based Practice"
+            ],
+            "recommended_skills": [
+                "Healthcare Technology",
+                "Cultural Competence",
+                "Leadership",
+                "Teamwork",
+                "Patient Advocacy"
+            ],
+            "training_path": [
+                "Clinical fundamentals",
+                "Patient assessment",
+                "Medication management",
+                "Care coordination",
+                "Specialized care techniques"
+            ]
+        },
+        {
+            "title": "Clinical Psychology",
+            "field": "Psychology",
+            "description": "Assess and treat mental, emotional, and behavioral disorders",
+            "required_skills": [
+                "Psychological Assessment",
+                "Diagnostic Skills",
+                "Therapeutic Techniques",
                 "Research Methods",
+                "Ethics",
+                "Psychopathology",
+                "Counseling",
+                "Cognitive Testing",
+                "Mental Health Treatment",
+                "Crisis Intervention",
+                "Clinical Documentation",
+                "Evidence-Based Interventions"
+            ],
+            "recommended_skills": [
+                "Psychological Testing",
+                "Family Therapy",
+                "Group Therapy",
+                "Cultural Competence",
+                "Child Development"
+            ],
+            "training_path": [
+                "Psychological theory",
+                "Assessment techniques",
+                "Therapeutic methods",
+                "Intervention strategies",
+                "Clinical documentation"
+            ]
+        },
+        {
+            "title": "Marketing",
+            "field": "Business",
+            "description": "Promote products, services, or brands to target audiences",
+            "required_skills": [
+                "Marketing Strategy",
+                "Market Research",
+                "Digital Marketing",
+                "Brand Management",
+                "Content Creation",
+                "Social Media",
+                "Analytics",
+                "Customer Insights",
+                "Campaign Management",
+                "SEO/SEM",
+                "Marketing Automation",
+                "CRM"
+            ],
+            "recommended_skills": [
+                "Graphic Design",
+                "Copywriting",
+                "Data Analysis",
+                "User Experience",
+                "Public Relations"
+            ],
+            "training_path": [
+                "Marketing fundamentals",
+                "Digital marketing",
+                "Content strategy",
+                "Analytics and measurement",
+                "Brand development"
+            ]
+        },
+        {
+            "title": "Financial Analysis",
+            "field": "Business",
+            "description": "Analyze financial data to guide business decisions and investments",
+            "required_skills": [
+                "Financial Modeling",
+                "Financial Reporting",
+                "Budgeting",
+                "Forecasting",
+                "Valuation",
+                "Excel",
+                "Risk Assessment",
+                "Financial Statement Analysis",
+                "Business Analytics",
+                "Investment Analysis",
+                "Data Analysis",
+                "Industry Research"
+            ],
+            "recommended_skills": [
+                "Accounting Principles",
+                "Corporate Finance",
                 "Statistical Analysis",
-                "Criminal Psychology",
+                "Financial Software",
+                "Business Intelligence"
+            ],
+            "training_path": [
+                "Financial statement analysis",
+                "Modeling techniques",
+                "Valuation methods",
+                "Risk assessment",
+                "Investment analysis"
+            ]
+        },
+        {
+            "title": "Criminal Justice",
+            "field": "Criminology",
+            "description": "Study and implement laws, policies, and practices related to crime and justice",
+            "required_skills": [
+                "Legal Studies",
                 "Criminal Law",
-                "Crime Prevention",
-                "Investigative Techniques",
-                "Victimology",
-                "Juvenile Delinquency",
-                "White-Collar Crime",
-                "Criminal Profiling"
+                "Constitutional Law",
+                "Ethics",
+                "Corrections",
+                "Judicial Process",
+                "Public Policy",
+                "Social Justice",
+                "Criminal Justice Administration",
+                "Comparative Justice Systems",
+                "Restorative Justice",
+                "Rehabilitation Theory"
+            ],
+            "recommended_skills": [
+                "Research Methods",
+                "Sociology",
+                "Psychology",
+                "Cultural Awareness",
+                "Critical Thinking"
+            ],
+            "training_path": [
+                "Legal fundamentals",
+                "Criminal justice system",
+                "Policy development",
+                "Ethics and integrity",
+                "Justice administration"
             ]
         },
         {
@@ -117,142 +362,6 @@
                 "Surveillance",
                 "Interviewing",
                 "Community Policing"
-            ]
-        },
-        {
-            "title": "Criminal Justice",
-            "required_skills": [
-                "Legal Studies",
-                "Criminal Law",
-                "Constitutional Law",
-                "Ethics",
-                "Corrections",
-                "Judicial Process",
-                "Public Policy",
-                "Social Justice",
-                "Criminal Justice Administration",
-                "Comparative Justice Systems",
-                "Restorative Justice",
-                "Rehabilitation Theory"
-            ]
-        },
-        {
-            "title": "Healthcare Administration",
-            "required_skills": [
-                "Healthcare Regulations",
-                "Medical Terminology",
-                "Healthcare Operations",
-                "Financial Management",
-                "Quality Improvement",
-                "Electronic Health Records",
-                "Healthcare Policy",
-                "Risk Management",
-                "Patient Experience",
-                "Strategic Planning",
-                "Data Analytics",
-                "Healthcare Economics"
-            ]
-        },
-        {
-            "title": "Nursing",
-            "required_skills": [
-                "Patient Assessment",
-                "Clinical Skills",
-                "Pharmacology",
-                "Critical Thinking",
-                "Patient Education",
-                "Care Planning",
-                "Medical Terminology",
-                "Communication",
-                "Emergency Response",
-                "Infection Control",
-                "Documentation",
-                "Evidence-Based Practice"
-            ]
-        },
-        {
-            "title": "Clinical Psychology",
-            "required_skills": [
-                "Psychological Assessment",
-                "Diagnostic Skills",
-                "Therapeutic Techniques",
-                "Research Methods",
-                "Ethics",
-                "Psychopathology",
-                "Counseling",
-                "Cognitive Testing",
-                "Mental Health Treatment",
-                "Crisis Intervention",
-                "Clinical Documentation",
-                "Evidence-Based Interventions"
-            ]
-        },
-        {
-            "title": "Industrial-Organizational Psychology",
-            "required_skills": [
-                "Organizational Behavior",
-                "Employee Assessment",
-                "Training Development",
-                "Performance Management",
-                "Talent Acquisition",
-                "Psychological Measurement",
-                "Team Dynamics",
-                "Change Management",
-                "Leadership Development",
-                "Workplace Motivation",
-                "Statistical Analysis",
-                "Research Methods"
-            ]
-        },
-        {
-            "title": "Marketing",
-            "required_skills": [
-                "Market Research",
-                "Digital Marketing",
-                "Brand Management",
-                "Content Strategy",
-                "Social Media Marketing",
-                "SEO",
-                "Campaign Analysis",
-                "Consumer Behavior",
-                "Email Marketing",
-                "Advertising",
-                "Marketing Analytics",
-                "Product Positioning"
-            ]
-        },
-        {
-            "title": "Finance",
-            "required_skills": [
-                "Financial Analysis",
-                "Investment Management",
-                "Risk Assessment",
-                "Financial Modeling",
-                "Portfolio Management",
-                "Financial Reporting",
-                "Budgeting",
-                "Accounting Principles",
-                "Corporate Finance",
-                "Valuation Methods",
-                "Market Analysis",
-                "Financial Regulations"
-            ]
-        },
-        {
-            "title": "Human Resources",
-            "required_skills": [
-                "Talent Acquisition",
-                "Employee Relations",
-                "Compensation and Benefits",
-                "Performance Management",
-                "Training and Development",
-                "HR Policies",
-                "Labor Laws",
-                "Conflict Resolution",
-                "Organizational Development",
-                "HRIS Systems",
-                "Onboarding",
-                "Employee Engagement"
             ]
         },
         {

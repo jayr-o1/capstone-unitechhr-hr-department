@@ -709,6 +709,189 @@ def evaluate_model(test_data_path=None, model_path=None, verbose=False):
 # Alias evaluate_model function as evaluate_model_performance for backward compatibility
 evaluate_model_performance = evaluate_model
 
+def train_model_with_recent_changes(user_preferences_only=False, days_threshold=30, min_feedback_count=5, verbose=True):
+    """
+    Train the model with recent changes including new user preferences and feedback.
+    
+    This function focuses on incorporating recent user interactions rather than a full retrain.
+    It's useful for quickly adapting the model to new changes without the computational cost
+    of a full retraining.
+    
+    Args:
+        user_preferences_only (bool): If True, only use user preferences for training
+        days_threshold (int): Only include data from the last N days
+        min_feedback_count (int): Minimum number of feedback entries required to perform training
+        verbose (bool): If True, print detailed progress messages
+    
+    Returns:
+        bool: True if training was successful, False otherwise
+    """
+    try:
+        if verbose:
+            print(f"Starting incremental model training with recent changes...")
+        
+        # Load existing model if available
+        model_exists = os.path.exists(MODEL_PATH)
+        if not model_exists:
+            if verbose:
+                print("No existing model found. Performing initial training instead.")
+            return initial_model_training(verbose=verbose)
+        
+        # Load existing model components
+        if verbose:
+            print("Loading existing model components...")
+        model_components = joblib.load(MODEL_PATH)
+        
+        # Extract components
+        model = model_components.get("model")
+        tfidf = model_components.get("tfidf")
+        pca = model_components.get("pca")
+        label_encoder = model_components.get("label_encoder")
+        
+        # Load user preferences data
+        from utils.data_loader import load_all_user_preferences
+        user_prefs = load_all_user_preferences()
+        
+        if not user_prefs:
+            if verbose:
+                print("No user preferences found. Cannot perform training with recent changes.")
+            return False
+        
+        if verbose:
+            print(f"Loaded {len(user_prefs)} user preference entries")
+            
+        # Filter for recent entries if needed
+        if days_threshold > 0:
+            from datetime import datetime, timedelta
+            cutoff_date = datetime.now() - timedelta(days=days_threshold)
+            
+            # Filter entries based on timestamp if available
+            recent_prefs = []
+            for pref in user_prefs:
+                if 'timestamp' in pref:
+                    try:
+                        timestamp = datetime.fromisoformat(pref['timestamp'])
+                        if timestamp >= cutoff_date:
+                            recent_prefs.append(pref)
+                    except (ValueError, TypeError):
+                        # If timestamp parsing fails, include entry anyway
+                        recent_prefs.append(pref)
+                else:
+                    # Include entries without timestamp
+                    recent_prefs.append(pref)
+            
+            if verbose:
+                print(f"Filtered to {len(recent_prefs)} entries from the last {days_threshold} days")
+            user_prefs = recent_prefs
+        
+        # Prepare data for model update
+        user_data = []
+        for pref in user_prefs:
+            # Include only entries with both skills and preferred specialization
+            if 'current_skills' in pref and 'preferred_specialization' in pref:
+                # Get the field from the specialization
+                field = None
+                if 'preferred_field' in pref:
+                    field = pref['preferred_field']
+                else:
+                    # Try to determine field from specialization
+                    from utils.skill_analyzer import get_field_for_specialization
+                    field = get_field_for_specialization(pref['preferred_specialization'], None)
+                
+                if field:
+                    user_data.append({
+                        'Skills': ', '.join(pref['current_skills']),
+                        'Field': field
+                    })
+        
+        if len(user_data) < min_feedback_count:
+            if verbose:
+                print(f"Insufficient user data ({len(user_data)}/{min_feedback_count} required). Skipping training.")
+            return False
+        
+        # Create a DataFrame
+        user_df = pd.DataFrame(user_data)
+        
+        # Also load feedback data if not using preferences only
+        feedback_df = None
+        if not user_preferences_only:
+            # Load feedback data
+            from utils.feedback_handler import get_all_feedback
+            feedback = get_all_feedback()
+            
+            if feedback and len(feedback) > 0:
+                feedback_data = []
+                
+                for entry in feedback:
+                    if 'user_skills' in entry and 'selected_field' in entry and entry.get('rating', 0) >= 3:
+                        feedback_data.append({
+                            'Skills': ', '.join(entry['user_skills']),
+                            'Field': entry['selected_field']
+                        })
+                
+                if feedback_data:
+                    feedback_df = pd.DataFrame(feedback_data)
+                    if verbose:
+                        print(f"Loaded {len(feedback_df)} feedback entries with ratings >= 3")
+        
+        # Combine user preferences with feedback if available
+        if feedback_df is not None and len(feedback_df) > 0:
+            combined_df = pd.concat([user_df, feedback_df], ignore_index=True)
+            if verbose:
+                print(f"Combined dataset contains {len(combined_df)} entries")
+        else:
+            combined_df = user_df
+            if verbose:
+                print(f"Using only user preferences dataset with {len(combined_df)} entries")
+        
+        # Extract features using existing TF-IDF vectorizer
+        if verbose:
+            print("Extracting features from skills data...")
+        
+        # Ensure all skills are strings
+        combined_df['Skills'] = combined_df['Skills'].astype(str)
+        
+        # Transform using the existing TF-IDF vectorizer
+        X_skills = tfidf.transform(combined_df['Skills'])
+        
+        # Apply existing PCA transformation
+        X_pca = pca.transform(X_skills.toarray())
+        
+        if verbose:
+            print(f"Prepared features with shape: {X_pca.shape}")
+        
+        # Encode the target variable using existing encoder
+        y = label_encoder.transform(combined_df['Field'])
+        
+        # Update the model with new data
+        if verbose:
+            print("Updating model with new data...")
+        
+        # Train the model (partial_fit not available for RandomForest, so we fit on all data)
+        model.fit(X_pca, y)
+        
+        if verbose:
+            print("Model update complete")
+        
+        # Save the updated model
+        model_components["model"] = model
+        model_components["trained_at"] = datetime.now().isoformat()
+        model_components["recent_changes_count"] = len(combined_df)
+        
+        save_model_components(model_components, verbose=verbose)
+        
+        if verbose:
+            print("Updated model saved successfully")
+        
+        return True
+    
+    except Exception as e:
+        if verbose:
+            print(f"Error in incremental model training: {str(e)}")
+            import traceback
+            traceback.print_exc()
+        return False
+
 if __name__ == "__main__":
     # This allows running this module directly for training/retraining
     print("Career Recommender System - Model Trainer")

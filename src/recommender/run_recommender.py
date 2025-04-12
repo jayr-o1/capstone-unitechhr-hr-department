@@ -533,8 +533,9 @@ def main():
     print("1. Get career recommendations with skill matching (ENHANCED)")
     print("2. Explore career fields and specializations")
     print("3. View skill clusters (admin)")
+    print("4. Train model with recent changes (admin)")
     
-    choice = get_validated_integer("Enter your choice (1-3): ", 1, 3)
+    choice = get_validated_integer("Enter your choice (1-4): ", 1, 4)
     
     career_paths = load_career_paths()
     skills_data = load_skills_data()
@@ -561,6 +562,56 @@ def main():
             if skill.lower() == 'exit':
                 break
             display_skill_clusters(skill)
+    
+    elif choice == 4:
+        # Admin function: Train model with recent changes
+        print("\n" + "=" * 60)
+        print("MODEL TRAINING WITH RECENT CHANGES")
+        print("=" * 60)
+        
+        print("This will update the recommendation model with recent user preferences and feedback.")
+        print("The existing model will be backed up before any changes are made.")
+        
+        if get_validated_yes_no("Do you want to proceed? (y/n): "):
+            # Import the training function
+            try:
+                from utils.model_trainer import train_model_with_recent_changes
+                
+                # Ask for training options
+                use_prefs_only = get_validated_yes_no("Use only user preferences (ignore feedback)? (y/n): ")
+                days = get_validated_integer("Consider data from how many recent days? (0 for all data): ", 0, 365)
+                min_count = get_validated_integer("Minimum data points required (1-100): ", 1, 100)
+                
+                print("\nStarting model training...")
+                success = train_model_with_recent_changes(
+                    user_preferences_only=use_prefs_only,
+                    days_threshold=days,
+                    min_feedback_count=min_count,
+                    verbose=True
+                )
+                
+                if success:
+                    print("\nModel training completed successfully!")
+                    
+                    # Evaluate the model
+                    try:
+                        from utils.model_trainer import evaluate_model_performance
+                        print("\nEvaluating model performance...")
+                        metrics = evaluate_model_performance(verbose=True)
+                        
+                        print("\nModel Evaluation Summary:")
+                        print(f"Accuracy: {metrics.get('accuracy', 'N/A')}")
+                        print(f"F1 Score: {metrics.get('f1_score', 'N/A')}")
+                    except (ImportError, Exception) as e:
+                        print(f"\nCould not evaluate model: {str(e)}")
+                else:
+                    print("\nModel training was not completed.")
+                    print("This might be due to insufficient data or an error during training.")
+            except ImportError:
+                print("\nError: Could not import training functions.")
+                print("Make sure all required packages are installed.")
+            except Exception as e:
+                print(f"\nAn error occurred: {str(e)}")
     
     # Display feedback reminder
     print("\n" + "=" * 60)

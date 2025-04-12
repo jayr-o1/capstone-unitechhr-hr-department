@@ -1,13 +1,1 @@
-{
-  "feedback": [
-    {
-      "user_id": "test_user",
-      "timestamp": "2025-04-10T20:57:40.591066",
-      "specialization": "Software Development",
-      "match_percentage": 75,
-      "satisfaction_rating": 4,
-      "feedback_comment": "This is a test comment",
-      "recommendation_version": "test_v1.0"
-    }
-  ]
-}
+{"feedback": []}
