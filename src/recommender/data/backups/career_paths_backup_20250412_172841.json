@@ -105,17 +105,17 @@
             "description": "Design and manage cloud-based infrastructure and services",
             "required_skills": [
                 "Cloud Platforms",
-                "AWS",
-                "Azure",
+                "Infrastructure as Code",
                 "Containerization",
-                "Virtualization",
                 "Networking",
                 "Security",
-                "Infrastructure as Code",
+                "Automation",
                 "DevOps",
+                "System Administration",
+                "Virtualization",
                 "Microservices",
-                "Scalability",
-                "Disaster Recovery"
+                "Serverless Architecture",
+                "Load Balancing"
             ],
             "recommended_skills": [
                 "Programming",
@@ -139,16 +139,16 @@
             "required_skills": [
                 "Healthcare Regulations",
                 "Medical Terminology",
-                "Electronic Health Records",
                 "Healthcare Operations",
+                "Financial Management",
                 "Quality Improvement",
-                "Patient Experience",
-                "Data Analytics",
-                "Staff Management",
-                "Budget Planning",
+                "Electronic Health Records",
                 "Healthcare Policy",
                 "Risk Management",
-                "Compliance"
+                "Patient Experience",
+                "Strategic Planning",
+                "Data Analytics",
+                "Healthcare Economics"
             ],
             "recommended_skills": [
                 "Leadership",
@@ -333,18 +333,19 @@
         {
             "title": "Forensic Science",
             "required_skills": [
-                "Forensic Analysis",
-                "Evidence Collection",
                 "Crime Scene Processing",
-                "Documentation",
-                "Laboratory Techniques",
-                "Chain of Custody",
+                "Evidence Collection",
                 "DNA Analysis",
+                "Fingerprint Analysis",
+                "Forensic Photography",
                 "Toxicology",
-                "Expert Testimony",
-                "Scientific Methods"
-            ],
-            "field": "Forensic Science"
+                "Ballistics",
+                "Court Testimony",
+                "Bloodstain Pattern Analysis",
+                "Forensic Anthropology",
+                "Trace Evidence Analysis",
+                "Chain of Custody"
+            ]
         },
         {
             "title": "Law Enforcement",
@@ -367,349 +368,341 @@
             "title": "Mechanical Engineering",
             "required_skills": [
                 "CAD Design",
-                "Mechanical Design",
                 "Thermodynamics",
                 "Fluid Mechanics",
-                "Material Science",
-                "Structural Analysis",
-                "Technical Documentation",
-                "Prototyping",
-                "Problem Solving",
-                "Engineering Mathematics",
+                "Materials Science",
                 "Manufacturing Processes",
-                "Quality Control"
-            ],
-            "field": "Engineering"
+                "Structural Analysis",
+                "Heat Transfer",
+                "Machine Design",
+                "Engineering Mathematics",
+                "Prototyping",
+                "Quality Control",
+                "Technical Documentation"
+            ]
         },
         {
             "title": "Civil Engineering",
             "required_skills": [
-                "Structural Design",
+                "Structural Analysis",
+                "Geotechnical Engineering",
+                "Hydraulics",
                 "Construction Management",
-                "CAD Software",
+                "Infrastructure Design",
+                "Environmental Engineering",
                 "Surveying",
-                "Soil Mechanics",
+                "Materials Testing",
+                "AutoCAD",
                 "Building Codes",
                 "Project Planning",
-                "Hydraulics",
-                "Environmental Assessment",
-                "Transportation Engineering",
-                "Construction Materials",
-                "Geotechnical Engineering"
-            ],
-            "field": "Engineering"
+                "Sustainable Design"
+            ]
         },
         {
             "title": "Elementary Education",
             "required_skills": [
                 "Curriculum Development",
-                "Lesson Planning",
-                "Educational Technology",
-                "Student Assessment",
                 "Classroom Management",
-                "Differentiated Instruction",
-                "Communication",
                 "Child Development",
-                "Special Education",
-                "Teaching Methods",
-                "Educational Psychology",
-                "Literacy Instruction"
-            ],
-            "field": "Education"
+                "Instructional Strategies",
+                "Assessment Methods",
+                "Differentiated Instruction",
+                "Educational Technology",
+                "Communication Skills",
+                "Literacy Instruction",
+                "Mathematics Instruction",
+                "Special Education Awareness",
+                "Behavior Management"
+            ]
         },
         {
             "title": "Secondary Education",
             "required_skills": [
-                "Subject Matter Expertise",
-                "Curriculum Design",
-                "Instructional Strategies",
-                "Assessment Methods",
-                "Classroom Leadership",
-                "Educational Psychology",
-                "Technology Integration",
+                "Subject Expertise",
                 "Adolescent Development",
-                "Group Facilitation",
-                "Project-Based Learning",
+                "Curriculum Planning",
+                "Assessment Strategies",
+                "Classroom Management",
+                "Educational Psychology",
+                "Instructional Technology",
+                "Differentiated Instruction",
                 "Student Engagement",
-                "Specialized Content Knowledge"
-            ],
-            "field": "Education"
+                "Behavior Management",
+                "Educational Research",
+                "Parent Communication"
+            ]
         },
         {
             "title": "Graphic Design",
             "required_skills": [
                 "Adobe Creative Suite",
                 "Typography",
+                "Color Theory",
                 "Layout Design",
                 "Visual Communication",
-                "Branding",
-                "Illustration",
-                "Color Theory",
-                "UX Design",
-                "Digital Media",
-                "Motion Graphics",
+                "Brand Identity",
+                "Digital Illustration",
+                "UI/UX Principles",
                 "Web Design",
-                "Print Production"
-            ],
-            "field": "Creative Arts"
+                "Print Production",
+                "Design Thinking",
+                "Client Communication"
+            ]
         },
         {
             "title": "Film Production",
             "required_skills": [
                 "Cinematography",
-                "Video Editing",
-                "Screenwriting",
                 "Directing",
+                "Screenwriting",
+                "Video Editing",
                 "Sound Design",
-                "Lighting",
                 "Production Management",
                 "Visual Storytelling",
-                "Post-Production",
-                "Film History",
+                "Lighting Techniques",
                 "Camera Operation",
-                "Project Planning"
-            ],
-            "field": "Creative Arts"
+                "Post-Production",
+                "Project Planning",
+                "Set Design"
+            ]
         },
         {
             "title": "Legal Practice",
             "required_skills": [
                 "Legal Research",
                 "Legal Writing",
-                "Client Advocacy",
-                "Case Management",
+                "Case Analysis",
+                "Client Counseling",
                 "Negotiation",
-                "Litigation",
-                "Contract Analysis",
+                "Courtroom Procedures",
                 "Legal Ethics",
-                "Oral Argument",
-                "Critical Thinking",
-                "Document Drafting",
-                "Legal Technology"
-            ],
-            "field": "Legal"
+                "Statutory Interpretation",
+                "Contract Drafting",
+                "Dispute Resolution",
+                "Professional Responsibility",
+                "Legal Reasoning"
+            ]
         },
         {
             "title": "Environmental Science",
             "required_skills": [
-                "Environmental Analysis",
                 "Field Research",
-                "Data Collection",
+                "Environmental Sampling",
+                "Data Analysis",
                 "GIS Mapping",
-                "Sustainability Assessment",
-                "Ecological Principles",
-                "Lab Techniques",
-                "Scientific Report Writing",
                 "Environmental Regulations",
-                "Wildlife Management",
-                "Conservation Planning",
+                "Environmental Impact Assessment",
+                "Laboratory Techniques",
+                "Scientific Writing",
+                "Sustainability Practices",
+                "Ecosystem Analysis",
+                "Pollution Control",
                 "Climate Science"
-            ],
-            "field": "Science"
+            ]
         },
         {
             "title": "Journalism",
             "required_skills": [
-                "Investigative Reporting",
                 "Interviewing",
                 "News Writing",
-                "Fact Checking",
+                "Research",
+                "Fact-Checking",
+                "Editing",
                 "Media Ethics",
-                "Digital Publishing",
-                "Multimedia Content",
-                "Social Media Management",
-                "Copy Editing",
+                "Multimedia Production",
+                "Social Media",
+                "Investigative Techniques",
+                "Content Planning",
                 "Story Development",
-                "Photography",
-                "Audio Production"
-            ],
-            "field": "Media"
+                "Deadline Management"
+            ]
         },
         {
             "title": "Social Work",
             "required_skills": [
                 "Case Management",
                 "Crisis Intervention",
-                "Counseling Techniques",
+                "Counseling",
                 "Community Resources",
-                "Family Systems",
-                "Advocacy",
-                "Assessment",
-                "Cultural Competence",
-                "Group Facilitation",
+                "Assessment Skills",
                 "Documentation",
-                "Referral Process",
-                "Trauma-Informed Care"
-            ],
-            "field": "Social Services"
+                "Cultural Competence",
+                "Advocacy",
+                "Group Facilitation",
+                "Ethics",
+                "Mental Health Knowledge",
+                "Social Policy"
+            ]
         },
         {
             "title": "Physical Therapy",
             "required_skills": [
-                "Therapeutic Exercise",
-                "Manual Therapy",
-                "Patient Assessment",
-                "Rehabilitation Techniques",
-                "Kinesiology",
-                "Functional Training",
-                "Documentation",
-                "Patient Education",
-                "Pain Management",
-                "Biomechanics",
+                "Anatomy Knowledge",
+                "Movement Assessment",
                 "Treatment Planning",
-                "Evidence-Based Practice"
-            ],
-            "field": "Healthcare Specialists"
+                "Manual Therapy",
+                "Therapeutic Exercise",
+                "Patient Education",
+                "Documentation",
+                "Evidence-Based Practice",
+                "Pain Management",
+                "Rehabilitation Techniques",
+                "Gait Analysis",
+                "Mobility Assessment"
+            ]
         },
         {
             "title": "Speech-Language Pathology",
             "required_skills": [
                 "Speech Assessment",
+                "Language Development",
                 "Treatment Planning",
                 "Communication Disorders",
                 "Articulation Therapy",
-                "Language Development",
                 "Swallowing Disorders",
-                "Client Documentation",
-                "Counseling",
-                "Assistive Technology",
-                "Anatomy",
-                "Cognition",
-                "Augmentative Communication"
-            ],
-            "field": "Healthcare Specialists"
+                "Documentation",
+                "Patient Education",
+                "Augmentative Communication",
+                "Voice Therapy",
+                "Fluency Treatment",
+                "Cognitive-Communication"
+            ]
         },
         {
             "title": "Architecture",
             "required_skills": [
-                "Architectural Design",
-                "CAD/BIM Software",
+                "Architectural Drawing",
+                "Building Design",
+                "AutoCAD",
+                "3D Modeling",
                 "Building Codes",
-                "Space Planning",
+                "Structural Principles",
                 "Construction Documentation",
+                "Site Planning",
                 "Sustainable Design",
                 "Project Management",
                 "Client Communication",
-                "3D Modeling",
-                "Building Systems",
-                "Site Analysis",
-                "Materials Knowledge"
-            ],
-            "field": "Design"
+                "Material Selection"
+            ]
         },
         {
             "title": "Interior Design",
             "required_skills": [
-                "Interior Space Planning",
-                "Material Selection",
+                "Space Planning",
                 "Color Theory",
-                "Furniture Design",
+                "Design Principles",
+                "AutoCAD",
+                "Materials Knowledge",
                 "Lighting Design",
-                "Rendering",
-                "Client Presentations",
-                "Budget Management",
-                "Construction Coordination",
-                "CAD Software",
-                "Design History",
-                "Sustainable Design"
-            ],
-            "field": "Design"
+                "Furniture Selection",
+                "Client Communication",
+                "Construction Documents",
+                "Building Codes",
+                "Sustainable Design",
+                "3D Visualization"
+            ]
         },
         {
             "title": "Agriculture",
             "required_skills": [
-                "Agricultural Science",
                 "Crop Management",
-                "Soil Analysis",
-                "Sustainable Farming",
-                "Irrigation Systems",
+                "Soil Science",
                 "Pest Management",
+                "Agricultural Machinery",
+                "Irrigation Systems",
+                "Animal Husbandry",
+                "Sustainable Practices",
+                "Farm Management",
                 "Agricultural Economics",
-                "Equipment Operation",
-                "Farm Planning",
-                "Livestock Management"
-            ],
-            "field": "Agriculture & Farming"
+                "Plant Pathology",
+                "Harvest Management",
+                "Agricultural Technology"
+            ]
         },
         {
             "title": "Hospitality Management",
             "required_skills": [
-                "Hospitality Management",
                 "Customer Service",
                 "Event Planning",
-                "Staff Supervision",
-                "Revenue Management",
-                "Food & Beverage Operations",
                 "Facility Management",
+                "Food and Beverage",
+                "Revenue Management",
+                "Staff Supervision",
+                "Inventory Control",
                 "Marketing",
-                "Financial Analysis",
+                "Budgeting",
+                "Crisis Management",
+                "Quality Assurance",
                 "Guest Relations"
-            ],
-            "field": "Hospitality"
+            ]
         },
         {
             "title": "Dentistry",
             "required_skills": [
                 "Dental Procedures",
-                "Patient Care",
-                "Oral Hygiene",
-                "Radiography",
-                "Preventive Dentistry",
+                "Patient Assessment",
                 "Treatment Planning",
-                "Dental Materials",
-                "Sterilization",
-                "Clinical Diagnosis",
-                "Patient Management"
-            ],
-            "field": "Healthcare & Medicine"
+                "Clinical Skills",
+                "Dental Anatomy",
+                "Infection Control",
+                "Patient Education",
+                "Pain Management",
+                "Restorative Techniques",
+                "Dental Radiology",
+                "Oral Pathology",
+                "Preventive Dentistry"
+            ]
         },
         {
             "title": "Pharmacy",
             "required_skills": [
                 "Pharmacology",
-                "Medication Management",
+                "Medication Dispensing",
                 "Patient Counseling",
-                "Disease Management",
-                "Health Education",
-                "Compounding",
                 "Drug Interactions",
-                "Prescription Processing",
-                "Regulatory Compliance",
-                "Health Informatics"
-            ],
-            "field": "Healthcare & Medicine"
+                "Pharmaceutical Calculations",
+                "Inventory Management",
+                "Pharmacy Law",
+                "Compounding",
+                "Medication Therapy Management",
+                "Clinical Decision Making",
+                "Documentation",
+                "Health Promotion"
+            ]
         },
         {
             "title": "Veterinary Medicine",
             "required_skills": [
-                "Animal Care",
-                "Veterinary Medicine",
-                "Diagnostic Procedures",
-                "Surgery Assistance",
+                "Animal Anatomy",
+                "Clinical Diagnosis",
+                "Surgical Skills",
+                "Animal Handling",
+                "Preventive Care",
+                "Pharmacology",
+                "Laboratory Diagnostics",
                 "Client Communication",
+                "Anesthesia",
+                "Emergency Medicine",
                 "Animal Behavior",
-                "Anatomy",
-                "Clinical Skills",
-                "Medical Recordkeeping",
-                "Laboratory Techniques"
-            ],
-            "field": "Healthcare & Medicine"
+                "Nutrition"
+            ]
         },
         {
             "title": "Urban Planning",
             "required_skills": [
-                "Urban Planning",
-                "Geographic Information Systems",
-                "Land Use Analysis",
-                "Community Development",
+                "Land Use Planning",
+                "GIS Mapping",
                 "Zoning Regulations",
-                "Public Policy",
-                "Stakeholder Engagement",
-                "Infrastructure Planning",
-                "Sustainability",
-                "Transportation Planning"
-            ],
-            "field": "Urban Development"
+                "Community Development",
+                "Transportation Planning",
+                "Environmental Analysis",
+                "Urban Design",
+                "Policy Analysis",
+                "Public Engagement",
+                "Project Management",
+                "Demographic Analysis",
+                "Sustainable Development"
+            ]
         },
         {
             "title": "Software Engineer",
@@ -3537,1068 +3530,6 @@
                 "Grant Writing",
                 "Corporate Sustainability",
                 "Biodiversity Monitoring"
-            ]
-        },
-        {
-            "title": "Game Development",
-            "field": "Technology",
-            "required_skills": [
-                "Game Design",
-                "Level Design",
-                "Programming",
-                "3D Modeling",
-                "Game Testing",
-                "Player Experience",
-                "Game Engines",
-                "Animation",
-                "Storytelling",
-                "User Interface Design"
-            ]
-        },
-        {
-            "title": "Artificial Intelligence",
-            "field": "Technology",
-            "required_skills": [
-                "Artificial Intelligence",
-                "Machine Learning",
-                "Neural Networks",
-                "Algorithm Development",
-                "Data Science",
-                "Research Methodology",
-                "Deep Learning",
-                "Natural Language Processing",
-                "Computer Vision",
-                "Computational Statistics"
-            ]
-        },
-        {
-            "title": "Geographic Information Systems",
-            "field": "Technology",
-            "required_skills": [
-                "GIS Technology",
-                "Spatial Analysis",
-                "Remote Sensing",
-                "Cartography",
-                "Data Processing",
-                "Environmental Monitoring",
-                "Database Management",
-                "Python Programming",
-                "Spatial Modeling",
-                "3D Visualization"
-            ]
-        },
-        {
-            "title": "Virtual Reality",
-            "field": "Technology",
-            "required_skills": [
-                "Virtual Reality Development",
-                "3D Modeling",
-                "UI/UX Design",
-                "Programming",
-                "Animation",
-                "Interactive Media",
-                "Spatial Design",
-                "Human-Computer Interaction",
-                "Game Engines",
-                "Audio Integration"
-            ]
-        },
-        {
-            "title": "Industrial-Organizational Psychology",
-            "field": "Psychology",
-            "required_skills": [
-                "Organizational Behavior",
-                "Performance Assessment",
-                "Employee Selection",
-                "Workplace Motivation",
-                "Training Development",
-                "Leadership Development",
-                "Organizational Development",
-                "Team Dynamics",
-                "Research Methods",
-                "Statistics",
-                "Consulting Skills",
-                "Change Management"
-            ]
-        },
-        {
-            "title": "Applied Behavior Analysis",
-            "field": "Psychology",
-            "required_skills": [
-                "Behavioral Analysis",
-                "Therapeutic Techniques",
-                "Data Collection",
-                "Treatment Planning",
-                "Parent Training",
-                "Assessment Methods",
-                "Behavior Intervention",
-                "Ethics in Practice",
-                "Clinical Documentation",
-                "Research Methods"
-            ]
-        },
-        {
-            "title": "Mental Health Counseling",
-            "field": "Psychology",
-            "required_skills": [
-                "Mental Health Assessment",
-                "Therapy Modalities",
-                "Crisis Intervention",
-                "Treatment Planning",
-                "Clinical Documentation",
-                "Case Management",
-                "Ethical Practice",
-                "Psychopathology",
-                "Family Systems",
-                "Evidence-Based Interventions"
-            ]
-        },
-        {
-            "title": "Finance",
-            "field": "Business",
-            "required_skills": [
-                "Financial Modeling",
-                "Financial Reporting",
-                "Budgeting",
-                "Forecasting",
-                "Valuation",
-                "Excel",
-                "Risk Assessment",
-                "Financial Statement Analysis",
-                "Business Analytics",
-                "Investment Analysis",
-                "Data Analysis",
-                "Industry Research"
-            ]
-        },
-        {
-            "title": "Human Resources",
-            "field": "Business",
-            "required_skills": [
-                "Recruitment",
-                "Employee Relations",
-                "Performance Management",
-                "Compensation and Benefits",
-                "HR Policies",
-                "Talent Development",
-                "Conflict Resolution",
-                "HRIS Systems",
-                "Labor Laws",
-                "Training",
-                "Succession Planning",
-                "Organizational Design"
-            ]
-        },
-        {
-            "title": "Sales Management",
-            "field": "Business",
-            "required_skills": [
-                "Sales Strategy",
-                "Client Relationship Management",
-                "Negotiation",
-                "Market Analysis",
-                "Product Knowledge",
-                "Sales Forecasting",
-                "Team Leadership",
-                "Performance Metrics",
-                "Customer Engagement",
-                "Strategic Planning"
-            ]
-        },
-        {
-            "title": "Product Management",
-            "field": "Business",
-            "required_skills": [
-                "User Research",
-                "Product Strategy",
-                "Market Analysis",
-                "Prototyping",
-                "Stakeholder Management",
-                "Data Analytics",
-                "Agile Methodologies",
-                "Product Lifecycle",
-                "Feature Prioritization",
-                "Technical Communication"
-            ]
-        },
-        {
-            "title": "Executive Leadership",
-            "field": "Business",
-            "required_skills": [
-                "Corporate Governance",
-                "Mergers & Acquisitions",
-                "Business Strategy",
-                "Leadership",
-                "Stakeholder Management",
-                "Financial Oversight",
-                "Strategic Planning",
-                "Team Building",
-                "Change Management",
-                "Executive Communication"
-            ]
-        },
-        {
-            "title": "Economics",
-            "field": "Business",
-            "required_skills": [
-                "Economic Analysis",
-                "Econometric Modeling",
-                "Data Interpretation",
-                "Policy Research",
-                "Financial Markets",
-                "Statistical Methods",
-                "Macro/Microeconomics",
-                "Forecasting",
-                "Research Design",
-                "Academic Writing"
-            ]
-        },
-        {
-            "title": "Retail Management",
-            "field": "Business",
-            "required_skills": [
-                "Visual Merchandising",
-                "Retail Operations",
-                "Inventory Management",
-                "Customer Experience",
-                "Brand Representation",
-                "Sales Strategy",
-                "Staff Supervision",
-                "Performance Metrics",
-                "Loss Prevention",
-                "Financial Management"
-            ]
-        },
-        {
-            "title": "Electrical Engineering",
-            "field": "Engineering",
-            "required_skills": [
-                "Electrical Systems",
-                "Circuit Design",
-                "Power Distribution",
-                "Control Systems",
-                "Technical Documentation",
-                "System Testing",
-                "Electronics",
-                "Signal Processing",
-                "Embedded Systems",
-                "Instrumentation"
-            ]
-        },
-        {
-            "title": "Chemical Engineering",
-            "field": "Engineering",
-            "required_skills": [
-                "Chemical Processes",
-                "Laboratory Testing",
-                "Process Optimization",
-                "Safety Protocols",
-                "Technical Documentation",
-                "Research Design",
-                "Thermodynamics",
-                "Material Properties",
-                "Process Control",
-                "Reaction Kinetics"
-            ]
-        },
-        {
-            "title": "Semiconductor Engineering",
-            "field": "Engineering",
-            "required_skills": [
-                "Semiconductor Technology",
-                "Circuit Design",
-                "Process Engineering",
-                "Fabrication Techniques",
-                "Quality Control",
-                "Technical Documentation",
-                "Materials Science",
-                "Clean Room Protocols",
-                "Testing Procedures",
-                "Product Development"
-            ]
-        },
-        {
-            "title": "Robotics",
-            "field": "Engineering",
-            "required_skills": [
-                "Robotics Engineering",
-                "Programming",
-                "Mechanical Design",
-                "Electronics",
-                "Control Systems",
-                "Prototyping",
-                "AI Integration",
-                "Computer Vision",
-                "Sensor Technology",
-                "Human-Robot Interaction"
-            ]
-        },
-        {
-            "title": "Education Administration",
-            "field": "Education",
-            "required_skills": [
-                "Classroom Leadership",
-                "Educational Administration",
-                "School Policy",
-                "Curriculum Development",
-                "Staff Supervision",
-                "Student Assessment",
-                "Budgeting",
-                "Program Evaluation",
-                "Strategic Planning",
-                "Community Relations"
-            ]
-        },
-        {
-            "title": "Student Affairs",
-            "field": "Education",
-            "required_skills": [
-                "Academic Advising",
-                "Student Development",
-                "Program Coordination",
-                "Counseling",
-                "Crisis Intervention",
-                "Administrative Management",
-                "Event Planning",
-                "Budget Management",
-                "Conflict Resolution",
-                "Educational Policy"
-            ]
-        },
-        {
-            "title": "Chemistry",
-            "field": "Science",
-            "required_skills": [
-                "Organic Chemistry",
-                "Synthesis Methods",
-                "Laboratory Techniques",
-                "Analytical Methods",
-                "Research Planning",
-                "Scientific Documentation",
-                "Chemical Analysis",
-                "Instrumentation",
-                "Safety Protocols",
-                "Materials Characterization"
-            ]
-        },
-        {
-            "title": "Astronomy",
-            "field": "Science",
-            "required_skills": [
-                "Astronomical Observation",
-                "Data Analysis",
-                "Physics",
-                "Mathematics",
-                "Research Methodology",
-                "Scientific Writing",
-                "Astrophysics",
-                "Computational Methods",
-                "Telescope Operation",
-                "Spectroscopy"
-            ]
-        },
-        {
-            "title": "Mathematics",
-            "field": "Science",
-            "required_skills": [
-                "Game Theory",
-                "Mathematical Modeling",
-                "Statistical Analysis",
-                "Probability",
-                "Research Design",
-                "Academic Writing",
-                "Theoretical Mathematics",
-                "Algorithm Development",
-                "Computational Methods",
-                "Problem Solving"
-            ]
-        },
-        {
-            "title": "Occupational Therapy",
-            "field": "Healthcare Specialists",
-            "required_skills": [
-                "Occupational Assessment",
-                "Rehabilitation Planning",
-                "Adaptive Equipment",
-                "Activity Analysis",
-                "Client Education",
-                "Documentation",
-                "Functional Mobility",
-                "Sensory Processing",
-                "Physical Rehabilitation",
-                "Mental Health Strategies"
-            ]
-        },
-        {
-            "title": "UX/UI Design",
-            "field": "Design",
-            "required_skills": [
-                "User Interface Design",
-                "Wireframing",
-                "Prototyping",
-                "User Testing",
-                "Interaction Design",
-                "Web Accessibility",
-                "Information Architecture",
-                "Visual Design",
-                "Usability Principles",
-                "Design Software"
-            ]
-        },
-        {
-            "title": "Criminology",
-            "field": "Criminology & Law Enforcement",
-            "required_skills": [
-                "Criminal Law",
-                "Legal Ethics",
-                "Investigative Techniques",
-                "Forensic Analysis",
-                "Criminal Procedure",
-                "Evidence Handling",
-                "Criminal Psychology",
-                "Research Methods",
-                "Statistical Analysis",
-                "Crime Prevention"
-            ]
-        },
-        {
-            "title": "Pharmaceutical Science",
-            "field": "Healthcare & Medicine",
-            "required_skills": [
-                "Biochemistry",
-                "Pharmaceutical Research",
-                "Drug Development",
-                "Clinical Trials",
-                "Laboratory Techniques",
-                "Medical Writing",
-                "Pharmacology",
-                "Regulatory Affairs",
-                "Quality Control",
-                "Analytical Methods"
-            ]
-        },
-        {
-            "title": "Plant Science",
-            "field": "Agriculture & Farming",
-            "required_skills": [
-                "Plant Genetics",
-                "Crop Improvement",
-                "Molecular Biology",
-                "Field Trials",
-                "Statistical Analysis",
-                "Laboratory Techniques",
-                "Plant Pathology",
-                "Breeding Methods",
-                "Agricultural Innovation",
-                "Sustainable Agriculture"
-            ]
-        },
-        {
-            "title": "Fashion Design",
-            "field": "Fashion & Beauty",
-            "required_skills": [
-                "Fashion Design",
-                "Textile Knowledge",
-                "Pattern Making",
-                "Garment Construction",
-                "CAD Design",
-                "Trend Analysis",
-                "Illustration",
-                "Collection Development",
-                "Fashion History",
-                "Production Methods"
-            ]
-        },
-        {
-            "title": "Culinary Arts",
-            "field": "Culinary Arts & Food Service",
-            "required_skills": [
-                "Culinary Techniques",
-                "Menu Development",
-                "Kitchen Management",
-                "Food Safety",
-                "Ingredient Selection",
-                "Presentation Skills",
-                "Recipe Development",
-                "Nutritional Knowledge",
-                "Food Cost Control",
-                "Culinary Creativity"
-            ]
-        },
-        {
-            "title": "Sports Science",
-            "field": "Sports & Recreation",
-            "required_skills": [
-                "Physical Training",
-                "Exercise Prescription",
-                "Nutritional Guidance",
-                "Client Assessment",
-                "Rehabilitation",
-                "Sports Performance",
-                "Biomechanics",
-                "Exercise Physiology",
-                "Injury Prevention",
-                "Sports Psychology"
-            ]
-        },
-        {
-            "title": "Sports Management",
-            "field": "Sports & Recreation",
-            "required_skills": [
-                "Sports Performance Analysis",
-                "Athlete Development",
-                "Training Program Design",
-                "Physiological Assessment",
-                "Tactical Analysis",
-                "Team Coordination",
-                "Sports Medicine",
-                "Program Management",
-                "Competition Strategy",
-                "Talent Identification"
-            ]
-        },
-        {
-            "title": "Kinesiology",
-            "field": "Sports & Recreation",
-            "required_skills": [
-                "Human Performance",
-                "Biomechanics",
-                "Exercise Physiology",
-                "Nutrition",
-                "Scientific Research",
-                "Athletic Development",
-                "Movement Analysis",
-                "Rehabilitation",
-                "Functional Anatomy",
-                "Performance Testing"
-            ]
-        },
-        {
-            "title": "Public Administration",
-            "field": "Public Service & Government",
-            "required_skills": [
-                "Public Policy Analysis",
-                "Political Science",
-                "Economic Analysis",
-                "Research Methods",
-                "Policy Implementation",
-                "Stakeholder Engagement",
-                "Program Evaluation",
-                "Regulatory Affairs",
-                "Grant Management",
-                "Ethical Leadership"
-            ]
-        },
-        {
-            "title": "Music",
-            "field": "Arts & Design",
-            "required_skills": [
-                "Music Performance",
-                "Music Theory",
-                "Composition",
-                "Instrument Proficiency",
-                "Conducting",
-                "Music History",
-                "Teaching Methods",
-                "Arrangement",
-                "Sight Reading",
-                "Performance Practice"
-            ]
-        },
-        {
-            "title": "Animation",
-            "field": "Arts & Design",
-            "required_skills": [
-                "3D Animation",
-                "Character Design",
-                "Modeling",
-                "Rigging",
-                "Texturing",
-                "Motion Graphics",
-                "Storyboarding",
-                "Animation Principles",
-                "Rendering",
-                "Compositing"
-            ]
-        },
-        {
-            "title": "Accountancy",
-            "field": "Accountancy",
-            "required_skills": [
-                "Accounting Principles",
-                "Tax Preparation",
-                "Financial Statements",
-                "Auditing",
-                "Regulatory Compliance",
-                "Business Advisory",
-                "Bookkeeping",
-                "Financial Analysis",
-                "Tax Law",
-                "Corporate Accounting"
-            ]
-        },
-        {
-            "title": "Telecommunications",
-            "field": "Telecommunications",
-            "required_skills": [
-                "Telecommunications Systems",
-                "Network Infrastructure",
-                "Wireless Technology",
-                "Technical Support",
-                "Problem Diagnosis",
-                "System Configuration",
-                "Telecommunications Regulations",
-                "Voice Systems",
-                "Data Communications",
-                "Network Security"
-            ]
-        },
-        {
-            "title": "Religious Studies",
-            "field": "Religious Studies",
-            "required_skills": [
-                "Religious Studies",
-                "Pastoral Counseling",
-                "Spiritual Guidance",
-                "Community Outreach",
-                "Ethics",
-                "Religious Texts",
-                "Comparative Religion",
-                "Philosophy",
-                "Interpersonal Communication",
-                "Cultural Awareness"
-            ]
-        },
-        {
-            "title": "Construction Management",
-            "field": "Construction Management",
-            "required_skills": [
-                "Construction Management",
-                "Project Scheduling",
-                "Cost Estimation",
-                "Contract Administration",
-                "Building Codes",
-                "Quality Control",
-                "Resource Allocation",
-                "Safety Management",
-                "Site Supervision",
-                "Stakeholder Communication"
-            ]
-        },
-        {
-            "title": "Translation & Interpretation",
-            "field": "Language & Communication",
-            "required_skills": [
-                "Language Acquisition",
-                "Translation Techniques",
-                "Cultural Context",
-                "Interpretation",
-                "Linguistics",
-                "Terminological Research",
-                "Specialized Vocabulary",
-                "Communication Skills",
-                "Intercultural Competence",
-                "Technology Tools"
-            ]
-        },
-        {
-            "title": "Aviation",
-            "field": "Aviation",
-            "required_skills": [
-                "Flight Operations",
-                "Aircraft Systems",
-                "Navigation",
-                "Aviation Regulations",
-                "Emergency Procedures",
-                "Crew Resource Management",
-                "Meteorology",
-                "Aerodynamics",
-                "Flight Planning",
-                "Communication"
-            ]
-        },
-        {
-            "title": "Library Science",
-            "field": "Library & Information Science",
-            "required_skills": [
-                "Library Science",
-                "Information Organization",
-                "Reference Services",
-                "Digital Resources",
-                "Collection Development",
-                "User Education",
-                "Information Literacy",
-                "Cataloging",
-                "Database Management",
-                "Archival Methods"
-            ]
-        },
-        {
-            "title": "Marine Science",
-            "field": "Marine Science",
-            "required_skills": [
-                "Marine Biology",
-                "Oceanography",
-                "Research Methods",
-                "Data Analysis",
-                "Underwater Sampling",
-                "Ecosystem Assessment",
-                "Marine Conservation",
-                "Species Identification",
-                "Fieldwork",
-                "Scientific Writing"
-            ]
-        },
-        {
-            "title": "Biotechnology",
-            "field": "Biotechnology",
-            "required_skills": [
-                "Biochemistry",
-                "Laboratory Techniques",
-                "Research Design",
-                "Data Analysis",
-                "Cell Biology",
-                "Molecular Biology",
-                "Genetic Engineering",
-                "Scientific Documentation",
-                "Experimental Methods",
-                "Microbiology"
-            ]
-        },
-        {
-            "title": "Real Estate",
-            "field": "Real Estate",
-            "required_skills": [
-                "Real Estate Market Analysis",
-                "Property Valuation",
-                "Client Relations",
-                "Negotiation",
-                "Contract Management",
-                "Property Law",
-                "Market Trends",
-                "Financial Analysis",
-                "Marketing",
-                "Property Management"
-            ]
-        },
-        {
-            "title": "Event Management",
-            "field": "Event Planning",
-            "required_skills": [
-                "Event Planning",
-                "Vendor Management",
-                "Budget Control",
-                "Marketing",
-                "Client Relations",
-                "Logistics Coordination",
-                "Risk Management",
-                "Contract Negotiation",
-                "Project Management",
-                "Creative Design"
-            ]
-        },
-        {
-            "title": "Actuarial Science",
-            "field": "Finance",
-            "required_skills": [
-                "Actuarial Mathematics",
-                "Risk Assessment",
-                "Statistical Analysis",
-                "Financial Modeling",
-                "Insurance Products",
-                "Regulatory Compliance",
-                "Probability Theory",
-                "Economic Principles",
-                "Financial Mathematics",
-                "Data Analysis"
-            ]
-        },
-        {
-            "title": "Investment Banking",
-            "field": "Finance",
-            "required_skills": [
-                "Market Analysis",
-                "Trading Strategies",
-                "Financial Modeling",
-                "Risk Management",
-                "Quantitative Methods",
-                "Portfolio Management",
-                "Client Relations",
-                "Economic Analysis",
-                "Valuation Techniques",
-                "Deal Structuring"
-            ]
-        },
-        {
-            "title": "Geology",
-            "field": "Earth Sciences",
-            "required_skills": [
-                "Geological Surveying",
-                "Rock Analysis",
-                "Mineral Identification",
-                "Field Mapping",
-                "Resource Estimation",
-                "Environmental Impact",
-                "Geological Modeling",
-                "Sample Collection",
-                "Laboratory Analysis",
-                "Technical Reporting"
-            ]
-        },
-        {
-            "title": "Nonprofit Management",
-            "field": "Nonprofit & NGO",
-            "required_skills": [
-                "Fundraising",
-                "Donor Relations",
-                "Grant Writing",
-                "Volunteer Management",
-                "Community Outreach",
-                "Program Development",
-                "Strategic Planning",
-                "Financial Management",
-                "Stakeholder Engagement",
-                "Social Impact Measurement"
-            ]
-        },
-        {
-            "title": "Supply Chain Management",
-            "field": "Logistics & Operations",
-            "required_skills": [
-                "Supply Chain Analysis",
-                "Inventory Management",
-                "Logistics Planning",
-                "Process Optimization",
-                "Data Analytics",
-                "Vendor Relations",
-                "Transportation Management",
-                "Demand Planning",
-                "Procurement",
-                "Distribution Systems"
-            ]
-        },
-        {
-            "title": "Computer Science",
-            "field": "Computer Science",
-            "required_skills": [
-                "Algorithm Design",
-                "Computer Theory",
-                "Mathematical Modeling",
-                "Problem Solving",
-                "Programming Languages",
-                "Research Methods",
-                "Data Structures",
-                "Operating Systems",
-                "Computational Complexity",
-                "Systems Analysis"
-            ]
-        },
-        {
-            "title": "Tax Law",
-            "field": "Law & Legal Studies",
-            "required_skills": [
-                "Tax Law",
-                "Corporate Law",
-                "Legal Research",
-                "Client Consultation",
-                "Tax Planning",
-                "Regulatory Compliance",
-                "Legal Writing",
-                "Financial Analysis",
-                "Advanced Accounting",
-                "Case Management"
-            ]
-        },
-        {
-            "title": "Mediation",
-            "field": "Law & Legal Studies",
-            "required_skills": [
-                "Conflict Resolution",
-                "Negotiation",
-                "Legal Knowledge",
-                "Mediation Techniques",
-                "Communication",
-                "Documentation",
-                "Ethics",
-                "Client Management",
-                "Settlement Procedures",
-                "Active Listening"
-            ]
-        },
-        {
-            "title": "Immigration Law",
-            "field": "Law & Legal Studies",
-            "required_skills": [
-                "Immigration Law",
-                "Asylum Procedures",
-                "Case Management",
-                "Legal Research",
-                "International Relations",
-                "Client Advocacy",
-                "Documentation Processes",
-                "Legal Writing",
-                "Regulatory Compliance",
-                "Multi-cultural Communication"
-            ]
-        },
-        {
-            "title": "Health & Wellness",
-            "field": "Health & Wellness",
-            "required_skills": [
-                "Health Coaching",
-                "Nutrition Planning",
-                "Client Assessment",
-                "Behavior Change",
-                "Wellness Programming",
-                "Motivational Interviewing",
-                "Fitness Training",
-                "Stress Management",
-                "Preventive Care",
-                "Health Education"
-            ]
-        },
-        {
-            "title": "Textile Science",
-            "field": "Textile & Materials Science",
-            "required_skills": [
-                "Textile Science",
-                "Material Development",
-                "Quality Control",
-                "Technical Documentation",
-                "Product Testing",
-                "Research Methods",
-                "Fiber Properties",
-                "Manufacturing Processes",
-                "Design Principles",
-                "Sustainability"
-            ]
-        },
-        {
-            "title": "Content Strategy",
-            "field": "Media & Communications",
-            "required_skills": [
-                "Content Strategy",
-                "SEO",
-                "Writing",
-                "Editing",
-                "Audience Analysis",
-                "Digital Marketing",
-                "Content Management",
-                "Social Media",
-                "Analytics",
-                "Brand Voice"
-            ]
-        },
-        {
-            "title": "Social Media Management",
-            "field": "Media & Communications",
-            "required_skills": [
-                "Social Media Strategy",
-                "Platform Management",
-                "Content Creation",
-                "Analytics",
-                "Influencer Relations",
-                "Campaign Design",
-                "Community Management",
-                "Brand Development",
-                "Digital Marketing",
-                "Content Scheduling"
-            ]
-        },
-        {
-            "title": "Museum Studies",
-            "field": "Museum & Cultural Heritage",
-            "required_skills": [
-                "Museum Curation",
-                "Collection Management",
-                "Exhibition Design",
-                "Conservation",
-                "Research",
-                "Public Education",
-                "Archival Methods",
-                "Cultural Heritage",
-                "Visitor Experience",
-                "Art History"
-            ]
-        },
-        {
-            "title": "Anthropology",
-            "field": "Social Sciences",
-            "required_skills": [
-                "Ethnographic Research",
-                "Qualitative Analysis",
-                "Cultural Documentation",
-                "Fieldwork",
-                "Research Ethics",
-                "Interview Techniques",
-                "Cultural Anthropology",
-                "Data Collection",
-                "Comparative Analysis",
-                "Academic Writing"
-            ]
-        },
-        {
-            "title": "Renewable Energy",
-            "field": "Environmental Science",
-            "required_skills": [
-                "Clean Energy Systems",
-                "Sustainability Assessment",
-                "Project Development",
-                "Energy Policy",
-                "Technical Design",
-                "Impact Analysis",
-                "Renewable Technologies",
-                "Environmental Regulations",
-                "Financial Modeling",
-                "Project Management"
-            ]
-        },
-        {
-            "title": "Water Resource Management",
-            "field": "Environmental Science",
-            "required_skills": [
-                "Hydrology",
-                "Water Quality Assessment",
-                "Environmental Sampling",
-                "GIS Mapping",
-                "Regulatory Compliance",
-                "Field Research",
-                "Watershed Management",
-                "Water Policy",
-                "Environmental Monitoring",
-                "Sustainable Resources"
-            ]
-        },
-        {
-            "title": "Maritime Operations",
-            "field": "Maritime & Logistics",
-            "required_skills": [
-                "Maritime Navigation",
-                "Ship Operations",
-                "Safety Regulations",
-                "Crew Management",
-                "Cargo Handling",
-                "Environmental Compliance",
-                "Maritime Law",
-                "Emergency Procedures",
-                "Communication Systems",
-                "Logistics Planning"
-            ]
-        },
-        {
-            "title": "Diplomacy",
-            "field": "International Relations",
-            "required_skills": [
-                "International Relations",
-                "Diplomatic Protocol",
-                "Policy Analysis",
-                "Negotiation",
-                "Cultural Competence",
-                "Foreign Languages",
-                "Geopolitics",
-                "International Law",
-                "Strategic Communications",
-                "Conflict Resolution"
             ]
         }
     ]

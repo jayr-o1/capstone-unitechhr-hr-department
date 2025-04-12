@@ -3,18 +3,11 @@ import json
 import csv
 import pandas as pd
 from datetime import datetime
+from .data_loader import load_synthetic_career_path_data, load_csv_file
 
-def load_synthetic_data():
+def load_synthetic_data(verbose=False):
     """Load synthetic career path data from CSV file."""
-    file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'synthetic_career_path_data.csv')
-    
-    try:
-        df = pd.read_csv(file_path)
-        print(f"Successfully loaded {len(df)} records from synthetic_career_path_data.csv")
-        return df
-    except Exception as e:
-        print(f"Error loading synthetic data: {e}")
-        return None
+    return load_synthetic_career_path_data(verbose=verbose)
 
 def load_current_career_paths():
     """Load current career paths from JSON file."""
@@ -29,14 +22,53 @@ def load_current_career_paths():
         print(f"Error loading career paths JSON: {e}")
         return None
 
-def extract_skills_from_synthetic_data(df):
+def extract_skills_from_synthetic_data(df, verbose=False):
     """Extract skills from synthetic data and organize by field and role."""
     field_roles_skills = {}
     
+    if verbose:
+        print(f"Available columns in dataset: {df.columns.tolist()}")
+    
+    # Check for Field column - handle any case or possible BOM prefix
+    field_col = None
+    for col in df.columns:
+        if col.lower() == 'field' or col.lower().endswith('field'):
+            field_col = col
+            break
+    
+    # Check for Specialization/Career Path column
+    specialization_cols = ['Specialization', 'Career Path']
+    specialization_col = None
+    for col_name in specialization_cols:
+        if col_name in df.columns:
+            specialization_col = col_name
+            break
+    
+    # Check for Skills column
+    skills_col = None
+    skills_cols = ['Required Skills', 'Skills']
+    for col_name in skills_cols:
+        if col_name in df.columns:
+            skills_col = col_name
+            break
+    
+    # Ensure the required columns exist
+    if not field_col or not specialization_col or not skills_col:
+        print(f"Missing required columns. Available columns: {df.columns.tolist()}")
+        missing_cols = []
+        if not field_col:
+            missing_cols.append('Field')
+        if not specialization_col:
+            missing_cols.append('Specialization/Career Path')
+        if not skills_col:
+            missing_cols.append('Required Skills/Skills')
+        print(f"Missing columns: {', '.join(missing_cols)}")
+        return {}
+    
     for _, row in df.iterrows():
-        field = row['Field']
-        role = row['Career Path']
-        skills_str = row['Required Skills']
+        field = row[field_col]
+        role = row[specialization_col]
+        skills_str = row[skills_col]
         
         # Skip if any required field is missing
         if pd.isna(field) or pd.isna(role) or pd.isna(skills_str):
@@ -54,13 +86,17 @@ def extract_skills_from_synthetic_data(df):
     
     return field_roles_skills
 
-def update_career_paths(current_data, synthetic_data_df):
+def update_career_paths(current_data, synthetic_data_df, verbose=False):
     """Update career paths with skills from synthetic data."""
     if current_data is None or synthetic_data_df is None:
         return None
     
     # Extract field, roles, and skills from synthetic data
-    field_roles_skills = extract_skills_from_synthetic_data(synthetic_data_df)
+    field_roles_skills = extract_skills_from_synthetic_data(synthetic_data_df, verbose)
+    
+    if not field_roles_skills:
+        print("No field-role-skills data could be extracted from synthetic data.")
+        return current_data
     
     # Create a mapping of title to index for faster lookup
     title_to_index = {path['title']: i for i, path in enumerate(current_data['career_paths'])}
@@ -176,6 +212,44 @@ def consolidate_career_paths():
         print("\nConsolidation failed during save operation.")
     
     return success
+
+def consolidate_data_for_model_training():
+    """Prepare and consolidate data for model training."""
+    print("\n" + "="*60)
+    print("PREPARING DATA FOR MODEL TRAINING".center(60))
+    print("="*60 + "\n")
+    
+    # 1. Load and process career path data
+    print("Step 1: Loading and processing career path data...")
+    career_path_data = load_synthetic_data(verbose=True)
+    
+    if career_path_data is None or len(career_path_data) == 0:
+        print("Failed to load career path data. Aborting consolidation.")
+        return False
+    
+    print(f"Successfully loaded {len(career_path_data)} career path records")
+    
+    # 2. Ensure career_paths.json is up to date
+    print("\nStep 2: Updating career paths JSON file...")
+    current_data = load_current_career_paths()
+    
+    if current_data is None:
+        print("Failed to load current career paths. Creating a new file.")
+        current_data = {"career_paths": []}
+    
+    updated_data = update_career_paths(current_data, career_path_data, verbose=True)
+    
+    if updated_data is None:
+        print("Failed to update career paths. Continuing with existing data.")
+    else:
+        save_success = save_updated_career_paths(updated_data)
+        if save_success:
+            print("Successfully updated career paths JSON file")
+        else:
+            print("Failed to save updated career paths. Continuing with existing data.")
+    
+    print("\nData consolidation completed successfully!")
+    return True
 
 if __name__ == "__main__":
     consolidate_career_paths() 

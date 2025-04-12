@@ -1,7 +1,282 @@
 import json
 import os
+import pandas as pd
+import re
 from datetime import datetime
 from .error_handler import safe_load_json, safe_save_json, handle_user_error
+
+def clean_column_names(df):
+    """
+    Clean column names by removing BOM markers and other special characters.
+    
+    Args:
+        df (DataFrame): Pandas DataFrame with potentially unclean column names
+        
+    Returns:
+        DataFrame: DataFrame with cleaned column names
+    """
+    clean_columns = {}
+    for col in df.columns:
+        # Remove BOM markers and other special characters
+        clean_col = re.sub(r'^[\ufeff\ufffe\u00ff\u00fe]+', '', col)
+        # Remove any other non-printable characters
+        clean_col = re.sub(r'[^\x20-\x7E]', '', clean_col)
+        # If the column name actually changed, add it to the mapping
+        if clean_col != col:
+            clean_columns[col] = clean_col
+    
+    # Rename columns if needed
+    if clean_columns:
+        df = df.rename(columns=clean_columns)
+    
+    return df
+
+def load_csv_file(file_path, encoding='utf-8', verbose=False):
+    """
+    Flexible CSV file loader that tries multiple encodings and handles errors gracefully.
+    
+    Args:
+        file_path (str): Path to the CSV file
+        encoding (str): Initial encoding to try
+        verbose (bool): Whether to print verbose messages
+        
+    Returns:
+        DataFrame or None: Pandas DataFrame if successful, None otherwise
+    """
+    # Try different encodings including UTF-16 for BOM files
+    encodings_to_try = ['utf-8', 'utf-16', 'utf-16le', 'utf-16be', 'latin1', 'cp1252', 'ISO-8859-1']
+    if encoding in encodings_to_try:
+        # Move the specified encoding to the front of the list
+        encodings_to_try.remove(encoding)
+        encodings_to_try.insert(0, encoding)
+    
+    # Try to load the file with different encodings using the C engine
+    for enc in encodings_to_try:
+        try:
+            if verbose:
+                print(f"Trying to load {file_path} with encoding: {enc} (C engine)")
+            
+            df = pd.read_csv(
+                file_path,
+                sep=',',
+                quotechar='"',
+                encoding=enc,
+                engine='c'  # Use C engine to handle NULL bytes
+            )
+            
+            # Clean column names to remove BOM markers
+            df = clean_column_names(df)
+            
+            if verbose:
+                print(f"Successfully loaded {len(df)} records with encoding: {enc}")
+                print(f"Columns: {', '.join(df.columns)}")
+            
+            return df
+        except UnicodeDecodeError:
+            if verbose:
+                print(f"Failed with encoding: {enc}")
+            continue
+        except Exception as e:
+            if verbose:
+                print(f"Error with encoding {enc}: {str(e)}")
+            continue
+    
+    # Try with Python engine as a fallback (skipping NULL byte lines)
+    try:
+        if verbose:
+            print("Trying with Python engine (may skip lines with NULL bytes)...")
+        
+        df = pd.read_csv(
+            file_path,
+            sep=',',
+            quotechar='"',
+            encoding='latin1',
+            engine='python',
+            on_bad_lines='skip'  # Skip bad lines
+        )
+        
+        # Clean column names
+        df = clean_column_names(df)
+        
+        if verbose:
+            print(f"Successfully loaded {len(df)} records with Python engine")
+            print(f"Columns: {', '.join(df.columns)}")
+        
+        return df
+    except Exception as e:
+        # Last resort - try with very relaxed parameters
+        try:
+            if verbose:
+                print("Trying with very relaxed parameters...")
+            
+            # Try to read the file as text and preprocess it
+            with open(file_path, 'rb') as f:
+                content = f.read()
+                # Remove NULL bytes
+                content = content.replace(b'\x00', b'')
+                
+                # Try to detect and remove BOM
+                if content.startswith(b'\xff\xfe') or content.startswith(b'\xfe\xff'):
+                    # UTF-16 BOM, remove it
+                    if content.startswith(b'\xff\xfe'):
+                        content = content[2:]
+                    elif content.startswith(b'\xfe\xff'):
+                        content = content[2:]
+                elif content.startswith(b'\xef\xbb\xbf'):
+                    # UTF-8 BOM, remove it
+                    content = content[3:]
+            
+            # Write to a temporary file
+            temp_file = file_path + '.temp'
+            with open(temp_file, 'wb') as f:
+                f.write(content)
+            
+            # Now read with pandas
+            df = pd.read_csv(
+                temp_file,
+                sep=',',
+                quotechar='"',
+                encoding='latin1',
+                engine='python'
+            )
+            
+            # Clean column names
+            df = clean_column_names(df)
+            
+            # Clean up temp file
+            try:
+                os.remove(temp_file)
+            except:
+                pass
+            
+            if verbose:
+                print(f"Successfully loaded {len(df)} records with preprocessed file")
+                print(f"Columns: {', '.join(df.columns)}")
+            
+            return df
+        except Exception as e2:
+            if verbose:
+                print(f"All loading attempts failed: {str(e2)}")
+            return None
+
+def load_synthetic_employee_data(verbose=False):
+    """
+    Load synthetic employee data from CSV file with flexible column mapping.
+    
+    Args:
+        verbose (bool): Whether to print verbose messages
+        
+    Returns:
+        DataFrame or None: Pandas DataFrame with employee data
+    """
+    file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'synthetic_employee_data.csv')
+    
+    df = load_csv_file(file_path, verbose=verbose)
+    
+    if df is None:
+        if verbose:
+            print("Could not load synthetic employee data")
+        return None
+    
+    # Map expected column names to actual column names if needed
+    required_columns = ['Employee ID', 'Name', 'Age', 'Years Experience', 'Skills', 'Career Goal', 'Current Role']
+    
+    # Check if all required columns exist (case-insensitive)
+    missing_columns = [col for col in required_columns if not any(col.lower() == c.lower() for c in df.columns)]
+    
+    if missing_columns:
+        if verbose:
+            print(f"Missing required columns: {', '.join(missing_columns)}")
+            print("Attempting to map columns based on semantic similarity...")
+        
+        # Map similar column names (simple mapping for now)
+        column_mapping = {}
+        for req_col in missing_columns:
+            if req_col == 'Years Experience' and 'Experience' in df.columns:
+                column_mapping['Experience'] = 'Years Experience'
+            elif req_col == 'Career Goal' and 'Career Path' in df.columns:
+                column_mapping['Career Path'] = 'Career Goal'
+            elif req_col == 'Skills' and 'Required Skills' in df.columns:
+                column_mapping['Required Skills'] = 'Skills'
+        
+        # Rename columns based on mapping
+        if column_mapping:
+            df = df.rename(columns=column_mapping)
+            if verbose:
+                print(f"Renamed columns: {column_mapping}")
+    
+    return df
+
+def load_synthetic_career_path_data(verbose=False):
+    """
+    Load synthetic career path data from CSV file with flexible column mapping.
+    
+    Args:
+        verbose (bool): Whether to print verbose messages
+        
+    Returns:
+        DataFrame or None: Pandas DataFrame with career path data
+    """
+    file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'synthetic_career_path_data.csv')
+    
+    # After debugging, we know the file is UTF-8 encoded
+    try:
+        if verbose:
+            print(f"Loading career path data with UTF-8 encoding")
+        
+        df = pd.read_csv(
+            file_path,
+            sep=',',
+            quotechar='"',
+            encoding='utf-8'
+        )
+        
+        # Clean column names to remove BOM markers
+        df = clean_column_names(df)
+        
+        if verbose:
+            print(f"Successfully loaded {len(df)} career path records")
+            print(f"Career path columns: {', '.join(df.columns)}")
+        
+        return df
+    except Exception as e:
+        if verbose:
+            print(f"Error loading with UTF-8: {str(e)}, falling back to general loader")
+    
+    # Fall back to the general loader if direct approach fails
+    df = load_csv_file(file_path, encoding='utf-8', verbose=verbose)
+    
+    if df is None:
+        if verbose:
+            print("Could not load synthetic career path data")
+        return None
+    
+    # Check expected columns
+    expected_columns = ['Field', 'Specialization', 'Required Skills', 'Experience Level']
+    
+    # Check if all expected columns exist (case-insensitive)
+    missing_columns = [col for col in expected_columns if not any(col.lower() == c.lower() for c in df.columns)]
+    
+    if missing_columns:
+        if verbose:
+            print(f"Missing expected columns: {', '.join(missing_columns)}")
+            print("Attempting to map columns based on semantic similarity...")
+        
+        # Map similar column names (simple mapping for now)
+        column_mapping = {}
+        for req_col in missing_columns:
+            if req_col == 'Specialization' and 'Career Path' in df.columns:
+                column_mapping['Career Path'] = 'Specialization'
+            elif req_col == 'Required Skills' and 'Skills' in df.columns:
+                column_mapping['Skills'] = 'Required Skills'
+        
+        # Rename columns based on mapping
+        if column_mapping:
+            df = df.rename(columns=column_mapping)
+            if verbose:
+                print(f"Renamed columns: {column_mapping}")
+    
+    return df
 
 def load_career_paths():
     """Load career paths from JSON file."""
