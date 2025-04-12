@@ -49,6 +49,26 @@ try:
 except ImportError:
     SKILL_ANALYZER_AVAILABLE = False
 
+# Import hybrid recommender
+try:
+    from recommender.hybrid_recommender import HybridRecommender
+    HYBRID_RECOMMENDER_AVAILABLE = True
+except ImportError:
+    HYBRID_RECOMMENDER_AVAILABLE = False
+    print("Hybrid recommender not available, falling back to basic recommender")
+
+# Import ML model access functions
+try:
+    from utils.model_trainer import (
+        load_career_recommendation_model,
+        preprocess_skills_for_model,
+        predict_career_field,
+        get_field_skill_importance
+    )
+    MODEL_AVAILABLE = True
+except ImportError:
+    MODEL_AVAILABLE = False
+
 def check_install_packages():
     """Check and install required packages."""
     required_packages = {
@@ -281,23 +301,36 @@ def handle_undecided_user(user_id, user_name, user_skills, career_paths, skills_
     
     # Group career paths by field
     fields = {
-        "Technology": ["Software Development", "Data Science", "Cybersecurity", "Cloud Computing"],
+        "Technology": ["Software Development", "Data Science", "Cybersecurity", "Cloud Computing", 
+                      "AI Research", "Database Administration", "Network Engineering", "IT Security"],
         "Criminal Justice": ["Criminology", "Forensic Science", "Law Enforcement", "Criminal Justice"],
         "Healthcare": ["Healthcare Administration", "Nursing", "Clinical Psychology", "Industrial-Organizational Psychology"],
-        "Business": ["Marketing", "Finance", "Human Resources"],
-        "Engineering": ["Mechanical Engineering", "Civil Engineering"],
-        "Education": ["Elementary Education", "Secondary Education"],
-        "Creative Arts": ["Graphic Design", "Film Production"],
-        "Legal": ["Legal Practice"],
-        "Science": ["Environmental Science"],
-        "Media": ["Journalism"],
-        "Social Services": ["Social Work"],
-        "Healthcare Specialists": ["Physical Therapy", "Speech-Language Pathology"],
-        "Design": ["Architecture", "Interior Design"],
-        "Agriculture": ["Agriculture"],
-        "Hospitality": ["Hospitality Management"],
-        "Medical": ["Dentistry", "Pharmacy", "Veterinary Medicine"],
-        "Urban Development": ["Urban Planning"]
+        "Business": ["Marketing", "Finance", "Human Resources", "Business Analysis", "Management Consulting",
+                    "Operations Management", "Business Development", "Strategic Planning"],
+        "Engineering": ["Mechanical Engineering", "Civil Engineering", "Aerospace Engineering", "Electrical Engineering"],
+        "Education": ["Elementary Education", "Secondary Education", "Educational Technology", "Special Education"],
+        "Creative Arts": ["Graphic Design", "Film Production", "Fine Art", "Music", "Photography", 
+                          "Dance", "Creative Writing", "Film", "Animation"],
+        "Legal": ["Legal Practice", "Corporate Law", "Criminal Law", "Environmental Law"],
+        "Science": ["Environmental Science", "Chemistry", "Physics", "Biology", "Astronomy"],
+        "Media": ["Journalism", "Broadcasting", "Digital Media", "Public Relations"],
+        "Social Services": ["Social Work", "Community Outreach", "Counseling", "Nonprofit Management"],
+        "Healthcare Specialists": ["Physical Therapy", "Speech-Language Pathology", "Occupational Therapy"],
+        "Design": ["Architecture", "Interior Design", "Product Design", "UX/UI Design", "Fashion Design"],
+        "Agriculture": ["Agriculture", "Agronomy", "Horticulture", "Food Science"],
+        "Hospitality": ["Hospitality Management", "Hotel Administration", "Tourism", "Restaurant Management"],
+        "Medical": ["Dentistry", "Pharmacy", "Veterinary Medicine", "Radiology", "Nursing"],
+        "Urban Development": ["Urban Planning", "City Management", "Community Development", "Transportation Planning"],
+        "Environmental Science": ["Conservation Science", "Climate Change Analysis", "Environmental Management"],
+        "Library & Information Science": ["Library Science", "Information Management", "Archival Studies"],
+        "Marine Science": ["Marine Biology", "Oceanography", "Marine Conservation", "Marine Resource Management"],
+        "Maritime & Logistics": ["Maritime Operations", "Port Management", "Shipping Logistics", "Maritime Safety"],
+        "Museum & Cultural Heritage": ["Museum Studies", "Cultural Preservation", "Exhibition Design"],
+        "Psychology": ["Clinical Psychology", "Neuropsychology", "Developmental Psychology", "Research Psychology"],
+        "Textile & Material Science": ["Textile Engineering", "Material Science", "Fabric Development"],
+        "Logistics & Operations": ["Supply Chain Management", "Operations Management", "Logistics Coordination"],
+        "Social Sciences": ["Sociology", "Anthropology", "Economics", "Political Science"],
+        "Real Estate": ["Real Estate Agent", "Property Management", "Real Estate Development"]
     }
     
     # Show available fields with match percentages
@@ -417,23 +450,36 @@ def get_field_for_specialization(specialization, career_paths):
     """Determine which field a specialization belongs to."""
     # Define mapping from specializations to fields
     fields = {
-        "Technology": ["Software Development", "Data Science", "Cybersecurity", "Cloud Computing"],
+        "Technology": ["Software Development", "Data Science", "Cybersecurity", "Cloud Computing", 
+                      "AI Research", "Database Administration", "Network Engineering", "IT Security"],
         "Criminal Justice": ["Criminology", "Forensic Science", "Law Enforcement", "Criminal Justice"],
         "Healthcare": ["Healthcare Administration", "Nursing", "Clinical Psychology", "Industrial-Organizational Psychology"],
-        "Business": ["Marketing", "Finance", "Human Resources"],
-        "Engineering": ["Mechanical Engineering", "Civil Engineering"],
-        "Education": ["Elementary Education", "Secondary Education"],
-        "Creative Arts": ["Graphic Design", "Film Production"],
-        "Legal": ["Legal Practice"],
-        "Science": ["Environmental Science"],
-        "Media": ["Journalism"],
-        "Social Services": ["Social Work"],
-        "Healthcare Specialists": ["Physical Therapy", "Speech-Language Pathology"],
-        "Design": ["Architecture", "Interior Design"],
-        "Agriculture": ["Agriculture"],
-        "Hospitality": ["Hospitality Management"],
-        "Medical": ["Dentistry", "Pharmacy", "Veterinary Medicine"],
-        "Urban Development": ["Urban Planning"]
+        "Business": ["Marketing", "Finance", "Human Resources", "Business Analysis", "Management Consulting",
+                    "Operations Management", "Business Development", "Strategic Planning"],
+        "Engineering": ["Mechanical Engineering", "Civil Engineering", "Aerospace Engineering", "Electrical Engineering"],
+        "Education": ["Elementary Education", "Secondary Education", "Educational Technology", "Special Education"],
+        "Creative Arts": ["Graphic Design", "Film Production", "Fine Art", "Music", "Photography", 
+                          "Dance", "Creative Writing", "Film", "Animation"],
+        "Legal": ["Legal Practice", "Corporate Law", "Criminal Law", "Environmental Law"],
+        "Science": ["Environmental Science", "Chemistry", "Physics", "Biology", "Astronomy"],
+        "Media": ["Journalism", "Broadcasting", "Digital Media", "Public Relations"],
+        "Social Services": ["Social Work", "Community Outreach", "Counseling", "Nonprofit Management"],
+        "Healthcare Specialists": ["Physical Therapy", "Speech-Language Pathology", "Occupational Therapy"],
+        "Design": ["Architecture", "Interior Design", "Product Design", "UX/UI Design", "Fashion Design"],
+        "Agriculture": ["Agriculture", "Agronomy", "Horticulture", "Food Science"],
+        "Hospitality": ["Hospitality Management", "Hotel Administration", "Tourism", "Restaurant Management"],
+        "Medical": ["Dentistry", "Pharmacy", "Veterinary Medicine", "Radiology", "Nursing"],
+        "Urban Development": ["Urban Planning", "City Management", "Community Development", "Transportation Planning"],
+        "Environmental Science": ["Conservation Science", "Climate Change Analysis", "Environmental Management"],
+        "Library & Information Science": ["Library Science", "Information Management", "Archival Studies"],
+        "Marine Science": ["Marine Biology", "Oceanography", "Marine Conservation", "Marine Resource Management"],
+        "Maritime & Logistics": ["Maritime Operations", "Port Management", "Shipping Logistics", "Maritime Safety"],
+        "Museum & Cultural Heritage": ["Museum Studies", "Cultural Preservation", "Exhibition Design"],
+        "Psychology": ["Clinical Psychology", "Neuropsychology", "Developmental Psychology", "Research Psychology"],
+        "Textile & Material Science": ["Textile Engineering", "Material Science", "Fabric Development"],
+        "Logistics & Operations": ["Supply Chain Management", "Operations Management", "Logistics Coordination"],
+        "Social Sciences": ["Sociology", "Anthropology", "Economics", "Political Science"],
+        "Real Estate": ["Real Estate Agent", "Property Management", "Real Estate Development"]
     }
     
     # Find the field that contains this specialization
@@ -493,177 +539,306 @@ def get_user_id():
     
     return user_id, is_new_user, is_predefined
 
+def get_recommendations_with_enhanced_model(user_skills, user_preferences=None):
+    """
+    Get personalized career path recommendations using the enhanced ML model and semantic matching.
+    
+    Args:
+        user_skills (list): List of user's skills
+        user_preferences (dict, optional): User's preferences
+        
+    Returns:
+        dict: Recommendation results
+    """
+    recommendations = {}
+    
+    # Try to use the hybrid recommender if available (preferred approach)
+    if HYBRID_RECOMMENDER_AVAILABLE:
+        try:
+            # Get current field and specialization from preferences if available
+            current_field = None
+            current_specialization = None
+            
+            if user_preferences:
+                current_field = user_preferences.get('current_field')
+                current_specialization = user_preferences.get('current_specialization')
+            
+            # Create hybrid recommender instance
+            recommender = HybridRecommender()
+            
+            # Get recommendations
+            recommendations = recommender.recommend_fields_for_employee(
+                user_skills,
+                current_field=current_field,
+                current_specialization=current_specialization,
+                verbose=False
+            )
+            
+            return recommendations
+        except Exception as e:
+            print(f"Error using hybrid recommender: {str(e)}")
+            # Fall back to enhanced model if hybrid recommender fails
+    
+    # Fall back to enhanced model-based recommendations
+    if MODEL_AVAILABLE:
+        try:
+            # Load model
+            model, model_components = load_career_recommendation_model()
+            
+            # Preprocess skills for the model
+            processed_skills = preprocess_skills_for_model(user_skills, model_components)
+            
+            # Get prediction and confidence
+            predicted_field, confidence, all_scores = predict_career_field(
+                processed_skills, model, model_components
+            )
+            
+            # Sort fields by score
+            sorted_fields = sorted(all_scores.items(), key=lambda x: x[1], reverse=True)
+            top_fields = [(field, score) for field, score in sorted_fields[:5]]
+            
+            # Create recommendations object
+            recommendations = {
+                'top_fields': [
+                    {
+                        'field': field,
+                        'match_percentage': round(score * 100, 1),
+                        'sources': ['model'],
+                        'matching_skills': []  # Would require additional analysis
+                    }
+                    for field, score in top_fields
+                ],
+                'explanation': {
+                    'summary': f"Based on your skills, the model predicts {predicted_field} as the best matching field with {round(confidence * 100, 1)}% confidence."
+                }
+            }
+            
+            return recommendations
+        except Exception as e:
+            print(f"Error using ML model: {str(e)}")
+    
+    # Fall back to semantic matching if both hybrid and ML approaches fail
+    try:
+        # Get recommendations using semantic matching
+        semantic_recommendations = enhanced_recommend_fields_based_on_skills(user_skills)
+        
+        # Create recommendations object
+        recommendations = {
+            'top_fields': [
+                {
+                    'field': rec['field'],
+                    'match_percentage': rec['match_percentage'],
+                    'sources': ['semantic'],
+                    'matching_skills': rec['matching_skills'],
+                    'missing_skills': rec.get('missing_skills', [])
+                }
+                for rec in semantic_recommendations[:5]
+            ],
+            'explanation': {
+                'summary': f"Based on semantic matching of your skills, {semantic_recommendations[0]['field']} is the best matching field with {semantic_recommendations[0]['match_percentage']}% match."
+            }
+        }
+        
+        return recommendations
+    except Exception as e:
+        print(f"Error using semantic matching: {str(e)}")
+        
+        # Return empty recommendations if all approaches fail
+        return {
+            'top_fields': [],
+            'explanation': {
+                'summary': "Unable to generate recommendations. Please try again later."
+            }
+        }
+
+def get_specialization_recommendations(user_skills, field, top_n=3):
+    """
+    Get specialization recommendations for a specific field.
+    
+    Args:
+        user_skills (list): User's skills
+        field (str): Field to get specializations for
+        top_n (int): Number of top recommendations to return
+        
+    Returns:
+        list: Recommended specializations
+    """
+    # Try to use hybrid recommender if available
+    if HYBRID_RECOMMENDER_AVAILABLE:
+        try:
+            recommender = HybridRecommender()
+            return recommender.recommend_specializations_for_field(user_skills, field, top_n)
+        except Exception as e:
+            print(f"Error getting specialization recommendations from hybrid recommender: {str(e)}")
+    
+    # Fall back to basic approach
+    specializations = []
+    
+    # Get specializations for the field
+    field_specializations = fields.get(field, [])
+    
+    for spec in field_specializations:
+        # Calculate match percentage
+        analysis = enhanced_analyze_skill_gap(user_skills, spec)
+        
+        # Create specialization recommendation
+        specializations.append({
+            'specialization': spec,
+            'match_percentage': analysis['match_percentage'],
+            'matching_skills': analysis['matching_skills'],
+            'similar_skills': analysis.get('similar_skills', {}),
+            'missing_skills': analysis['missing_skills'][:5]  # Limit to top 5
+        })
+    
+    # Sort by match percentage
+    specializations.sort(key=lambda x: x['match_percentage'], reverse=True)
+    
+    return specializations[:top_n]
+
+def identify_skill_gaps_for_career_path(user_skills, career_path):
+    """
+    Identify skill gaps for a specific career path.
+    
+    Args:
+        user_skills (list): User's skills
+        career_path (str): Career path title or specialization
+        
+    Returns:
+        dict: Skill gap analysis
+    """
+    # Try to use hybrid recommender if available
+    if HYBRID_RECOMMENDER_AVAILABLE:
+        try:
+            recommender = HybridRecommender()
+            return recommender.identify_skill_gaps(user_skills, career_path)
+        except Exception as e:
+            print(f"Error identifying skill gaps from hybrid recommender: {str(e)}")
+    
+    # Fall back to enhanced skill gap analysis
+    return enhanced_analyze_skill_gap(user_skills, career_path)
+
+def save_user_recommendation(user_id, recommendation_data, user_skills=None):
+    """
+    Save user recommendation for future reference.
+    
+    Args:
+        user_id (str): User ID
+        recommendation_data (dict): Recommendation results
+        user_skills (list, optional): User's skills
+        
+    Returns:
+        bool: Whether save was successful
+    """
+    # Try to use hybrid recommender if available
+    if HYBRID_RECOMMENDER_AVAILABLE:
+        try:
+            recommender = HybridRecommender()
+            return recommender.save_employee_recommendation(user_id, recommendation_data, user_skills)
+        except Exception as e:
+            print(f"Error saving recommendation with hybrid recommender: {str(e)}")
+    
+    # Fall back to basic approach
+    try:
+        # Prepare data to save
+        save_data = {
+            'user_id': user_id,
+            'timestamp': datetime.now().isoformat(),
+            'recommendations': recommendation_data
+        }
+        
+        if user_skills:
+            save_data['user_skills'] = user_skills
+        
+        # Save to user preferences
+        save_user_preferences(save_data)
+        
+        return True
+    except Exception as e:
+        print(f"Error saving user recommendation: {str(e)}")
+        return False
+
+def example_workflow():
+    """
+    Example workflow demonstrating the recommendation system.
+    
+    This function shows how to:
+    1. Get user skills
+    2. Get field recommendations
+    3. Get specialization recommendations for the top field
+    4. Identify skill gaps for a specific career path
+    5. Save user recommendations
+    """
+    # Example user skills
+    user_skills = [
+        "Python Programming", "Data Analysis", "Problem Solving",
+        "Communication", "Project Management", "SQL", "Team Leadership"
+    ]
+    
+    # Example user preferences
+    user_preferences = {
+        'current_field': "Technology",
+        'current_specialization': "Data Science",
+        # Additional preferences can be added here
+    }
+    
+    print("\n" + "=" * 60)
+    print("CAREER PATH RECOMMENDATION SYSTEM")
+    print("=" * 60)
+    
+    print("\nAnalyzing skills...")
+    
+    # Get recommendations using enhanced model
+    recommendations = get_recommendations_with_enhanced_model(user_skills, user_preferences)
+    
+    # Display recommendations
+    print("\nTop Field Recommendations:")
+    for i, field in enumerate(recommendations['top_fields'], 1):
+        print(f"{i}. {field['field']} - {field['match_percentage']}% match")
+        if 'matching_skills' in field and field['matching_skills']:
+            print(f"   Matching skills: {', '.join(field['matching_skills'][:3])}...")
+        if 'missing_skills' in field and field['missing_skills']:
+            print(f"   Missing skills: {', '.join(field['missing_skills'][:3])}...")
+    
+    # Get specialization recommendations for the top field
+    if recommendations['top_fields']:
+        top_field = recommendations['top_fields'][0]['field']
+        
+        print(f"\nTop Specializations for {top_field}:")
+        specializations = get_specialization_recommendations(user_skills, top_field)
+        
+        for i, spec in enumerate(specializations, 1):
+            print(f"{i}. {spec['specialization']} - {spec['match_percentage']}% match")
+    
+    # Identify skill gaps for a specific career path
+    if recommendations['top_fields'] and 'top_specializations' in recommendations and recommendations['top_specializations']:
+        top_spec = recommendations['top_specializations'][0]['specialization']
+        print(f"\nSkill Gap Analysis for {top_spec}:")
+        
+        skill_gaps = identify_skill_gaps_for_career_path(user_skills, top_spec)
+        
+        print(f"Match Percentage: {skill_gaps['match_percentage']}%")
+        print("\nMissing Skills:")
+        
+        for i, skill in enumerate(skill_gaps['missing_skills'][:5], 1):
+            print(f"{i}. {skill}")
+            
+            if 'training_recommendations' in skill_gaps and skill in skill_gaps['training_recommendations']:
+                for j, rec in enumerate(skill_gaps['training_recommendations'][skill][:2], 1):
+                    print(f"   {j}. {rec}")
+    
+    # Save user recommendation
+    user_id = str(uuid.uuid4())  # Generate a random user ID for demo
+    save_success = save_user_recommendation(user_id, recommendations, user_skills)
+    
+    if save_success:
+        print(f"\nRecommendations saved successfully for user {user_id}")
+
 def main():
-    """Run the main program."""
-    print("\n" + "=" * 60)
-    print("CAREER RECOMMENDER SYSTEM WITH LEARNING CAPABILITY")
-    print("=" * 60)
-    
-    # Check and install packages
-    check_install_packages()
-    
-    # Get user ID or create a new one
-    user_id, is_new_user, is_predefined = get_user_id()
-    
-    if is_predefined:
-        # Load predefined user data
-        predefined_user = get_predefined_user(user_id)
-        if not predefined_user:
-            print("Error: Predefined user not found.")
-            sys.exit(1)
-        
-        user_name = predefined_user.get('name', 'User')
-        user_skills = predefined_user.get('skills', [])
-    else:
-        # For non-predefined users
-        user_preferences = None if is_new_user else load_user_preferences(user_id)
-        
-        if user_preferences:
-            # Returning user
-            user_name = user_preferences.get('user_name', 'User')
-            print(f"\nWelcome back, {user_name}!")
-            
-            # User already made a selection
-            if 'preferred_specialization' in user_preferences:
-                preferred_spec = user_preferences['preferred_specialization']
-                print(f"You previously selected: {preferred_spec}")
-                
-                # Ask if they want to continue with the same path
-                if get_validated_yes_no("Would you like to continue with the same specialization? (y/n): "):
-                    career_paths = load_career_paths()
-                    selected_path = None
-                    for path in career_paths:
-                        if path['title'] == preferred_spec:
-                            selected_path = path
-                            break
-                    
-                    if selected_path:
-                        user_skills = user_preferences.get('current_skills', [])
-                        run_analysis(user_id, selected_path, user_skills, career_paths, load_skills_data())
-                        return
-                    else:
-                        print("Your previously selected specialization could not be found. Let's explore new options.")
-            
-            # Get updated skills
-            print("\nYour previously entered skills:")
-            for skill in user_preferences.get('current_skills', []):
-                print(f"- {skill}")
-            
-            # Ask if they want to update skills
-            if get_validated_yes_no("Would you like to update your skills? (y/n): "):
-                user_skills = get_validated_list("Enter your skills (comma-separated): ")
-            else:
-                user_skills = user_preferences.get('current_skills', [])
-        else:
-            # New user
-            user_name = get_validated_string("Enter your name: ")
-            user_skills = get_validated_list("Enter your skills (comma-separated): ")
-    
-    # Present options to the user
-    print("\nWhat would you like to do?")
-    print("1. Get career recommendations with skill matching (ENHANCED)")
-    print("2. Explore career fields and specializations")
-    print("3. View skill clusters (admin)")
-    print("4. Train model with recent changes (admin)")
-    
-    choice = get_validated_integer("Enter your choice (1-4): ", 1, 4)
-    
-    career_paths = load_career_paths()
-    skills_data = load_skills_data()
-    
-    if choice == 1:
-        # NEW: Use enhanced recommendations
-        if SKILL_ANALYZER_AVAILABLE:
-            handle_enhanced_undecided_user(user_id, user_name, user_skills)
-        else:
-            print("Enhanced recommendations are not available. Using standard recommendations.")
-            handle_undecided_user(user_id, user_name, user_skills, career_paths, skills_data)
-    
-    elif choice == 2:
-        # Explore career fields and specializations
-        if SKILL_ANALYZER_AVAILABLE:
-            handle_undecided_user(user_id, user_name, user_skills, career_paths, skills_data)
-        else:
-            handle_undecided_user(user_id, user_name, user_skills, career_paths, skills_data)
-    
-    elif choice == 3:
-        # Admin function: View skill clusters
-        print("\nSkill Cluster Management:")
-        print("1. View specific skill cluster")
-        print("2. View all skill clusters")
-        print("3. Return to main menu")
-        
-        cluster_choice = get_validated_integer("\nEnter your choice (1-3): ", 1, 3)
-        
-        if cluster_choice == 1:
-            # View specific skill cluster
-            while True:
-                skill = get_validated_string("Enter skill to view user clusters (or 'exit' to quit): ")
-                if skill.lower() == 'exit':
-                    break
-                display_skill_clusters(skill)
-        elif cluster_choice == 2:
-            # View all skill clusters
-            display_all_skill_clusters()
-        # Option 3 just returns to main menu
-    
-    elif choice == 4:
-        # Admin function: Train model with recent changes
-        print("\n" + "=" * 60)
-        print("MODEL TRAINING WITH RECENT CHANGES")
-        print("=" * 60)
-        
-        print("This will update the recommendation model with recent user preferences and feedback.")
-        print("The existing model will be backed up before any changes are made.")
-        
-        if get_validated_yes_no("Do you want to proceed? (y/n): "):
-            # Import the training function
-            try:
-                from utils.model_trainer import train_model_with_recent_changes
-                
-                # Ask for training options
-                use_prefs_only = get_validated_yes_no("Use only user preferences (ignore feedback)? (y/n): ")
-                days = get_validated_integer("Consider data from how many recent days? (0 for all data): ", 0, 365)
-                min_count = get_validated_integer("Minimum data points required (1-100): ", 1, 100)
-                
-                print("\nStarting model training...")
-                success = train_model_with_recent_changes(
-                    user_preferences_only=use_prefs_only,
-                    days_threshold=days,
-                    min_feedback_count=min_count,
-                    verbose=True
-                )
-                
-                if success:
-                    print("\nModel training completed successfully!")
-                    
-                    # Evaluate the model
-                    try:
-                        from utils.model_trainer import evaluate_model_with_generated_data
-                        print("\nEvaluating model performance...")
-                        metrics = evaluate_model_with_generated_data(verbose=True)
-                        
-                        print("\nModel Evaluation Summary:")
-                        print(f"Accuracy: {metrics.get('accuracy', 'N/A')}")
-                        print(f"F1 Score: {metrics.get('f1_score', 'N/A')}")
-                    except (ImportError, Exception) as e:
-                        print(f"\nCould not evaluate model: {str(e)}")
-                else:
-                    print("\nModel training was not completed.")
-                    print("This might be due to insufficient data or an error during training.")
-            except ImportError:
-                print("\nError: Could not import training functions.")
-                print("Make sure all required packages are installed.")
-            except Exception as e:
-                print(f"\nAn error occurred: {str(e)}")
-    
-    # Display feedback reminder
-    print("\n" + "=" * 60)
-    print("YOUR FEEDBACK HELPS US IMPROVE!")
-    print("=" * 60)
-    print("Please run 'python collect_feedback.py' to provide feedback about your recommendations.")
-    print("Your user ID is:", user_id)
-    print("=" * 60)
+    """Main function that runs the recommendation system."""
+    # Always use the enhanced model for recommendations
+    print("\nCareer Path Recommendation System")
+    print("-" * 40)
+    example_workflow()
 
 if __name__ == "__main__":
     try:
