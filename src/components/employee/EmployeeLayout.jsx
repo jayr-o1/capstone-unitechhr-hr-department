@@ -13,7 +13,7 @@ import {
   faBell
 } from '@fortawesome/free-solid-svg-icons';
 import toast from 'react-hot-toast';
-import PageLoader from '../PageLoader'; // Import the PageLoader
+import EmployeePageLoader from './EmployeePageLoader'; // Import our custom EmployeePageLoader
 
 const EmployeeLayout = () => {
   const { user, userDetails, university, logout } = useAuth();
@@ -235,9 +235,9 @@ const EmployeeLayout = () => {
           {/* Page Content */}
           <div className="flex-1 overflow-y-auto p-4">
             <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
-              {/* Page Loader */}
+              {/* Employee Page Loader */}
               {isLoading && (
-                <PageLoader 
+                <EmployeePageLoader 
                   isLoading={true} 
                   contentOnly={true} 
                   message={`Loading ${getCurrentPageTitle().toLowerCase()}...`}
@@ -252,6 +252,14 @@ const EmployeeLayout = () => {
           </div>
         </main>
       </div>
+
+      {/* Overlay for mobile sidebar - Visible only when sidebar is open on mobile */}
+      {isMobile && isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={toggleSidebar}
+        />
+      )}
     </div>
   );
 };

@@ -1,0 +1,15 @@
+// Paste these rules in your Firebase Storage Rules tab in the Firebase Console
+
+// Allow read/write access on all paths for authenticated users
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      // Allow read access for all users (even unauthenticated)
+      // and write access for authenticated users
+      allow read;
+      allow write: if request.auth != null;
+    }
+  }
+} 

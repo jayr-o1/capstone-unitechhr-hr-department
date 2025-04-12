@@ -28,6 +28,7 @@ const AuthProvider = ({ children }) => {
   const [university, setUniversity] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [loginAttemptTimestamp, setLoginAttemptTimestamp] = useState(null);
 
   // Fetch additional user details and university info
   const fetchUserDetails = async (userId) => {
@@ -52,6 +53,9 @@ const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
+    } finally {
+      // Always set loading to false after fetch attempt, even if it fails
+      setLoading(false);
     }
   };
 
@@ -107,6 +111,14 @@ const AuthProvider = ({ children }) => {
       return () => {}; // No cleanup needed
     }
     
+    // Add safety timeout to prevent infinite loading state
+    const safetyTimeout = setTimeout(() => {
+      if (loading) {
+        console.log("Safety timeout triggered - resetting loading state");
+        setLoading(false);
+      }
+    }, 10000); // 10 seconds timeout
+
     // Otherwise, proceed with Firebase auth listener
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
       console.log("Auth state changed:", authUser ? "User logged in" : "No user");
@@ -114,29 +126,54 @@ const AuthProvider = ({ children }) => {
       // Keep loading true until we fetch user details
       setLoading(true);
       
-      if (authUser) {
-        console.log("Setting user from Firebase Auth:", authUser.uid);
-        setUser(authUser);
-        await fetchUserDetails(authUser.uid);
-        console.log("User details fetched, setting loading to false");
-        setLoading(false);
-      } else {
-        console.log("No Firebase Auth user, clearing state and setting loading to false");
-        setUser(null);
-        setUserDetails(null);
-        setUniversity(null);
+      try {
+        if (authUser) {
+          console.log("Setting user from Firebase Auth:", authUser.uid);
+          setUser(authUser);
+          await fetchUserDetails(authUser.uid);
+          console.log("User details fetched, setting loading to false");
+          setLoading(false);
+        } else {
+          console.log("No Firebase Auth user, clearing state and setting loading to false");
+          setUser(null);
+          setUserDetails(null);
+          setUniversity(null);
+          setLoading(false);
+        }
+      } catch (error) {
+        // Error handler to prevent stuck loading state
+        console.error("Error in auth state change handler:", error);
         setLoading(false);
       }
     });
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
+    // Cleanup subscription and timeout on unmount
+    return () => {
+      unsubscribe();
+      clearTimeout(safetyTimeout);
+    };
   }, []);
+
+  // Additional safety effect to ensure loading state is reset
+  useEffect(() => {
+    if (loginAttemptTimestamp && loading) {
+      const timeoutId = setTimeout(() => {
+        const timeElapsed = Date.now() - loginAttemptTimestamp;
+        if (timeElapsed > 8000 && loading) {
+          console.log("Login has been in loading state for too long, forcing reset");
+          setLoading(false);
+        }
+      }, 8000);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [loginAttemptTimestamp, loading]);
 
   const login = async (email, password) => {
     console.log("Login attempt started for:", email);
     setLoading(true);
     setError(null);
+    setLoginAttemptTimestamp(Date.now());
     
     try {
       const result = await loginUser(email, password);
@@ -233,9 +270,13 @@ const AuthProvider = ({ children }) => {
       } else if (result.role === 'hr_head' || result.role === 'hr_personnel') {
         // For HR logins, Firebase Auth has already been initialized by the loginUser function
         console.log(`HR ${result.role} login successful - user is set by Firebase Auth`);
-        // Don't set loading to false here - let the onAuthStateChanged handler above handle it
-        // after it fetches the user details
-        console.log("Waiting for Firebase Auth state change to complete user details fetch");
+        // Set a timeout to ensure loading state gets reset even if auth state change handler fails
+        setTimeout(() => {
+          if (loading) {
+            console.log("HR login still in loading state after timeout, forcing reset");
+            setLoading(false);
+          }
+        }, 5000);
       } else {
         console.error("Login successful but unknown role:", result.role);
         setLoading(false);

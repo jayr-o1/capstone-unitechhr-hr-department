@@ -21,7 +21,7 @@ import {
   faBriefcase,
   faTrophy
 } from '@fortawesome/free-solid-svg-icons';
-import PageLoader from '../../components/PageLoader';
+import EmployeePageLoader from '../../components/employee/EmployeePageLoader';
 
 const CareerProgress = () => {
   const { user, userDetails } = useAuth();
@@ -31,11 +31,46 @@ const CareerProgress = () => {
   const [skills, setSkills] = useState([]);
   const [careerPaths, setCareerPaths] = useState([]);
   const [selectedCareerPath, setSelectedCareerPath] = useState(null);
+  const [activeSection, setActiveSection] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
   // Refs for scrolling
   const careerPathDetailsRef = useRef(null);
+  
+  // Check for section and careerPathId in URL query parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const sectionParam = params.get('section');
+    const careerPathParam = params.get('careerPathId');
+    
+    if (sectionParam && ['overview', 'career-path', 'skills-gap'].includes(sectionParam)) {
+      setActiveSection(sectionParam);
+    }
+    
+    // Set selected career path from URL if it exists and we have loaded career paths
+    if (careerPathParam && careerPaths.length > 0) {
+      const pathFromParam = careerPaths.find(path => path.id === careerPathParam);
+      if (pathFromParam) {
+        setSelectedCareerPath(pathFromParam);
+      }
+    }
+  }, [location.search, careerPaths]);
+  
+  // Update URL when section or career path changes
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    
+    if (activeSection) {
+      params.set('section', activeSection);
+    }
+    
+    if (selectedCareerPath?.id) {
+      params.set('careerPathId', selectedCareerPath.id);
+    }
+    
+    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+  }, [activeSection, selectedCareerPath]);
   
   useEffect(() => {
     const loadData = async () => {
@@ -63,8 +98,20 @@ const CareerProgress = () => {
               if (careerPathsData.success) {
                 setCareerPaths(careerPathsData.careerPaths);
                 
-                // Select first career path if available
-                if (careerPathsData.careerPaths.length > 0) {
+                // Check URL for career path selection
+                const params = new URLSearchParams(location.search);
+                const careerPathParam = params.get('careerPathId');
+                
+                if (careerPathParam) {
+                  const pathFromParam = careerPathsData.careerPaths.find(path => path.id === careerPathParam);
+                  if (pathFromParam) {
+                    setSelectedCareerPath(pathFromParam);
+                  } else if (careerPathsData.careerPaths.length > 0) {
+                    // Fall back to first career path if ID not found
+                    setSelectedCareerPath(careerPathsData.careerPaths[0]);
+                  }
+                } else if (careerPathsData.careerPaths.length > 0) {
+                  // No URL param, select first career path
                   setSelectedCareerPath(careerPathsData.careerPaths[0]);
                 }
               }
@@ -87,12 +134,21 @@ const CareerProgress = () => {
   
   // Scroll to career details if redirect from dashboard
   useEffect(() => {
-    if (location.state?.fromDashboard && careerPathDetailsRef.current) {
+    // Check both location state and URL params for section indication
+    const params = new URLSearchParams(location.search);
+    const sectionParam = params.get('section');
+    
+    const shouldScrollToCareerPath = 
+      (location.state?.fromDashboard && careerPathDetailsRef.current) || 
+      (sectionParam === 'career-path' && careerPathDetailsRef.current);
+      
+    if (shouldScrollToCareerPath) {
       setTimeout(() => {
         careerPathDetailsRef.current.scrollIntoView({ behavior: 'smooth' });
+        setActiveSection('career-path');
       }, 300);
     }
-  }, [location.state, selectedCareerPath]);
+  }, [location.state, location.search, selectedCareerPath]);
   
   const getSkillLevel = (proficiency) => {
     if (proficiency >= 90) return 'Expert';
@@ -131,11 +187,32 @@ const CareerProgress = () => {
   };
   
   const handleViewAllSkills = () => {
-    navigate('/employee/profile', { state: { activeTab: 'skills' } });
+    navigate('/employee/profile', { 
+      state: { activeTab: 'skills' },
+      search: new URLSearchParams({ tab: 'skills' }).toString()
+    });
+  };
+  
+  const handleChangeSection = (section) => {
+    setActiveSection(section);
+    
+    // Update URL
+    const params = new URLSearchParams(location.search);
+    params.set('section', section);
+    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+  };
+  
+  const handleSelectCareerPath = (careerPath) => {
+    setSelectedCareerPath(careerPath);
+    
+    // Update URL
+    const params = new URLSearchParams(location.search);
+    params.set('careerPathId', careerPath.id);
+    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
   };
   
   if (loading) {
-    return <PageLoader isLoading={true} message="Loading your career progress..." />;
+    return <EmployeePageLoader isLoading={true} message="Loading career progress..." />;
   }
   
   if (error) {

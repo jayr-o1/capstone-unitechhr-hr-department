@@ -121,6 +121,26 @@ async function authenticateEmployee(employeeId, universityId, password) {
   }
 }
 
+// Helper function to add timeout to promises
+const withTimeout = (promise, timeoutMs = 15000) => {
+  let timeoutId;
+  
+  // Create a promise that rejects after the specified timeout
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`Operation timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+  
+  // Race the original promise against the timeout
+  return Promise.race([
+    promise,
+    timeoutPromise
+  ]).finally(() => {
+    clearTimeout(timeoutId);
+  });
+};
+
 // Handle login
 export const loginUser = async (email, password) => {
   try {
@@ -137,7 +157,7 @@ export const loginUser = async (email, password) => {
         
         // Use system admin authentication
         const { getSystemAdminByCredentials } = await import('./adminService');
-        const adminResult = await getSystemAdminByCredentials(username, password);
+        const adminResult = await withTimeout(getSystemAdminByCredentials(username, password));
         
         if (adminResult.success) {
           console.log("System admin login successful");
@@ -163,7 +183,7 @@ export const loginUser = async (email, password) => {
         const universityId = match[2];
         
         // Use direct employee authentication, bypassing Firebase Auth
-        return await authenticateEmployee(employeeId, universityId, password);
+        return await withTimeout(authenticateEmployee(employeeId, universityId, password));
       }
     }
     
@@ -174,13 +194,13 @@ export const loginUser = async (email, password) => {
       
       try {
         // Standard Firebase Auth for HR login
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await withTimeout(signInWithEmailAndPassword(auth, email, password));
         const uid = userCredential.user.uid;
         console.log("Sign-in successful for UID:", uid);
 
         // Get user document from the authMappings collection
         const authMappingRef = doc(db, "authMappings", uid);
-        const authMappingDoc = await getDoc(authMappingRef);
+        const authMappingDoc = await withTimeout(getDoc(authMappingRef));
 
         if (authMappingDoc.exists()) {
           const authData = authMappingDoc.data();
@@ -210,7 +230,7 @@ export const loginUser = async (email, password) => {
           // Get university name
           let universityName = null;
           const universityRef = doc(db, "universities", universityId);
-          const universityDoc = await getDoc(universityRef);
+          const universityDoc = await withTimeout(getDoc(universityRef));
           if (universityDoc.exists()) {
             universityName = universityDoc.data().name;
             console.log("Found university name:", universityName);
@@ -223,12 +243,12 @@ export const loginUser = async (email, password) => {
             if (role === 'hr_head') {
               console.log("Updating lastLogin for HR Head in university collection");
               const hrHeadRef = doc(db, "universities", universityId, "hr_head", uid);
-              const hrHeadDoc = await getDoc(hrHeadRef);
+              const hrHeadDoc = await withTimeout(getDoc(hrHeadRef));
               
               if (hrHeadDoc.exists()) {
-                await updateDoc(hrHeadRef, {
+                await withTimeout(updateDoc(hrHeadRef, {
                   lastLogin: serverTimestamp()
-                });
+                }));
                 console.log("HR Head lastLogin updated successfully");
               } else {
                 console.warn("HR Head record not found in university collection");
@@ -236,72 +256,83 @@ export const loginUser = async (email, password) => {
             } else if (role === 'hr_personnel') {
               console.log("Updating lastLogin for HR Personnel in university collection");
               const hrPersonnelRef = doc(db, "universities", universityId, "hr_personnel", uid);
-              const hrPersonnelDoc = await getDoc(hrPersonnelRef);
+              const hrPersonnelDoc = await withTimeout(getDoc(hrPersonnelRef));
               
               if (hrPersonnelDoc.exists()) {
-                await updateDoc(hrPersonnelRef, {
+                await withTimeout(updateDoc(hrPersonnelRef, {
                   lastLogin: serverTimestamp()
-                });
+                }));
                 console.log("HR Personnel lastLogin updated successfully");
               } else {
                 console.warn("HR Personnel record not found in university collection");
               }
             }
           } catch (updateError) {
-            console.warn("Error updating lastLogin:", updateError);
-            // Continue even if lastLogin update fails
+            // Just log this error but continue - it's not critical enough to fail the login
+            console.warn("Error updating lastLogin:", updateError.message);
           }
-          
-          console.log("HR login successful, returning role:", role, "universityId:", universityId, "universityName:", universityName);
-          return { 
-            success: true, 
-            universityId, 
+
+          // Return success with role and university info
+          return {
+            success: true,
             role,
-            universityCode: null,
+            universityId,
             universityName
           };
+        } else {
+          // No auth mapping found
+          console.error("No auth mapping found for user with UID:", uid);
+          
+          // Sign out the user to clean up the Auth state
+          await signOut(auth);
+          
+          return { 
+            success: false, 
+            message: "Your account is not properly configured. Please contact administrator." 
+          };
+        }
+      } catch (error) {
+        console.error("Firebase Auth login error:", error);
+        
+        // Format the error message
+        let errorMessage = "Login failed. Please check your credentials and try again.";
+        
+        // Convert Firebase error code to user-friendly message
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+          errorMessage = "Invalid email or password.";
+        } else if (error.code === 'auth/invalid-email') {
+          errorMessage = "Invalid email format.";
+        } else if (error.code === 'auth/user-disabled') {
+          errorMessage = "This account has been disabled.";
+        } else if (error.code === 'auth/too-many-requests') {
+          errorMessage = "Too many unsuccessful login attempts. Please try again later.";
+        } else if (error.message.includes('timed out')) {
+          errorMessage = "Login timed out. Please check your connection and try again.";
         }
         
-        // If no auth mapping found, this means the user exists in Firebase Auth but not in our system
-        console.error("No auth mapping found for user:", uid);
         return { 
           success: false, 
-          message: "User not found in the system. Please contact administrator."
+          message: errorMessage 
         };
-      } catch (firebaseError) {
-        console.error("Firebase auth error:", firebaseError);
-        
-        if (firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/wrong-password') {
-          return { 
-            success: false, 
-            message: "Invalid email or password. Please try again." 
-          };
-        } else if (firebaseError.code === 'auth/too-many-requests') {
-          return { 
-            success: false, 
-            message: "Too many failed login attempts. Please try again later or reset your password." 
-          };
-        } else {
-          return { 
-            success: false, 
-            message: "Login failed: " + (firebaseError.message || "Unknown error") 
-          };
-        }
       }
     }
     
-    // If we reach here, the email format wasn't recognized
-    console.log("Email format doesn't match any known pattern, returning error");
+    // If no matching login flow was found
     return { 
       success: false, 
-      message: "Invalid email format. Please check your input and try again." 
+      message: "Invalid login attempt. Please check your credentials." 
     };
-    
   } catch (error) {
-    console.error("Unexpected error in login process:", error);
+    console.error("Error in loginUser:", error);
+    
+    let errorMessage = "An unexpected error occurred during login.";
+    if (error.message.includes('timed out')) {
+      errorMessage = "Login request timed out. Please check your connection and try again.";
+    }
+    
     return { 
       success: false, 
-      message: "An unexpected error occurred. Please try again." 
+      message: errorMessage
     };
   }
 };

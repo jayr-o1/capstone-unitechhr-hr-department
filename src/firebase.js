@@ -4,14 +4,15 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
-// Firebase configuration using Vite's import.meta.env
+// Firebase configuration with direct values to match the working project
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID, // Ensure this is included
+  apiKey: "AIzaSyDF8HgLVsPAbNjCATP7v6pMjhKslOnAjOc",
+  authDomain: "com-capstone-unitechhr-cecca.firebaseapp.com",
+  projectId: "com-capstone-unitechhr-cecca",
+  storageBucket: "com-capstone-unitechhr-cecca.appspot.com",
+  messagingSenderId: "1087281687437",
+  appId: "1:1087281687437:web:cf6caf25d1a1f5be042bc4",
+  measurementId: "G-P9TZQKWPJ0"
 };
 
 // Initialize Firebase
