@@ -5,7 +5,8 @@ This script can be run directly or scheduled to run periodically.
 """
 
 import argparse
-from utils.model_trainer import retrain_model, train_model_with_recent_changes, evaluate_model_performance
+from utils.model_trainer import retrain_model, train_model_with_recent_changes, evaluate_model_performance, initial_model_training
+import os
 
 def main():
     """Main entry point with command-line argument handling."""
@@ -34,7 +35,16 @@ def main():
     
     # Determine which training method to use
     success = False
-    if args.full:
+    
+    # Check if model exists
+    model_path = os.path.join('models', 'career_path_recommendation_model.pkl')
+    model_exists = os.path.exists(model_path)
+    
+    if not model_exists:
+        if verbose:
+            print("No existing model found. Performing initial training...")
+        success = initial_model_training(verbose=verbose)
+    elif args.full:
         if verbose:
             print("Starting full model retraining...")
         success = retrain_model(force=args.force, verbose=verbose)

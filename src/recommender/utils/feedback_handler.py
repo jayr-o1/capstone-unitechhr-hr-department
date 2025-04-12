@@ -231,9 +231,23 @@ def get_all_feedback():
         return []
     
     all_feedback = []
+    
+    # Load from the main feedback.json file first
+    main_feedback_file = os.path.join(feedback_dir, 'feedback.json')
+    if os.path.exists(main_feedback_file):
+        try:
+            with open(main_feedback_file, 'r') as f:
+                data = json.load(f)
+                if isinstance(data, dict) and "feedback" in data:
+                    all_feedback.extend(data["feedback"])
+        except json.JSONDecodeError:
+            pass
+    
+    # Process all individual feedback files
     for filename in os.listdir(feedback_dir):
-        if filename.endswith('_feedback.json'):
-            with open(os.path.join(feedback_dir, filename), 'r') as f:
+        if filename.endswith('.json') and filename != 'feedback.json':
+            file_path = os.path.join(feedback_dir, filename)
+            with open(file_path, 'r') as f:
                 try:
                     feedback = json.load(f)
                     if isinstance(feedback, list):

@@ -1,0 +1,20 @@
+{
+    "user_id": "tech2",
+    "preferred_field": "Technology",
+    "preferred_specialization": "Data Science",
+    "current_skills": [
+        "Data Analysis",
+        "Statistics",
+        "Python",
+        "SQL",
+        "Data Visualization",
+        "Machine Learning",
+        "R",
+        "Excel",
+        "Statistical Modeling",
+        "Big Data"
+    ],
+    "lacking_skills": [
+        "Data Mining"
+    ]
+}

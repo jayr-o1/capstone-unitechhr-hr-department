@@ -24,7 +24,7 @@ from utils.data_loader import (
     load_predefined_users,
     get_predefined_user
 )
-from utils.cluster_manager import update_clusters, get_users_by_skill
+from utils.cluster_manager import update_clusters, get_users_by_skill, load_clusters, get_skills_by_popularity
 from utils.feedback_handler import save_feedback, get_user_feedback
 from utils.input_validator import (
     get_validated_integer,
@@ -80,6 +80,37 @@ def display_skill_clusters(skill):
             print("Current Skills:", ", ".join(user['current_skills']))
     else:
         print(f"\nNo users currently need training in {skill}")
+
+def display_all_skill_clusters():
+    """Display all skill clusters with their associated users."""
+    # Load all clusters
+    clusters = load_clusters()
+    if not clusters:
+        print("\nNo skill clusters found. Users may not have any skill gaps or no recommendations have been made yet.")
+        return
+    
+    # Get skills sorted by popularity
+    skill_popularity = get_skills_by_popularity()
+    
+    # Display header
+    print("\n" + "=" * 60)
+    print("ALL SKILL CLUSTERS")
+    print("=" * 60)
+    print(f"Total skills requiring training: {len(clusters)}")
+    
+    # Display each cluster
+    for skill, count in skill_popularity:
+        print(f"\n{'-' * 60}")
+        print(f"SKILL: {skill} ({count} users)")
+        print(f"{'-' * 60}")
+        
+        users = clusters.get(skill, [])
+        for user in users:
+            print(f"\nUser ID: {user['user_id']}")
+            print(f"Specialization: {user['preferred_specialization']}")
+            print("Current Skills:", ", ".join(user['current_skills']))
+    
+    print("\n" + "=" * 60)
 
 def display_predefined_users():
     """Display list of predefined users with their names."""
@@ -557,11 +588,24 @@ def main():
     
     elif choice == 3:
         # Admin function: View skill clusters
-        while True:
-            skill = get_validated_string("Enter skill to view user clusters (or 'exit' to quit): ")
-            if skill.lower() == 'exit':
-                break
-            display_skill_clusters(skill)
+        print("\nSkill Cluster Management:")
+        print("1. View specific skill cluster")
+        print("2. View all skill clusters")
+        print("3. Return to main menu")
+        
+        cluster_choice = get_validated_integer("\nEnter your choice (1-3): ", 1, 3)
+        
+        if cluster_choice == 1:
+            # View specific skill cluster
+            while True:
+                skill = get_validated_string("Enter skill to view user clusters (or 'exit' to quit): ")
+                if skill.lower() == 'exit':
+                    break
+                display_skill_clusters(skill)
+        elif cluster_choice == 2:
+            # View all skill clusters
+            display_all_skill_clusters()
+        # Option 3 just returns to main menu
     
     elif choice == 4:
         # Admin function: Train model with recent changes

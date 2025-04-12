@@ -75,6 +75,44 @@ def load_user_preferences(user_id):
     file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'users', f"{user_id}.json")
     return safe_load_json(file_path)
 
+def load_all_user_preferences():
+    """
+    Load all user preferences from the users directory.
+    
+    Returns:
+        list: A list of user preference dictionaries
+    """
+    users_dir = os.path.join(os.path.dirname(__file__), '..', 'data', 'users')
+    
+    # Create directory if it doesn't exist
+    os.makedirs(users_dir, exist_ok=True)
+    
+    user_preferences = []
+    
+    # List all files in the users directory
+    try:
+        for filename in os.listdir(users_dir):
+            if filename.endswith('.json'):
+                file_path = os.path.join(users_dir, filename)
+                user_data = safe_load_json(file_path)
+                
+                if user_data:
+                    # Add timestamp if not present
+                    if 'timestamp' not in user_data:
+                        # Try to get timestamp from file modification time
+                        try:
+                            mtime = os.path.getmtime(file_path)
+                            user_data['timestamp'] = datetime.fromtimestamp(mtime).isoformat()
+                        except:
+                            # If that fails, use current time
+                            user_data['timestamp'] = datetime.now().isoformat()
+                    
+                    user_preferences.append(user_data)
+    except Exception as e:
+        print(f"Error loading user preferences: {str(e)}")
+    
+    return user_preferences
+
 def load_predefined_users():
     """Load predefined users with their skills."""
     file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'predefined_users.json')

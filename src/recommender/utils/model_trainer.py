@@ -7,7 +7,7 @@ import os
 import pandas as pd
 import numpy as np
 import joblib
-from datetime import datetime
+from datetime import datetime, timedelta
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
@@ -261,7 +261,7 @@ def initial_model_training(verbose=True):
         traceback.print_exc()
         return False
 
-def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
+def retrain_model(feedback_file=None, verbose=True, progress_callback=None, force=False):
     """
     Retrain the recommendation model using feedback data.
     
@@ -269,6 +269,7 @@ def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
         feedback_file (str): Path to the feedback file. If None, the default feedback file is used.
         verbose (bool): If True, print progress messages
         progress_callback (function): Callback function for progress updates; takes (step_name, percent)
+        force (bool): If True, force retraining even if conditions aren't ideal
     
     Returns:
         bool: True if the model was retrained successfully, False otherwise
@@ -336,7 +337,7 @@ def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
             if verbose:
                 print(f"Loaded {len(feedback_entries)} feedback entries directly from the feedback database")
             
-            if not feedback_entries:
+            if not feedback_entries and not force:
                 if verbose:
                     print("No feedback entries found for retraining.")
                 return False
@@ -412,7 +413,16 @@ def retrain_model(feedback_file=None, verbose=True, progress_callback=None):
             
             if verbose:
                 print(f"Prepared feedback DataFrame with {len(feedback_df)} entries")
-                
+            
+            # Add is_positive column if it doesn't exist
+            if 'is_positive' not in feedback_df.columns:
+                # If we don't have a rating column, assume all entries are positive
+                if 'rating' not in feedback_df.columns:
+                    feedback_df['is_positive'] = True
+                else:
+                    # Consider ratings >= 3 as positive
+                    feedback_df['is_positive'] = feedback_df['rating'] >= 3
+            
             report_progress("Features prepared successfully", 40)
         except Exception as e:
             if verbose:
@@ -727,6 +737,9 @@ def train_model_with_recent_changes(user_preferences_only=False, days_threshold=
         bool: True if training was successful, False otherwise
     """
     try:
+        # Import datetime here to avoid UnboundLocalError
+        from datetime import datetime, timedelta
+        
         if verbose:
             print(f"Starting incremental model training with recent changes...")
         
@@ -762,7 +775,6 @@ def train_model_with_recent_changes(user_preferences_only=False, days_threshold=
             
         # Filter for recent entries if needed
         if days_threshold > 0:
-            from datetime import datetime, timedelta
             cutoff_date = datetime.now() - timedelta(days=days_threshold)
             
             # Filter entries based on timestamp if available
@@ -861,7 +873,34 @@ def train_model_with_recent_changes(user_preferences_only=False, days_threshold=
             print(f"Prepared features with shape: {X_pca.shape}")
         
         # Encode the target variable using existing encoder
-        y = label_encoder.transform(combined_df['Field'])
+        try:
+            y = label_encoder.transform(combined_df['Field'])
+        except ValueError as e:
+            if verbose:
+                print(f"Found new field labels. Updating label encoder...")
+            
+            # Get the current classes
+            current_classes = set(label_encoder.classes_)
+            
+            # Add the new classes
+            new_classes = set(combined_df['Field']) - current_classes
+            if verbose:
+                print(f"New field labels found: {new_classes}")
+            
+            # Create a new encoder with all classes
+            all_classes = list(current_classes.union(new_classes))
+            new_encoder = LabelEncoder()
+            new_encoder.fit(all_classes)
+            
+            # Transform the data
+            y = new_encoder.transform(combined_df['Field'])
+            
+            # Replace the old encoder
+            label_encoder = new_encoder
+            model_components["label_encoder"] = label_encoder
+            
+            if verbose:
+                print(f"Label encoder updated with {len(new_classes)} new classes")
         
         # Update the model with new data
         if verbose:
