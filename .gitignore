@@ -16,6 +16,16 @@ dist-ssr
 
 *.pkl
 
+# Python virtual environments
+venv/
+*/venv/
+.venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
