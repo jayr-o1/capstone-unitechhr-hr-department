@@ -1,4 +1,17 @@
 {
+    "Experimental Design": [
+        {
+            "user_id": "fbdf4124-2888-4fa1-88e9-2e8f896f576f",
+            "preferred_specialization": "Data Science",
+            "current_skills": [
+                "Python",
+                "Excel",
+                "SQL",
+                "Firebase",
+                "Data Analysis"
+            ]
+        }
+    ],
     "Incident Response": [
         {
             "user_id": "security1",

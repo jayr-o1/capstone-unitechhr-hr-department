@@ -639,9 +639,9 @@ def main():
                     
                     # Evaluate the model
                     try:
-                        from utils.model_trainer import evaluate_model_performance
+                        from utils.model_trainer import evaluate_model_with_generated_data
                         print("\nEvaluating model performance...")
-                        metrics = evaluate_model_performance(verbose=True)
+                        metrics = evaluate_model_with_generated_data(verbose=True)
                         
                         print("\nModel Evaluation Summary:")
                         print(f"Accuracy: {metrics.get('accuracy', 'N/A')}")

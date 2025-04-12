@@ -1,0 +1,15 @@
+{
+    "user_id": "fbdf4124-2888-4fa1-88e9-2e8f896f576f",
+    "preferred_field": "Technology",
+    "preferred_specialization": "Data Science",
+    "current_skills": [
+        "Python",
+        "Excel",
+        "SQL",
+        "Firebase",
+        "Data Analysis"
+    ],
+    "lacking_skills": [
+        "Experimental Design"
+    ]
+}

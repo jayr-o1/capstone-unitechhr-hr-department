@@ -244,36 +244,69 @@ def calculate_skill_similarity(user_skill, required_skill):
         # Technology-related mappings
         "Problem Solving": ["Debugging", "System Design", "Requirements Analysis", "Test Automation"],
         "Analytical Skills": ["Data Analysis", "Performance Optimization", "Requirements Gathering"],
-        "Attention to Detail": ["Quality Assurance", "Code Review", "Testing", "Documentation"],
+
+        # Data Science related mappings - added for better Data Science matching
+        "Data Analysis": ["Machine Learning", "Statistical Modeling", "Big Data", "Data Mining", "Natural Language Processing", "Deep Learning", "Data Science", "Predictive Modeling", "Business Intelligence"],
+        "Statistics": ["Statistical Modeling", "Machine Learning", "Experimental Design", "Data Mining", "Data Science"],
+        "Python": ["Data Science", "Machine Learning", "Web Development", "Automation", "Scripting", "Software Development"],
+        "SQL": ["Database Management", "Data Analysis", "Data Warehousing", "Business Intelligence", "Data Engineering"],
+        "Data Visualization": ["Business Intelligence", "Data Analysis", "Data Science", "User Interface Design"],
+        "R": ["Statistical Modeling", "Data Analysis", "Data Science", "Biostatistics"],
+        "Excel": ["Data Analysis", "Financial Modeling", "Business Intelligence", "Statistics"],
+        "Machine Learning": ["Data Science", "Artificial Intelligence", "Deep Learning", "Computer Vision"],
+        "Big Data": ["Data Engineering", "Hadoop", "Spark", "Cloud Computing", "Distributed Systems"],
         
-        # Business-related mappings
-        "Communication": ["Client Relations", "Stakeholder Management", "Presentations", "Negotiation"],
-        "Leadership": ["Team Management", "Strategic Planning", "Project Management"],
-        "Organization": ["Project Planning", "Process Improvement", "Resource Allocation"],
+        # Security-related mappings
+        "Network Management": ["Network Security", "Firewall Configuration", "VPN Setup", "Network Monitoring"],
+        "Cybersecurity": ["Information Security", "Ethical Hacking", "Security Auditing", "Incident Response", "Penetration Testing"],
+        "Information Technology": ["System Administration", "Network Security", "Cloud Services", "Desktop Support"],
         
         # Healthcare-related mappings
-        "Communication": ["Patient Communication", "Medical Documentation", "Care Coordination"],
-        "Empathy": ["Patient Care", "Counseling", "Support Services"],
-        "Attention to Detail": ["Medical Documentation", "Medication Administration", "Diagnostic Procedures"]
+        "Patient Care": ["Clinical Skills", "Nursing", "Patient Assessment", "Medical Procedures"],
+        "Medical Knowledge": ["Medical Terminology", "Anatomy", "Physiology", "Pharmacology", "Diagnosis"],
+        "Attention to Detail": ["Medical Documentation", "Lab Procedures", "Quality Assurance", "Medication Administration"],
+        
+        # Business-related mappings
+        "Business Acumen": ["Market Analysis", "Strategic Planning", "Business Development", "Competitive Analysis"],
+        "Financial Skills": ["Financial Analysis", "Budgeting", "Financial Reporting", "Investment Analysis"]
     }
     
-    # Check for direct match
+    # Initialize similarity score
+    max_similarity = 0.0
+    
+    # Exact match
     if user_skill.lower() == required_skill.lower():
         return 1.0
     
-    # Check for similarity-based match
-    if user_skill in skill_similarity_map:
-        if required_skill in skill_similarity_map[user_skill]:
-            # Calculate position-based weight (earlier items are stronger matches)
-            position = skill_similarity_map[user_skill].index(required_skill)
-            total_items = len(skill_similarity_map[user_skill])
-            return 0.8 * (1 - position / total_items)
-    
-    # Check for partial text match
+    # Check for partial string match - stronger similarity
     if user_skill.lower() in required_skill.lower() or required_skill.lower() in user_skill.lower():
-        return 0.5
+        similarity = 0.8
+        if similarity > max_similarity:
+            max_similarity = similarity
     
-    return 0.0
+    # Check if user skill has a mapping to the required skill
+    if user_skill in skill_similarity_map:
+        for similar_skill in skill_similarity_map[user_skill]:
+            if similar_skill.lower() == required_skill.lower():
+                similarity = 0.9  # High similarity for directly mapped skills
+                if similarity > max_similarity:
+                    max_similarity = similarity
+            elif similar_skill.lower() in required_skill.lower() or required_skill.lower() in similar_skill.lower():
+                similarity = 0.7  # Medium similarity for partial matches within mapped skills
+                if similarity > max_similarity:
+                    max_similarity = similarity
+    
+    # Check for single word matches in multi-word skills
+    user_words = set(user_skill.lower().split())
+    required_words = set(required_skill.lower().split())
+    common_words = user_words.intersection(required_words)
+    
+    if common_words:
+        similarity = len(common_words) / max(len(user_words), len(required_words))
+        if similarity > max_similarity:
+            max_similarity = similarity
+    
+    return max_similarity
 
 def enhanced_analyze_skill_gap(user_skills, specialization, career_paths=None):
     """
