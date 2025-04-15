@@ -14,6 +14,7 @@ import random
 # Import utilities
 from utils.data_processing import parse_resume, calculate_total_experience
 from utils.feedback_handler import load_feedback_db, get_user_feedback
+from utils.model_trainer import predict_field, predict_specialization, identify_missing_skills
 
 # Define paths
 MODEL_PATH = "models/career_path_recommendation_model.pkl"
@@ -785,3 +786,35 @@ def recommend_career_from_resume(file_path, user_id=None):
     recommendations = recommend_field_and_career_paths(", ".join(skills), experience_str, user_id)
 
     return recommendations, ", ".join(skills), experience_str 
+
+def recommend_career_path(skills_str, model_path=MODEL_PATH):
+    """
+    Complete three-stage career recommendation:
+    1. Recommend field with confidence score
+    2. Recommend specialization with confidence score
+    3. Identify missing skills with importance levels
+    """
+    # Load model components
+    components = joblib.load(model_path)
+    
+    # Stage 1: Field Recommendation with confidence
+    field, field_confidence = predict_field(skills_str, components)
+    
+    # Stage 2: Specialization Recommendation using field context
+    specialization, spec_confidence = predict_specialization(skills_str, field, components)
+    
+    # Stage 3: Skill Gap Analysis with importance weighting
+    missing_skills = identify_missing_skills(skills_str, specialization, components)
+    
+    # Get user's existing skills
+    user_skills = [skill.strip() for skill in skills_str.split(',')]
+    
+    return {
+        'recommended_field': field,
+        'field_confidence': round(field_confidence * 100, 2),
+        'recommended_specialization': specialization,
+        'specialization_confidence': round(spec_confidence * 100, 2),
+        'missing_skills': list(missing_skills),
+        'existing_skills': user_skills,
+        'model_version': components.get('version', '1.0')
+    } 

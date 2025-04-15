@@ -43,7 +43,8 @@ try:
         update_user_skills_and_recommendations,
         calculate_skill_similarity,
         enhanced_analyze_skill_gap,
-        enhanced_recommend_fields_based_on_skills
+        enhanced_recommend_fields_based_on_skills,
+        recommend_skills_for_specialization
     )
     SKILL_ANALYZER_AVAILABLE = True
 except ImportError:
@@ -758,87 +759,309 @@ def save_user_recommendation(user_id, recommendation_data, user_skills=None):
         return False
 
 def example_workflow():
+    """Example workflow for the user to follow."""
+    # Get a user ID - either existing or new
+    user_id = get_user_id()
+    
+    # Get predefined users
+    predefined_users = display_predefined_users()
+    predefined_user_ids = [user['id'] for user in predefined_users]
+    
+    # Check if this is a predefined user
+    if user_id in predefined_user_ids:
+        for user in predefined_users:
+            if user['id'] == user_id:
+                print(f"\nWelcome back, {user['name']}!")
+                user_data = get_predefined_user(user_id)
+                
+                # Get current user data
+                user_skills = user_data.get('skills', [])
+                current_field = user_data.get('field')
+                current_specialization = user_data.get('specialization')
+                
+                print("\nYour current profile:")
+                print(f"Skills: {', '.join(user_skills)}")
+                if current_field:
+                    print(f"Field: {current_field}")
+                if current_specialization:
+                    print(f"Specialization: {current_specialization}")
+                
+                # Use sequential recommendation
+                print("\nGenerating comprehensive career recommendations...")
+                results = run_sequential_recommendation(
+                    user_id, 
+                    user_skills, 
+                    current_field, 
+                    current_specialization
+                )
+                
+                # Display results
+                display_sequential_recommendation_results(results)
+                
+                # Ask if user wants to save any feedback
+                if get_validated_yes_no("\nWould you like to provide feedback on these recommendations?"):
+                    feedback = get_validated_string("Please enter your feedback: ")
+                    save_feedback(user_id, "recommendation", feedback)
+                    print("Thank you for your feedback!")
+                
+                return
+    
+    # For a new user
+    print("\nWelcome to the Career Path Recommendation System!")
+    
+    # Get user name
+    user_name = get_validated_string("Please enter your name: ")
+    
+    # Get user skills
+    print("\nPlease enter your current skills, separated by commas.")
+    print("Example: Python, Data Analysis, Excel, SQL")
+    user_skills_input = get_validated_string("Skills: ")
+    user_skills = [skill.strip() for skill in user_skills_input.split(',') if skill.strip()]
+    
+    # Check if user already has a career field in mind
+    has_field = get_validated_yes_no("\nDo you already have a specific career field in mind? (y/n) ")
+    
+    if has_field:
+        field = get_validated_string("What field are you interested in? ")
+        has_specialization = get_validated_yes_no("Do you have a specific specialization in mind? (y/n) ")
+        
+        if has_specialization:
+            specialization = get_validated_string("What specialization are you interested in? ")
+            
+            # Run sequential recommendation with field and specialization
+            print("\nGenerating comprehensive career recommendations...")
+            results = run_sequential_recommendation(user_id, user_skills, field, specialization)
+            
+            # Display results
+            display_sequential_recommendation_results(results)
+        else:
+            # Run sequential recommendation with just field
+            print("\nGenerating comprehensive career recommendations...")
+            results = run_sequential_recommendation(user_id, user_skills, field)
+            
+            # Display results
+            display_sequential_recommendation_results(results)
+    else:
+        # Undecided user - run sequential recommendation with no field/specialization
+        print("\nGenerating comprehensive career recommendations...")
+        results = run_sequential_recommendation(user_id, user_skills)
+        
+        # Display results
+        display_sequential_recommendation_results(results)
+    
+    # Ask if user wants to save any feedback
+    if get_validated_yes_no("\nWould you like to provide feedback on these recommendations?"):
+        feedback = get_validated_string("Please enter your feedback: ")
+        save_feedback(user_id, "recommendation", feedback)
+        print("Thank you for your feedback!")
+
+def run_sequential_recommendation(user_id, user_skills, current_field=None, current_specialization=None):
     """
-    Example workflow demonstrating the recommendation system.
+    Run the sequential recommendation workflow:
+    1. Recommend field based on skills
+    2. Recommend specialization based on field and skills
+    3. Recommend skills based on specialization data
     
-    This function shows how to:
-    1. Get user skills
-    2. Get field recommendations
-    3. Get specialization recommendations for the top field
-    4. Identify skill gaps for a specific career path
-    5. Save user recommendations
+    Args:
+        user_id (str): User ID
+        user_skills (list): List of user's current skills
+        current_field (str, optional): User's current field if available
+        current_specialization (str, optional): User's current specialization if available
+    
+    Returns:
+        dict: Comprehensive recommendation results
     """
-    # Example user skills
-    user_skills = [
-        "Python Programming", "Data Analysis", "Problem Solving",
-        "Communication", "Project Management", "SQL", "Team Leadership"
-    ]
+    # Initialize the hybrid recommender
+    if not HYBRID_RECOMMENDER_AVAILABLE:
+        print("Hybrid recommender not available. Using basic recommender instead.")
+        # Fallback to basic recommendation
+        field_recs = recommend_fields_based_on_skills(user_skills)
+        top_field = field_recs[0]['field'] if field_recs else None
+        
+        if top_field:
+            spec_recs = recommend_specializations_for_field(user_skills, top_field)
+            top_spec = spec_recs[0]['specialization'] if spec_recs else None
+            
+            if top_spec:
+                skill_analysis = enhanced_analyze_skill_gap(user_skills, top_spec)
+                return {
+                    "status": "basic",
+                    "field_recommendations": {
+                        "top_field": top_field,
+                        "all_fields": field_recs
+                    },
+                    "specialization_recommendations": {
+                        "top_specialization": top_spec,
+                        "all_specializations": spec_recs
+                    },
+                    "skill_recommendations": {
+                        "recommended_skills": skill_analysis.get('missing_skills', []),
+                        "popularity_scores": {},
+                        "total_employees_analyzed": 0
+                    }
+                }
+        return {"status": "failed", "message": "Could not generate recommendations"}
     
-    # Example user preferences
-    user_preferences = {
-        'current_field': "Technology",
-        'current_specialization': "Data Science",
-        # Additional preferences can be added here
-    }
+    # Use the hybrid recommender for sequential recommendations
+    try:
+        recommender = HybridRecommender()
+        results = recommender.sequential_recommendation(
+            user_skills,
+            current_field,
+            current_specialization
+        )
+        
+        # Save recommendation for this user
+        save_user_recommendation(user_id, results, user_skills)
+        
+        # Update skill clusters
+        if results["status"] == "complete":
+            update_user_skills_and_recommendations(
+                user_id,
+                results["field_recommendations"]["top_field"],
+                results["specialization_recommendations"]["top_specialization"],
+                user_skills
+            )
+            
+            # Also update the skill clusters
+            update_clusters()
+        
+        return results
     
+    except Exception as e:
+        print(f"Error in sequential recommendation: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "message": str(e)}
+
+def display_sequential_recommendation_results(results, verbose=True):
+    """
+    Display the results of the sequential recommendation in a user-friendly format.
+    
+    Args:
+        results (dict): Results from run_sequential_recommendation
+        verbose (bool): Whether to show detailed information
+    """
+    if results.get("status") == "error":
+        print(f"\nError: {results.get('message', 'Unknown error')}")
+        return
+    
+    if results.get("status") == "failed":
+        print("\nCould not generate recommendations. Please try again with more skills information.")
+        return
+    
+    # Print header
     print("\n" + "=" * 60)
-    print("CAREER PATH RECOMMENDATION SYSTEM")
+    print("CAREER PATH RECOMMENDATION RESULTS")
     print("=" * 60)
     
-    print("\nAnalyzing skills...")
+    # Field recommendation
+    field_recs = results.get("field_recommendations", {})
+    top_field = field_recs.get("top_field", "Unknown")
+    match_percentage = field_recs.get("match_percentage", 0)
     
-    # Get recommendations using enhanced model
-    recommendations = get_recommendations_with_enhanced_model(user_skills, user_preferences)
+    print(f"\nRecommended Field: {top_field} ({match_percentage}% match)")
     
-    # Display recommendations
-    print("\nTop Field Recommendations:")
-    for i, field in enumerate(recommendations['top_fields'], 1):
-        print(f"{i}. {field['field']} - {field['match_percentage']}% match")
-        if 'matching_skills' in field and field['matching_skills']:
-            print(f"   Matching skills: {', '.join(field['matching_skills'][:3])}...")
-        if 'missing_skills' in field and field['missing_skills']:
-            print(f"   Missing skills: {', '.join(field['missing_skills'][:3])}...")
+    # Field explanation if available
+    explanation = results.get("explanation", {})
+    if "field_reasoning" in explanation and explanation["field_reasoning"]:
+        print(f"\n{explanation['field_reasoning']}")
     
-    # Get specialization recommendations for the top field
-    if recommendations['top_fields']:
-        top_field = recommendations['top_fields'][0]['field']
+    # Specialization recommendation
+    spec_recs = results.get("specialization_recommendations", {})
+    top_spec = spec_recs.get("top_specialization", "Unknown")
+    spec_match = spec_recs.get("match_percentage", 0)
+    
+    print(f"\nRecommended Specialization: {top_spec} ({spec_match}% match)")
+    
+    if "specialization_match" in explanation and explanation["specialization_match"]:
+        print(f"\n{explanation['specialization_match']}")
+    
+    # Skill recommendations
+    skill_recs = results.get("skill_recommendations", {})
+    recommended_skills = skill_recs.get("recommended_skills", [])
+    popularity_scores = skill_recs.get("popularity_scores", {})
+    total_analyzed = skill_recs.get("total_employees_analyzed", 0)
+    
+    if recommended_skills:
+        print(f"\nRecommended Skills to Develop (based on {total_analyzed} professionals):")
+        for skill in recommended_skills:
+            popularity = popularity_scores.get(skill, 0)
+            print(f"- {skill} (used by {popularity:.1f}% of {top_spec} professionals)")
+    else:
+        print("\nNo additional skills to recommend. You already have a strong skill set for this specialization.")
+    
+    # Additional details if verbose
+    if verbose:
+        print("\n" + "-" * 60)
+        print("DETAILED INFORMATION")
+        print("-" * 60)
         
-        print(f"\nTop Specializations for {top_field}:")
-        specializations = get_specialization_recommendations(user_skills, top_field)
+        # Current state
+        current_state = results.get("current_state", {})
+        print(f"\nCurrent Skills: {', '.join(current_state.get('current_skills', []))}")
         
-        for i, spec in enumerate(specializations, 1):
-            print(f"{i}. {spec['specialization']} - {spec['match_percentage']}% match")
+        if current_state.get("current_field"):
+            print(f"Current Field: {current_state.get('current_field')}")
+        
+        if current_state.get("current_specialization"):
+            print(f"Current Specialization: {current_state.get('current_specialization')}")
+        
+        # Additional fields if available
+        all_fields = field_recs.get("all_fields", [])
+        if len(all_fields) > 1:
+            print("\nOther Possible Fields:")
+            for field in all_fields[1:4]:  # Show next 3 fields
+                print(f"- {field.get('field', 'Unknown')} ({field.get('match_percentage', 0)}% match)")
+        
+        # Additional specializations if available
+        all_specs = spec_recs.get("all_specializations", [])
+        if len(all_specs) > 1:
+            print("\nOther Possible Specializations in this Field:")
+            for spec in all_specs[1:4]:  # Show next 3 specializations
+                print(f"- {spec.get('specialization', 'Unknown')} ({spec.get('match_percentage', 0)}% match)")
     
-    # Identify skill gaps for a specific career path
-    if recommendations['top_fields'] and 'top_specializations' in recommendations and recommendations['top_specializations']:
-        top_spec = recommendations['top_specializations'][0]['specialization']
-        print(f"\nSkill Gap Analysis for {top_spec}:")
-        
-        skill_gaps = identify_skill_gaps_for_career_path(user_skills, top_spec)
-        
-        print(f"Match Percentage: {skill_gaps['match_percentage']}%")
-        print("\nMissing Skills:")
-        
-        for i, skill in enumerate(skill_gaps['missing_skills'][:5], 1):
-            print(f"{i}. {skill}")
-            
-            if 'training_recommendations' in skill_gaps and skill in skill_gaps['training_recommendations']:
-                for j, rec in enumerate(skill_gaps['training_recommendations'][skill][:2], 1):
-                    print(f"   {j}. {rec}")
-    
-    # Save user recommendation
-    user_id = str(uuid.uuid4())  # Generate a random user ID for demo
-    save_success = save_user_recommendation(user_id, recommendations, user_skills)
-    
-    if save_success:
-        print(f"\nRecommendations saved successfully for user {user_id}")
+    # Final advice
+    print("\n" + "=" * 60)
+    if "skill_improvement" in explanation and explanation["skill_improvement"]:
+        print(f"\n{explanation['skill_improvement']}")
+    print("=" * 60)
 
 def main():
     """Main function that runs the recommendation system."""
-    # Always use the enhanced model for recommendations
+    # Check for required packages
+    check_install_packages()
+    
     print("\nCareer Path Recommendation System")
-    print("-" * 40)
-    example_workflow()
+    print("=" * 40)
+    
+    # Show available operations
+    print("\nSelect an operation:")
+    print("1. Get career path recommendations (for yourself)")
+    print("2. View skill clusters (for trainers/managers)")
+    print("3. View employees needing specific skill training (for trainers)")
+    print("4. Update skill clusters (for administrators)")
+    print("5. Exit")
+    
+    choice = get_validated_integer("Enter your choice (1-5): ", min_val=1, max_val=5)
+    
+    if choice == 1:
+        # Run the recommendation workflow
+        example_workflow()
+    elif choice == 2:
+        # View all clusters
+        display_all_skill_clusters()
+    elif choice == 3:
+        # View specific skill cluster
+        skill = get_validated_string("Enter the skill to view: ")
+        display_skill_clusters(skill)
+    elif choice == 4:
+        # Update clusters
+        update_clusters()
+        print("Skill clusters updated successfully")
+    elif choice == 5:
+        print("\nThank you for using the Career Path Recommendation System. Goodbye!")
+        sys.exit(0)
 
 if __name__ == "__main__":
     try:

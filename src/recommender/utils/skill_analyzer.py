@@ -2,6 +2,29 @@ import os
 import json
 from collections import defaultdict
 
+# Define mapping from fields to specializations
+fields = {
+    "Technology": ["Software Development", "Data Science", "Cybersecurity", "Cloud Computing"],
+    "Criminal Justice": ["Criminology", "Forensic Science", "Law Enforcement", "Criminal Justice"],
+    "Healthcare": ["Healthcare Administration", "Nursing", "Clinical Psychology", "Industrial-Organizational Psychology"],
+    "Business": ["Marketing", "Finance", "Human Resources"],
+    "Engineering": ["Mechanical Engineering", "Civil Engineering"],
+    "Education": ["Elementary Education", "Secondary Education", "Elementary School Teacher", "College Professor", 
+                 "Educational Administrator", "Special Education Teacher", "Educational Technologist"],
+    "Creative Arts": ["Graphic Design", "Film Production"],
+    "Legal": ["Legal Practice"],
+    "Science": ["Environmental Science"],
+    "Media": ["Journalism"],
+    "Social Services": ["Social Work"],
+    "Healthcare Specialists": ["Physical Therapy", "Speech-Language Pathology"],
+    "Design": ["Architecture", "Interior Design"],
+    "Agriculture": ["Agriculture"],
+    "Hospitality": ["Hospitality Management"],
+    "Medical": ["Dentistry", "Pharmacy", "Veterinary Medicine"],
+    "Urban Development": ["Urban Planning"],
+    "Computer Science": ["Software Engineer", "Data Scientist", "Machine Learning Engineer", "Cybersecurity Analyst"]
+}
+
 def get_required_skills_for_specialization(specialization, career_paths=None):
     """
     Get required skills for a specific specialization.
@@ -76,27 +99,6 @@ def recommend_fields_based_on_skills(user_skills, career_paths=None):
     if career_paths is None:
         career_paths = load_career_paths()
     
-    # Define mapping from specializations to fields
-    fields = {
-        "Technology": ["Software Development", "Data Science", "Cybersecurity", "Cloud Computing"],
-        "Criminal Justice": ["Criminology", "Forensic Science", "Law Enforcement", "Criminal Justice"],
-        "Healthcare": ["Healthcare Administration", "Nursing", "Clinical Psychology", "Industrial-Organizational Psychology"],
-        "Business": ["Marketing", "Finance", "Human Resources"],
-        "Engineering": ["Mechanical Engineering", "Civil Engineering"],
-        "Education": ["Elementary Education", "Secondary Education"],
-        "Creative Arts": ["Graphic Design", "Film Production"],
-        "Legal": ["Legal Practice"],
-        "Science": ["Environmental Science"],
-        "Media": ["Journalism"],
-        "Social Services": ["Social Work"],
-        "Healthcare Specialists": ["Physical Therapy", "Speech-Language Pathology"],
-        "Design": ["Architecture", "Interior Design"],
-        "Agriculture": ["Agriculture"],
-        "Hospitality": ["Hospitality Management"],
-        "Medical": ["Dentistry", "Pharmacy", "Veterinary Medicine"],
-        "Urban Development": ["Urban Planning"]
-    }
-    
     # Calculate field match percentages
     field_matches = []
     for field, specializations in fields.items():
@@ -144,27 +146,6 @@ def recommend_specializations_for_field(user_skills, field, career_paths=None):
     """
     if career_paths is None:
         career_paths = load_career_paths()
-    
-    # Define mapping from fields to specializations
-    fields = {
-        "Technology": ["Software Development", "Data Science", "Cybersecurity", "Cloud Computing"],
-        "Criminal Justice": ["Criminology", "Forensic Science", "Law Enforcement", "Criminal Justice"],
-        "Healthcare": ["Healthcare Administration", "Nursing", "Clinical Psychology", "Industrial-Organizational Psychology"],
-        "Business": ["Marketing", "Finance", "Human Resources"],
-        "Engineering": ["Mechanical Engineering", "Civil Engineering"],
-        "Education": ["Elementary Education", "Secondary Education"],
-        "Creative Arts": ["Graphic Design", "Film Production"],
-        "Legal": ["Legal Practice"],
-        "Science": ["Environmental Science"],
-        "Media": ["Journalism"],
-        "Social Services": ["Social Work"],
-        "Healthcare Specialists": ["Physical Therapy", "Speech-Language Pathology"],
-        "Design": ["Architecture", "Interior Design"],
-        "Agriculture": ["Agriculture"],
-        "Hospitality": ["Hospitality Management"],
-        "Medical": ["Dentistry", "Pharmacy", "Veterinary Medicine"],
-        "Urban Development": ["Urban Planning"]
-    }
     
     # Get specializations for the field
     specializations = fields.get(field, [])
@@ -389,28 +370,6 @@ def enhanced_recommend_fields_based_on_skills(user_skills, career_paths=None):
     if career_paths is None:
         career_paths = load_career_paths()
     
-    # Define mapping from specializations to fields
-    fields = {
-        "Technology": ["Software Development", "Data Science", "Cybersecurity", "Cloud Computing"],
-        "Criminal Justice": ["Criminology", "Forensic Science", "Law Enforcement", "Criminal Justice"],
-        "Healthcare": ["Healthcare Administration", "Nursing", "Clinical Psychology", "Industrial-Organizational Psychology"],
-        "Business": ["Marketing", "Finance", "Human Resources"],
-        "Engineering": ["Mechanical Engineering", "Civil Engineering"],
-        "Education": ["Elementary Education", "Secondary Education", "Elementary School Teacher", "College Professor", 
-                      "Educational Administrator", "Special Education Teacher", "Educational Technologist"],
-        "Creative Arts": ["Graphic Design", "Film Production"],
-        "Legal": ["Legal Practice"],
-        "Science": ["Environmental Science"],
-        "Media": ["Journalism"],
-        "Social Services": ["Social Work"],
-        "Healthcare Specialists": ["Physical Therapy", "Speech-Language Pathology"],
-        "Design": ["Architecture", "Interior Design"],
-        "Agriculture": ["Agriculture"],
-        "Hospitality": ["Hospitality Management"],
-        "Medical": ["Dentistry", "Pharmacy", "Veterinary Medicine"],
-        "Urban Development": ["Urban Planning"]
-    }
-    
     # Calculate field match percentages with similarities
     field_matches = []
     for field, specializations in fields.items():
@@ -566,4 +525,88 @@ def update_user_skills_and_recommendations(user_id, preferred_field, preferred_s
     from utils.cluster_manager import update_clusters
     update_clusters()
     
-    return user_data 
+    return user_data
+
+def recommend_skills_for_specialization(user_skills, specialization, employee_data=None):
+    """
+    Recommend skills to develop based on what other employees with the same specialization have.
+    
+    Args:
+        user_skills (list): User's current skills
+        specialization (str): Target specialization
+        employee_data (DataFrame, optional): Employee data containing skills and specializations
+        
+    Returns:
+        dict: Recommended skills with supporting data
+    """
+    if employee_data is None:
+        # Load employee data if not provided
+        from .data_loader import load_synthetic_employee_data
+        employee_data = load_synthetic_employee_data()
+    
+    # Convert user skills to a set for faster operations
+    user_skills_set = set(user_skills)
+    
+    # Filter employees with the target specialization
+    specialization_employees = employee_data[employee_data['Specialization'] == specialization]
+    
+    if len(specialization_employees) == 0:
+        # If no employees with exact specialization, try looking at employees with the same field
+        # First determine the field for the specialization
+        for field, specs in fields.items():
+            if specialization in specs:
+                # Look for employees in the same field
+                field_employees = employee_data[employee_data['Field'] == field]
+                if len(field_employees) > 0:
+                    specialization_employees = field_employees
+                break
+    
+    if len(specialization_employees) == 0:
+        # Still no matches, return empty recommendations
+        return {
+            "recommended_skills": [],
+            "popularity_scores": {},
+            "skill_frequency": {},
+            "comparison_data": {
+                "total_employees_analyzed": 0,
+                "skills_analyzed": 0
+            }
+        }
+    
+    # Analyze skills frequencies among specialization employees
+    skill_frequency = {}
+    total_employees = len(specialization_employees)
+    
+    for _, employee in specialization_employees.iterrows():
+        if 'Skills' in employee and isinstance(employee['Skills'], str):
+            employee_skills = [s.strip() for s in employee['Skills'].split(',')]
+            
+            for skill in employee_skills:
+                if skill in skill_frequency:
+                    skill_frequency[skill] += 1
+                else:
+                    skill_frequency[skill] = 1
+    
+    # Calculate popularity scores (percentage of employees with this skill)
+    popularity_scores = {skill: count / total_employees * 100 
+                         for skill, count in skill_frequency.items()}
+    
+    # Filter out skills the user already has
+    missing_skills = [skill for skill in skill_frequency.keys() 
+                      if skill not in user_skills_set]
+    
+    # Sort missing skills by popularity
+    recommended_skills = sorted(missing_skills, 
+                               key=lambda skill: popularity_scores.get(skill, 0), 
+                               reverse=True)
+    
+    # Prepare return data
+    return {
+        "recommended_skills": recommended_skills[:10],  # Top 10 recommendations
+        "popularity_scores": {skill: popularity_scores.get(skill, 0) for skill in recommended_skills[:10]},
+        "skill_frequency": {skill: skill_frequency.get(skill, 0) for skill in recommended_skills[:10]},
+        "comparison_data": {
+            "total_employees_analyzed": total_employees,
+            "skills_analyzed": len(skill_frequency)
+        }
+    } 
