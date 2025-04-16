@@ -10,6 +10,9 @@ import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import PCA
 import random
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier
 
 # Import utilities
 from utils.data_processing import parse_resume, calculate_total_experience
@@ -525,240 +528,359 @@ employee_data = None
 career_path_data = None
 
 def load_model_and_data():
-    """
-    Load the trained model and dataset for making recommendations.
-    
-    Returns:
-        bool: True if loading was successful, False otherwise
-    """
-    global model, tfidf, pca, label_encoder, employee_data, career_path_data
-    
+    """Load the trained model and data files."""
     try:
-        # Load the trained model
-        model_components = joblib.load(MODEL_PATH)
-        
-        # Check if model_components is a dictionary with the expected structure
-        if isinstance(model_components, dict) and "model" in model_components:
-            print("Loading model from components dictionary...")
-            model = model_components["model"]
-            tfidf = model_components["tfidf"]
-            pca = model_components["pca"]
-            label_encoder = model_components["label_encoder"]
-        else:
-            # Legacy format - model directly saved
-            print("Loading model from legacy format...")
-            model = model_components
-            
-            # Recreate the preprocessing components
-            from sklearn.preprocessing import LabelEncoder
-            label_encoder = LabelEncoder()
-            tfidf = TfidfVectorizer(max_features=100)
-        
-        # Load datasets
+        # Load employee data
+        print("Loading employee data...")
         employee_data = pd.read_csv(EMPLOYEE_DATA_PATH)
+        print(f"Successfully loaded {len(employee_data)} records")
+        print("Columns:", ", ".join(employee_data.columns))
+        
+        # Load career path data
+        print("\nLoading career path data...")
         career_path_data = pd.read_csv(CAREER_PATH_DATA_PATH)
+        print(f"Successfully loaded {len(career_path_data)} career path records")
+        print("Career path columns:", ", ".join(career_path_data.columns))
         
-        # If tfidf needs to be fit
-        if not hasattr(tfidf, 'vocabulary_'):
-            print("Fitting TF-IDF vectorizer...")
-            X_skills = tfidf.fit_transform(employee_data["Skills"])
+        # Fine-tune specialization to field mappings
+        print("\nFine-tuning specialization to field mappings...")
+        specialization_to_field = dict(zip(career_path_data['Specialization'], career_path_data['Field']))
+        print(f"Example mapping - '{list(specialization_to_field.keys())[0]}' is mapped to field: {list(specialization_to_field.values())[0]}")
         
-        # If label_encoder needs to be fit
-        if not hasattr(label_encoder, 'classes_'):
-            print("Fitting label encoder...")
-            employee_data["Field"] = employee_data["Career Goal"].map(
-                {goal: field for field, goals in career_fields.items() for goal in goals["roles"]}
-            )
-            label_encoder.fit(employee_data["Field"])
+        # Prepare training data
+        print(f"\nTraining with {len(employee_data)} valid employee records")
+        print("\nSample data:")
+        print(employee_data[['Skills', 'Field', 'Specialization']].head(2))
         
-        # If pca needs to be initialized
-        if pca is None:
-            print("Initializing PCA...")
-            X_skills = tfidf.transform(employee_data["Skills"])
-            X = pd.concat([pd.DataFrame(X_skills.toarray()), 
-                          employee_data["Experience"].str.extract("(\d+)").astype(float)], axis=1)
-            pca = PCA(n_components=min(38, X.shape[1]))
-            pca.fit(X)
+        # Extract features and labels
+        X = employee_data['Skills'].fillna('')
+        y_field = employee_data['Field'].fillna('')
+        y_specialization = employee_data['Specialization'].fillna('')
         
-        print("Model and data loaded successfully")
-        return True
+        # Create TF-IDF vectorizer
+        print("\nFitting TF-IDF vectorizer...")
+        vectorizer = TfidfVectorizer(max_features=150)
+        X_tfidf = vectorizer.fit_transform(X)
+        
+        # Add years of experience as a feature
+        X_exp = employee_data['Years Experience'].fillna(0).astype(float).values.reshape(-1, 1)
+        X_combined = np.hstack([X_tfidf.toarray(), X_exp])
+        
+        # Create label encoders
+        print("Fitting label encoder...")
+        field_encoder = LabelEncoder()
+        field_encoder.fit(y_field)
+        
+        specialization_encoder = LabelEncoder()
+        specialization_encoder.fit(y_specialization)
+        
+        # Apply PCA for dimensionality reduction
+        print("Initializing PCA...")
+        pca = PCA(n_components=50)
+        X_pca = pca.fit_transform(X_combined)
+        explained_var = sum(pca.explained_variance_ratio_) * 100
+        print(f"PCA reduced dimensions to {pca.n_components_} components, explaining {explained_var:.2f}% of variance")
+        
+        # Train field recommendation model
+        print("\n=== Training Field Recommendation Model ===")
+        print(f"Field training data shape: {len(X)} samples with {len(field_encoder.classes_)} unique fields")
+        field_model = RandomForestClassifier(n_estimators=100, random_state=42)
+        field_scores = cross_val_score(field_model, X_pca, field_encoder.transform(y_field), cv=5)
+        print(f"Field model cross-validation score: {field_scores.mean():.4f}")
+        
+        print("Starting enhanced model training...")
+        field_model.fit(X_pca, field_encoder.transform(y_field))
+        
+        # Train specialization recommendation model
+        print("\n=== Training Specialization Recommendation Model ===")
+        print(f"Specialization training data shape: {len(X)} samples with {len(specialization_encoder.classes_)} unique specializations")
+        specialization_model = RandomForestClassifier(
+            n_estimators=100,
+            class_weight='balanced',
+            random_state=42
+        )
+        specialization_scores = cross_val_score(specialization_model, X_pca, specialization_encoder.transform(y_specialization), cv=5)
+        print(f"Specialization model cross-validation score: {specialization_scores.mean():.4f}")
+        
+        print("Starting enhanced model training...")
+        if len(specialization_encoder.classes_) > 1:
+            print("Imbalanced classes detected, using balanced class weights")
+        specialization_model.fit(X_pca, specialization_encoder.transform(y_specialization))
+        
+        # Create skill profiles for each specialization
+        print("\n=== Preparing Skill Gap Analysis ===")
+        skill_profiles = {}
+        for specialization in specialization_encoder.classes_:
+            # Get all employees with this specialization
+            spec_employees = employee_data[employee_data['Specialization'] == specialization]
+            if len(spec_employees) > 0:
+                # Get all skills for this specialization
+                all_skills = []
+                for skills_str in spec_employees['Skills'].fillna(''):
+                    skills = [s.strip() for s in skills_str.split(',')]
+                    all_skills.extend(skills)
+                
+                # Count skill frequencies
+                skill_counts = {}
+                for skill in all_skills:
+                    if skill:  # Skip empty skills
+                        skill_counts[skill] = skill_counts.get(skill, 0) + 1
+                
+                # Convert to weighted profile
+                total = sum(skill_counts.values())
+                weighted_skills = [(skill, count/total) for skill, count in skill_counts.items()]
+                weighted_skills.sort(key=lambda x: x[1], reverse=True)
+                
+                skill_profiles[specialization] = weighted_skills
+        
+        print(f"Created weighted skill profiles for {len(skill_profiles)} specializations")
+        example_spec = list(skill_profiles.keys())[0]
+        print(f"Example for '{example_spec}': {skill_profiles[example_spec][:3]}")
+        
+        # Save the model and related data
+        model_data = {
+            'vectorizer': vectorizer,
+            'pca': pca,
+            'field_model': field_model,
+            'field_encoder': field_encoder,
+            'specialization_model': specialization_model,
+            'specialization_encoder': specialization_encoder,
+            'skill_profiles': skill_profiles,
+            'specialization_to_field': specialization_to_field
+        }
+        
+        os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+        joblib.dump(model_data, MODEL_PATH)
+        print(f"\nEnhanced model saved to {MODEL_PATH}")
+        
+        return model_data
+        
     except Exception as e:
-        print(f"Error loading model and data: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
+        print(f"Error loading model and data: {str(e)}")
+        return None
 
 def recommend_field_and_career_paths(skills, experience, user_id=None):
     """
-    Recommends a field, top 3 career paths, required skills, lacking skills, and training recommendations.
-
+    Recommends fields and career paths based on a user's skills and experience.
+    
     Args:
-        skills (str): Comma-separated string of skills (e.g., "Python, SQL, Machine Learning").
-        experience (str): Experience in years (e.g., "5+ years").
-        user_id (str, optional): User ID for personalized recommendations.
-
+        skills (list): List of skills
+        experience (int): Years of experience
+        user_id (str, optional): User ID for personalization
+        
     Returns:
-        dict: A dictionary containing the recommended field, top 3 career paths, required skills, lacking skills, and training recommendations.
+        dict: Dictionary containing field probabilities, specialization recommendations,
+              skill gaps, and other career path information
     """
-    # First check if we have personalized recommendations for this user
-    if user_id:
-        feedback_db = load_feedback_db()
-        if user_id in feedback_db.get("improved_recommendations", {}):
-            personalized_recs = feedback_db["improved_recommendations"][user_id]
-            # Check if the skills and experience are similar to what we've seen before
-            # Simple implementation - could be enhanced with similarity metrics
-            if personalized_recs["skills"] == skills and personalized_recs["experience"] == experience:
-                print(f"Using personalized recommendations for user {user_id}")
-                return personalized_recs["recommendation"]
+    # Load model
+    model_path = os.path.join(os.path.dirname(__file__), "models", "career_path_recommendation_model.pkl")
+    if not os.path.exists(model_path):
+        model_path = MODEL_PATH
     
-    # Ensure model and data are loaded
-    if model is None or tfidf is None or pca is None:
-        if not load_model_and_data():
-            raise Exception("Failed to load model and data")
+    model_data = joblib.load(model_path)
     
-    # Convert skills to TF-IDF features
-    # Ensure skills is a string
-    if not isinstance(skills, str):
-        skills = ", ".join(skills) if isinstance(skills, list) else str(skills)
+    # Extract model components
+    field_model = model_data['field_model']
+    field_encoder = model_data['field_encoder']
+    field_pca = model_data['field_pca']
+    specialization_model = model_data['specialization_model']
+    specialization_encoder = model_data['specialization_encoder']
+    specialization_to_field = model_data['specialization_to_field']
     
-    # Handle potentially empty skills
-    if not skills.strip():
-        skills = "none"
+    # Get vectorizers - check for both old and new naming conventions
+    if 'field_vectorizer' in model_data:
+        field_vectorizer = model_data['field_vectorizer']
+    elif 'field_tfidf' in model_data:
+        field_vectorizer = model_data['field_tfidf']
+    else:
+        # Create a basic TF-IDF vectorizer as fallback
+        field_vectorizer = TfidfVectorizer(max_features=1000)
+        print("Warning: No field vectorizer found in model data")
+        
+    if 'specialization_vectorizer' in model_data:
+        specialization_vectorizer = model_data['specialization_vectorizer']
+    elif 'specialization_tfidf' in model_data:
+        specialization_vectorizer = model_data['specialization_tfidf']
+    else:
+        # Create a basic TF-IDF vectorizer as fallback
+        specialization_vectorizer = TfidfVectorizer(max_features=1000)
+        print("Warning: No specialization vectorizer found in model data")
     
-    skills_tfidf = tfidf.transform([skills])
-
-    # Convert experience to numerical value with better error handling
+    # Get PCA components
+    if 'specialization_pca' in model_data:
+        specialization_pca = model_data['specialization_pca']
+    else:
+        print("Warning: No specialization PCA found in model data")
+        # Will handle this case later
+    
+    # Get experience scaler if available (for enhanced model)
+    experience_scaler = model_data.get('specialization_experience_scaler')
+    
+    # Get skill profiles if available
+    specialization_skill_profiles = model_data.get('specialization_skill_profiles', {})
+    
+    # Join skills into a string for vectorization
+    skills_str = ', '.join(skills)
+    
+    # Add experience as a feature
+    exp_feature = np.array([[float(experience)]])
+    
+    #--------------------------
+    # Field prediction process
+    #--------------------------
+    # Transform skills using field vectorizer
     try:
-        # Remove "+" and "years" for consistent extraction
-        exp_value = experience.replace("+", "").replace("years", "").strip()
-        # Convert to numeric
-        experience_num = float(exp_value)
-    except (ValueError, TypeError, AttributeError):
-        # Default to 0 if conversion fails
-        print(f"Warning: Could not parse experience value '{experience}', using 0 as default")
-        experience_num = 0.0
-
-    # Create feature DataFrame with proper column names
-    X_skills_array = skills_tfidf.toarray()
-    X_skills_df = pd.DataFrame(X_skills_array)
-    
-    # Use consistent feature naming for skills columns
-    X_skills_df.columns = [f'skill_{i}' for i in range(X_skills_df.shape[1])]
-    
-    # Use only skills features without adding experience
-    X_input = X_skills_df.copy()
-    
-    # Check for and handle NaN values
-    if X_input.isna().any().any():
-        print(f"Warning: Found {X_input.isna().sum().sum()} NaN values in input features, filling with 0")
-        X_input.fillna(0, inplace=True)
-    
-    # Apply PCA transformation
-    try:
-        X_input_pca = pca.transform(X_input)
+        # Try using the field vectorizer
+        X_field = field_vectorizer.transform([skills_str]).toarray()
     except Exception as e:
-        print(f"Warning: Error during PCA transformation: {e}")
-        print("Using original features without PCA")
-        # If PCA fails, use the original features directly
-        X_input_pca = X_input.values
+        print(f"Error transforming skills with field vectorizer: {e}")
+        # If it fails, create a simple feature
+        X_field = np.zeros((1, 300))  # Assuming 300 features
     
-    # Predict field and get probabilities
+    # Apply field PCA if possible
     try:
-        # Try standard predict_proba method first
-        y_pred_proba = model.predict_proba(X_input_pca)
-        predicted_field_index = np.argmax(y_pred_proba)
-        confidence_percentage = y_pred_proba[0][predicted_field_index] * 100
-    except (AttributeError, TypeError) as e:
-        print(f"Warning: Could not use predict_proba: {e}")
-        # Fallback to regular predict
-        try:
-            predicted_field_index = model.predict(X_input_pca)[0]
-            confidence_percentage = 90.0  # Default high confidence
-        except Exception as e2:
-            print(f"Error in prediction: {e2}")
-            # Last resort fallback - pick a random field
-            predicted_field_index = random.randint(0, len(career_fields) - 1)
-            confidence_percentage = 70.0  # Lower confidence for random
+        if field_pca:
+            # First combine with experience
+            X_field_exp = np.hstack([X_field, exp_feature])
+            X_field_pca = field_pca.transform(X_field_exp)
+            
+            # Now we can use this for prediction
+            field_probas = field_model.predict_proba(X_field_pca)[0]
+        else:
+            # Fallback without PCA
+            field_probas = field_model.predict_proba(np.hstack([X_field, exp_feature]))[0]
+    except Exception as e:
+        print(f"Error predicting field probabilities: {e}")
+        # Return simple result
+        return {
+            "error": f"Error predicting field: {str(e)}",
+            "field_probabilities": {"Unknown": 1.0},
+            "specialization_recommendations": {"Unknown": 1.0}
+        }
     
-    # Get field name
-    try:
-        predicted_field = label_encoder.inverse_transform([predicted_field_index])[0]
-    except Exception:
-        # Fallback if label_encoder fails
-        predicted_field = list(career_fields.keys())[predicted_field_index]
-
-    # Filter career paths within the predicted field
-    field_career_paths = career_fields[predicted_field]["roles"]
-
-    # Filter career_path_data to include only career paths in the predicted field
-    field_career_data = career_path_data[career_path_data["Career Path"].isin(field_career_paths)]
-
-    # Calculate similarity between input skills and required skills for each career path
-    input_skills_set = set(skills.split(", "))
-    similarity_scores = []
-    for _, row in field_career_data.iterrows():
-        required_skills_set = set(row["Required Skills"].split(", "))
-        similarity = len(input_skills_set.intersection(required_skills_set)) / len(required_skills_set)
-        similarity_scores.append(similarity)
-
-    # Add similarity scores to the DataFrame
-    field_career_data = field_career_data.copy()  # Ensure we're working with a copy
-    field_career_data.loc[:, "Similarity"] = similarity_scores
-
-    # Remove duplicate career paths
-    field_career_data = field_career_data.drop_duplicates(subset=["Career Path"])
-
-    # Sort by similarity and get top 3 career paths
-    top_3_career_paths = field_career_data.sort_values(by="Similarity", ascending=False).head(3)
-
-    # Prepare output
-    recommended_career_paths = top_3_career_paths["Career Path"].tolist()
-    required_skills = top_3_career_paths["Required Skills"].tolist()
-    confidence_percentages = [round(similarity * 100, 2) for similarity in top_3_career_paths["Similarity"]]
-
-    # Identify lacking skills and recommend training
-    lacking_skills_list = []
-    training_recommendations_list = []
-
-    for i, (career_path, req_skills) in enumerate(zip(recommended_career_paths, required_skills)):
-        req_skills_set = set(req_skills.split(", "))
-        lacking_skills = req_skills_set - input_skills_set
-        # Convert the set to a list for JSON serialization
-        lacking_skills_list.append(list(lacking_skills))
-
-        # Recommend training for lacking skills
-        training_recommendations = []
-        for skill in lacking_skills:
-            # Example: Use a predefined mapping of skills to training programs
-            training_mapping = {
-                "Python": "Python for Beginners (Coursera)",
-                "SQL": "SQL Bootcamp (Udemy)",
-                "Java": "Java Programming Masterclass (Udemy)",
-                "Node.js": "Node.js Developer Course (Pluralsight)",
-                "Machine Learning": "Machine Learning by Andrew Ng (Coursera)",
-                "React.js": "React - The Complete Guide (Udemy)",
-                "Data Science": "Data Science Specialization (Coursera)",
-                "Cybersecurity": "Cybersecurity Fundamentals (edX)",
-                "Cloud Computing": "AWS Certified Solutions Architect (Udemy)",
-                "DevOps": "DevOps Engineer Nanodegree (Udacity)",
-                # Add more mappings as needed
-            }
-            if skill in training_mapping:
-                training_recommendations.append(training_mapping[skill])
+    # Get top fields with probabilities
+    field_indices = np.argsort(field_probas)[::-1]
+    field_results = {}
+    for idx in field_indices[:5]:  # Get top 5 fields
+        field_name = field_encoder.inverse_transform([idx])[0]
+        field_results[field_name] = float(field_probas[idx])
+    
+    #--------------------------
+    # Specialization prediction process
+    #--------------------------
+    # For simplicity, let's use a different approach for specialization prediction
+    # We'll try to find specializations that match the top fields
+    
+    # Default fallback in case prediction fails
+    spec_results = {"Unknown": 1.0}
+    
+    # Try to map fields to specializations
+    field_to_spec = {}
+    for spec, field in specialization_to_field.items():
+        if field not in field_to_spec:
+            field_to_spec[field] = []
+        field_to_spec[field].append(spec)
+    
+    # Get specializations from top fields
+    suggested_specs = []
+    for field in field_results.keys():
+        if field in field_to_spec:
+            suggested_specs.extend(field_to_spec[field])
+    
+    if suggested_specs:
+        # Calculate a simple match score based on skills matching
+        spec_scores = {}
+        user_skills_set = set(skill.lower() for skill in skills)
+        
+        for spec in suggested_specs:
+            score = 0
+            if spec in specialization_skill_profiles:
+                spec_skills = specialization_skill_profiles[spec]
+                common_skills = 0
+                total_skills = 0
+                
+                for skill, weight in spec_skills.items():
+                    total_skills += 1
+                    if skill.lower() in user_skills_set:
+                        common_skills += 1
+                        score += float(weight)
+                
+                if total_skills > 0:
+                    # Boost score for specializations that match many user skills
+                    score *= (common_skills / total_skills) * 2
+                    
+                # Factor in field score for this specialization
+                spec_field = specialization_to_field.get(spec)
+                if spec_field in field_results:
+                    score *= field_results[spec_field]
+                    
+                spec_scores[spec] = score
+        
+        # Normalize scores
+        if spec_scores:
+            total_score = sum(spec_scores.values())
+            if total_score > 0:
+                spec_results = {spec: score/total_score for spec, score in spec_scores.items()}
+            
+            # Sort and get top 10
+            spec_results = dict(sorted(spec_results.items(), key=lambda x: x[1], reverse=True)[:10])
+    
+    # Get skill gaps for each recommended specialization
+    skill_gaps = {}
+    user_skills_set = set(skill.lower() for skill in skills)
+    
+    for spec_name in list(spec_results.keys())[:5]:  # Get skill gaps for top 5 specializations
+        if spec_name in specialization_skill_profiles:
+            spec_skills = specialization_skill_profiles[spec_name]
+            if isinstance(spec_skills, dict):
+                # Sort by importance
+                important_skills = sorted(spec_skills.items(), key=lambda x: x[1], reverse=True)
+                missing_skills = []
+                
+                for skill, importance in important_skills[:20]:  # Check top 20 important skills
+                    if skill.lower() not in user_skills_set:
+                        missing_skills.append({"skill": skill, "importance": float(importance)})
+                
+                skill_gaps[spec_name] = missing_skills[:5]  # Return top 5 missing skills
+        else:
+            # If no skill profile, try to get required skills from specialization_to_field
+            field = specialization_to_field.get(spec_name, None)
+            if field in career_fields:
+                field_skills = career_fields[field].get('skills', [])
+                missing_skills = []
+                for skill in field_skills:
+                    if skill.lower() not in user_skills_set:
+                        missing_skills.append({"skill": skill, "importance": 0.5})  # Default importance
+                skill_gaps[spec_name] = missing_skills[:5]
             else:
-                training_recommendations.append(f"Training for {skill} (Check online platforms like Coursera, Udemy, or edX)")
-
-        training_recommendations_list.append(training_recommendations)
-
-    return {
-        "Recommended Field": predicted_field,
-        "Field Confidence": round(confidence_percentage, 2),  # Confidence for the predicted field
-        "Top 3 Career Paths": recommended_career_paths,
-        "Required Skills": required_skills,
-        "Confidence Percentages": confidence_percentages,  # Confidence for each career path
-        "Lacking Skills": lacking_skills_list,  # Lacking skills for each career path
-        "Training Recommendations": training_recommendations_list  # Training recommendations for lacking skills
+                skill_gaps[spec_name] = []
+    
+    # Combine all results
+    results = {
+        'field_probabilities': field_results,
+        'specialization_recommendations': spec_results,
+        'skill_gaps': skill_gaps,
+        'years_experience': experience
     }
+    
+    # Save user feedback data if user_id is provided
+    if user_id:
+        try:
+            feedback_db = load_feedback_db()
+            feedback_entry = {
+                'user_id': user_id,
+                'timestamp': pd.Timestamp.now(),
+                'skills': skills,
+                'experience': experience,
+                'recommended_fields': list(field_results.keys()),
+                'recommended_specializations': list(spec_results.keys())
+            }
+            feedback_db = feedback_db.append(feedback_entry, ignore_index=True)
+            feedback_db.to_csv('data/user_feedback.csv', index=False)
+        except Exception as e:
+            print(f"Error saving feedback: {e}")
+    
+    return results
 
 def recommend_career_from_resume(file_path, user_id=None):
     """
@@ -783,7 +905,7 @@ def recommend_career_from_resume(file_path, user_id=None):
     experience_str = f"{int(total_experience)}+ years"  # Format experience as "X+ years"
 
     # Get recommendations
-    recommendations = recommend_field_and_career_paths(", ".join(skills), experience_str, user_id)
+    recommendations = recommend_field_and_career_paths(skills, total_experience, user_id)
 
     return recommendations, ", ".join(skills), experience_str 
 
