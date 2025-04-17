@@ -1,11 +1,9 @@
 """
-Career recommender system package.
+Career Path Recommender System
 
-This package provides a machine learning-based career recommendation system that:
-1. Analyzes a user's skills and experience from their resume
-2. Recommends suitable career fields and paths
-3. Identifies skill gaps and suggests training
-4. Learns from user feedback to personalize future recommendations
+A machine learning-based system for recommending career paths based on a user's skills.
 """
 
-__version__ = "1.0.0" 
+__version__ = "2.0.0"
+
+from .recommender import recommend_career_path, recommend_field_and_career_paths 
