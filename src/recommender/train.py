@@ -32,8 +32,8 @@ def main():
     data_dir = os.path.join(base_dir, "data")
     os.makedirs(data_dir, exist_ok=True)
     
-    employee_file = os.path.join(data_dir, "synthetic_employee_data.csv")
-    career_file = os.path.join(data_dir, "synthetic_career_path_data.csv")
+    employee_file = os.path.join(data_dir, "synthetic_employee_data.json")
+    career_file = os.path.join(data_dir, "synthetic_career_path_data.json")
     
     # Generate synthetic data
     if verbose:

@@ -58,7 +58,7 @@ class WeightedTrainingDataGenerator:
         """
         # Prepare output file
         if output_file is None:
-            output_file = os.path.join(self.output_dir, "synthetic_career_path_weighted_data.csv")
+            output_file = os.path.join(self.output_dir, "synthetic_career_path_weighted_data.json")
             
         # Create a list of all fields and their specializations
         fields = {}
@@ -130,9 +130,10 @@ class WeightedTrainingDataGenerator:
         # Convert to DataFrame
         df = pd.DataFrame(data)
         
-        # Save to CSV
+        # Save to JSON
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
-        df.to_csv(output_file, index=False)
+        with open(output_file, 'w') as f:
+            json.dump(data, f, indent=2)
         print(f"Generated career path data saved to {output_file}")
         
         return df
@@ -150,7 +151,7 @@ class WeightedTrainingDataGenerator:
         """
         # Prepare output file
         if output_file is None:
-            output_file = os.path.join(self.output_dir, "synthetic_employee_weighted_data.csv")
+            output_file = os.path.join(self.output_dir, "synthetic_employee_weighted_data.json")
             
         # Prepare fields and specializations
         fields = defaultdict(list)
@@ -237,9 +238,10 @@ class WeightedTrainingDataGenerator:
         # Convert to DataFrame
         df = pd.DataFrame(data)
         
-        # Save to CSV
+        # Save to JSON
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
-        df.to_csv(output_file, index=False)
+        with open(output_file, 'w') as f:
+            json.dump(data, f, indent=2)
         print(f"Generated employee data saved to {output_file}")
         
         return df

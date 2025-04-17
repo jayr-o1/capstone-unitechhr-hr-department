@@ -28,23 +28,23 @@ def get_adjusted_path(path):
 
 def load_synthetic_employee_data(file_path=None):
     """
-    Load synthetic employee data from a CSV file.
+    Load synthetic employee data from a JSON file.
     
     Args:
-        file_path (str): Path to the CSV file (default: use predefined path)
+        file_path (str): Path to the JSON file (default: use predefined path)
         
     Returns:
         pandas.DataFrame: Employee data or None if loading fails
     """
     try:
         if file_path is None:
-            file_path = get_adjusted_path("data/synthetic_employee_data.csv")
+            file_path = get_adjusted_path("data/synthetic_employee_data.json")
             
         if not os.path.exists(file_path):
             print(f"Employee data file not found at {file_path}")
             return None
             
-        data = pd.read_csv(file_path)
+        data = pd.read_json(file_path, orient='records')
         return data
     except Exception as e:
         print(f"Error loading synthetic employee data: {str(e)}")
@@ -52,23 +52,23 @@ def load_synthetic_employee_data(file_path=None):
 
 def load_synthetic_career_path_data(file_path=None):
     """
-    Load synthetic career path data from a CSV file.
+    Load synthetic career path data from a JSON file.
     
     Args:
-        file_path (str): Path to the CSV file (default: use predefined path)
+        file_path (str): Path to the JSON file (default: use predefined path)
         
     Returns:
         pandas.DataFrame: Career path data or None if loading fails
     """
     try:
         if file_path is None:
-            file_path = get_adjusted_path("data/synthetic_career_path_data.csv")
+            file_path = get_adjusted_path("data/synthetic_career_path_data.json")
             
         if not os.path.exists(file_path):
             print(f"Career path data file not found at {file_path}")
             return None
             
-        data = pd.read_csv(file_path)
+        data = pd.read_json(file_path, orient='records')
         return data
     except Exception as e:
         print(f"Error loading synthetic career path data: {str(e)}")

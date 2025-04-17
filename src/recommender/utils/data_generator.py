@@ -173,9 +173,17 @@ class SyntheticDataGenerator:
         
         # Save to file if specified
         if output_file:
-            mode = 'a' if append else 'w'
-            header = not append
-            df.to_csv(output_file, index=False, mode=mode, header=header)
+            if append and os.path.exists(output_file):
+                # For append mode with JSON, we need to load existing data first,
+                # combine with new data, then save
+                try:
+                    existing_df = pd.read_json(output_file, orient='records')
+                    df = pd.concat([existing_df, df], ignore_index=True)
+                except Exception as e:
+                    print(f"Warning: Could not append to existing JSON file: {str(e)}")
+                    print("Creating new file instead.")
+            
+            df.to_json(output_file, orient='records', indent=4)
             print(f"Generated {num_entries} employee records saved to {os.path.abspath(output_file)}")
             
         return df
@@ -230,9 +238,17 @@ class SyntheticDataGenerator:
         
         # Save to file if specified
         if output_file:
-            mode = 'a' if append else 'w'
-            header = not append
-            df.to_csv(output_file, index=False, mode=mode, header=header)
+            if append and os.path.exists(output_file):
+                # For append mode with JSON, we need to load existing data first,
+                # combine with new data, then save
+                try:
+                    existing_df = pd.read_json(output_file, orient='records')
+                    df = pd.concat([existing_df, df], ignore_index=True)
+                except Exception as e:
+                    print(f"Warning: Could not append to existing JSON file: {str(e)}")
+                    print("Creating new file instead.")
+            
+            df.to_json(output_file, orient='records', indent=4)
             print(f"Generated {num_entries} career path records saved to {os.path.abspath(output_file)}")
             
         return df

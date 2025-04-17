@@ -16,11 +16,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Define paths
 MODEL_PATH = "models/career_path_recommendation_model.pkl"
-EMPLOYEE_DATA_PATH = "data/synthetic_employee_data.csv"
-CAREER_PATH_DATA_PATH = "data/synthetic_career_path_data.csv"
+EMPLOYEE_DATA_PATH = "data/synthetic_employee_data.json"
+CAREER_PATH_DATA_PATH = "data/synthetic_career_path_data.json"
 
 # Import utilities
-from utils.model_trainer import predict_field, predict_specialization, identify_missing_skills
+from utils.model_trainer import predict_field, predict_specialization, identify_missing_skills, calculate_skill_match_percentage
+from weighted_recommender import WeightedSkillRecommender
 
 def load_model_and_data():
     """
@@ -55,7 +56,7 @@ def load_model_and_data():
         # Load employee data
         employee_data_path = os.path.join(os.path.dirname(__file__), EMPLOYEE_DATA_PATH)
         try:
-            employee_data = pd.read_csv(employee_data_path)
+            employee_data = pd.read_json(employee_data_path, orient='records')
         except:
             print(f"Could not load employee data from {employee_data_path}")
             employee_data = None
@@ -63,7 +64,7 @@ def load_model_and_data():
         # Load career path data
         career_path_data_path = os.path.join(os.path.dirname(__file__), CAREER_PATH_DATA_PATH)
         try:
-            career_path_data = pd.read_csv(career_path_data_path)
+            career_path_data = pd.read_json(career_path_data_path, orient='records')
         except:
             print(f"Could not load career path data from {career_path_data_path}")
             career_path_data = None
@@ -78,12 +79,74 @@ def recommend_field_and_career_paths(skills, user_id=None):
     Recommend a field and possible career paths based on skills.
     
     Args:
-        skills (list): List of skills
+        skills (list or str): List of skills or comma-separated string of skills
         user_id (str, optional): User ID for feedback tracking
         
     Returns:
         dict: Recommendation results including field, specialization, and skills to develop
     """
+    # Standardize skills input
+    if isinstance(skills, str):
+        skills_list = [skill.strip() for skill in skills.split(',') if skill.strip()]
+    else:
+        skills_list = [skill.strip() for skill in skills if skill.strip()]
+    
+    if not skills_list:
+        return {
+            'status': 'error',
+            'message': 'No valid skills provided'
+        }
+    
+    # Prepare skills for weighted recommender (default proficiency level of 70%)
+    user_skills = {skill: 70 for skill in skills_list}
+    
+    try:
+        # Try using the weighted recommender for more accurate results
+        recommender = WeightedSkillRecommender()
+        weighted_result = recommender.recommend(user_skills, top_n=5)
+        
+        if weighted_result.get('success', False):
+            recommendations = weighted_result.get('recommendations', {})
+            top_fields = recommendations.get('top_fields', [])
+            top_specializations = recommendations.get('top_specializations', [])
+            
+            if top_fields and top_specializations:
+                field = top_fields[0].get('field', '')
+                field_confidence = top_fields[0].get('confidence', 0.7)
+                
+                career_paths = []
+                popular_specializations = []
+                
+                # Format career paths from top specializations
+                for spec_info in top_specializations:
+                    specialization = spec_info.get('specialization', '')
+                    match_score = spec_info.get('match_percentage', 0)
+                    missing_skills = spec_info.get('missing_skills', [])
+                    
+                    career_path = {
+                        'field': field,
+                        'specialization': specialization,
+                        'match_score': match_score,
+                        'missing_skills': missing_skills
+                    }
+                    career_paths.append(career_path)
+                    popular_specializations.append(specialization)
+                
+                return {
+                    'status': 'success',
+                    'field': field,
+                    'field_confidence': field_confidence,
+                    'primary_specialization': top_specializations[0].get('specialization', ''),
+                    'specialization_confidence': top_specializations[0].get('match_percentage', 0) / 100,
+                    'career_paths': career_paths,
+                    'popular_specializations': popular_specializations,
+                    'explanation': recommendations.get('explanation', '')
+                }
+    except Exception as e:
+        # Log the exception and fall back to the traditional model
+        print(f"Error using weighted recommender: {str(e)}")
+    
+    # Fall back to traditional model if weighted recommender fails
     # Load model components
     components = load_model_and_data()[0]
     if components is None:
@@ -93,7 +156,7 @@ def recommend_field_and_career_paths(skills, user_id=None):
         }
     
     # Join skills into a string
-    skills_str = ", ".join(skills)
+    skills_str = ", ".join(skills_list)
     
     # Predict field
     field_result = predict_field(skills_str, components)
@@ -322,3 +385,44 @@ def recommend_career_path(skills_str, model_path=MODEL_PATH):
             'status': 'error',
             'message': str(e)
         } 
+
+def get_career_path_match_scores(skills_list):
+    """
+    Get matching scores for all career paths based on skills.
+    
+    Args:
+        skills_list (list): List of skills
+        
+    Returns:
+        dict: Dictionary mapping career path names to match scores (percentage)
+    """
+    # Prepare skills as comma-separated string if it's a list
+    if isinstance(skills_list, list):
+        skills_str = ", ".join(skills_list)
+    else:
+        skills_str = skills_list
+    
+    # Load data
+    employee_data_path = os.path.join(os.path.dirname(__file__), EMPLOYEE_DATA_PATH)
+    try:
+        employee_data = pd.read_json(employee_data_path, orient='records')
+    except:
+        print(f"Could not load employee data from {employee_data_path}")
+        return {}
+    
+    career_path_data_path = os.path.join(os.path.dirname(__file__), CAREER_PATH_DATA_PATH)
+    try:
+        career_path_data = pd.read_json(career_path_data_path, orient='records')
+    except:
+        print(f"Could not load career path data from {career_path_data_path}")
+        return {}
+    
+    # Calculate match score for each career path
+    match_scores = {}
+    for _, row in career_path_data.iterrows():
+        career_path = row['Career Path']
+        required_skills = row['Required Skills']
+        score = calculate_skill_match_percentage(skills_str, row['Specialization'], required_skills)
+        match_scores[career_path] = score
+    
+    return match_scores 

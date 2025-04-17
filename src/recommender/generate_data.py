@@ -16,9 +16,9 @@ def main():
     parser.add_argument('--career-path-count', type=int, default=150, 
                         help='Number of career path records to generate')
     parser.add_argument('--employee-file', type=str, default=None, 
-                        help='Output file for employee data (default: data/synthetic_employee_data.csv)')
+                        help='Output file for employee data (default: data/synthetic_employee_data.json)')
     parser.add_argument('--career-file', type=str, default=None, 
-                        help='Output file for career path data (default: data/synthetic_career_path_data.csv)')
+                        help='Output file for career path data (default: data/synthetic_career_path_data.json)')
     parser.add_argument('--seed', type=int, default=42, 
                         help='Random seed for reproducibility')
     parser.add_argument('--keep-existing', action='store_true', 
@@ -38,10 +38,10 @@ def main():
     os.makedirs(data_dir, exist_ok=True)
     
     if args.employee_file is None:
-        args.employee_file = os.path.join(data_dir, "synthetic_employee_data.csv")
+        args.employee_file = os.path.join(data_dir, "synthetic_employee_data.json")
         
     if args.career_file is None:
-        args.career_file = os.path.join(data_dir, "synthetic_career_path_data.csv")
+        args.career_file = os.path.join(data_dir, "synthetic_career_path_data.json")
     
     # Determine append mode - default is to append if files exist unless replace is specified
     should_append = args.append or (not args.replace and not args.keep_existing)

@@ -36,8 +36,8 @@ logger = logging.getLogger(__name__)
 
 # Define paths
 MODEL_PATH = "models/career_path_recommendation_model.pkl"
-EMPLOYEE_DATA_PATH = "data/synthetic_employee_data.csv"
-CAREER_PATH_DATA_PATH = "data/synthetic_career_path_data.csv"
+EMPLOYEE_DATA_PATH = "data/synthetic_employee_data.json"
+CAREER_PATH_DATA_PATH = "data/synthetic_career_path_data.json"
 MODEL_HISTORY_DIR = "models/history"
 
 # Adjust paths for when running from different directories
@@ -579,29 +579,224 @@ def load_specialization_skills(path=None):
 
 def load_skill_weights(path=None):
     """
-    Load skill weights mapping from JSON file.
+    Load skill weight data for specialization matching.
     
     Args:
-        path: Path to skill weights JSON file (optional)
+        path (str): Path to skill weights JSON file
         
     Returns:
-        dict: Mapping of specialization names to skill weights
+        dict: Mapping of specializations to skill weights
     """
-    if not path:
-        # Use default path
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        path = os.path.join(base_dir, "data", "skill_weights.json")
-    
     try:
-        with open(path, 'r') as f:
-            data = json.load(f)
-        logger.info(f"Loaded skill weights from {path}")
-        return data
+        if path is None:
+            # Try multiple potential file locations
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            potential_paths = [
+                os.path.join(base_dir, "data", "skill_weights.json"),
+                os.path.join(base_dir, "skill_weights.json"),
+                "skill_weights.json"
+            ]
+            
+            # Try each path until we find one that exists
+            for potential_path in potential_paths:
+                if os.path.exists(potential_path):
+                    path = potential_path
+                    break
         
+        if path and os.path.exists(path):
+            with open(path, 'r') as f:
+                weights = json.load(f)
+                
+            # Check if we need to apply dynamic adjustments based on trends
+            trend_adjustment_file = os.path.join(os.path.dirname(path), "skill_weights_metadata.json")
+            if os.path.exists(trend_adjustment_file):
+                try:
+                    with open(trend_adjustment_file, 'r') as f:
+                        metadata = json.load(f)
+                    
+                    # Apply trend-based adjustments if available
+                    if 'trends' in metadata:
+                        weights = _apply_trend_adjustments(weights, metadata['trends'])
+                        
+                    # Apply recency adjustments to skills if last_updated is available
+                    if 'last_updated' in metadata:
+                        weights = _apply_recency_adjustments(weights, metadata['last_updated'])
+                        
+                except Exception as e:
+                    logger.warning(f"Error applying trend adjustments: {str(e)}")
+            
+            return weights
+        else:
+            # If no file exists, return fallback weights
+            logger.warning(f"Skill weights file not found at {path if path else 'any location'}. Using fallback weights.")
+            return _generate_fallback_weights(_get_fallback_specializations())
     except Exception as e:
-        logger.error(f"Error loading skill weights: {str(e)}")
-        # Return fallback data for testing
+        logger.warning(f"Error loading skill weights: {str(e)}")
         return _generate_fallback_weights(_get_fallback_specializations())
+
+def _apply_trend_adjustments(weights, trends):
+    """
+    Apply trend-based adjustments to skill weights.
+    
+    Args:
+        weights (dict): Original skill weights
+        trends (dict): Trend data from metadata
+        
+    Returns:
+        dict: Adjusted skill weights
+    """
+    adjusted_weights = {spec: dict(spec_weights) for spec, spec_weights in weights.items()}
+    
+    # Process trending skills (boost weights)
+    for skill, boost in trends.get('trending_skills', {}).items():
+        # Find all specializations that have this skill
+        for spec in adjusted_weights:
+            if skill in adjusted_weights[spec]:
+                # Boost the weight, but cap at 1.0
+                current_weight = adjusted_weights[spec][skill]
+                adjusted_weights[spec][skill] = min(1.0, current_weight * (1.0 + boost))
+    
+    # Process declining skills (reduce weights)
+    for skill, reduction in trends.get('declining_skills', {}).items():
+        # Find all specializations that have this skill
+        for spec in adjusted_weights:
+            if skill in adjusted_weights[spec]:
+                # Reduce the weight, but keep it above 0.1
+                current_weight = adjusted_weights[spec][skill]
+                adjusted_weights[spec][skill] = max(0.1, current_weight * (1.0 - reduction))
+    
+    # Add emerging skills if not already present
+    for skill, initial_weight in trends.get('emerging_skills', {}).items():
+        # Find relevant specializations for this emerging skill
+        for spec in adjusted_weights:
+            # Use skill relationship or category mapping to decide if this emerging skill
+            # should be added to a specialization
+            if _should_add_emerging_skill(skill, spec, adjusted_weights[spec]):
+                if skill not in adjusted_weights[spec]:
+                    adjusted_weights[spec][skill] = initial_weight
+    
+    return adjusted_weights
+
+def _should_add_emerging_skill(skill, specialization, existing_skills):
+    """
+    Determine if an emerging skill should be added to a specialization.
+    
+    Args:
+        skill (str): The emerging skill
+        specialization (str): The specialization
+        existing_skills (dict): Existing skills for the specialization
+        
+    Returns:
+        bool: True if the skill should be added
+    """
+    # Map of tech domains and related skills
+    domain_skills = {
+        'web_development': ['JavaScript', 'HTML', 'CSS', 'React', 'Angular', 'Vue', 'Web Development'],
+        'data_science': ['Python', 'R', 'Data Analysis', 'Machine Learning', 'Statistics', 'Data Visualization'],
+        'cloud': ['AWS', 'Azure', 'GCP', 'Cloud Computing', 'Containerization', 'DevOps'],
+        'mobile': ['Android', 'iOS', 'Swift', 'Kotlin', 'React Native', 'Flutter'],
+        'ai': ['Machine Learning', 'Deep Learning', 'NLP', 'Computer Vision', 'TensorFlow', 'PyTorch'],
+        'security': ['Cybersecurity', 'Network Security', 'Penetration Testing', 'Security Compliance'],
+        'devops': ['CI/CD', 'Docker', 'Kubernetes', 'Jenkins', 'GitLab CI', 'DevOps'],
+        'database': ['SQL', 'NoSQL', 'MongoDB', 'PostgreSQL', 'MySQL', 'Database Design']
+    }
+    
+    # Emerging skill mappings to domains
+    emerging_skill_domains = {
+        'WebAssembly': ['web_development'],
+        'JAMstack': ['web_development'],
+        'Next.js': ['web_development'],
+        'Svelte': ['web_development'],
+        'AutoML': ['data_science', 'ai'],
+        'MLOps': ['data_science', 'ai', 'devops'],
+        'GitOps': ['devops', 'cloud'],
+        'FinOps': ['cloud'],
+        'Serverless': ['cloud'],
+        'Edge Computing': ['cloud'],
+        'Blockchain': ['security'],
+        'Zero Trust': ['security'],
+        'Low-Code': ['web_development'],
+        'Generative AI': ['ai'],
+        'LLMs': ['ai', 'data_science'],
+        'Vector Databases': ['database', 'ai'],
+        'AR/VR Development': ['mobile'],
+        'Quantum Computing': ['ai'],
+        'GPT Integration': ['ai', 'web_development'],
+        'Prompt Engineering': ['ai']
+    }
+    
+    # Check if the emerging skill belongs to a domain relevant to this specialization
+    skill_domains = emerging_skill_domains.get(skill, [])
+    
+    # Count how many skills from each domain are in the specialization
+    domain_counts = {}
+    for domain, domain_skill_list in domain_skills.items():
+        count = sum(1 for s in domain_skill_list if s in existing_skills)
+        domain_counts[domain] = count
+        
+    # Check if any of the skill's domains have a significant presence in the specialization
+    for domain in skill_domains:
+        if domain in domain_counts and domain_counts[domain] >= 2:
+            return True
+    
+    # Special cases based on specialization name
+    specialization_lower = specialization.lower()
+    if 'web' in specialization_lower and 'web_development' in skill_domains:
+        return True
+    if 'data' in specialization_lower and ('data_science' in skill_domains or 'database' in skill_domains):
+        return True
+    if 'cloud' in specialization_lower and 'cloud' in skill_domains:
+        return True
+    if 'mobile' in specialization_lower and 'mobile' in skill_domains:
+        return True
+    if 'ai' in specialization_lower or 'intelligence' in specialization_lower and 'ai' in skill_domains:
+        return True
+    if 'security' in specialization_lower and 'security' in skill_domains:
+        return True
+    if 'devops' in specialization_lower and 'devops' in skill_domains:
+        return True
+    if 'database' in specialization_lower and 'database' in skill_domains:
+        return True
+    
+    return False
+
+def _apply_recency_adjustments(weights, last_updated):
+    """
+    Apply recency-based adjustments to skill weights.
+    
+    Args:
+        weights (dict): Original skill weights
+        last_updated (dict): Last updated timestamps for skills
+        
+    Returns:
+        dict: Adjusted skill weights
+    """
+    adjusted_weights = {spec: dict(spec_weights) for spec, spec_weights in weights.items()}
+    
+    # Get current date for comparison
+    current_date = datetime.now()
+    
+    for spec in adjusted_weights:
+        for skill in list(adjusted_weights[spec].keys()):
+            # Check if we have recency data for this skill
+            if skill in last_updated:
+                try:
+                    # Parse the timestamp
+                    last_updated_date = datetime.fromisoformat(last_updated[skill])
+                    
+                    # Calculate days since last update
+                    days_since_update = (current_date - last_updated_date).days
+                    
+                    # Apply decay for older skills (more than 180 days without update)
+                    if days_since_update > 180:
+                        # Calculate decay factor (from 1.0 down to 0.7 for very old skills)
+                        decay_factor = max(0.7, 1.0 - ((days_since_update - 180) / 1000))
+                        adjusted_weights[spec][skill] *= decay_factor
+                except:
+                    # Skip if date parsing fails
+                    pass
+    
+    return adjusted_weights
 
 def save_model_data(data, filename, folder=None):
     """
@@ -1484,3 +1679,270 @@ def fine_tune_specialization_mapping(specialization_to_field):
         enhanced_mapping[specialization] = field
     
     return enhanced_mapping
+
+def update_model_with_feedback(feedback_data, verbose=False):
+    """
+    Update the model with user feedback for continuous improvement.
+    
+    Args:
+        feedback_data (list): List of feedback entries with format:
+            {
+                'user_id': str,
+                'skills': list,
+                'recommended_field': str,
+                'recommended_specialization': str,
+                'user_selected_field': str,
+                'user_selected_specialization': str,
+                'feedback_score': int,  # 1-5 rating
+                'timestamp': str,
+                'additional_comments': str
+            }
+        verbose (bool): Whether to print verbose output
+        
+    Returns:
+        bool: True if model was updated successfully, False otherwise
+    """
+    if not feedback_data:
+        logger.warning("No feedback data provided for model update")
+        return False
+        
+    try:
+        # Load existing model components
+        model_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), MODEL_PATH)
+        if not os.path.exists(model_path):
+            logger.error(f"Model not found at {model_path}, cannot update")
+            return False
+            
+        model_components = joblib.load(model_path)
+        
+        # Process feedback data
+        if verbose:
+            print(f"Processing {len(feedback_data)} feedback entries for model update")
+            
+        # Extract valuable feedback: entries with low scores or where user selection differs
+        valuable_feedback = []
+        for entry in feedback_data:
+            # Calculate if this is valuable feedback (incorrect prediction or low score)
+            is_field_incorrect = entry.get('recommended_field') != entry.get('user_selected_field')
+            is_specialization_incorrect = entry.get('recommended_specialization') != entry.get('user_selected_specialization')
+            is_low_score = entry.get('feedback_score', 5) < 3
+            
+            if is_field_incorrect or is_specialization_incorrect or is_low_score:
+                valuable_feedback.append(entry)
+                
+        if verbose:
+            print(f"Found {len(valuable_feedback)} valuable feedback entries for model improvement")
+            
+        if not valuable_feedback:
+            logger.info("No valuable feedback entries found for model update")
+            return True  # No update needed, but not an error
+            
+        # Create training data from feedback
+        field_feedback = []
+        specialization_feedback = []
+        
+        for entry in valuable_feedback:
+            skills = entry.get('skills', [])
+            if not skills:
+                continue
+                
+            skills_str = ", ".join(skills)
+            
+            # Add to field feedback if field was incorrect or score was low
+            if entry.get('user_selected_field'):
+                field_feedback.append({
+                    'Skills': skills_str,
+                    'Field': entry.get('user_selected_field')
+                })
+                
+            # Add to specialization feedback if specialization was incorrect or score was low
+            if entry.get('user_selected_specialization') and entry.get('user_selected_field'):
+                specialization_feedback.append({
+                    'Skills': skills_str,
+                    'Field': entry.get('user_selected_field'),
+                    'Specialization': entry.get('user_selected_specialization')
+                })
+                
+        # Convert to DataFrames
+        field_df = pd.DataFrame(field_feedback) if field_feedback else None
+        specialization_df = pd.DataFrame(specialization_feedback) if specialization_feedback else None
+        
+        # Update field model if we have field feedback
+        if field_df is not None and len(field_df) > 0:
+            if verbose:
+                print(f"Updating field model with {len(field_df)} feedback entries")
+                
+            # Get existing field model and vectorizer
+            field_model = model_components.get('field_model')
+            field_vectorizer = model_components.get('field_vectorizer')
+            
+            if field_model and field_vectorizer:
+                # Vectorize new data
+                X_field = field_vectorizer.transform(field_df['Skills'])
+                y_field = field_df['Field']
+                
+                # Update the model (partial_fit if RandomForest doesn't have it, we need to train a new model)
+                if hasattr(field_model, 'partial_fit'):
+                    # If model supports incremental learning
+                    field_model.partial_fit(X_field, y_field)
+                else:
+                    # Otherwise, we need to combine with original data and retrain
+                    # This is a simplified approach - in practice, you'd want to store original training data
+                    # Get original predictions as a proxy for original training data
+                    original_features = field_vectorizer.get_feature_names_out()
+                    dummy_data = [" ".join(original_features)]
+                    X_dummy = field_vectorizer.transform(dummy_data)
+                    
+                    # Combine dummy data with new data 
+                    # (this is a placeholder - normally you'd have actual original training data)
+                    X_combined = np.vstack([X_dummy, X_field])
+                    y_combined = np.concatenate([[list(set(y_field))[0]], y_field])
+                    
+                    # Train a new model (with increased weight on feedback data)
+                    field_model = RandomForestClassifier(n_estimators=100, random_state=42)
+                    field_model.fit(X_combined, y_combined)
+                    
+                # Update the model in components
+                model_components['field_model'] = field_model
+                
+        # Update specialization model if we have specialization feedback
+        if specialization_df is not None and len(specialization_df) > 0:
+            if verbose:
+                print(f"Updating specialization model with {len(specialization_df)} feedback entries")
+                
+            # Get existing specialization model components
+            spec_models = model_components.get('specialization_models', {})
+            spec_vectorizers = model_components.get('specialization_vectorizers', {})
+            
+            # Group by field
+            for field, field_group in specialization_df.groupby('Field'):
+                if field in spec_models and field in spec_vectorizers:
+                    # Get model and vectorizer for this field
+                    spec_model = spec_models[field]
+                    spec_vectorizer = spec_vectorizers[field]
+                    
+                    # Vectorize new data
+                    X_spec = spec_vectorizer.transform(field_group['Skills'])
+                    y_spec = field_group['Specialization']
+                    
+                    # Update the model
+                    if hasattr(spec_model, 'partial_fit'):
+                        # If model supports incremental learning
+                        spec_model.partial_fit(X_spec, y_spec)
+                    else:
+                        # Otherwise, train a new model (simplified approach)
+                        # In practice, you'd want to store original training data
+                        spec_model = RandomForestClassifier(n_estimators=100, random_state=42)
+                        spec_model.fit(X_spec, y_spec)
+                        
+                    # Update the model in components
+                    spec_models[field] = spec_model
+                else:
+                    # Create new model and vectorizer for this field if doesn't exist
+                    if verbose:
+                        print(f"Creating new specialization model for field: {field}")
+                        
+                    # Create vectorizer and transform skills
+                    spec_vectorizer = TfidfVectorizer(max_features=1000)
+                    X_spec = spec_vectorizer.fit_transform(field_group['Skills'])
+                    y_spec = field_group['Specialization']
+                    
+                    # Train model
+                    spec_model = RandomForestClassifier(n_estimators=100, random_state=42)
+                    spec_model.fit(X_spec, y_spec)
+                    
+                    # Add to components
+                    spec_models[field] = spec_model
+                    spec_vectorizers[field] = spec_vectorizer
+                    
+            # Update the components
+            model_components['specialization_models'] = spec_models
+            model_components['specialization_vectorizers'] = spec_vectorizers
+            
+        # Update skill weights based on feedback
+        try:
+            # Load existing skill weights
+            skill_weights = load_skill_weights()
+            
+            # Update weights based on feedback
+            for entry in valuable_feedback:
+                if entry.get('user_selected_specialization') and entry.get('skills'):
+                    spec = entry.get('user_selected_specialization')
+                    
+                    if spec in skill_weights:
+                        # For each skill in this specialty, slightly boost weights for those
+                        # that appeared in successful recommendations
+                        boost_factor = 0.05
+                        for skill in entry.get('skills', []):
+                            if skill in skill_weights[spec]:
+                                # Boost the weight but cap at 1.0
+                                current_weight = skill_weights[spec][skill]
+                                skill_weights[spec][skill] = min(1.0, current_weight + boost_factor)
+                                
+            # Save updated skill weights
+            skill_weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+                                            "data", "skill_weights.json")
+            
+            with open(skill_weights_path, 'w') as f:
+                json.dump(skill_weights, f, indent=4)
+                
+            if verbose:
+                print(f"Updated skill weights saved to {skill_weights_path}")
+        except Exception as e:
+            logger.warning(f"Error updating skill weights: {str(e)}")
+            
+        # Update metadata with feedback statistics
+        model_components['feedback_entries_used'] = model_components.get('feedback_entries_used', 0) + len(valuable_feedback)
+        model_components['last_feedback_update'] = datetime.now().isoformat()
+        
+        # Calculate and update model accuracy metrics if possible
+        if field_df is not None and len(field_df) > 0:
+            field_pred = predict_field_batch(field_df['Skills'], model_components)
+            if isinstance(field_pred, list):
+                field_accuracy = sum(1 for pred, actual in zip(field_pred, field_df['Field']) if pred == actual) / len(field_pred)
+                model_components['field_accuracy'] = field_accuracy
+        
+        # Save updated model
+        if verbose:
+            print("Saving updated model with feedback improvements")
+            
+        success = save_model_components(model_components, verbose=verbose)
+        
+        return success
+    except Exception as e:
+        logger.error(f"Error updating model with feedback: {str(e)}")
+        if verbose:
+            traceback.print_exc()
+        return False
+        
+def predict_field_batch(skills_list, components):
+    """
+    Predict fields for a batch of skills entries.
+    
+    Args:
+        skills_list (list): List of skills strings
+        components (dict): Model components
+        
+    Returns:
+        list: Predicted fields
+    """
+    if not skills_list or not components:
+        return []
+        
+    try:
+        field_model = components.get('field_model')
+        field_vectorizer = components.get('field_vectorizer')
+        
+        if not field_model or not field_vectorizer:
+            return []
+            
+        # Vectorize skills
+        X = field_vectorizer.transform(skills_list)
+        
+        # Predict fields
+        predictions = field_model.predict(X)
+        
+        return list(predictions)
+    except Exception as e:
+        logger.error(f"Error in batch field prediction: {str(e)}")
+        return []

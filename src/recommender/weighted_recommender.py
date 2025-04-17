@@ -243,27 +243,107 @@ class WeightedSkillRecommender:
         
     def _calculate_skill_similarity(self, skill1, skill2):
         """
-        Calculate similarity between two skills using various methods.
+        Calculate similarity between two skills using multiple methods.
         
         Args:
             skill1: First skill name
             skill2: Second skill name
             
         Returns:
-            float: Similarity score (0.0-1.0)
+            float: Similarity score between 0 and 1
         """
-        # Convert to lowercase for comparison
-        s1 = skill1.lower()
-        s2 = skill2.lower()
+        # Normalize skills for comparison (lowercase, remove special chars)
+        s1 = skill1.lower().strip()
+        s2 = skill2.lower().strip()
         
-        # Direct substring match
-        if s1 in s2 or s2 in s1:
-            # Longer substring means higher similarity
-            return min(len(s1) / len(s2), len(s2) / len(s1))
+        # Direct match
+        if s1 == s2:
+            return 1.0
             
-        # Use difflib sequence matcher for similarity
-        similarity = difflib.SequenceMatcher(None, s1, s2).ratio()
-        return similarity
+        # Check for one being a substring of the other
+        if s1 in s2 or s2 in s1:
+            # Calculate relative length of overlap
+            overlap_ratio = min(len(s1), len(s2)) / max(len(s1), len(s2))
+            # Higher similarity for more complete overlap
+            return 0.8 + (0.2 * overlap_ratio)
+            
+        # Handle common variations
+        # Remove common prefixes/suffixes for comparison
+        common_prefixes = ['advanced ', 'basic ', 'intermediate ', 'proficient in ', 'knowledge of ']
+        common_suffixes = [' programming', ' development', ' language', ' framework', ' design', ' analysis', ' management']
+        
+        s1_normalized = s1
+        s2_normalized = s2
+        
+        for prefix in common_prefixes:
+            s1_normalized = s1_normalized[len(prefix):] if s1_normalized.startswith(prefix) else s1_normalized
+            s2_normalized = s2_normalized[len(prefix):] if s2_normalized.startswith(prefix) else s2_normalized
+            
+        for suffix in common_suffixes:
+            s1_normalized = s1_normalized[:-len(suffix)] if s1_normalized.endswith(suffix) else s1_normalized
+            s2_normalized = s2_normalized[:-len(suffix)] if s2_normalized.endswith(suffix) else s2_normalized
+        
+        # Check if normalized versions match
+        if s1_normalized == s2_normalized:
+            return 0.9
+        
+        # Handle common acronyms and full forms
+        common_acronyms = {
+            'ml': 'machine learning',
+            'ai': 'artificial intelligence',
+            'dl': 'deep learning',
+            'nlp': 'natural language processing',
+            'cv': 'computer vision',
+            'ui': 'user interface',
+            'ux': 'user experience',
+            'js': 'javascript',
+            'py': 'python',
+            'ts': 'typescript',
+            'db': 'database',
+            'api': 'application programming interface',
+            'oop': 'object oriented programming',
+            'ci': 'continuous integration',
+            'cd': 'continuous deployment',
+            'devops': 'development operations'
+        }
+        
+        # Expand acronyms if possible
+        s1_expanded = common_acronyms.get(s1_normalized, s1_normalized)
+        s2_expanded = common_acronyms.get(s2_normalized, s2_normalized)
+        
+        # Check if expanded versions match
+        if s1_expanded == s2_expanded:
+            return 0.85
+        
+        # Handle version numbers (e.g., "Python 3" ≈ "Python")
+        import re
+        version_pattern = r'(.*?)\s*\d+(\.\d+)*$'
+        s1_base = re.match(version_pattern, s1_normalized)
+        s2_base = re.match(version_pattern, s2_normalized)
+        
+        if s1_base and s2_base and s1_base.group(1).strip() == s2_base.group(1).strip():
+            return 0.8
+        
+        # Use difflib sequence matcher for more general similarity
+        from difflib import SequenceMatcher
+        sequence_similarity = SequenceMatcher(None, s1_normalized, s2_normalized).ratio()
+        
+        # Use word-level similarity for longer phrases
+        words1 = set(s1_normalized.split())
+        words2 = set(s2_normalized.split())
+        
+        if words1 and words2:
+            jaccard_similarity = len(words1.intersection(words2)) / len(words1.union(words2))
+            # Combine both similarities with more weight on sequence for short terms
+            # and more weight on word-level for longer phrases
+            if len(words1) <= 2 and len(words2) <= 2:
+                combined_similarity = 0.8 * sequence_similarity + 0.2 * jaccard_similarity
+            else:
+                combined_similarity = 0.4 * sequence_similarity + 0.6 * jaccard_similarity
+            
+            return combined_similarity
+            
+        return sequence_similarity
         
     def _is_same_field(self, specialization, field):
         """
