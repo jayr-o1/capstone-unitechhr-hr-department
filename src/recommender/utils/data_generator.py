@@ -53,9 +53,21 @@ class SyntheticDataGenerator:
         self.specializations = {}
         self.skills = {}
         
+        # Dictionary to track popular specializations
+        self.popular_specializations = {}
+        
         for field, data in career_fields.items():
             # Get specializations (roles) for each field
-            self.specializations[field] = data.get("roles", [])
+            specializations = data.get("roles", [])
+            self.specializations[field] = specializations
+            
+            # Track popular specializations (about 40% of the total)
+            if specializations:
+                num_popular = max(3, int(len(specializations) * 0.4))
+                self.popular_specializations[field] = specializations[:num_popular]
+            else:
+                self.popular_specializations[field] = []
+                
             # Get skills for each field
             self.skills[field] = data.get("skills", [])
             
@@ -150,43 +162,60 @@ class SyntheticDataGenerator:
         # Structure: Field, Specialization, Required Skills, Experience Level
         data = []
         
-        # First, include all specializations from career_fields
+        # First, include all popular specializations from career_fields
         for field, field_data in career_fields.items():
             specializations = field_data.get("roles", [])
             skills_pool = field_data.get("skills", [])
             
+            # Focus on popular specializations (about 40% of all specializations)
+            popular_specs = self.popular_specializations.get(field, [])
+            if not popular_specs and specializations:
+                popular_specs = specializations[:max(3, int(len(specializations) * 0.4))]
+            
+            # Generate more entries for popular specializations to make training more focused
             for specialization in specializations:
-                # Select random experience level
-                experience_level = random.choice(self.experience_levels)
+                # Determine how many entries to create for this specialization
+                # Popular specializations get multiple entries for better representation
+                entry_count = 3 if specialization in popular_specs else 1
                 
-                # Generate skills for this specialization
-                required_skills = self._generate_skills_for_field(field, min_skills=5, max_skills=12)
-                
-                # Add additional specific skills if skills pool is large enough
-                if len(skills_pool) > 5:
-                    specialty_skills = random.sample(skills_pool, min(5, len(skills_pool)))
-                    required_skills.extend(specialty_skills)
-                
-                # Remove duplicates and join as string
-                required_skills = list(set(required_skills))
-                skills_str = ",".join(required_skills)
-                
-                # Add entry
-                data.append({
-                    "Field": field,
-                    "Specialization": specialization,
-                    "Required Skills": skills_str,
-                    "Experience Level": experience_level
-                })
+                for _ in range(entry_count):
+                    # Select random experience level
+                    experience_level = random.choice(self.experience_levels)
+                    
+                    # Generate skills for this specialization
+                    required_skills = self._generate_skills_for_field(field, min_skills=5, max_skills=12)
+                    
+                    # Add additional specific skills if skills pool is large enough
+                    if len(skills_pool) > 5:
+                        specialty_skills = random.sample(skills_pool, min(5, len(skills_pool)))
+                        required_skills.extend(specialty_skills)
+                    
+                    # Remove duplicates and join as string
+                    required_skills = list(set(required_skills))
+                    skills_str = ",".join(required_skills)
+                    
+                    # Add entry
+                    data.append({
+                        "Field": field,
+                        "Specialization": specialization,
+                        "Required Skills": skills_str,
+                        "Experience Level": experience_level
+                    })
         
-        # Generate additional random entries if needed
+        # Generate additional random entries if needed, focusing more on popular specializations
         remaining = num_entries - len(data)
         if remaining > 0:
             for _ in range(remaining):
-                # Select random field and corresponding specialization
+                # Select random field
                 field = random.choice(self.fields)
-                specialization = random.choice(self.specializations.get(field, 
-                                             [f"{field} Specialist", f"{field} Associate"]))
+                
+                # 70% chance to use a popular specialization
+                if random.random() < 0.7 and self.popular_specializations.get(field):
+                    specialization = random.choice(self.popular_specializations[field])
+                else:
+                    # Otherwise use any specialization
+                    specialization = random.choice(self.specializations.get(field, 
+                                                 [f"{field} Specialist", f"{field} Associate"]))
                 
                 # Select random experience level
                 experience_level = random.choice(self.experience_levels)
@@ -248,77 +277,44 @@ class SyntheticDataGenerator:
         Returns:
             pandas.DataFrame: The generated synthetic employee data
         """
-        # Structure: Employee ID, Name, Age, Years Experience, Skills, Career Goal, Current Role
+        # Columns: Name, Age, Field, Specialization, Skills, Experience Level, Years of Experience
         data = []
         
-        # If appending, determine the starting ID number
-        start_id = 1
-        if append and output_file and os.path.exists(output_file):
-            try:
-                existing_df = pd.read_csv(output_file)
-                # Extract employee IDs and find the highest numeric value
-                if 'Employee ID' in existing_df.columns:
-                    existing_ids = existing_df['Employee ID'].str.extract(r'EMP(\d+)', expand=False).astype(float)
-                    if not existing_ids.empty:
-                        max_id = existing_ids.max()
-                        if not pd.isna(max_id):
-                            start_id = int(max_id) + 1
-            except Exception as e:
-                print(f"Error reading existing employee IDs: {str(e)}")
-                print("Starting with default ID numbering")
-        
-        for i in range(start_id, start_id + num_entries):
-            # Select a random field and corresponding specialization
+        for _ in range(num_entries):
+            # Generate employee name and age
+            name = self._generate_name()
+            
+            # Select random field
             field = random.choice(self.fields)
-            career_goal = random.choice(self.specializations.get(field, [f"{field} Specialist"]))
             
-            # Generate a current role that's slightly different from career goal
-            if random.random() < 0.7:  # 70% chance of related current role
-                related_specs = self.specializations.get(field, [])
-                if related_specs and len(related_specs) > 1:
-                    current_role = random.choice([s for s in related_specs if s != career_goal])
-                else:
-                    prefix = random.choice(["Junior ", "Associate ", ""])
-                    current_role = f"{prefix}{career_goal.split()[-1]}"
+            # Prioritize popular specializations (70% chance)
+            if random.random() < 0.7 and self.popular_specializations.get(field):
+                specialization = random.choice(self.popular_specializations[field])
             else:
-                # Completely different role
-                other_field = random.choice([f for f in self.fields if f != field])
-                other_specs = self.specializations.get(other_field, [f"{other_field} Associate"])
-                current_role = random.choice(other_specs) if other_specs else f"{other_field} Associate"
+                # Otherwise use any specialization from this field
+                specialization = random.choice(self.specializations.get(field, 
+                                             [f"{field} Specialist", f"{field} Associate"]))
             
-            # Select experience level and corresponding age and years experience
+            # Select random experience level
             experience_level = random.choice(self.experience_levels)
+            
+            # Calculate age and years of experience
             age = self._generate_age(experience_level)
             years_experience = self._generate_years_experience(experience_level)
             
-            # Generate skills - include both field skills and some skills from career goal field
+            # Generate skills
             skills = self._generate_skills_for_field(field)
-            
-            # Ensure all employees have some goal-related skills
-            if random.random() < 0.9:  # 90% chance of having goal-related skills
-                goal_skills = []
-                
-                for field_name, specs in self.specializations.items():
-                    if career_goal in specs:
-                        goal_skills = self._generate_skills_for_field(field_name, min_skills=2, max_skills=4, add_common=False)
-                        break
-                
-                # Add these skills to the employee's skill set
-                skills.extend(goal_skills)
-            
-            # Remove duplicates and join as string
-            skills = list(set(skills))
-            skills_str = ", ".join(skills)
+            skills_str = ",".join(skills)
             
             # Add entry
             data.append({
-                "Employee ID": f"EMP{i:03d}",
-                "Name": self._generate_name(),
+                "Name": name,
                 "Age": age,
-                "Years Experience": years_experience,
+                "Field": field,
+                "Specialization": specialization,
                 "Skills": skills_str,
-                "Career Goal": career_goal,
-                "Current Role": current_role
+                "Experience Level": experience_level,
+                "Years of Experience": years_experience
             })
         
         # Create DataFrame with new data

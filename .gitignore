@@ -36,7 +36,3 @@ __pycache__/
 *.njsproj
 *.sln
 *.sw?
-
-# Large data files
-src/recommender/data/synthetic_employee_data.csv
-src/recommender/data/synthetic_career_path_data.csv

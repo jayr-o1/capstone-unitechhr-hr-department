@@ -159,29 +159,97 @@ def prepare_features(data, target):
     """
     Prepare features for training with advanced text preprocessing
     """
-    # Ensure data has the required columns
-    if 'Skills' not in data.columns:
-        raise ValueError(f"Skills column not found in data. Available columns: {data.columns.tolist()}")
+    # Find the skills column - could be 'Skills' (employee data) or 'Required Skills' (career path data)
+    skills_column = None
+    if 'Skills' in data.columns:
+        skills_column = 'Skills'
+    elif 'Required Skills' in data.columns:
+        skills_column = 'Required Skills'
+    else:
+        raise ValueError(f"No skills column found in data. Available columns: {data.columns.tolist()}")
     
     if target not in data.columns:
         raise ValueError(f"Target column '{target}' not found in data. Available columns: {data.columns.tolist()}")
     
     # Extract features and target
-    X = data['Skills'].fillna('')
+    X = data[skills_column].fillna('')
     y = data[target].fillna('')
     
     # Remove empty targets and skills
     valid = (y != '') & (X != '')
     return X[valid], y[valid]
 
-def train_enhanced_model(X, y, experience=None, verbose=False):
+def identify_popular_specializations(data, threshold=5):
+    """
+    Identify popular specializations that have enough training examples.
+    
+    Args:
+        data: DataFrame containing training data
+        threshold: Minimum number of examples needed to be considered popular
+        
+    Returns:
+        dict: Dictionary mapping fields to their popular specializations
+    """
+    # Group by field and specialization to count occurrences
+    counts = data.groupby(['Field', 'Specialization']).size().reset_index(name='count')
+    
+    # Filter to specializations that have at least threshold examples
+    popular = counts[counts['count'] >= threshold]
+    
+    # Create a dictionary mapping fields to their popular specializations
+    result = {}
+    for field, group in popular.groupby('Field'):
+        result[field] = group['Specialization'].tolist()
+        
+    return result
+
+def filter_to_popular_specializations(data, popular_specs=None, min_examples=5):
+    """
+    Filter dataset to include only popular specializations with sufficient training examples.
+    
+    Args:
+        data: DataFrame containing training data
+        popular_specs: Optional pre-defined dictionary of popular specializations
+        min_examples: Minimum examples needed if popular_specs not provided
+        
+    Returns:
+        DataFrame: Filtered dataset with only popular specializations
+    """
+    if popular_specs is None:
+        popular_specs = identify_popular_specializations(data, min_examples)
+    
+    # If no popular specializations were found or all are empty, return original data
+    if not popular_specs or all(len(specs) == 0 for specs in popular_specs.values()):
+        print(f"No popular specializations found with threshold {min_examples}. Using all data.")
+        return data
+    
+    # Create a mask for rows to keep
+    mask = pd.Series(False, index=data.index)
+    
+    # Include rows where the field+specialization combination is in our popular list
+    for field, specializations in popular_specs.items():
+        if specializations:  # Only if we have specializations for this field
+            field_mask = (data['Field'] == field) & (data['Specialization'].isin(specializations))
+            mask = mask | field_mask
+    
+    # Filter the data
+    filtered_data = data[mask].copy()
+    
+    # If filtering resulted in too little data, return the original
+    if len(filtered_data) < 50 or len(filtered_data) < 0.1 * len(data):
+        print(f"Filtered data too small ({len(filtered_data)} rows). Using all {len(data)} rows instead.")
+        return data
+        
+    print(f"Filtered from {len(data)} to {len(filtered_data)} examples (focusing on popular specializations)")
+    return filtered_data
+
+def train_enhanced_model(X, y, verbose=False):
     """
     Train a model with enhanced feature extraction and parameter tuning
     
     Args:
         X: Series or array of skill strings
         y: Series or array of target labels
-        experience: Series or array of experience values (optional)
         verbose: Whether to print progress messages
     """
     if verbose:
@@ -198,53 +266,45 @@ def train_enhanced_model(X, y, experience=None, verbose=False):
     X_tfidf = tfidf.fit_transform(X)
     
     if verbose:
-        print(f"TF-IDF created {X_tfidf.shape[1]} features")
+        print(f"Extracted {X_tfidf.shape[1]} features from skills text")
     
-    # Add experience as a feature if provided
-    if experience is not None:
-        X_exp = np.array(experience).reshape(-1, 1)
-        X_combined = np.hstack([X_tfidf.toarray(), X_exp])
-    else:
-        X_combined = X_tfidf.toarray()
-        
-    # Apply PCA for dimensionality reduction
-    n_components = min(X_combined.shape[0]-1, X_combined.shape[1]-1, 50)
-    pca = PCA(n_components=n_components)
-    X_pca = pca.fit_transform(X_combined)
+    # Choose appropriate n_estimators based on dataset size
+    n_trees = min(200, max(100, int(len(X) / 10)))
     
-    if verbose:
-        explained_variance = pca.explained_variance_ratio_.sum() * 100
-        print(f"PCA reduced dimensions to {n_components} components, explaining {explained_variance:.2f}% of variance")
-    
-    # Encode target labels
-    encoder = LabelEncoder()
-    y_encoded = encoder.fit_transform(y)
-    
-    # Balance class weights for imbalanced datasets
-    class_counts = np.bincount(y_encoded)
-    if max(class_counts) / min(class_counts) > 5:
-        # Imbalanced dataset
-        if verbose:
-            print("Imbalanced classes detected, using balanced class weights")
-        class_weight = 'balanced'
-    else:
-        class_weight = None
-    
-    # Train RandomForestClassifier with improved parameters
+    # Create RandomForest with improved parameters
     model = RandomForestClassifier(
-        n_estimators=100, 
-        max_depth=15,
+        n_estimators=n_trees,
+        max_depth=None,
         min_samples_split=5,
         min_samples_leaf=2,
-        class_weight=class_weight,
+        max_features='sqrt',
+        bootstrap=True,
+        class_weight='balanced',
         random_state=42
     )
-    model.fit(X_pca, y_encoded)
     
     if verbose:
-        print("Model training complete")
+        print(f"Training RandomForest with {n_trees} trees...")
     
-    return model, tfidf, pca, encoder
+    # Train the model
+    model.fit(X_tfidf, y)
+    
+    # Get training accuracy
+    y_pred = model.predict(X_tfidf)
+    accuracy = accuracy_score(y, y_pred)
+    
+    if verbose:
+        print(f"Model training completed with accuracy: {accuracy:.4f}")
+        
+        # Show class distribution
+        class_counts = Counter(y)
+        total = sum(class_counts.values())
+        print("\nClass distribution:")
+        for cls, count in class_counts.most_common():
+            percentage = (count / total) * 100
+            print(f"  {cls}: {count} examples ({percentage:.1f}%)")
+    
+    return model, tfidf, accuracy
 
 def cross_validate_model(X, y, folds=5):
     """
@@ -274,231 +334,374 @@ def cross_validate_model(X, y, folds=5):
 
 def predict_field(skills_str, components):
     """
-    Predict career field based on skills with confidence score
-    """
-    X = components['field_tfidf'].transform([skills_str])
-    X_pca = components['field_pca'].transform(X.toarray())
+    Predict field based on skills.
     
+    Args:
+        skills_str (str): Comma-separated list of skills
+        components (dict): Model components
+        
+    Returns:
+        dict: Prediction results with field and confidence
+    """
     try:
-        # Try to get probability scores
-        proba = components['field_model'].predict_proba(X_pca)[0]
-        pred_idx = np.argmax(proba)
-        confidence = proba[pred_idx]
+        # Extract model components
+        field_model = components.get('field_model')
+        field_vectorizer = components.get('field_vectorizer')
         
-        # Get predicted field
-        field = components['field_encoder'].inverse_transform([pred_idx])[0]
+        if field_model is None or field_vectorizer is None:
+            # Missing required components
+            print("Missing field model components")
+            return {
+                'field': "Technology",  # Default fallback field
+                'confidence': 0.3,
+                'error': "Missing model components"
+            }
         
-        # Return field and confidence
-        return field, confidence
-    except:
-        # Fallback to basic prediction without confidence
-        pred_idx = components['field_model'].predict(X_pca)[0]
-        field = components['field_encoder'].inverse_transform([pred_idx])[0]
-        return field, 0.7  # Default confidence
+        # Convert skills to features
+        X = field_vectorizer.transform([skills_str])
+        
+        # Make prediction
+        field = field_model.predict(X)[0]
+        
+        # Get prediction probabilities
+        proba = field_model.predict_proba(X)[0]
+        confidence = max(proba)
+        
+        # Get alternate fields as the top 3 predicted fields
+        predicted_classes = field_model.classes_
+        sorted_indices = np.argsort(proba)[::-1]  # Sort in descending order
+        alternate_fields = [predicted_classes[i] for i in sorted_indices[1:4]]  # Next 3 fields after the top one
+        
+        return {
+            'field': field,
+            'confidence': float(confidence),
+            'alternate_fields': alternate_fields
+        }
+    except Exception as e:
+        # Fallback to default
+        print(f"Error in field prediction: {str(e)}")
+        return {
+            'field': "Technology",  # Default fallback field
+            'confidence': 0.2,
+            'error': str(e)
+        }
 
 def predict_specialization(skills_str, field, components):
     """
-    Predict specialization based on skills and field context with balanced handling
-    for all specializations.
+    Predict specialization for a given field based on skills.
+    
+    Args:
+        skills_str (str): Comma-separated list of skills
+        field (str): The field to predict specialization for
+        components (dict): Model components
+        
+    Returns:
+        dict: Prediction results with specialization and confidence
     """
-    X = components['specialization_tfidf'].transform([skills_str])
-    X_pca = components['specialization_pca'].transform(X.toarray())
-    
-    # Get field-specific specializations
-    field_specializations = components.get('field_to_specializations', {}).get(field, [])
-    
     try:
-        # Get probability scores for all specializations
-        proba = components['specialization_model'].predict_proba(X_pca)[0]
+        # Get model and vectorizer for this field
+        specialization_models = components.get('specialization_models', {})
+        specialization_vectorizers = components.get('specialization_vectorizers', {})
+        popular_specializations = components.get('popular_specializations', {})
         
-        # Get all specializations with their probabilities
-        specialization_probs = {
-            components['specialization_encoder'].inverse_transform([i])[0]: proba[i]
-            for i in range(len(proba))
+        if field not in specialization_models or field not in specialization_vectorizers:
+            # If we don't have a model for this field, return a default
+            field_specs = popular_specializations.get(field, [])
+            if field_specs:
+                # Return the first popular specialization for this field
+                return {
+                    'specialization': field_specs[0],
+                    'confidence': 0.5,
+                    'note': 'Using popular specialization default - no model available for this field'
+                }
+            return {
+                'specialization': f"{field} Specialist",
+                'confidence': 0.3,
+                'note': 'Using generic default - no model available for this field'
+            }
+            
+        # Get the model and vectorizer
+        model = specialization_models[field]
+        vectorizer = specialization_vectorizers[field]
+        
+        # Preprocess the skills
+        X = vectorizer.transform([skills_str])
+        
+        # Make prediction
+        specialization = model.predict(X)[0]
+        
+        # Get prediction probabilities
+        proba = model.predict_proba(X)[0]
+        confidence = max(proba)
+        
+        return {
+            'specialization': specialization,
+            'confidence': float(confidence),
+            'alternate_specializations': popular_specializations.get(field, [])[:3]
         }
-        
-        # Prioritize specializations from the predicted field
-        if field_specializations:
-            # Boost scores for specializations in the predicted field
-            for spec in field_specializations:
-                if spec in specialization_probs:
-                    specialization_probs[spec] *= 1.2  # 20% boost for field-specific specializations
-        
-        # Get top specialization
-        top_spec = max(specialization_probs.items(), key=lambda x: x[1])
-        return top_spec[0], top_spec[1]
-    except:
-        # Fallback to basic prediction
-        pred_idx = components['specialization_model'].predict(X_pca)[0]
-        spec = components['specialization_encoder'].inverse_transform([pred_idx])[0]
-        return spec, 0.7  # Default confidence
+    except Exception as e:
+        # Fallback to default
+        print(f"Error in specialization prediction: {str(e)}")
+        return {
+            'specialization': f"{field} Specialist",
+            'confidence': 0.2,
+            'error': str(e)
+        }
 
 def identify_missing_skills(skills_str, specialization, components):
     """
-    Identify skills needed for specialization that user doesn't have,
-    with importance weighting for all specializations.
+    Identify missing skills for a specific specialization.
+    
+    Args:
+        skills_str (str): Comma-separated list of skills
+        specialization (str): Target specialization
+        components (dict): Model components
+        
+    Returns:
+        dict: Dictionary with missing skills and recommendations
     """
-    user_skills = set(skill.strip().lower() for skill in skills_str.split(','))
-    
-    # Get weighted skills for the specialization
-    weighted_skills = components['specialization_skills'].get(specialization, {})
-    
-    if not weighted_skills:
-        # If we don't have skills, return an empty set
-        return set()
-    
-    # Sort skills by importance (weight)
-    sorted_skills = sorted(weighted_skills.items(), key=lambda x: x[1], reverse=True)
-    
-    # Extract missing skills with their importance
-    missing_skills_with_weight = [
-        (skill, weight) for skill, weight in sorted_skills
-        if skill.lower() not in user_skills
-    ]
-    
-    # Convert to set of skills only (without weights)
-    missing_skills = set(skill for skill, _ in missing_skills_with_weight)
-    
-    return missing_skills
+    try:
+        # Load career fields to get required skills for the specialization
+        career_fields = load_career_fields()
+        
+        # Parse user skills
+        user_skills = [skill.strip().lower() for skill in skills_str.split(',') if skill.strip()]
+        user_skills_set = set(user_skills)
+        
+        # Find which field this specialization belongs to
+        specialization_field = None
+        for field, data in career_fields.items():
+            if specialization in data.get('roles', []):
+                specialization_field = field
+                break
+        
+        if not specialization_field:
+            return {
+                'missing_skills': [],
+                'note': f"Could not find field for specialization '{specialization}'"
+            }
+        
+        # Get required skills for this field/specialization
+        field_skills = career_fields.get(specialization_field, {}).get('skills', [])
+        
+        # Find missing skills
+        missing_skills = []
+        for skill in field_skills:
+            if skill.lower() not in user_skills_set:
+                missing_skills.append(skill)
+        
+        # Get skills from training data if available
+        model_skills = []
+        
+        # Sort missing skills by relevance (currently just alphabetical)
+        missing_skills.sort()
+        
+        # Return the top 5-7 missing skills
+        top_missing = missing_skills[:min(7, len(missing_skills))]
+        
+        return {
+            'missing_skills': top_missing,
+            'field': specialization_field,
+            'specialization': specialization,
+            'user_skills_count': len(user_skills),
+            'required_skills_count': len(field_skills),
+            'missing_skills_count': len(missing_skills)
+        }
+    except Exception as e:
+        print(f"Error identifying missing skills: {str(e)}")
+        return {
+            'missing_skills': [],
+            'error': str(e)
+        }
 
 def recommend_career_path(skills_str, model_path=MODEL_PATH):
     """
-    Complete three-stage career recommendation with confidence scores:
-    1. Recommend field with confidence score
-    2. Recommend specialization with confidence score
-    3. Identify missing skills with importance levels
+    Recommend career path based on skills.
+    
+    Args:
+        skills_str (str): Comma-separated list of skills
+        model_path (str): Path to the model file
+        
+    Returns:
+        dict: Recommendation results
     """
-    # Load model components
-    components = joblib.load(model_path)
+    try:
+        # Load model components
+        model_file = get_adjusted_path(model_path)
+        if not os.path.exists(model_file):
+            return {
+                'status': 'error', 
+                'message': f'Model file not found at {model_file}'
+            }
+        
+        components = joblib.load(model_file)
+        
+        # Parse user skills
+        user_skills = [skill.strip() for skill in skills_str.split(',') if skill.strip()]
     
-    # Stage 1: Field Recommendation
-    field, field_confidence = predict_field(skills_str, components)
+        # Stage 1: Field Recommendation
+        field_info = predict_field(skills_str, components)
+        field = field_info['field']
     
-    # Stage 2: Specialization Recommendation
-    specialization, spec_confidence = predict_specialization(skills_str, field, components)
+        # Stage 2: Specialization Recommendation
+        specialization_info = predict_specialization(skills_str, field, components)
+        
+        if isinstance(specialization_info, dict):
+            specialization = specialization_info.get('specialization')
+            spec_confidence = specialization_info.get('confidence', 0.7)
+        else:
+            # Handle legacy format (tuple of specialization and confidence)
+            specialization = specialization_info[0] if isinstance(specialization_info, tuple) else specialization_info
+            spec_confidence = specialization_info[1] if isinstance(specialization_info, tuple) else 0.7
     
-    # Stage 3: Skill Gap Analysis
-    missing_skills = identify_missing_skills(skills_str, specialization, components)
-    
-    # Get user's existing skills
-    user_skills = [skill.strip() for skill in skills_str.split(',')]
-    
-    return {
-        'recommended_field': field,
-        'field_confidence': round(field_confidence * 100, 2),
-        'recommended_specialization': specialization,
-        'specialization_confidence': round(spec_confidence * 100, 2),
-        'missing_skills': list(missing_skills),
-        'existing_skills': user_skills,
-        'model_version': components.get('version', '1.0')
-    }
+        # Stage 3: Skill Gap Analysis
+        missing_skills_info = identify_missing_skills(skills_str, specialization, components)
+        
+        if isinstance(missing_skills_info, dict):
+            missing_skills = missing_skills_info.get('missing_skills', [])
+        else:
+            # Handle legacy format (set of skills)
+            missing_skills = list(missing_skills_info) if missing_skills_info else []
+        
+        # Prepare the response
+        return {
+            'status': 'success',
+            'recommended_field': field,
+            'field_confidence': round(field_info.get('confidence', 0.7) * 100, 2),
+            'recommended_specialization': specialization,
+            'specialization_confidence': round(spec_confidence * 100, 2),
+            'missing_skills': missing_skills,
+            'existing_skills': user_skills,
+            'model_version': components.get('version', '1.0'),
+            'alternate_fields': field_info.get('alternate_fields', []),
+            'alternate_specializations': specialization_info.get('alternate_specializations', []) 
+                if isinstance(specialization_info, dict) else []
+        }
+    except Exception as e:
+        print(f"Error in career path recommendation: {str(e)}")
+        traceback.print_exc()
+        return {
+            'status': 'error',
+            'message': str(e)
+        }
 
 def initial_model_training(verbose=True):
     """
     Perform initial model training using synthetic data.
-    
-    Args:
-        verbose (bool): If True, print progress messages
         
     Returns:
         bool: True if training was successful, False otherwise
     """
     try:
-        # Load synthetic data
-        employee_data = pd.read_csv(get_adjusted_path(EMPLOYEE_DATA_PATH))
-        career_path_data = pd.read_csv(get_adjusted_path(CAREER_PATH_DATA_PATH))
-        
         if verbose:
-            print("Loading employee data...")
-            print(f"Successfully loaded {len(employee_data)} records")
-            print("Columns:", ", ".join(employee_data.columns))
+            print("Loading synthetic data for model training...")
             
-            print("\nLoading career path data...")
-            print(f"Successfully loaded {len(career_path_data)} career path records")
-            print("Career path columns:", ", ".join(career_path_data.columns))
+        # Load the employee and career path data
+        employee_data = load_synthetic_employee_data()
+        career_path_data = load_synthetic_career_path_data()
         
-        # Create specialization to field mapping
-        specialization_to_field = dict(zip(career_path_data['Specialization'], career_path_data['Field']))
+        if employee_data is None or career_path_data is None:
+            if verbose:
+                print("Failed to load synthetic data. Please generate data first.")
+            return False
+            
+        if verbose:
+            print(f"Loaded {len(employee_data)} employee records and {len(career_path_data)} career path records")
         
-        # Map Career Goal to Field and Specialization
-        employee_data['Specialization'] = employee_data['Career Goal']
-        employee_data['Field'] = employee_data['Career Goal'].map(specialization_to_field)
-        
-        # Remove rows with missing fields
-        employee_data = employee_data.dropna(subset=['Field', 'Specialization'])
+        # Identify popular specializations
+        popular_specs = identify_popular_specializations(career_path_data, threshold=5)
         
         if verbose:
-            print(f"\nMapped {len(employee_data)} employee records to fields and specializations")
-            print("Sample mappings:")
-            sample = employee_data[['Career Goal', 'Field', 'Specialization']].head(3)
-            print(sample)
+            print("\nPopular specializations by field:")
+            for field, specs in popular_specs.items():
+                print(f"  {field}: {len(specs)} specializations")
+                for spec in specs[:5]:  # Show first 5 for each field
+                    print(f"    - {spec}")
+                if len(specs) > 5:
+                    print(f"    - ... and {len(specs)-5} more")
         
-        # Prepare field training data
-        X_field, y_field = prepare_features(employee_data, 'Field')
-        experience = employee_data['Years Experience'].fillna(0).astype(float)
+        # Filter data to focus on popular specializations
+        filtered_career_data = filter_to_popular_specializations(career_path_data, popular_specs)
         
+        # Train field prediction model
         if verbose:
-            print("\n=== Training Field Recommendation Model ===")
-            print(f"Field training data shape: {len(X_field)} samples with {len(set(y_field))} unique fields")
+            print("\n=== Training Field Prediction Model ===")
         
-        # Train field model
-        field_model, field_tfidf, field_pca, field_encoder = train_enhanced_model(
-            X_field, y_field, experience=experience, verbose=verbose
-        )
+        X_field, y_field = prepare_features(filtered_career_data, 'Field')
+        field_model, field_vectorizer, field_accuracy = train_enhanced_model(X_field, y_field, verbose=verbose)
         
-        # Prepare specialization training data
-        X_spec, y_spec = prepare_features(employee_data, 'Specialization')
-        
+        # Train specialization prediction model - one model per field
         if verbose:
-            print("\n=== Training Specialization Recommendation Model ===")
-            print(f"Specialization training data shape: {len(X_spec)} samples with {len(set(y_spec))} unique specializations")
+            print("\n=== Training Specialization Prediction Models ===")
+            
+        specialization_models = {}
+        specialization_vectorizers = {}
+        specialization_accuracies = {}
         
-        # Train specialization model
-        specialization_model, specialization_tfidf, specialization_pca, specialization_encoder = train_enhanced_model(
-            X_spec, y_spec, experience=experience, verbose=verbose
-        )
+        # Get all unique fields
+        fields = filtered_career_data['Field'].unique()
         
-        # Create field to specializations mapping
-        field_to_specializations = {}
-        for spec, field in specialization_to_field.items():
-            if field not in field_to_specializations:
-                field_to_specializations[field] = []
-            field_to_specializations[field].append(spec)
+        for field in fields:
+            if verbose:
+                print(f"\nTraining model for field: {field}")
+                
+            # Filter data for this field
+            field_data = filtered_career_data[filtered_career_data['Field'] == field]
+            
+            # Check if we have enough data
+            if len(field_data) < 5:
+                if verbose:
+                    print(f"Not enough data for field {field}. Skipping...")
+                continue
+                
+            # Prepare features
+            X_spec, y_spec = prepare_features(field_data, 'Specialization')
+            
+            if len(X_spec) < 5:
+                if verbose:
+                    print(f"Not enough valid data for field {field}. Skipping...")
+                continue
+            
+            # Train the model
+            spec_model, spec_vectorizer, spec_accuracy = train_enhanced_model(
+                X_spec, y_spec, verbose=verbose
+            )
+            
+            # Store the model
+            specialization_models[field] = spec_model
+            specialization_vectorizers[field] = spec_vectorizer
+            specialization_accuracies[field] = spec_accuracy
         
-        # Create specialization skill profiles
-        specialization_skills = {}
-        for _, row in career_path_data.iterrows():
-            skills = [s.strip() for s in row['Required Skills'].split(',')]
-            specialization_skills[row['Specialization']] = skills
-        
-        # Save model components
-        model_data = {
+        # Prepare to create the final model components
+        model_components = {
             'field_model': field_model,
-            'field_tfidf': field_tfidf,
-            'field_pca': field_pca,
-            'field_encoder': field_encoder,
-            'specialization_model': specialization_model,
-            'specialization_tfidf': specialization_tfidf,
-            'specialization_pca': specialization_pca,
-            'specialization_encoder': specialization_encoder,
-            'specialization_skills': specialization_skills,
-            'field_to_specializations': field_to_specializations,
-            'specialization_to_field': specialization_to_field,
-            'trained_at': datetime.now().isoformat(),
-            'training_data_shape': {
-                'employees': len(employee_data),
-                'career_paths': len(career_path_data)
-            },
-            'version': '2.0'
+            'field_vectorizer': field_vectorizer,
+            'field_accuracy': field_accuracy,
+            'specialization_models': specialization_models,
+            'specialization_vectorizers': specialization_vectorizers,
+            'specialization_accuracies': specialization_accuracies,
+            'popular_specializations': popular_specs,
+            'trained_at': datetime.now().isoformat()
         }
         
-        success = save_model_components(model_data, verbose=verbose)
-        
-        if success and verbose:
-            print("\n=== Model Training Complete ===")
-            print("Model training completed successfully!")
+        # Save the model
+        if save_model_components(model_components, verbose):
+            if verbose:
+                print("\n=== Model Training Complete ===")
+                print(f"Field prediction accuracy: {field_accuracy:.4f}")
+                
+                # Calculate average specialization accuracy
+                if specialization_accuracies:
+                    avg_spec_accuracy = sum(specialization_accuracies.values()) / len(specialization_accuracies)
+                    print(f"Average specialization prediction accuracy: {avg_spec_accuracy:.4f}")
+                    
+                print(f"Model saved to {MODEL_PATH}")
             
-        return success
+            return True
+        else:
+            if verbose:
+                print("Failed to save model components.")
+            return False
         
     except Exception as e:
         if verbose:
