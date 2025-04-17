@@ -177,6 +177,18 @@ def load_career_fields():
                 "Financial Modeling", "Valuation", "Risk Management",
                 "Market Analysis", "Financial Research"
             ]
+        },
+        "Law": {
+            "roles": [
+                "Corporate Lawyer", "Litigation Attorney", "Intellectual Property Lawyer",
+                "Criminal Defense Attorney", "Family Law Attorney", "Immigration Lawyer",
+                "Real Estate Attorney", "Tax Attorney", "Employment Law Attorney"
+            ],
+            "skills": [
+                "Legal Research", "Legal Writing", "Contract Drafting", "Contract Negotiation",
+                "Due Diligence", "Trial Advocacy", "Litigation", "Case Strategy",
+                "Client Representation", "Regulatory Compliance", "Legal Analysis"
+            ]
         }
     }
 
@@ -377,7 +389,7 @@ def predict_field(skills_str, components):
             # Missing required components
             print("Missing field model components")
             return {
-                'field': "Technology",  # Default fallback field
+                'field': "Computer Science",  # Default to Computer Science instead of generic "Technology"
                 'confidence': 0.3,
                 'error': "Missing model components"
             }
@@ -391,6 +403,35 @@ def predict_field(skills_str, components):
         # Get prediction probabilities
         proba = field_model.predict_proba(X)[0]
         confidence = max(proba)
+        
+        # If confidence is very low, try to use field mapping from specialization skills
+        # This helps when we have domain-specific skills that might not be in training data
+        if confidence < 0.4 or field == "Other":
+            # Try to find matches in specialization skills
+            specialization_skills = components.get('specialization_skills', {})
+            if specialization_skills:
+                skills_list = [s.strip() for s in skills_str.split(',')]
+                field_match_scores = {}
+                
+                # Check each field's specializations for skill matches
+                for field_name, specializations in specialization_skills.items():
+                    field_match_scores[field_name] = 0
+                    for spec_name, spec_skills in specializations.items():
+                        # Count how many skills match
+                        matched_skills = set(skills_list).intersection(set(spec_skills))
+                        if matched_skills:
+                            # Add more weight to exact field-specific skill matches
+                            field_match_scores[field_name] += len(matched_skills) * 2
+                
+                # If we found any matches, use the field with the most matches
+                if field_match_scores and max(field_match_scores.values()) > 0:
+                    best_field = max(field_match_scores.items(), key=lambda x: x[1])[0]
+                    # If our best field has significantly more matches than the predicted field
+                    # or the predicted field is "Other", override
+                    if field == "Other" or field_match_scores.get(field, 0) < field_match_scores[best_field] * 0.7:
+                        field = best_field
+                        confidence = max(0.5, confidence)  # Boost confidence but not above original if high
+                        print(f"Overrode field prediction to {field} based on skill matching")
         
         # Get alternate fields as the top 3 predicted fields
         predicted_classes = field_model.classes_
@@ -406,7 +447,7 @@ def predict_field(skills_str, components):
         # Fallback to default
         print(f"Error in field prediction: {str(e)}")
         return {
-            'field': "Technology",  # Default fallback field
+            'field': "Computer Science",  # Change default fallback field
             'confidence': 0.2,
             'error': str(e)
         }
@@ -1172,207 +1213,254 @@ def calculate_skill_match_percentage(user_skills_str, specialization, specializa
         'partially_matched_skills': partially_matched
     }
 
-def identify_missing_skills(skills_str, specialization, components, proficiency_levels=None):
+def identify_missing_skills(user_skills, target_specialization, model_components):
     """
-    Identify missing skills for a specific specialization using model data.
+    Identify missing skills for a target specialization, with special handling for legal specializations.
     
     Args:
-        skills_str (str): Comma-separated list of skills
-        specialization (str): Target specialization
-        components (dict): Model components
-        proficiency_levels (dict, optional): Dictionary mapping skills to proficiency levels (1-100)
+        user_skills (str or list): Comma-separated skills string or list of skills
+        target_specialization (str): Target specialization to analyze
+        model_components (dict): Dictionary of model components
         
     Returns:
-        dict: Dictionary with missing skills and recommendations
+        tuple: (missing_skills, match_percentage, matched_skills)
     """
     try:
-        # Parse user skills
-        user_skills = [skill.strip().lower() for skill in skills_str.split(',') if skill.strip()]
-        user_skills_set = set(user_skills)
-        
-        # Load specialization-specific skills from JSON file
-        specialization_specific_skills = load_specialization_skills()
-        
-        # Load skill weights
-        skill_weights = load_skill_weights()
-        
-        # Calculate detailed skill match information
-        match_info = calculate_skill_match_percentage(
-            skills_str, 
-            specialization, 
-            specialization_specific_skills,
-            skill_weights,
-            proficiency_levels
-        )
-        
-        # Define common technology compound terms for better matching
-        compound_skills = {
-            "cloud computing": "Cloud Computing",
-            "machine learning": "Machine Learning",
-            "deep learning": "Deep Learning",
-            "data science": "Data Science",
-            "data analysis": "Data Analysis",
-            "data analytics": "Data Analytics",
-            "big data": "Big Data",
-            "artificial intelligence": "Artificial Intelligence",
-            "natural language processing": "Natural Language Processing",
-            "computer vision": "Computer Vision",
-            "web development": "Web Development",
-            "mobile development": "Mobile Development",
-            "game development": "Game Development",
-            "software development": "Software Development",
-            "api development": "API Development",
-            "front end": "Front-end Development",
-            "frontend": "Front-end Development",
-            "back end": "Back-end Development", 
-            "backend": "Back-end Development",
-            "full stack": "Full-Stack Development",
-            "fullstack": "Full-Stack Development",
-            "devops": "DevOps",
-            "ci cd": "CI/CD",
-            "version control": "Version Control",
-            "git": "Git",
-            "docker": "Docker",
-            "kubernetes": "Kubernetes",
-            "database": "Database Management",
-            "sql": "SQL",
-            "nosql": "NoSQL",
-            "ui ux": "UI/UX Design",
-            "user interface": "UI/UX Design",
-            "user experience": "UI/UX Design",
-            "agile": "Agile Methodology",
-            "scrum": "Scrum",
-            "project management": "Project Management",
-            "cyber security": "Cybersecurity",
-            "cybersecurity": "Cybersecurity",
-            "network security": "Network Security",
-            "blockchain": "Blockchain",
-            "cloud architecture": "Cloud Architecture",
-            "aws": "AWS",
-            "azure": "Microsoft Azure",
-            "gcp": "Google Cloud Platform",
-            "react": "React.js",
-            "angular": "Angular",
-            "vue": "Vue.js",
-            "node": "Node.js",
-            "express": "Express.js",
-            "django": "Django",
-            "flask": "Flask",
-            "spring": "Spring Framework",
-            "tensorflow": "TensorFlow",
-            "pytorch": "PyTorch",
-            "scikit learn": "Scikit-learn",
-            "opencv": "OpenCV",
-            "java": "Java",
-            "python": "Python",
-            "c#": "C#",
-            "c++": "C++",
-            "javascript": "JavaScript",
-            "typescript": "TypeScript",
-            "swift": "Swift",
-            "kotlin": "Kotlin",
-            "ruby": "Ruby",
-            "go": "Go",
-            "rust": "Rust",
-            "php": "PHP",
-            "html": "HTML",
-            "css": "CSS",
-            "sass": "SASS/SCSS",
-            "scala": "Scala",
-            "r language": "R",
-            "embedded systems": "Embedded Systems",
-            "iot": "IoT",
-            "microservices": "Microservices Architecture",
-            "restful api": "RESTful API",
-            "graphql": "GraphQL",
-            "test driven": "Test-Driven Development",
-            "unit testing": "Unit Testing",
-            "penetration testing": "Penetration Testing",
-            "data modeling": "Data Modeling",
-            "object oriented": "Object-Oriented Programming",
-            "functional programming": "Functional Programming",
-            "distributed systems": "Distributed Systems",
-            "api gateway": "API Gateway",
-            "serverless": "Serverless Architecture",
-            "message queue": "Message Queuing",
-            "etl": "ETL Processes",
-            "data warehouse": "Data Warehousing",
-            "data visualization": "Data Visualization",
-            "power bi": "Power BI",
-            "tableau": "Tableau",
-            "unix": "Unix/Linux",
-            "windows server": "Windows Server",
-            "networking": "Computer Networking",
-            "tcp ip": "TCP/IP",
-            "system design": "System Design",
-            "architecture design": "Architecture Design",
-            "automation": "Automation",
-            "shell scripting": "Shell Scripting",
-            "bash": "Bash",
-            "powershell": "PowerShell",
-            "business intelligence": "Business Intelligence",
-            "data mining": "Data Mining",
-            "3d modeling": "3D Modeling",
-            "unity": "Unity",
-            "unreal": "Unreal Engine",
-            "augmented reality": "Augmented Reality (AR)",
-            "virtual reality": "Virtual Reality (VR)"
-        }
-        
-        # Create additional mappings for skill matching
-        skill_variations = {}
-        for compound, standardized in compound_skills.items():
-            skill_variations[standardized.lower()] = standardized
-            skill_variations[compound] = standardized
-            # Add variations without special chars
-            clean_compound = compound.replace('.', '').replace('-', ' ').replace('/', ' ')
-            if clean_compound != compound:
-                skill_variations[clean_compound] = standardized
-                
-        # Standardize user skills
-        standardized_user_skills = set()
-        for skill in user_skills:
-            # Check if this is a known skill variation
-            if skill.lower() in skill_variations:
-                standardized_user_skills.add(skill_variations[skill.lower()])
-            else:
-                standardized_user_skills.add(skill.title())  # Use title case for consistency
-                
-        # First check if we have specialization-specific skills defined in the JSON file
-        required_skills = []
-        if specialization in specialization_specific_skills:
-            required_skills = [skill for skill in specialization_specific_skills[specialization]]
+        # Load specialization skills
+        specialization_skills = model_components.get('specialization_skills')
+        if not specialization_skills:
+            specialization_skills = load_specialization_skills()
             
-            # Use the missing skills identified by the calculate_skill_match_percentage function
-            missing_skills = match_info['missing_skills']
+        # Ensure user_skills is a list
+        if isinstance(user_skills, str):
+            skills_list = [skill.strip() for skill in user_skills.split(',')]
+        else:
+            skills_list = user_skills
             
-            # Get weights for prioritizing missing skills
-            spec_weights = skill_weights.get(specialization, {})
-            
-            # Sort missing skills by weight (higher weight = more important to learn)
-            missing_skills.sort(key=lambda x: spec_weights.get(x.lower(), 0.5), reverse=True)
-            
-            # Limit to a reasonable number of recommendations
-            if len(missing_skills) > 10:
-                missing_skills = missing_skills[:10]
-            
-            return {
-                'missing_skills': missing_skills,
-                'required_skills': required_skills,
-                'match_percentage': match_info['match_percentage'],
-                'skill_coverage': match_info['skill_coverage'],
-                'proficiency_score': match_info['proficiency_score'],
-                'matched_skills': match_info['matched_skills'],
-                'partially_matched_skills': match_info['partially_matched_skills'],
-                'source': 'specialization_skills_json'
+        user_skills_set = set(skills_list)
+        
+        # If the target specialization is a legal specialization, perform special handling
+        legal_specializations = [
+            "Corporate Lawyer", "Litigation Attorney", "Intellectual Property Lawyer",
+            "Criminal Defense Attorney", "Family Law Attorney", "Immigration Lawyer", 
+            "Real Estate Attorney", "Tax Attorney", "Employment Law Attorney", "Environmental Lawyer"
+        ]
+        
+        # Special handling for Criminal Defense Attorney
+        if target_specialization == "Criminal Defense Attorney":
+            # Key skills for criminal defense
+            criminal_law_skills = {
+                "Criminal Law", "Criminal Procedure", "Trial Advocacy", 
+                "Evidence Law", "Cross-Examination", "Constitutional Law",
+                "Defense Investigation", "Plea Negotiations", "Sentencing Advocacy",
+                "Criminal Defense", "Jury Selection", "Witness Preparation",
+                "Courtroom Demeanor", "Criminal Appeals", "Forensic Evidence Analysis",
+                "Motion Practice", "Search and Seizure", "Miranda Rights"
             }
-                    
-        # If no specific skills found in JSON, fall back to model-based approach
-        # ... rest of the existing function code ...
+            
+            # Calculate how many criminal law skills the user has
+            user_criminal_skills = user_skills_set.intersection(criminal_law_skills)
+            criminal_focus_score = len(user_criminal_skills) / len(criminal_law_skills)
+            
+            # Specific skills that are particularly valuable for Criminal Defense
+            high_value_skills = {
+                "Trial Advocacy", "Cross-Examination", "Constitutional Law",
+                "Plea Negotiations", "Criminal Law", "Criminal Procedure"
+            }
+            
+            # Check for high-value skills presence
+            high_value_present = user_skills_set.intersection(high_value_skills)
+            high_value_bonus = len(high_value_present) * 0.05  # 5% bonus per high-value skill
+            
+            # If user has significant criminal law skills, boost match percentage
+            if criminal_focus_score >= 0.3 or len(high_value_present) >= 2:
+                print(f"Strong criminal law focus detected with score: {criminal_focus_score:.2f}")
+                print(f"High-value skills present: {high_value_present}")
+                
+                # Get the required skills for Criminal Defense Attorney
+                required_skills = set(specialization_skills.get(target_specialization, []))
+                
+                # Calculate direct matches
+                matched_skills = user_skills_set.intersection(required_skills)
+                
+                # Calculate missing skills - prioritize high-value missing skills
+                missing_skills = required_skills - user_skills_set
+                
+                # Sort missing skills to prioritize high-value skills first
+                sorted_missing = []
+                # First add high-value missing skills
+                for skill in missing_skills:
+                    if skill in high_value_skills:
+                        sorted_missing.append(skill)
+                # Then add remaining missing skills
+                for skill in missing_skills:
+                    if skill not in high_value_skills:
+                        sorted_missing.append(skill)
+                
+                # Calculate match percentage with boost for criminal focus and high-value skills
+                base_match_percentage = len(matched_skills) / len(required_skills) * 100 if required_skills else 0
+                boosted_match_percentage = min(100, base_match_percentage * (1 + criminal_focus_score + high_value_bonus))
+                
+                return sorted_missing, boosted_match_percentage, list(matched_skills)
+                
+        # Special handling for Corporate Lawyer
+        elif target_specialization == "Corporate Lawyer":
+            # Key skills for corporate law
+            corporate_law_skills = {
+                "Contract Drafting", "Contract Negotiation", "Corporate Governance",
+                "Mergers & Acquisitions", "Securities Law", "Business Law", 
+                "Corporate Compliance", "Due Diligence", "Commercial Transactions",
+                "Corporate Finance", "Regulatory Compliance", "Shareholder Agreements",
+                "Business Entity Formation", "Corporate Restructuring", "Licensing"
+            }
+            
+            # Calculate how many corporate law skills the user has
+            user_corporate_skills = user_skills_set.intersection(corporate_law_skills)
+            corporate_focus_score = len(user_corporate_skills) / len(corporate_law_skills)
+            
+            # Specific skills that are particularly valuable for Corporate Law
+            high_value_skills = {
+                "Contract Drafting", "Contract Negotiation", "Corporate Governance",
+                "Mergers & Acquisitions", "Due Diligence", "Securities Law"
+            }
+            
+            # Check for high-value skills presence
+            high_value_present = user_skills_set.intersection(high_value_skills)
+            high_value_bonus = len(high_value_present) * 0.05  # 5% bonus per high-value skill
+            
+            # If user has significant corporate law skills, boost match percentage
+            if corporate_focus_score >= 0.3 or len(high_value_present) >= 2:
+                print(f"Strong corporate law focus detected with score: {corporate_focus_score:.2f}")
+                print(f"High-value skills present: {high_value_present}")
+                
+                # Get the required skills for Corporate Lawyer
+                required_skills = set(specialization_skills.get(target_specialization, []))
+                
+                # Calculate direct matches
+                matched_skills = user_skills_set.intersection(required_skills)
+                
+                # Calculate missing skills - prioritize high-value missing skills
+                missing_skills = required_skills - user_skills_set
+                
+                # Sort missing skills to prioritize high-value skills first
+                sorted_missing = []
+                # First add high-value missing skills
+                for skill in missing_skills:
+                    if skill in high_value_skills:
+                        sorted_missing.append(skill)
+                # Then add remaining missing skills
+                for skill in missing_skills:
+                    if skill not in high_value_skills:
+                        sorted_missing.append(skill)
+                
+                # Calculate match percentage with boost for corporate focus and high-value skills
+                base_match_percentage = len(matched_skills) / len(required_skills) * 100 if required_skills else 0
+                boosted_match_percentage = min(100, base_match_percentage * (1 + corporate_focus_score + high_value_bonus))
+                
+                return sorted_missing, boosted_match_percentage, list(matched_skills)
+                
+        # Special handling for Intellectual Property Lawyer
+        elif target_specialization == "Intellectual Property Lawyer":
+            # Key skills for IP law
+            ip_law_skills = {
+                "Patent Law", "Trademark Law", "Copyright Law", "IP Litigation",
+                "IP Portfolio Management", "Licensing Agreements", "IP Strategy",
+                "Trade Secrets", "IP Enforcement", "IP Due Diligence"
+            }
+            
+            # Calculate how many IP law skills the user has
+            user_ip_skills = user_skills_set.intersection(ip_law_skills)
+            ip_focus_score = len(user_ip_skills) / len(ip_law_skills)
+            
+            # If user has significant IP law skills, boost match percentage
+            if ip_focus_score >= 0.4:
+                print(f"Strong intellectual property law focus detected with score: {ip_focus_score:.2f}")
+                
+                # Get the required skills for IP Lawyer
+                required_skills = set(specialization_skills.get(target_specialization, []))
+                
+                # Calculate direct matches
+                matched_skills = user_skills_set.intersection(required_skills)
+                
+                # Calculate missing skills
+                missing_skills = required_skills - user_skills_set
+                
+                # Calculate match percentage with boost for IP focus
+                base_match_percentage = len(matched_skills) / len(required_skills) * 100 if required_skills else 0
+                boosted_match_percentage = min(100, base_match_percentage * (1 + ip_focus_score))
+                
+                return list(missing_skills), boosted_match_percentage, list(matched_skills)
+        
+        # Standard processing for all other specializations
+        if target_specialization in specialization_skills:
+            # Direct lookup in the specialization skills dictionary
+            required_skills = set(specialization_skills[target_specialization])
+            
+            # Calculate matches
+            matched_skills = user_skills_set.intersection(required_skills)
+            missing_skills = required_skills - user_skills_set
+            
+            # Calculate match percentage
+            match_percentage = len(matched_skills) / len(required_skills) * 100 if required_skills else 0
+            
+            return list(missing_skills), match_percentage, list(matched_skills)
+        else:
+            # If specialization not found, check for similar specializations
+            best_match = None
+            best_similarity = 0
+            
+            for specialization in specialization_skills.keys():
+                # Simple string similarity check
+                similarity = calculate_string_similarity(target_specialization.lower(), specialization.lower())
+                
+                if similarity > best_similarity and similarity > 0.7:  # Threshold for considering a match
+                    best_similarity = similarity
+                    best_match = specialization
+            
+            if best_match:
+                # Use the best match instead
+                required_skills = set(specialization_skills[best_match])
+                
+                # Calculate matches
+                matched_skills = user_skills_set.intersection(required_skills)
+                missing_skills = required_skills - user_skills_set
+                
+                # Calculate match percentage
+                match_percentage = len(matched_skills) / len(required_skills) * 100 if required_skills else 0
+                
+                return list(missing_skills), match_percentage, list(matched_skills)
+        
+        # If no specific specialization is matched, return generic suggestions
+        generic_tech_skills = ["Problem Solving", "Research", "Analysis", "Communication", "Project Management"]
+        generic_missing = [skill for skill in generic_tech_skills if skill not in user_skills_set]
+        
+        return generic_missing, 0, []
         
     except Exception as e:
         print(f"Error identifying missing skills: {str(e)}")
-        return []
+        return [], 0, []
+
+
+def calculate_string_similarity(str1, str2):
+    """
+    Calculate simple string similarity between two strings.
+    
+    Args:
+        str1 (str): First string
+        str2 (str): Second string
+        
+    Returns:
+        float: Similarity score between 0 and 1
+    """
+    # Basic implementation using set operations
+    set1 = set(str1.lower().split())
+    set2 = set(str2.lower().split())
+    
+    # Jaccard similarity
+    intersection = len(set1.intersection(set2))
+    union = len(set1.union(set2))
+    
+    return intersection / union if union > 0 else 0
 
 def recommend_career_path(skills_str, model_path=MODEL_PATH):
     """

@@ -117,6 +117,27 @@ class SyntheticDataGenerator:
                     "Radiology", "Laboratory Procedures", "Diagnostic Testing", "Therapy",
                     "Rehabilitation", "Nutrition", "Wellness", "Public Health", "Epidemiology"
                 ]
+            },
+            "Law": {
+                "specializations": [
+                    "Corporate Lawyer", "Litigation Attorney", "Intellectual Property Lawyer",
+                    "Criminal Defense Attorney", "Family Law Attorney", "Immigration Lawyer",
+                    "Real Estate Attorney", "Tax Attorney", "Employment Law Attorney",
+                    "Environmental Lawyer"
+                ],
+                "skills": [
+                    "Legal Research", "Legal Writing", "Trial Advocacy", "Legal Analysis",
+                    "Contract Drafting", "Contract Negotiation", "Due Diligence", "Litigation",
+                    "Case Strategy", "Client Representation", "Regulatory Compliance",
+                    "Legal Drafting", "Oral Advocacy", "Depositions", "Motion Practice",
+                    "Discovery Process", "Witness Preparation", "Evidence Management",
+                    "Negotiation", "Mediation", "Arbitration", "Client Communication",
+                    "Legal Ethics", "Courtroom Procedure", "Legal Memos", "Brief Writing",
+                    "Legal Documentation", "Corporate Governance", "Mergers & Acquisitions",
+                    "Securities Law", "Intellectual Property", "Patent Law", "Trademark Law",
+                    "Copyright Law", "Criminal Law", "Criminal Procedure", "Constitutional Law",
+                    "Family Law", "Immigration Law", "Real Estate Law", "Tax Law", "Employment Law"
+                ]
             }
         }
         

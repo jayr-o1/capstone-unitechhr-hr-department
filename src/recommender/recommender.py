@@ -123,8 +123,13 @@ def recommend_field_and_career_paths(skills, user_id=None):
                     match_score = spec_info.get('match_percentage', 0)
                     missing_skills = spec_info.get('missing_skills', [])
                     
+                    # Override field for specific specializations
+                    spec_field = field
+                    if specialization == "Quantitative Analyst":
+                        spec_field = "Finance"
+                    
                     career_path = {
-                        'field': field,
+                        'field': spec_field,
                         'specialization': specialization,
                         'match_score': match_score,
                         'missing_skills': missing_skills
@@ -132,11 +137,17 @@ def recommend_field_and_career_paths(skills, user_id=None):
                     career_paths.append(career_path)
                     popular_specializations.append(specialization)
                 
+                # Fix primary field if primary specialization is Quantitative Analyst
+                primary_field = field
+                primary_spec = top_specializations[0].get('specialization', '')
+                if primary_spec == "Quantitative Analyst":
+                    primary_field = "Finance"
+                
                 return {
                     'status': 'success',
-                    'field': field,
+                    'field': primary_field,
                     'field_confidence': field_confidence,
-                    'primary_specialization': top_specializations[0].get('specialization', ''),
+                    'primary_specialization': primary_spec,
                     'specialization_confidence': top_specializations[0].get('match_percentage', 0) / 100,
                     'career_paths': career_paths,
                     'popular_specializations': popular_specializations,

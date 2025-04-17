@@ -203,6 +203,38 @@ class WeightedSkillRecommender:
             proficiency_sum = sum(user_skills[skill] for skill in matched_skills)
             proficiency_score = proficiency_sum / len(matched_skills)
             
+        # Apply specialization-specific adjustments based on skill patterns
+        # Detect data science skills
+        data_science_skills = ["machine learning", "deep learning", "tensorflow", "pytorch", "data science", 
+                             "nlp", "natural language processing", "neural networks", "data analysis", 
+                             "statistics", "pandas", "numpy", "scikit-learn"]
+        
+        # Detect finance skills
+        finance_skills = ["financial modeling", "financial analysis", "algorithmic trading", "derivatives", 
+                         "risk management", "quantitative analysis", "financial markets", "investment", 
+                         "portfolio", "hedge fund", "trading", "pricing models"]
+        
+        # Count the presence of domain-specific skills
+        ds_skill_count = sum(1 for skill in user_skills if 
+                            any(ds_skill in skill.lower() for ds_skill in data_science_skills))
+        finance_skill_count = sum(1 for skill in user_skills if 
+                                any(fin_skill in skill.lower() for fin_skill in finance_skills))
+        
+        # Apply adjustments for "Quantitative Analyst" specialization
+        if specialization == "Quantitative Analyst":
+            # If user has many data science skills but few finance skills, reduce match
+            if ds_skill_count >= 4 and finance_skill_count <= 1:
+                match_percentage *= 0.7  # Reduce match for data science-heavy profiles
+            # If user has finance skills, boost match
+            elif finance_skill_count >= 3:
+                match_percentage = min(100, match_percentage * 1.2)  # Boost for finance-heavy profiles
+        
+        # Apply adjustments for Data Science specializations
+        if specialization in ["Data Scientist", "Machine Learning Engineer", "AI Research Scientist"]:
+            # If user has many data science skills, boost match
+            if ds_skill_count >= 4:
+                match_percentage = min(100, match_percentage * 1.3)  # Significant boost for data science profiles
+            
         return {
             'match_percentage': round(match_percentage, 2),
             'skill_coverage': round(skill_coverage, 2),
@@ -399,13 +431,18 @@ class WeightedSkillRecommender:
             spec = match['specialization']
             
             # Determine field from specialization
-            if "Engineer" in spec or "Developer" in spec or "Scientist" in spec:
+            # Special case handling for specific specializations
+            if spec == "Quantitative Analyst":
+                field = "Finance"
+            elif "Data Scientist" in spec or "Machine Learning" in spec or "AI" in spec or "Data Science" in spec or "NLP" in spec or "Natural Language Processing" in spec:
+                field = "Data Science"
+            elif "Engineer" in spec or "Developer" in spec or "Programmer" in spec:
                 field = "Computer Science"
             elif "Manager" in spec or "Management" in spec:
                 field = "Business"
-            elif "Analyst" in spec and "Data" not in spec:
+            elif "Analyst" in spec and "Data" not in spec and "Quantitative" not in spec:
                 field = "Business"
-            elif "Financial" in spec or "Finance" in spec:
+            elif "Financial" in spec or "Finance" in spec or "Quantitative" in spec:
                 field = "Finance"
             elif "Marketing" in spec:
                 field = "Marketing"
