@@ -1,0 +1,98 @@
+{
+    "user1": {
+        "Python": 85,
+        "Java": 65,
+        "SQL": 80,
+        "Machine Learning": 75,
+        "Data Science": 70,
+        "Web Development": 60,
+        "React.js": 75,
+        "Node.js": 70,
+        "TensorFlow": 65,
+        "Deep Learning": 70
+    },
+    "user2": {
+        "JavaScript": 90,
+        "HTML": 85,
+        "CSS": 85,
+        "React.js": 80,
+        "TypeScript": 75,
+        "Node.js": 75,
+        "UI/UX Design": 70,
+        "Git": 80,
+        "RESTful APIs": 75,
+        "Web Development": 85
+    },
+    "user3": {
+        "Project Management": 90,
+        "Leadership": 85,
+        "Strategic Planning": 80,
+        "Agile Methodology": 85,
+        "Team Management": 80,
+        "Risk Management": 75,
+        "Stakeholder Communication": 85,
+        "Business Analysis": 70,
+        "Scrum": 80,
+        "Microsoft Office": 90
+    },
+    "user4": {
+        "Financial Analysis": 90,
+        "Excel": 95,
+        "Financial Modeling": 85,
+        "Data Analysis": 80,
+        "Accounting": 75,
+        "Financial Planning": 85,
+        "Investment Analysis": 80,
+        "Risk Assessment": 70,
+        "PowerPoint": 85,
+        "Business Intelligence": 75
+    },
+    "user5": {
+        "Marketing Strategy": 85,
+        "Social Media Marketing": 90,
+        "Content Marketing": 85,
+        "SEO": 80,
+        "Brand Management": 85,
+        "Market Research": 75,
+        "Digital Marketing": 90,
+        "Advertising": 80,
+        "Customer Relationship Management": 75,
+        "Google Analytics": 85
+    },
+    "user6": {
+        "Cybersecurity": 85,
+        "Network Security": 80,
+        "Penetration Testing": 75,
+        "Security Protocols": 85,
+        "Encryption": 80,
+        "Vulnerability Assessment": 85,
+        "Ethical Hacking": 75,
+        "Security Compliance": 70,
+        "Python": 65,
+        "Linux": 80
+    },
+    "user7": {
+        "Cloud Architecture": 85,
+        "AWS": 90,
+        "Docker": 85,
+        "Kubernetes": 80,
+        "Terraform": 75,
+        "Infrastructure as Code": 85,
+        "DevOps": 80,
+        "CI/CD": 85,
+        "Microservices": 75,
+        "Serverless Architecture": 70
+    },
+    "user8": {
+        "Statistical Analysis": 85,
+        "R": 80,
+        "Python": 75,
+        "Data Visualization": 85,
+        "Tableau": 80,
+        "Hypothesis Testing": 75,
+        "Regression Analysis": 80,
+        "Data Cleaning": 85,
+        "SQL": 75,
+        "Machine Learning": 70
+    }
+}

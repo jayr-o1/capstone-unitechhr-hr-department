@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
 """
-Model training and retraining module for the career recommender system.
-This module handles initial model training and retraining based on user feedback.
+Model trainer utilities for career recommender.
+This module provides utility functions for loading and processing skill data
+for use in career recommendation models.
 """
 
 import os
@@ -17,22 +19,20 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.pipeline import Pipeline
-from collections import Counter
+from collections import Counter, defaultdict
 import json
 import pickle
 import shutil
 import difflib
+import logging
 
 # Import utilities
 from .data_loader import load_synthetic_employee_data, load_synthetic_career_path_data
 
-# Try to import data_manager if available
-try:
-    from .data_manager import load_specialization_skills
-except ImportError:
-    # If not available, define a stub function
-    def load_specialization_skills():
-        return {}
+# Configure logging
+logging.basicConfig(level=logging.INFO, 
+                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Define paths
 MODEL_PATH = "models/career_path_recommendation_model.pkl"
@@ -532,67 +532,452 @@ def predict_specialization(skills_str, field, components):
             'confidence': 0.5
         }
 
-def load_specialization_skills():
+def load_specialization_skills(path=None):
     """
-    Load specialization skills from JSON file.
-    """
-    skills_file_path = get_adjusted_path("data/specialization_skills.json")
-    try:
-        with open(skills_file_path, 'r') as file:
-            return json.load(file)
-    except Exception as e:
-        print(f"Error loading specialization skills from {skills_file_path}: {str(e)}")
-        return {}
-
-def calculate_skill_match_percentage(user_skills_str, specialization, specialization_skills=None):
-    """
-    Calculate the percentage of specialization skills that match the user's skills.
+    Load specialization skills mapping from JSON file.
     
     Args:
-        user_skills_str (str): Comma-separated list of user skills
-        specialization (str): Target specialization
-        specialization_skills (dict, optional): Dictionary of specialization skills
+        path: Path to specialization skills JSON file (optional)
         
     Returns:
-        float: Percentage of matched skills (0.0 to 1.0)
+        dict: Mapping of specialization names to required skills
     """
-    # Parse user skills
-    user_skills = [skill.strip().lower() for skill in user_skills_str.split(',') if skill.strip()]
+    if not path:
+        # Use default path
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(base_dir, "data", "specialization_skills.json")
     
-    # Load specialization skills if not provided
-    if not specialization_skills:
-        specialization_skills = load_specialization_skills()
+    try:
+        with open(path, 'r') as f:
+            data = json.load(f)
+        logger.info(f"Loaded specialization skills from {path}")
+        
+        # Check if it's the expected format
+        if isinstance(data, dict):
+            return data
+        
+        # Try alternate formats
+        if isinstance(data, list) and all(isinstance(item, dict) for item in data):
+            # Convert list of dicts to dict of specialization -> skills
+            result = {}
+            for item in data:
+                if 'specialization' in item and 'skills' in item:
+                    result[item['specialization']] = item['skills']
+                elif 'title' in item and 'required_skills' in item:
+                    result[item['title']] = item['required_skills']
+            
+            logger.info(f"Converted list format to specialization mapping")
+            return result
+        
+        logger.warning(f"Unexpected data format in {path}")
+        return {}
+        
+    except Exception as e:
+        logger.error(f"Error loading specialization skills: {str(e)}")
+        # Return fallback data for testing
+        return _get_fallback_specializations()
+
+def load_skill_weights(path=None):
+    """
+    Load skill weights mapping from JSON file.
     
-    # If specialization not found in our data, return 0
-    if specialization not in specialization_skills:
-        return 0.0
+    Args:
+        path: Path to skill weights JSON file (optional)
+        
+    Returns:
+        dict: Mapping of specialization names to skill weights
+    """
+    if not path:
+        # Use default path
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(base_dir, "data", "skill_weights.json")
+    
+    try:
+        with open(path, 'r') as f:
+            data = json.load(f)
+        logger.info(f"Loaded skill weights from {path}")
+        return data
+        
+    except Exception as e:
+        logger.error(f"Error loading skill weights: {str(e)}")
+        # Return fallback data for testing
+        return _generate_fallback_weights(_get_fallback_specializations())
+
+def save_model_data(data, filename, folder=None):
+    """
+    Save model data to JSON file.
+    
+    Args:
+        data: Data to save
+        filename: Name of the file to save to
+        folder: Optional folder path
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    if not folder:
+        # Use default path
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        folder = os.path.join(base_dir, "data")
+    
+    # Create folder if it doesn't exist
+    if not os.path.exists(folder):
+        try:
+            os.makedirs(folder)
+        except Exception as e:
+            logger.error(f"Could not create folder {folder}: {str(e)}")
+            return False
+    
+    # Save data
+    path = os.path.join(folder, filename)
+    try:
+        with open(path, 'w') as f:
+            json.dump(data, f, indent=2)
+        logger.info(f"Saved model data to {path}")
+        return True
+    except Exception as e:
+        logger.error(f"Error saving model data: {str(e)}")
+        return False
+
+def preprocess_skills(skills):
+    """
+    Preprocess skills to standardize format and remove variations.
+    
+    Args:
+        skills: List of skill names or dict of skill:proficiency pairs
+        
+    Returns:
+        dict: Processed skills with standardized names as keys
+    """
+    # Standardize input format
+    if isinstance(skills, list):
+        skill_dict = {skill: 70 for skill in skills}  # Default proficiency
+    elif isinstance(skills, dict):
+        skill_dict = skills.copy()
+    else:
+        return {}
+    
+    processed = {}
+    
+    # Process each skill
+    for skill, proficiency in skill_dict.items():
+        # Standardize case and whitespace
+        std_skill = skill.lower().strip()
+        
+        # Handle common abbreviations and aliases
+        aliases = {
+            "js": "javascript",
+            "ts": "typescript",
+            "py": "python",
+            "ui/ux": "ui design",
+            "react": "react.js",
+            "node": "node.js",
+            "vue": "vue.js",
+            "postgres": "postgresql",
+            "ml": "machine learning",
+            "ai": "artificial intelligence",
+            "oop": "object oriented programming"
+        }
+        
+        if std_skill in aliases:
+            std_skill = aliases[std_skill]
+        
+        # Add to processed dict (use higher proficiency if duplicated)
+        if std_skill in processed:
+            processed[std_skill] = max(processed[std_skill], proficiency)
+        else:
+            processed[std_skill] = proficiency
+    
+    return processed
+
+def extract_top_skills_by_field(specializations_skills, top_n=10):
+    """
+    Extract top skills by field from specialization skills.
+    
+    Args:
+        specializations_skills: Mapping of specialization to required skills
+        top_n: Number of top skills to extract per field
+        
+    Returns:
+        dict: Mapping of field to top skills
+    """
+    # Initialize counters for skills by field
+    field_skills = defaultdict(lambda: defaultdict(int))
+    
+    # Map specializations to fields
+    field_map = {
+        "Software Developer": "Computer Science",
+        "Web Developer": "Computer Science",
+        "Mobile Developer": "Computer Science",
+        "Data Scientist": "Computer Science",
+        "Machine Learning Engineer": "Computer Science",
+        "DevOps Engineer": "Computer Science",
+        "Cloud Engineer": "Computer Science",
+        "Security Engineer": "Computer Science",
+        "Project Manager": "Business",
+        "Product Manager": "Business",
+        "Business Analyst": "Business",
+        "Financial Analyst": "Finance",
+        "Investment Banker": "Finance",
+        "Accountant": "Finance",
+        "Marketing Specialist": "Marketing",
+        "Digital Marketer": "Marketing",
+        "Content Marketer": "Marketing",
+        "UI Designer": "Design",
+        "UX Designer": "Design",
+        "Graphic Designer": "Design",
+        "HR Specialist": "Human Resources",
+        "Recruiter": "Human Resources",
+        "Talent Manager": "Human Resources"
+    }
+    
+    # Count occurrences of skills in each field
+    for specialization, skills in specializations_skills.items():
+        # Determine field
+        field = field_map.get(specialization, "Other")
+        
+        # Count skills
+        for skill in skills:
+            field_skills[field][skill] += 1
+    
+    # Get top skills for each field
+    top_skills_by_field = {}
+    for field, skill_counts in field_skills.items():
+        # Sort by count (descending)
+        sorted_skills = sorted(skill_counts.items(), key=lambda x: x[1], reverse=True)
+        
+        # Get top N skills
+        top_skills_by_field[field] = [skill for skill, count in sorted_skills[:top_n]]
+    
+    return top_skills_by_field
+
+def _get_fallback_specializations():
+    """
+    Provide fallback specialization skills for testing.
+    
+    Returns:
+        dict: Mapping of specialization names to required skills
+    """
+    return {
+        "Software Developer": [
+            "Python", "JavaScript", "Java", "C#", "C++", "Git", 
+            "Data Structures", "Algorithms", "Problem Solving", 
+            "Object Oriented Programming", "Software Architecture"
+        ],
+        "Web Developer": [
+            "HTML", "CSS", "JavaScript", "React.js", "Angular", "Vue.js", 
+            "Node.js", "PHP", "REST API", "Web Security", "Responsive Design"
+        ],
+        "Data Scientist": [
+            "Python", "R", "SQL", "Statistics", "Machine Learning", 
+            "Data Visualization", "Data Cleaning", "Big Data", 
+            "Natural Language Processing", "Deep Learning"
+        ],
+        "UX Designer": [
+            "User Research", "Wireframing", "Prototyping", "UI Design", 
+            "Usability Testing", "Figma", "Adobe XD", "Information Architecture", 
+            "Visual Design", "Design Thinking"
+        ],
+        "Product Manager": [
+            "Product Strategy", "Market Research", "User Stories", 
+            "Roadmapping", "Agile", "Stakeholder Management", 
+            "Competitive Analysis", "Prioritization", "Data Analysis", "Leadership"
+        ],
+        "Digital Marketer": [
+            "SEO", "SEM", "Content Marketing", "Social Media Marketing", 
+            "Email Marketing", "Analytics", "CRM", "A/B Testing", 
+            "Campaign Management", "Brand Strategy"
+        ]
+    }
+
+def _generate_fallback_weights(specializations):
+    """
+    Generate fallback skill weights based on specializations.
+    
+    Args:
+        specializations: Mapping of specialization names to required skills
+        
+    Returns:
+        dict: Mapping of specialization names to skill weights
+    """
+    weights = {}
+    
+    for spec, skills in specializations.items():
+        skill_weights = {}
+        
+        # Assign weights to skills
+        for i, skill in enumerate(skills):
+            # First few skills get higher weights
+            if i < 3:
+                weight = 0.9  # Critical skills
+            elif i < 6:
+                weight = 0.7  # Important skills
+            else:
+                weight = 0.5  # Useful skills
+                
+            skill_weights[skill] = weight
+            
+        weights[spec] = skill_weights
+    
+    return weights
+
+def are_skills_related(skill1, skill2):
+    """
+    Determine if two skills are related to each other for fuzzy matching.
+    
+    Args:
+        skill1: First skill
+        skill2: Second skill
+        
+    Returns:
+        bool: True if skills are related, False otherwise
+    """
+    # Normalize skills
+    s1 = skill1.lower().replace("-", " ").replace(".", " ")
+    s2 = skill2.lower().replace("-", " ").replace(".", " ")
+    
+    # Exact match
+    if s1 == s2:
+        return True
+    
+    # One is substring of the other
+    if s1 in s2 or s2 in s1:
+        return True
+    
+    # Fuzzy matching using difflib
+    similarity = difflib.SequenceMatcher(None, s1, s2).ratio()
+    
+    # High similarity threshold
+    if similarity > 0.8:
+        return True
+    
+    # Check for compound skills
+    if (s1 in ["javascript", "js"] and s2 in ["javascript", "js"]) or \
+       (s1 in ["typescript", "ts"] and s2 in ["typescript", "ts"]) or \
+       (s1 in ["python", "py"] and s2 in ["python", "py"]) or \
+       (s1 in ["java", "jvm"] and s2 in ["java", "jvm"]) or \
+       (s1 in ["ruby", "rb"] and s2 in ["ruby", "rb"]) or \
+       (s1 in ["csharp", "c#", "dotnet", ".net"] and s2 in ["csharp", "c#", "dotnet", ".net"]) or \
+       (s1 in ["c++", "cpp"] and s2 in ["c++", "cpp"]) or \
+       (s1 in ["react", "react.js", "reactjs"] and s2 in ["react", "react.js", "reactjs"]) or \
+       (s1 in ["vue", "vue.js", "vuejs"] and s2 in ["vue", "vue.js", "vuejs"]) or \
+       (s1 in ["angular", "angular.js", "angularjs"] and s2 in ["angular", "angular.js", "angularjs"]) or \
+       (s1 in ["node", "node.js", "nodejs"] and s2 in ["node", "node.js", "nodejs"]) or \
+       (s1 in ["ml", "machine learning"] and s2 in ["ml", "machine learning"]) or \
+       (s1 in ["ai", "artificial intelligence"] and s2 in ["ai", "artificial intelligence"]) or \
+       (s1 in ["nlp", "natural language processing"] and s2 in ["nlp", "natural language processing"]):
+        return True
+        
+    return False
+
+def calculate_skill_match_percentage(user_skills_str, specialization, specialization_skills, skill_weights=None, proficiency_levels=None):
+    """
+    Calculate how well a user's skills match a specific specialization.
+    
+    Args:
+        user_skills_str (str or dict): User's skills as comma-separated string or proficiency dict
+        specialization (str): Target specialization to match against
+        specialization_skills (dict): Dictionary mapping specializations to required skills
+        skill_weights (dict, optional): Dictionary of skill importance weights
+        proficiency_levels (dict, optional): Dictionary mapping skills to proficiency levels
+        
+    Returns:
+        dict: Dictionary with match metrics and skill lists
+    """
+    # Parse user skills from string if needed
+    if isinstance(user_skills_str, str):
+        user_skills = [skill.strip() for skill in user_skills_str.split(',') if skill.strip()]
+        user_skills_proficiency = {skill: 70 for skill in user_skills}  # Default proficiency
+    else:
+        # Assume it's already a dictionary of skills with proficiency
+        user_skills_proficiency = user_skills_str
+        user_skills = list(user_skills_proficiency.keys())
+    
+    # Apply any provided proficiency levels
+    if proficiency_levels:
+        for skill, level in proficiency_levels.items():
+            if skill in user_skills_proficiency:
+                user_skills_proficiency[skill] = level
     
     # Get required skills for this specialization
-    required_skills = [skill.lower() for skill in specialization_skills[specialization]]
-    
+    required_skills = specialization_skills.get(specialization, [])
     if not required_skills:
-        return 0.0
-    
-    # Calculate matches
-    matches = 0
-    for skill in user_skills:
-        # Direct match
-        if skill in required_skills:
-            matches += 1
-            continue
-            
-        # Check for partial or related matches
-        for req_skill in required_skills:
-            if are_skills_related(skill, req_skill):
-                matches += 0.5  # Give partial credit for related skills
+        # Try case-insensitive match
+        for spec, skills in specialization_skills.items():
+            if spec.lower() == specialization.lower():
+                required_skills = skills
                 break
     
-    # Calculate match percentage
-    match_percentage = min(1.0, matches / len(required_skills))
+    if not required_skills:
+        return {
+            'match_percentage': 0.0,
+            'skill_coverage': 0.0,
+            'proficiency_score': 0.0,
+            'missing_skills': [],
+            'matched_skills': [],
+            'partially_matched_skills': []
+        }
     
-    return match_percentage
+    # Get weights for this specialization
+    spec_weights = {}
+    if skill_weights and specialization in skill_weights:
+        spec_weights = skill_weights[specialization]
+    
+    # Calculate match
+    matched_skills = []
+    partially_matched = []
+    missing_skills = []
+    total_weight = 0.0
+    matched_weight = 0.0
+    
+    for req_skill in required_skills:
+        # Get weight for this skill (default to 0.5 if not specified)
+        skill_weight = spec_weights.get(req_skill, 0.5) 
+        total_weight += skill_weight
+        
+        # Check for exact match
+        if req_skill in user_skills:
+            matched_skills.append(req_skill)
+            # Apply proficiency as a factor (0.0-1.0)
+            proficiency_factor = user_skills_proficiency.get(req_skill, 70) / 100.0
+            matched_weight += skill_weight * proficiency_factor
+            continue
+        
+        # Check for fuzzy/similar matches
+        matched = False
+        for user_skill in user_skills:
+            if are_skills_related(req_skill, user_skill):
+                partially_matched.append(req_skill)
+                # For partial matches, apply partial weight and proficiency
+                proficiency_factor = user_skills_proficiency.get(user_skill, 70) / 100.0
+                matched_weight += skill_weight * 0.7 * proficiency_factor  # 70% match for related skills
+                matched = True
+                break
+        
+        # If not matched, add to missing skills
+        if not matched:
+            missing_skills.append(req_skill)
+    
+    # Calculate match percentage (weighted by importance)
+    match_percentage = (matched_weight / total_weight * 100) if total_weight > 0 else 0.0
+    
+    # Calculate simple skill coverage (percentage of skills covered)
+    skill_coverage = ((len(matched_skills) + len(partially_matched)) / len(required_skills) * 100) if required_skills else 0.0
+    
+    # Calculate average proficiency score for matched skills
+    proficiency_values = [user_skills_proficiency.get(skill, 70) for skill in matched_skills]
+    proficiency_score = sum(proficiency_values) / len(proficiency_values) if proficiency_values else 0.0
+    
+    return {
+        'match_percentage': match_percentage,
+        'skill_coverage': skill_coverage, 
+        'proficiency_score': proficiency_score,
+        'missing_skills': missing_skills,
+        'matched_skills': matched_skills,
+        'partially_matched_skills': partially_matched
+    }
 
-def identify_missing_skills(skills_str, specialization, components):
+def identify_missing_skills(skills_str, specialization, components, proficiency_levels=None):
     """
     Identify missing skills for a specific specialization using model data.
     
@@ -600,6 +985,7 @@ def identify_missing_skills(skills_str, specialization, components):
         skills_str (str): Comma-separated list of skills
         specialization (str): Target specialization
         components (dict): Model components
+        proficiency_levels (dict, optional): Dictionary mapping skills to proficiency levels (1-100)
         
     Returns:
         dict: Dictionary with missing skills and recommendations
@@ -612,8 +998,17 @@ def identify_missing_skills(skills_str, specialization, components):
         # Load specialization-specific skills from JSON file
         specialization_specific_skills = load_specialization_skills()
         
-        # Calculate skill match percentage
-        match_percentage = calculate_skill_match_percentage(skills_str, specialization, specialization_specific_skills)
+        # Load skill weights
+        skill_weights = load_skill_weights()
+        
+        # Calculate detailed skill match information
+        match_info = calculate_skill_match_percentage(
+            skills_str, 
+            specialization, 
+            specialization_specific_skills,
+            skill_weights,
+            proficiency_levels
+        )
         
         # Define common technology compound terms for better matching
         compound_skills = {
@@ -753,22 +1148,14 @@ def identify_missing_skills(skills_str, specialization, components):
         if specialization in specialization_specific_skills:
             required_skills = [skill for skill in specialization_specific_skills[specialization]]
             
-            # Calculate missing skills using the specialized skills JSON
-            # Convert required skills to lowercase for case-insensitive comparison
-            required_skills_lower = set(skill.lower() for skill in required_skills)
+            # Use the missing skills identified by the calculate_skill_match_percentage function
+            missing_skills = match_info['missing_skills']
             
-            # Find missing skills by comparing with standardized user skills
-            missing_skills = []
-            for skill in required_skills:
-                # Check for exact match or variation match
-                skill_lower = skill.lower()
-                if (skill_lower not in [s.lower() for s in standardized_user_skills] and
-                    not any(are_skills_related(skill_lower, user_skill.lower()) for user_skill in standardized_user_skills)):
-                    missing_skills.append(skill)
-                    
-            # Sort missing skills by importance (assume earlier in the list = more important)
-            # This preserves the original order from the JSON file
-            missing_skills.sort(key=lambda x: required_skills.index(x) if x in required_skills else 999)
+            # Get weights for prioritizing missing skills
+            spec_weights = skill_weights.get(specialization, {})
+            
+            # Sort missing skills by weight (higher weight = more important to learn)
+            missing_skills.sort(key=lambda x: spec_weights.get(x.lower(), 0.5), reverse=True)
             
             # Limit to a reasonable number of recommendations
             if len(missing_skills) > 10:
@@ -777,7 +1164,11 @@ def identify_missing_skills(skills_str, specialization, components):
             return {
                 'missing_skills': missing_skills,
                 'required_skills': required_skills,
-                'match_percentage': round(match_percentage * 100, 2),
+                'match_percentage': match_info['match_percentage'],
+                'skill_coverage': match_info['skill_coverage'],
+                'proficiency_score': match_info['proficiency_score'],
+                'matched_skills': match_info['matched_skills'],
+                'partially_matched_skills': match_info['partially_matched_skills'],
                 'source': 'specialization_skills_json'
             }
                     
@@ -787,40 +1178,6 @@ def identify_missing_skills(skills_str, specialization, components):
     except Exception as e:
         print(f"Error identifying missing skills: {str(e)}")
         return []
-
-def are_skills_related(skill1, skill2):
-    """
-    Check if two skills are related (similar or variations of the same skill).
-    
-    Args:
-        skill1 (str): First skill
-        skill2 (str): Second skill
-        
-    Returns:
-        bool: True if skills are related, False otherwise
-    """
-    # If either is a substring of the other, they're related
-    if skill1 in skill2 or skill2 in skill1:
-        return True
-        
-    # Check for common prefixes (at least 5 chars)
-    if len(skill1) >= 5 and len(skill2) >= 5:
-        common_prefix_len = 0
-        for i in range(min(len(skill1), len(skill2))):
-            if skill1[i] == skill2[i]:
-                common_prefix_len += 1
-            else:
-                break
-                
-        if common_prefix_len >= 5:
-            return True
-            
-    # Calculate string similarity
-    similarity = difflib.SequenceMatcher(None, skill1, skill2).ratio()
-    if similarity > 0.8:  # High similarity threshold
-        return True
-        
-    return False
 
 def recommend_career_path(skills_str, model_path=MODEL_PATH):
     """

@@ -1,0 +1,29 @@
+{
+    "metadata": {
+        "weightDescriptions": {
+            "1.0": "Core skill - Essential for the role, without this skill it would be very difficult to perform job duties",
+            "0.7": "Important skill - Highly valuable but not absolutely essential, provides significant advantage",
+            "0.4": "Nice-to-have skill - Beneficial but not required, enhances capability in certain situations",
+            "0.2": "Supplementary skill - General skills that provide minimal advantage"
+        },
+        "proficiencyLevels": {
+            "0-25": "Beginner - Basic understanding but limited practical experience",
+            "26-50": "Intermediate - Working knowledge and some practical experience",
+            "51-75": "Advanced - Deep understanding and significant practical experience",
+            "76-100": "Expert - Comprehensive mastery and extensive practical experience"
+        },
+        "matchScoreInterpretation": {
+            "0-20": "Poor match - Missing most core skills or having only beginner level in available skills",
+            "21-40": "Below average match - Missing several core skills or limited proficiency in matched skills",
+            "41-60": "Average match - Has some core skills with moderate proficiency",
+            "61-80": "Good match - Has most core skills with good proficiency",
+            "81-100": "Excellent match - Has all or most core skills with high proficiency"
+        },
+        "recommendationLogic": {
+            "skillMatching": "Direct matches get full weight × proficiency credit",
+            "partialMatching": "Related skills get 50% weight × proficiency credit",
+            "minimumThreshold": "A match score of at least 30% is recommended for career transition",
+            "skillGapPriority": "Missing core skills (weight 1.0) should be developed first"
+        }
+    }
+}
