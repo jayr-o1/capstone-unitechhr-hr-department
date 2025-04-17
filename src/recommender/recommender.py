@@ -298,6 +298,61 @@ def recommend_career_path(skills_str, model_path=MODEL_PATH):
             specialization_confidence = specialization_info[1] if isinstance(specialization_info, tuple) else 0.7
             alternate_specializations = []
         
+        # Get popular specializations for this field
+        popular_specializations = components.get('popular_specializations', {})
+        field_specializations = popular_specializations.get(field, [])
+        
+        # Create a list to store specialization recommendations with confidence scores
+        specialization_recommendations = []
+        
+        # Add primary recommendation
+        specialization_recommendations.append({
+            'specialization': specialization,
+            'confidence': round(specialization_confidence * 100, 2)
+        })
+        
+        # Add additional recommendations with decreasing confidence
+        used_specializations = {specialization}
+        
+        # Try to use field-specific specializations from the model
+        for spec in field_specializations:
+            if spec not in used_specializations and len(specialization_recommendations) < 3:
+                # Calculate a slightly lower confidence for each alternative
+                alt_confidence = round(max(10, specialization_confidence * 100 * (0.9 - 0.1 * (len(specialization_recommendations) - 1))), 2)
+                specialization_recommendations.append({
+                    'specialization': spec,
+                    'confidence': alt_confidence
+                })
+                used_specializations.add(spec)
+        
+        # If we still don't have 3, add generic ones
+        while len(specialization_recommendations) < 3:
+            # Look up real specializations from the career_fields dictionary
+            if field in career_fields:
+                # Get all roles for this field
+                real_specializations = career_fields[field].get('roles', [])
+                # Find a role that's not already used
+                for real_spec in real_specializations:
+                    if real_spec not in used_specializations and len(specialization_recommendations) < 3:
+                        # Calculate a reasonable confidence score for additional specializations
+                        additional_confidence = round(max(8, specialization_confidence * 100 * 0.7 * (0.95 - 0.1 * (len(specialization_recommendations) - 1))), 2)
+                        specialization_recommendations.append({
+                            'specialization': real_spec,
+                            'confidence': additional_confidence
+                        })
+                        used_specializations.add(real_spec)
+            
+            # If we still don't have enough, use a generic name as last resort
+            if len(specialization_recommendations) < 3:
+                generic_spec = f"{field} Specialist {len(specialization_recommendations)}"
+                if generic_spec not in used_specializations:
+                    generic_confidence = round(max(5, specialization_confidence * 100 * 0.6 * (0.9 - 0.1 * (len(specialization_recommendations) - 1))), 2)
+                    specialization_recommendations.append({
+                        'specialization': generic_spec,
+                        'confidence': generic_confidence
+                    })
+                    used_specializations.add(generic_spec)
+        
         # Stage 3: Skill Gap Analysis
         missing_skills_info = identify_missing_skills(skills_str, specialization, components)
         
@@ -318,7 +373,7 @@ def recommend_career_path(skills_str, model_path=MODEL_PATH):
             'existing_skills': user_skills,
             'model_version': components.get('version', '1.0'),
             'alternate_fields': field_info.get('alternate_fields', []) if isinstance(field_info, dict) else [],
-            'alternate_specializations': alternate_specializations
+            'specialization_recommendations': specialization_recommendations
         }
     except Exception as e:
         print(f"Error in career path recommendation: {str(e)}")
