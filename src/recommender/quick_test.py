@@ -6,11 +6,11 @@ Quick test script for the career path recommender.
 from recommender import recommend_career_path
 
 def main():
-    # Define test skills for marketing field
+    # Define test skills for Computer Science field
     skills = [
-        "Digital Marketing", "Social Media Marketing", "Content Creation", 
-        "SEO", "Marketing Strategy", "Brand Management", "Market Research", 
-        "Campaign Management", "Google Analytics", "Email Marketing"
+        "Python", "Java", "C++", "SQL", "Machine Learning",
+        "Data Science", "Web Development", "React.js", "Node.js",
+        "TensorFlow", "PyTorch", "Deep Learning"
     ]
     
     # Convert skills list to comma-separated string

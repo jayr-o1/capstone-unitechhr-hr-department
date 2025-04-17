@@ -19,60 +19,6 @@ MODEL_PATH = "models/career_path_recommendation_model.pkl"
 EMPLOYEE_DATA_PATH = "data/synthetic_employee_data.csv"
 CAREER_PATH_DATA_PATH = "data/synthetic_career_path_data.csv"
 
-# Career fields data
-career_fields = {
-    "Computer Science": {
-        "roles": [
-            "Software Engineer", "Data Scientist", "Machine Learning Engineer",
-            "Cybersecurity Analyst", "Cloud Architect", "DevOps Engineer",
-            "UI/UX Designer", "Game Developer", "Mobile App Developer",
-            "Database Administrator", "System Administrator", "Blockchain Developer",
-            "AI Research Scientist", "IT Project Manager", "Network Engineer",
-            "Embedded Systems Developer", "Full-Stack Developer", "Frontend Developer",
-            "Backend Developer", "Data Engineer", "Software Architect"
-        ],
-        "skills": [
-            "Python", "Java", "C++", "C#", "JavaScript", "SQL", "NoSQL",
-            "Machine Learning", "Deep Learning", "Neural Networks", "Data Science",
-            "Cybersecurity", "Cloud Computing", "DevOps", "UI/UX Design",
-            "React.js", "Node.js", "Angular", "Vue.js", "Flutter",
-            "TensorFlow", "PyTorch", "Kubernetes", "Docker", "Microservices",
-            "Distributed Systems", "Web Development", "API Development",
-            "Blockchain", "Cryptography"
-        ]
-    },
-    "Finance": {
-        "roles": [
-            "Investment Banker", "Portfolio Manager", "Risk Manager",
-            "Financial Advisor", "Hedge Fund Analyst"
-        ],
-        "skills": [
-            "Financial Modeling", "Valuation", "Mergers & Acquisitions", 
-            "Capital Markets", "Excel Proficiency", "Pitch Book Creation", 
-            "Due Diligence", "Financial Statement Analysis", "Deal Structuring", 
-            "Client Relationship Management", "Asset Allocation", "Risk Management", 
-            "Market Analysis", "Performance Attribution", "Investment Strategy", 
-            "Client Communication", "Financial Research", "Portfolio Construction", 
-            "Regulatory Compliance", "Alternative Investments"
-        ]
-    },
-    "Marketing": {
-        "roles": [
-            "Digital Marketing Specialist", "Brand Manager", "Market Research Analyst",
-            "Content Strategist", "Public Relations Manager", "SEO Specialist", 
-            "Social Media Manager"
-        ],
-        "skills": [
-            "Social Media Marketing", "Search Engine Optimization (SEO)", "Content Marketing",
-            "Data Analytics", "Email Marketing", "Paid Advertising", "Google Analytics",
-            "Consumer Behavior", "Brand Management", "Marketing Automation", "Market Research",
-            "Competitor Analysis", "Product Positioning", "Campaign Management", "Brand Strategy",
-            "Creative Direction", "Public Relations", "Consumer Psychology", "Visual Communications",
-            "Presentation Skills"
-        ]
-    }
-}
-
 # Import utilities
 from utils.model_trainer import predict_field, predict_specialization, identify_missing_skills
 
@@ -291,61 +237,54 @@ def recommend_career_path(skills_str, model_path=MODEL_PATH):
         if isinstance(specialization_info, dict):
             specialization = specialization_info.get('specialization')
             specialization_confidence = specialization_info.get('confidence', 0.7)
-            alternate_specializations = specialization_info.get('alternate_specializations', [])
+            top_specializations = specialization_info.get('top_specializations', [])
         else:
             # Handle legacy format (tuple of specialization and confidence)
             specialization = specialization_info[0] if isinstance(specialization_info, tuple) else specialization_info
             specialization_confidence = specialization_info[1] if isinstance(specialization_info, tuple) else 0.7
-            alternate_specializations = []
+            top_specializations = []
         
-        # Get popular specializations for this field
-        popular_specializations = components.get('popular_specializations', {})
-        field_specializations = popular_specializations.get(field, [])
-        
-        # Create a list to store specialization recommendations with confidence scores
+        # Create specialization recommendations list (format for output)
         specialization_recommendations = []
         
-        # Add primary recommendation
-        specialization_recommendations.append({
-            'specialization': specialization,
-            'confidence': round(specialization_confidence * 100, 2)
-        })
-        
-        # Add additional recommendations with decreasing confidence
-        used_specializations = {specialization}
-        
-        # Try to use field-specific specializations from the model
-        for spec in field_specializations:
-            if spec not in used_specializations and len(specialization_recommendations) < 3:
-                # Calculate a slightly lower confidence for each alternative
-                alt_confidence = round(max(10, specialization_confidence * 100 * (0.9 - 0.1 * (len(specialization_recommendations) - 1))), 2)
+        # Use top_specializations from model prediction if available
+        if top_specializations:
+            for spec_info in top_specializations:
                 specialization_recommendations.append({
-                    'specialization': spec,
-                    'confidence': alt_confidence
+                    'specialization': spec_info['specialization'],
+                    'confidence': round(spec_info['confidence'] * 100, 2)
                 })
-                used_specializations.add(spec)
-        
-        # If we still don't have 3, add generic ones
-        while len(specialization_recommendations) < 3:
-            # Look up real specializations from the career_fields dictionary
-            if field in career_fields:
-                # Get all roles for this field
-                real_specializations = career_fields[field].get('roles', [])
-                # Find a role that's not already used
-                for real_spec in real_specializations:
-                    if real_spec not in used_specializations and len(specialization_recommendations) < 3:
-                        # Calculate a reasonable confidence score for additional specializations
-                        additional_confidence = round(max(8, specialization_confidence * 100 * 0.7 * (0.95 - 0.1 * (len(specialization_recommendations) - 1))), 2)
-                        specialization_recommendations.append({
-                            'specialization': real_spec,
-                            'confidence': additional_confidence
-                        })
-                        used_specializations.add(real_spec)
+        else:
+            # Fallback to legacy format or create defaults
+            # Add primary recommendation
+            specialization_recommendations.append({
+                'specialization': specialization,
+                'confidence': round(specialization_confidence * 100, 2)
+            })
             
-            # If we still don't have enough, use a generic name as last resort
-            if len(specialization_recommendations) < 3:
+            # Get popular specializations for this field
+            popular_specializations = components.get('popular_specializations', {})
+            field_specializations = popular_specializations.get(field, [])
+            
+            # Add additional recommendations with decreasing confidence
+            used_specializations = {specialization}
+            
+            # Try to use field-specific specializations
+            for spec in field_specializations:
+                if spec not in used_specializations and len(specialization_recommendations) < 3:
+                    # Calculate a slightly lower confidence for each alternative
+                    alt_confidence = round(max(10, specialization_confidence * 100 * (0.9 - 0.1 * (len(specialization_recommendations) - 1))), 2)
+                    specialization_recommendations.append({
+                        'specialization': spec,
+                        'confidence': alt_confidence
+                    })
+                    used_specializations.add(spec)
+            
+            # If we still don't have 3, add generic ones
+            while len(specialization_recommendations) < 3:
                 generic_spec = f"{field} Specialist {len(specialization_recommendations)}"
                 if generic_spec not in used_specializations:
+                    # Calculate a lower confidence for generic recommendations
                     generic_confidence = round(max(5, specialization_confidence * 100 * 0.6 * (0.9 - 0.1 * (len(specialization_recommendations) - 1))), 2)
                     specialization_recommendations.append({
                         'specialization': generic_spec,

@@ -133,13 +133,16 @@ def save_model_components(model_components, verbose=False):
         return False
 
 def load_career_fields():
-    """Load career fields from recommender module."""
+    """
+    Load career fields from recommender module or return a default dictionary.
+    This function has been modified to work even if career_fields is removed from recommender.py.
+    """
     try:
+        # Try to import career_fields from recommender.py
         from recommender import career_fields
         return career_fields
     except ImportError:
         # Fallback if direct import fails
-        print("Direct import failed, trying with full path...")
         try:
             import sys
             import os
@@ -152,8 +155,43 @@ def load_career_fields():
             from recommender import career_fields
             return career_fields
         except Exception as e:
-            print(f"Error importing career_fields: {e}")
-            raise
+            print(f"Could not import career_fields: {e}")
+            print("Using default career fields dictionary instead.")
+            
+            # Return a minimal default dictionary
+            return {
+                "Computer Science": {
+                    "roles": [
+                        "Software Engineer", "Data Scientist", "Machine Learning Engineer",
+                        "Cybersecurity Analyst", "Cloud Architect", "UI/UX Designer", 
+                        "AI Research Scientist", "Full-Stack Developer"
+                    ],
+                    "skills": [
+                        "Python", "Java", "C++", "JavaScript", "SQL", 
+                        "Machine Learning", "Cloud Computing", "Web Development"
+                    ]
+                },
+                "Marketing": {
+                    "roles": [
+                        "Digital Marketing Specialist", "Brand Manager", "Market Research Analyst",
+                        "Content Strategist", "Social Media Manager"
+                    ],
+                    "skills": [
+                        "Social Media Marketing", "SEO", "Content Marketing",
+                        "Data Analytics", "Brand Management", "Market Research"
+                    ]
+                },
+                "Finance": {
+                    "roles": [
+                        "Investment Banker", "Portfolio Manager", "Risk Manager",
+                        "Financial Advisor"
+                    ],
+                    "skills": [
+                        "Financial Modeling", "Valuation", "Risk Management",
+                        "Market Analysis", "Financial Research"
+                    ]
+                }
+            }
 
 def prepare_features(data, target):
     """
@@ -408,16 +446,44 @@ def predict_specialization(skills_str, field, components):
             # If we don't have a model for this field, return a default
             field_specs = popular_specializations.get(field, [])
             if field_specs:
-                # Return the first popular specialization for this field
+                # Return the top 3 popular specializations for this field with decreasing confidence
+                top_specs = field_specs[:min(3, len(field_specs))]
+                
+                specs_with_confidence = []
+                for i, spec in enumerate(top_specs):
+                    # Assign decreasing confidence scores: 0.5, 0.4, 0.3
+                    confidence = 0.5 - (i * 0.1)
+                    specs_with_confidence.append({
+                        'specialization': spec,
+                        'confidence': confidence
+                    })
+                
+                # If we don't have 3, add generic ones
+                while len(specs_with_confidence) < 3:
+                    generic_spec = f"{field} Specialist {len(specs_with_confidence)}"
+                    confidence = 0.3 - (len(specs_with_confidence) * 0.05)
+                    specs_with_confidence.append({
+                        'specialization': generic_spec,
+                        'confidence': max(0.1, confidence)
+                    })
+                
                 return {
-                    'specialization': field_specs[0],
+                    'specialization': top_specs[0],
                     'confidence': 0.5,
-                    'note': 'Using popular specialization default - no model available for this field'
+                    'note': 'Using popular specialization default - no model available for this field',
+                    'top_specializations': specs_with_confidence
                 }
+            
+            # Generic fallback if no popular specializations
             return {
                 'specialization': f"{field} Specialist",
                 'confidence': 0.3,
-                'note': 'Using generic default - no model available for this field'
+                'note': 'Using generic default - no model available for this field',
+                'top_specializations': [
+                    {'specialization': f"{field} Specialist", 'confidence': 0.3},
+                    {'specialization': f"{field} Analyst", 'confidence': 0.2},
+                    {'specialization': f"{field} Associate", 'confidence': 0.1}
+                ]
             }
             
         # Get the model and vectorizer
@@ -427,17 +493,60 @@ def predict_specialization(skills_str, field, components):
         # Preprocess the skills
         X = vectorizer.transform([skills_str])
         
-        # Make prediction
+        # Make prediction for top class
         specialization = model.predict(X)[0]
         
-        # Get prediction probabilities
+        # Get prediction probabilities for all classes
         proba = model.predict_proba(X)[0]
-        confidence = max(proba)
+        
+        # Get the class encoder
+        encoder = components.get('specialization_encoders', {}).get(field)
+        if encoder is None:
+            # Fallback to default
+            top_specializations = [
+                {'specialization': specialization, 'confidence': float(max(proba))}
+            ]
+            
+            # Add some popular specializations if available
+            field_specs = popular_specializations.get(field, [])
+            for i, spec in enumerate(field_specs[:2]):
+                if spec != specialization:
+                    top_specializations.append({
+                        'specialization': spec,
+                        'confidence': float(max(proba) * 0.8 - (i * 0.1))
+                    })
+        else:
+            # Get the classes
+            classes = encoder.classes_
+            
+            # Create list of (specialization, probability) tuples
+            spec_probs = [(classes[i], float(p)) for i, p in enumerate(proba)]
+            
+            # Sort by probability in descending order
+            spec_probs.sort(key=lambda x: x[1], reverse=True)
+            
+            # Take top 3 or less if fewer are available
+            top_specializations = [
+                {'specialization': spec, 'confidence': conf}
+                for spec, conf in spec_probs[:min(3, len(spec_probs))]
+            ]
+        
+        # If we have fewer than 3 specializations, add generic ones
+        while len(top_specializations) < 3:
+            generic_spec = f"{field} Specialist {len(top_specializations)}"
+            # Base confidence on the lowest confidence in the list, or a default if list is empty
+            base_confidence = 0.1
+            if top_specializations:
+                base_confidence = top_specializations[-1]['confidence'] * 0.7
+            top_specializations.append({
+                'specialization': generic_spec,
+                'confidence': max(0.05, base_confidence)
+            })
         
         return {
             'specialization': specialization,
-            'confidence': float(confidence),
-            'alternate_specializations': popular_specializations.get(field, [])[:3]
+            'confidence': float(max(proba)),
+            'top_specializations': top_specializations
         }
     except Exception as e:
         # Fallback to default
@@ -445,12 +554,17 @@ def predict_specialization(skills_str, field, components):
         return {
             'specialization': f"{field} Specialist",
             'confidence': 0.2,
-            'error': str(e)
+            'error': str(e),
+            'top_specializations': [
+                {'specialization': f"{field} Specialist", 'confidence': 0.2},
+                {'specialization': f"{field} Analyst", 'confidence': 0.15},
+                {'specialization': f"{field} Associate", 'confidence': 0.1}
+            ]
         }
 
 def identify_missing_skills(skills_str, specialization, components):
     """
-    Identify missing skills for a specific specialization.
+    Identify missing skills for a specific specialization using model data.
     
     Args:
         skills_str (str): Comma-separated list of skills
@@ -461,54 +575,268 @@ def identify_missing_skills(skills_str, specialization, components):
         dict: Dictionary with missing skills and recommendations
     """
     try:
-        # Load career fields to get required skills for the specialization
-        career_fields = load_career_fields()
-        
         # Parse user skills
         user_skills = [skill.strip().lower() for skill in skills_str.split(',') if skill.strip()]
         user_skills_set = set(user_skills)
         
-        # Find which field this specialization belongs to
-        specialization_field = None
-        for field, data in career_fields.items():
-            if specialization in data.get('roles', []):
-                specialization_field = field
-                break
+        # Get skill profiles from model components
+        skill_profiles = components.get('specialization_skill_profiles', {})
         
-        if not specialization_field:
-            return {
-                'missing_skills': [],
-                'note': f"Could not find field for specialization '{specialization}'"
-            }
+        # Define common technology compound terms
+        compound_skills = {
+            "cloud computing": "Cloud Computing",
+            "machine learning": "Machine Learning",
+            "deep learning": "Deep Learning",
+            "data science": "Data Science",
+            "data analysis": "Data Analysis",
+            "data analytics": "Data Analytics",
+            "big data": "Big Data",
+            "artificial intelligence": "Artificial Intelligence",
+            "natural language processing": "Natural Language Processing",
+            "computer vision": "Computer Vision",
+            "web development": "Web Development",
+            "mobile development": "Mobile Development",
+            "game development": "Game Development",
+            "software development": "Software Development",
+            "api development": "API Development",
+            "front end": "Front-end Development",
+            "frontend": "Front-end Development",
+            "back end": "Back-end Development", 
+            "backend": "Back-end Development",
+            "full stack": "Full-Stack Development",
+            "fullstack": "Full-Stack Development",
+            "devops": "DevOps",
+            "ci cd": "CI/CD",
+            "version control": "Version Control",
+            "git": "Git",
+            "docker": "Docker",
+            "kubernetes": "Kubernetes",
+            "database": "Database Management",
+            "sql": "SQL",
+            "nosql": "NoSQL",
+            "ui ux": "UI/UX Design",
+            "user interface": "UI/UX Design",
+            "user experience": "UI/UX Design",
+            "agile": "Agile Methodology",
+            "scrum": "Scrum",
+            "project management": "Project Management",
+            "cyber security": "Cybersecurity",
+            "cybersecurity": "Cybersecurity",
+            "network security": "Network Security",
+            "blockchain": "Blockchain",
+            "cloud architecture": "Cloud Architecture",
+            "aws": "AWS",
+            "azure": "Microsoft Azure",
+            "gcp": "Google Cloud Platform",
+            "react": "React.js",
+            "angular": "Angular",
+            "vue": "Vue.js",
+            "node": "Node.js",
+            "express": "Express.js",
+            "django": "Django",
+            "flask": "Flask",
+            "spring": "Spring Framework",
+            "tensorflow": "TensorFlow",
+            "pytorch": "PyTorch",
+            "scikit learn": "Scikit-learn",
+            "opencv": "OpenCV",
+            "java": "Java",
+            "python": "Python",
+            "c#": "C#",
+            "c++": "C++",
+            "javascript": "JavaScript",
+            "typescript": "TypeScript",
+            "swift": "Swift",
+            "kotlin": "Kotlin",
+            "ruby": "Ruby",
+            "go": "Go",
+            "rust": "Rust",
+            "php": "PHP",
+            "html": "HTML",
+            "css": "CSS",
+            "sass": "SASS/SCSS",
+            "scala": "Scala",
+            "r language": "R",
+            "embedded systems": "Embedded Systems",
+            "iot": "IoT",
+            "microservices": "Microservices Architecture",
+            "restful api": "RESTful API",
+            "graphql": "GraphQL",
+            "test driven": "Test-Driven Development",
+            "unit testing": "Unit Testing",
+            "penetration testing": "Penetration Testing",
+            "data modeling": "Data Modeling",
+            "object oriented": "Object-Oriented Programming",
+            "functional programming": "Functional Programming",
+            "distributed systems": "Distributed Systems",
+            "api gateway": "API Gateway",
+            "serverless": "Serverless Architecture",
+            "message queue": "Message Queuing",
+            "etl": "ETL Processes",
+            "data warehouse": "Data Warehousing",
+            "data visualization": "Data Visualization",
+            "power bi": "Power BI",
+            "tableau": "Tableau",
+            "unix": "Unix/Linux",
+            "windows server": "Windows Server",
+            "networking": "Computer Networking",
+            "tcp ip": "TCP/IP",
+            "system design": "System Design",
+            "architecture design": "Architecture Design",
+            "automation": "Automation",
+            "shell scripting": "Shell Scripting",
+            "bash": "Bash",
+            "powershell": "PowerShell",
+            "business intelligence": "Business Intelligence",
+            "data mining": "Data Mining",
+            "3d modeling": "3D Modeling",
+            "unity": "Unity",
+            "unreal": "Unreal Engine",
+            "augmented reality": "Augmented Reality (AR)",
+            "virtual reality": "Virtual Reality (VR)"
+        }
         
-        # Get required skills for this field/specialization
-        field_skills = career_fields.get(specialization_field, {}).get('skills', [])
+        # Find skills for this specialization from the model data
+        specialization_skills = []
         
-        # Find missing skills
+        # Check if we have skill profile for this specialization
+        if specialization in skill_profiles:
+            # Get skill weights - higher weight means more important
+            skill_weights = skill_profiles[specialization]
+            
+            # Convert to list of (skill, weight) tuples and sort by weight (descending)
+            weighted_skills = [(skill, weight) for skill, weight in skill_weights.items()]
+            weighted_skills.sort(key=lambda x: x[1], reverse=True)
+            
+            # Extract top skills (most important ones)
+            specialization_skills = [skill for skill, _ in weighted_skills[:30]]
+        
+        # If no skill profile found, try to find which field this specialization belongs to
+        if not specialization_skills:
+            # Try to get field-specific skills from the fallback dictionary
+            try:
+                career_fields = load_career_fields()
+                for field, data in career_fields.items():
+                    if specialization in data.get('roles', []):
+                        specialization_skills = data.get('skills', [])[:30]
+                        break
+            except Exception:
+                pass
+                
+            # If still no skills, try to find which field this specialization belongs to from the specialization models
+            if not specialization_skills:
+                specialization_field = None
+                specialization_encoders = components.get('specialization_encoders', {})
+                
+                for field, encoder in specialization_encoders.items():
+                    if hasattr(encoder, 'classes_') and specialization in encoder.classes_:
+                        specialization_field = field
+                        break
+                
+                # If we found the field, get top skills for that field
+                if specialization_field:
+                    # Get a list of all specializations in this field
+                    field_specializations = set()
+                    if specialization_field in specialization_encoders and hasattr(specialization_encoders[specialization_field], 'classes_'):
+                        field_specializations = set(specialization_encoders[specialization_field].classes_)
+                    
+                    # Get all skill profiles for specializations in this field
+                    field_skill_profiles = {
+                        spec: profile for spec, profile in skill_profiles.items() 
+                        if spec in field_specializations
+                    }
+                    
+                    # Combine skill weights across all specializations in this field
+                    combined_weights = {}
+                    for profile in field_skill_profiles.values():
+                        for skill, weight in profile.items():
+                            combined_weights[skill] = combined_weights.get(skill, 0) + weight
+                    
+                    # Sort skills by combined weight
+                    if combined_weights:
+                        combined_skills = [(skill, weight) for skill, weight in combined_weights.items()]
+                        combined_skills.sort(key=lambda x: x[1], reverse=True)
+                        specialization_skills = [skill for skill, _ in combined_skills[:30]]
+            
+            # If we still don't have skills, use model's vocabulary
+            if not specialization_skills:
+                vectorizers = components.get('specialization_vectorizers', {})
+                for field, vectorizer in vectorizers.items():
+                    if hasattr(vectorizer, 'vocabulary_'):
+                        # Get top feature names by their index (higher index = more important)
+                        vocab = vectorizer.vocabulary_
+                        top_features = sorted(vocab.items(), key=lambda x: x[1], reverse=True)[:50]
+                        specialization_skills = [feature for feature, _ in top_features]
+                        break
+        
+        # Process skills to identify compound terms
+        processed_skills = []
+        raw_tokens = []
+        
+        # First extract all individual words
+        for skill in specialization_skills:
+            tokens = skill.lower().split()
+            raw_tokens.extend(tokens)
+        
+        # Look for compound skills in the raw tokens
+        for i in range(len(raw_tokens) - 1):
+            bigram = f"{raw_tokens[i]} {raw_tokens[i+1]}"
+            if bigram in compound_skills:
+                processed_skills.append(compound_skills[bigram])
+                
+        # Also check for compound skills in the original specialization skills
+        for skill in specialization_skills:
+            skill_lower = skill.lower()
+            if skill_lower in compound_skills:
+                processed_skills.append(compound_skills[skill_lower])
+            else:
+                # Check if this contains a known compound skill
+                for compound, formal in compound_skills.items():
+                    if compound in skill_lower and formal not in processed_skills:
+                        processed_skills.append(formal)
+        
+        # Keep track of words that are part of compound skills to avoid duplication
+        words_in_compounds = set()
+        for compound in compound_skills:
+            for word in compound.split():
+                if len(word) > 2:  # Only track meaningful words
+                    words_in_compounds.add(word)
+        
+        # Add single-word skills, but only if they're not already part of a compound skill
+        for token in set(raw_tokens):
+            if token in compound_skills:
+                processed_skills.append(compound_skills[token])
+            elif len(token) > 2 and token not in words_in_compounds and token not in ['the', 'and', 'for', 'with', 'a', 'an', 'of', 'to', 'in', 'on', 'is', 'are']:
+                # Add capitalized individual tokens if they're not common words and not part of compounds
+                processed_skills.append(token.capitalize())
+        
+        # Remove duplicates by converting to a set and back to a list
+        processed_skills = list(set(processed_skills))
+        
+        # Find missing skills from the processed list
         missing_skills = []
-        for skill in field_skills:
-            if skill.lower() not in user_skills_set:
+        for skill in processed_skills:
+            skill_lower = skill.lower()
+            if all(skill_lower not in user_skill.lower() for user_skill in user_skills):
                 missing_skills.append(skill)
         
-        # Get skills from training data if available
-        model_skills = []
-        
-        # Sort missing skills by relevance (currently just alphabetical)
+        # Sort missing skills alphabetically (for consistency)
         missing_skills.sort()
         
-        # Return the top 5-7 missing skills
+        # Return the top 7 missing skills
         top_missing = missing_skills[:min(7, len(missing_skills))]
         
         return {
             'missing_skills': top_missing,
-            'field': specialization_field,
             'specialization': specialization,
             'user_skills_count': len(user_skills),
-            'required_skills_count': len(field_skills),
+            'required_skills_count': len(processed_skills),
             'missing_skills_count': len(missing_skills)
         }
     except Exception as e:
         print(f"Error identifying missing skills: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {
             'missing_skills': [],
             'error': str(e)
@@ -574,8 +902,7 @@ def recommend_career_path(skills_str, model_path=MODEL_PATH):
             'existing_skills': user_skills,
             'model_version': components.get('version', '1.0'),
             'alternate_fields': field_info.get('alternate_fields', []),
-            'alternate_specializations': specialization_info.get('alternate_specializations', []) 
-                if isinstance(specialization_info, dict) else []
+            'alternate_specializations': specialization_info.get('top_specializations', [])
         }
     except Exception as e:
         print(f"Error in career path recommendation: {str(e)}")
