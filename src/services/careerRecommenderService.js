@@ -13,16 +13,20 @@ import {
     writeBatch,
 } from "firebase/firestore";
 
+// Base API URL - use environment variable with fallback to localhost for development
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
 // API Configuration
 const API_CONFIG = {
     endpoints: {
-        recommend: "http://localhost:8000/recommend", // Main recommendation endpoint
-        simpleRecommend: "http://localhost:8000/api/recommend", // Frontend-friendly endpoint
-        outputRecommend: "http://localhost:8000/output_recommendation", // Output to JSON endpoint
-        health: "http://localhost:8000/health", // Health check endpoint
-        fields: "http://localhost:8000/fields", // Get available fields
-        specializations: "http://localhost:8000/specializations", // Get available specializations
-        matchSkill: "http://localhost:8000/match_skill", // Skill matching endpoint
+        recommend: `${API_BASE_URL}/recommend`, // Main recommendation endpoint
+        simpleRecommend: `${API_BASE_URL}/api/recommend`, // Frontend-friendly endpoint
+        outputRecommend: `${API_BASE_URL}/output_recommendation`, // Output to JSON endpoint
+        health: `${API_BASE_URL}/health`, // Health check endpoint
+        fields: `${API_BASE_URL}/fields`, // Get available fields
+        specializations: `${API_BASE_URL}/specializations`, // Get available specializations
+        matchSkill: `${API_BASE_URL}/match_skill`, // Skill matching endpoint
     },
     timeout: 30000, // 30 second timeout
 };
