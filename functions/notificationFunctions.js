@@ -91,6 +91,8 @@ exports.onNewJobCreated = functions.firestore
         const jobId = context.params.jobId;
         const universityId = jobData.universityId || "";
 
+        console.log(`Job creation triggered for job ID: ${jobId}`);
+
         // Get university name if available
         let universityName = "A company";
         if (universityId) {
@@ -112,22 +114,77 @@ exports.onNewJobCreated = functions.firestore
         const notificationTitle = "New Job Available";
         const notificationBody = `${universityName} has posted a new job: ${jobData.title}`;
 
-        // Send notification to all job seekers
-        await sendNotificationToTopic(
-            "job_seekers",
-            notificationTitle,
-            notificationBody,
-            {
+        // Create a general notification entry that will be visible to applicants
+        try {
+            console.log("Creating notification in Firestore...");
+
+            // Create notification data
+            const notificationData = {
+                title: notificationTitle,
+                message: notificationBody,
                 type: "new_job",
                 jobId: jobId,
                 universityId: universityId,
-            }
-        );
+                jobTitle: jobData.title,
+                companyName: universityName,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                read: false,
+            };
 
-        // Also send notification to university-specific topic if available
-        if (universityId) {
+            // 1. Explicitly create collection if it doesn't exist
+            const applicantsNotifRef = admin
+                .firestore()
+                .collection("applicants_general_notifications");
+
+            // Add the notification document
+            const newNotifDoc = await applicantsNotifRef.add(notificationData);
+
+            console.log(
+                `Created general notification document with ID: ${newNotifDoc.id} for job: ${jobId}`
+            );
+
+            // 2. Query all users with "applicant" role to add personalized notifications
+            console.log("Finding applicant users to send notifications to...");
+            const usersSnapshot = await admin
+                .firestore()
+                .collection("users")
+                .where("role", "==", "applicant")
+                .get();
+
+            console.log(`Found ${usersSnapshot.size} applicant users`);
+
+            // Create a batch to efficiently write multiple notifications
+            if (usersSnapshot.size > 0) {
+                const batch = admin.firestore().batch();
+
+                usersSnapshot.forEach((userDoc) => {
+                    const userId = userDoc.id;
+                    const notificationRef = admin
+                        .firestore()
+                        .collection("users")
+                        .doc(userId)
+                        .collection("notifications")
+                        .doc(); // Auto-generated ID
+
+                    batch.set(notificationRef, notificationData);
+                    console.log(`Adding notification for user: ${userId}`);
+                });
+
+                // Commit the batch
+                await batch.commit();
+                console.log(
+                    `Added job notifications to ${usersSnapshot.size} applicant users`
+                );
+            }
+        } catch (error) {
+            console.error("Error creating notifications:", error);
+        }
+
+        // Send notification to all job seekers (which are only applicants)
+        try {
+            console.log("Sending push notification to job_seekers topic...");
             await sendNotificationToTopic(
-                `university_${universityId}`,
+                "job_seekers",
                 notificationTitle,
                 notificationBody,
                 {
@@ -136,8 +193,60 @@ exports.onNewJobCreated = functions.firestore
                     universityId: universityId,
                 }
             );
+        } catch (error) {
+            console.error(
+                "Error sending notification to job_seekers topic:",
+                error
+            );
         }
 
+        // Also send notification to university-specific topic if available
+        if (universityId) {
+            try {
+                console.log(
+                    `Sending push notification to university_${universityId}_applicants topic...`
+                );
+                await sendNotificationToTopic(
+                    `university_${universityId}_applicants`,
+                    notificationTitle,
+                    notificationBody,
+                    {
+                        type: "new_job",
+                        jobId: jobId,
+                        universityId: universityId,
+                    }
+                );
+            } catch (error) {
+                console.error(
+                    `Error sending notification to university_${universityId}_applicants topic:`,
+                    error
+                );
+            }
+        }
+
+        // Also send to all applicants topic
+        try {
+            console.log("Sending push notification to all_applicants topic...");
+            await sendNotificationToTopic(
+                "all_applicants",
+                notificationTitle,
+                notificationBody,
+                {
+                    type: "new_job",
+                    jobId: jobId,
+                    universityId: universityId,
+                }
+            );
+        } catch (error) {
+            console.error(
+                "Error sending notification to all_applicants topic:",
+                error
+            );
+        }
+
+        console.log(
+            `Job creation notification process completed for job ID: ${jobId}`
+        );
         return null;
     });
 
@@ -408,3 +517,82 @@ exports.onOnboardingTasksUpdated = functions.firestore
 
         return null;
     });
+
+// Function to subscribe a user to FCM topics
+exports.subscribeToTopics = functions.https.onCall(async (data, context) => {
+    // Ensure user is authenticated
+    if (!context.auth) {
+        throw new functions.https.HttpsError(
+            "unauthenticated",
+            "You must be logged in to subscribe to topics"
+        );
+    }
+
+    const userId = context.auth.uid;
+    const { fcmToken } = data;
+
+    if (!fcmToken) {
+        throw new functions.https.HttpsError(
+            "invalid-argument",
+            "FCM token is required"
+        );
+    }
+
+    try {
+        // Get user data to determine role
+        const userDoc = await admin
+            .firestore()
+            .collection("users")
+            .doc(userId)
+            .get();
+
+        if (!userDoc.exists) {
+            throw new functions.https.HttpsError("not-found", "User not found");
+        }
+
+        const userData = userDoc.data();
+        const userRole = userData.role;
+
+        // Success response
+        const response = {
+            success: true,
+            subscribedTopics: [],
+        };
+
+        // Subscribe to topics based on user role
+        if (userRole === "applicant") {
+            // Subscribe to job seekers topic
+            await admin.messaging().subscribeToTopic(fcmToken, "job_seekers");
+            response.subscribedTopics.push("job_seekers");
+
+            // Subscribe to all applicants topic
+            await admin
+                .messaging()
+                .subscribeToTopic(fcmToken, "all_applicants");
+            response.subscribedTopics.push("all_applicants");
+
+            // Subscribe to university-specific topics if user has preferences
+            if (
+                userData.preferredUniversities &&
+                userData.preferredUniversities.length > 0
+            ) {
+                for (const universityId of userData.preferredUniversities) {
+                    const topicName = `university_${universityId}_applicants`;
+                    await admin
+                        .messaging()
+                        .subscribeToTopic(fcmToken, topicName);
+                    response.subscribedTopics.push(topicName);
+                }
+            }
+        }
+
+        return response;
+    } catch (error) {
+        console.error("Error subscribing to topics:", error);
+        throw new functions.https.HttpsError(
+            "internal",
+            "Failed to subscribe to topics",
+            error.message
+        );
+    }
+});
