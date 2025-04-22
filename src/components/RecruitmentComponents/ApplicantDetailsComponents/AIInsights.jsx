@@ -25,42 +25,35 @@ const AIInsights = ({
                 <div className="space-y-3 flex-grow">
                     <div className="flex justify-between items-center">
                         <span className="text-gray-600">Match Percentage:</span>
-                        <span className="text-gray-800 font-medium">85%</span>
+                        <span className="text-gray-800 font-medium">
+                            {applicant?.matchPercentage || "85%"}
+                        </span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-gray-600">Skills Match:</span>
                         <span className="text-gray-800 font-medium">
-                            React, Node.js, MongoDB (3/5)
+                            {applicant?.skillsMatch ||
+                                "React, Node.js, MongoDB (3/5)"}
                         </span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-gray-600">Experience:</span>
                         <span className="text-gray-800 font-medium">
-                            Required: 5 years | Applicant: 3 years (-10%)
+                            {applicant?.experience ||
+                                "Required: 5 years | Applicant: 3 years (-10%)"}
                         </span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-gray-600">Education:</span>
                         <span className="text-gray-800 font-medium">
-                            Bachelor's in IT (Meets Requirement)
-                        </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Certifications:</span>
-                        <span className="text-gray-800 font-medium">
-                            AWS Certified Developer (+5%)
-                        </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Resume Keywords:</span>
-                        <span className="text-gray-800 font-medium">
-                            Matched 7/10
+                            {applicant?.education ||
+                                "Bachelor's in IT (Meets Requirement)"}
                         </span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-gray-600">Recommendation:</span>
                         <span className="text-green-600 font-medium">
-                            Strong Hire ✅
+                            {applicant?.recommendation || "Strong Hire ✅"}
                         </span>
                     </div>
                 </div>
