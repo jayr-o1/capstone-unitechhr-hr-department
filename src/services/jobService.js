@@ -12,7 +12,7 @@ import {
     Timestamp,
     setDoc,
 } from "firebase/firestore";
-import { createJobNotification } from "./notificationService";
+import { sendJobCreationNotification } from "./notificationService";
 
 // Soft delete a job by setting isDeleted flag to true
 export const softDeleteJob = async (jobId) => {
@@ -390,8 +390,17 @@ export const createJob = async (jobData, universityId) => {
         );
         await setDoc(universityJobRef, jobWithMetadata);
 
-        // Create notification for all applicants
-        await createJobNotification(jobWithMetadata, universityId);
+        // Create notification for all applicants using client-side function
+        const notificationResult = await sendJobCreationNotification(
+            jobWithMetadata,
+            universityId
+        );
+        if (!notificationResult.success) {
+            console.error(
+                "Warning: Failed to send job notifications:",
+                notificationResult.message
+            );
+        }
 
         return { success: true, jobId };
     } catch (error) {

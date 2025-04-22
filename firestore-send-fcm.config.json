@@ -1,0 +1,15 @@
+{
+    "firestore": {
+        "path": "fcm_send_requests",
+        "topicField": "topic",
+        "notificationField": "notification",
+        "dataField": "data"
+    },
+    "condition": "status === 'pending'",
+    "message": {
+        "notification": {
+            "titleKey": "notification.title",
+            "bodyKey": "notification.body"
+        }
+    }
+}

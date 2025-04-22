@@ -1,9 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
-// Initialize the Firebase Admin SDK
-admin.initializeApp();
-
 // Function to send notification to a specific user by user ID
 const sendNotificationToUser = async (userId, title, body, data = {}) => {
     try {
@@ -56,6 +53,11 @@ const sendNotificationToUser = async (userId, title, body, data = {}) => {
 // Function to send notification to a topic (e.g., all users, university-specific users)
 const sendNotificationToTopic = async (topic, title, body, data = {}) => {
     try {
+        console.log(`📣 Attempting to send notification to topic: ${topic}`);
+        console.log(`Title: ${title}`);
+        console.log(`Body: ${body}`);
+        console.log(`Data: ${JSON.stringify(data)}`);
+
         // Create the notification message
         const message = {
             notification: {
@@ -69,29 +71,46 @@ const sendNotificationToTopic = async (topic, title, body, data = {}) => {
             topic: topic,
         };
 
+        console.log(`Full message payload: ${JSON.stringify(message)}`);
+
         // Send the notification
         const response = await admin.messaging().send(message);
         console.log(
-            "Successfully sent notification to topic:",
+            "✅ Successfully sent notification to topic:",
             topic,
             response
         );
         return true;
     } catch (error) {
-        console.error("Error sending notification to topic:", topic, error);
+        console.error("❌ Error sending notification to topic:", topic, error);
+        // Log more details about the error
+        if (error.code) {
+            console.error(`Error code: ${error.code}`);
+        }
+        if (error.message) {
+            console.error(`Error message: ${error.message}`);
+        }
+        if (error.stack) {
+            console.error(`Error stack: ${error.stack}`);
+        }
         return false;
     }
 };
 
 // Trigger when a new job is created
-exports.onNewJobCreated = functions.firestore
-    .document("jobs/{jobId}")
+exports.onNewJobCreated = functions
+    .runWith({
+        serviceAccount:
+            "compute-sa@com-capstone-unitechhr-cecca.iam.gserviceaccount.com",
+    })
+    .firestore.document("jobs/{jobId}")
     .onCreate(async (snapshot, context) => {
         const jobData = snapshot.data();
         const jobId = context.params.jobId;
         const universityId = jobData.universityId || "";
 
-        console.log(`Job creation triggered for job ID: ${jobId}`);
+        console.log(`🔔 Job creation trigger fired for job ID: ${jobId}`);
+        console.log(`Job data: ${JSON.stringify(jobData)}`);
 
         // Get university name if available
         let universityName = "A company";
@@ -105,6 +124,11 @@ exports.onNewJobCreated = functions.firestore
                 if (universityDoc.exists) {
                     universityName =
                         universityDoc.data().name || universityName;
+                    console.log(`Found university name: ${universityName}`);
+                } else {
+                    console.log(
+                        `University doc doesn't exist for ID: ${universityId}`
+                    );
                 }
             } catch (err) {
                 console.error("Error getting university name:", err);
@@ -140,7 +164,7 @@ exports.onNewJobCreated = functions.firestore
             const newNotifDoc = await applicantsNotifRef.add(notificationData);
 
             console.log(
-                `Created general notification document with ID: ${newNotifDoc.id} for job: ${jobId}`
+                `✅ Created general notification document with ID: ${newNotifDoc.id} for job: ${jobId}`
             );
 
             // 2. Query all users with "applicant" role to add personalized notifications
@@ -173,17 +197,31 @@ exports.onNewJobCreated = functions.firestore
                 // Commit the batch
                 await batch.commit();
                 console.log(
-                    `Added job notifications to ${usersSnapshot.size} applicant users`
+                    `✅ Added job notifications to ${usersSnapshot.size} applicant users`
                 );
             }
         } catch (error) {
-            console.error("Error creating notifications:", error);
+            console.error("❌ Error creating notifications:", error);
         }
 
         // Send notification to all job seekers (which are only applicants)
         try {
             console.log("Sending push notification to job_seekers topic...");
-            await sendNotificationToTopic(
+
+            // Log the message being sent
+            console.log(
+                `Notification payload: ${JSON.stringify({
+                    title: notificationTitle,
+                    body: notificationBody,
+                    data: {
+                        type: "new_job",
+                        jobId: jobId,
+                        universityId: universityId,
+                    },
+                })}`
+            );
+
+            const result = await sendNotificationToTopic(
                 "job_seekers",
                 notificationTitle,
                 notificationBody,
@@ -193,9 +231,13 @@ exports.onNewJobCreated = functions.firestore
                     universityId: universityId,
                 }
             );
+
+            console.log(
+                `✅ Push notification to job_seekers topic sent: ${result}`
+            );
         } catch (error) {
             console.error(
-                "Error sending notification to job_seekers topic:",
+                "❌ Error sending notification to job_seekers topic:",
                 error
             );
         }
