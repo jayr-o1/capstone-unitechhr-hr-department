@@ -13,3 +13,4 @@ exports.onInterviewScheduled = notificationFunctions.onInterviewScheduled;
 exports.onApplicantHired = notificationFunctions.onApplicantHired;
 exports.onOnboardingTasksUpdated =
     notificationFunctions.onOnboardingTasksUpdated;
+exports.subscribeToTopics = notificationFunctions.subscribeToTopics;
