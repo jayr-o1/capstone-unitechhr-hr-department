@@ -34,13 +34,14 @@ const ApplicantDetails = () => {
     const [selectedInterview, setSelectedInterview] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [universityId, setUniversityId] = useState(null);
-    
+
     // New state for the modals
     const [isAddNotesModalOpen, setIsAddNotesModalOpen] = useState(false);
-    const [isNotesRequiredModalOpen, setIsNotesRequiredModalOpen] = useState(false);
+    const [isNotesRequiredModalOpen, setIsNotesRequiredModalOpen] =
+        useState(false);
     const [interviewsWithoutNotes, setInterviewsWithoutNotes] = useState([]);
     const [currentActionType, setCurrentActionType] = useState(null); // 'hire' or 'fail'
-    
+
     const navigate = useNavigate();
 
     // Find the job and applicant
@@ -48,7 +49,7 @@ const ApplicantDetails = () => {
     const applicant = job?.applicants.find(
         (app) => app.id === applicantId // Find applicant by ID
     );
-    
+
     // Get university ID - either from job or from user data
     useEffect(() => {
         const getUniversityId = async () => {
@@ -58,7 +59,7 @@ const ApplicantDetails = () => {
                 console.log("Using university ID from job:", job.universityId);
                 return;
             }
-            
+
             // If not available from job, try to get from current user
             try {
                 const user = auth.currentUser;
@@ -66,11 +67,17 @@ const ApplicantDetails = () => {
                     console.error("No authenticated user found");
                     return;
                 }
-                
+
                 const userDataResult = await getUserData(user.uid);
-                if (userDataResult.success && userDataResult.data.universityId) {
+                if (
+                    userDataResult.success &&
+                    userDataResult.data.universityId
+                ) {
                     setUniversityId(userDataResult.data.universityId);
-                    console.log("Using university ID from user:", userDataResult.data.universityId);
+                    console.log(
+                        "Using university ID from user:",
+                        userDataResult.data.universityId
+                    );
                 } else {
                     console.error("User doesn't have a university association");
                 }
@@ -78,7 +85,7 @@ const ApplicantDetails = () => {
                 console.error("Error getting user's university:", error);
             }
         };
-        
+
         getUniversityId();
     }, [job]);
 
@@ -116,23 +123,28 @@ const ApplicantDetails = () => {
                 if (interviewsResult.success) {
                     setScheduledInterviews(interviewsResult.interviews || []);
                     showSuccessAlert("Notes saved successfully!");
-                    
+
                     // After adding notes, continue with the original action if applicable
                     if (currentActionType) {
                         // Check if there are still interviews without notes
-                        const remainingInterviewsWithoutNotes = filterInterviewsWithoutNotes(interviewsResult.interviews);
-                        
+                        const remainingInterviewsWithoutNotes =
+                            filterInterviewsWithoutNotes(
+                                interviewsResult.interviews
+                            );
+
                         if (remainingInterviewsWithoutNotes.length === 0) {
                             // All interviews now have notes, proceed with the original action
-                            if (currentActionType === 'hire') {
+                            if (currentActionType === "hire") {
                                 executeHireApplicant();
-                            } else if (currentActionType === 'fail') {
+                            } else if (currentActionType === "fail") {
                                 executeFailApplicant();
                             }
                             setCurrentActionType(null);
                         } else {
                             // There are still interviews without notes
-                            setInterviewsWithoutNotes(remainingInterviewsWithoutNotes);
+                            setInterviewsWithoutNotes(
+                                remainingInterviewsWithoutNotes
+                            );
                         }
                     }
                 }
@@ -213,10 +225,13 @@ const ApplicantDetails = () => {
 
     // Helper function to filter interviews without notes
     const filterInterviewsWithoutNotes = (interviews) => {
-        return interviews.filter(interview => {
-            return !interview.notes || 
-                  (typeof interview.notes === 'string' && interview.notes.trim() === '') ||
-                  (Array.isArray(interview.notes) && interview.notes.length === 0);
+        return interviews.filter((interview) => {
+            return (
+                !interview.notes ||
+                (typeof interview.notes === "string" &&
+                    interview.notes.trim() === "") ||
+                (Array.isArray(interview.notes) && interview.notes.length === 0)
+            );
         });
     };
 
@@ -224,23 +239,26 @@ const ApplicantDetails = () => {
     const checkInterviewNotes = (actionType) => {
         // Check if there are any interviews
         if (!scheduledInterviews || scheduledInterviews.length === 0) {
-            showErrorAlert("At least one interview must be scheduled and completed before hiring or rejecting an applicant.");
+            showErrorAlert(
+                "At least one interview must be scheduled and completed before hiring or rejecting an applicant."
+            );
             return false;
         }
 
         // Filter interviews without notes
-        const missingNotesInterviews = filterInterviewsWithoutNotes(scheduledInterviews);
+        const missingNotesInterviews =
+            filterInterviewsWithoutNotes(scheduledInterviews);
 
         if (missingNotesInterviews.length > 0) {
             // Set state for which interviews need notes
             setInterviewsWithoutNotes(missingNotesInterviews);
-            
+
             // Remember which action we're trying to perform
             setCurrentActionType(actionType);
-            
+
             // Open the notes required modal
             setIsNotesRequiredModalOpen(true);
-            
+
             return false;
         }
 
@@ -249,58 +267,41 @@ const ApplicantDetails = () => {
 
     // Execute hire applicant after all checks are passed
     const executeHireApplicant = () => {
-        showWarningAlert(
-            "Are you sure you want to hire this applicant?",
-            async () => {
-                setIsLoading(true);
-                try {
-                    const result = await updateApplicantStatus(
-                        jobId,
-                        applicantId,
-                        "Hired",
-                        universityId
+        setIsLoading(true);
+        // Call the service to hire the applicant (which changes status to In Onboarding)
+        updateApplicantStatus(jobId, applicantId, "Hired", universityId)
+            .then((result) => {
+                if (result.success) {
+                    showSuccessAlert(
+                        "Applicant has been hired and moved to onboarding!"
                     );
 
-                    if (result.success) {
-                        // Set page refresh flag to show fullscreen loader on redirect
-                        sessionStorage.setItem("isPageRefresh", "true");
+                    // Add a slight delay before redirecting to onboarding
+                    setTimeout(() => {
+                        // Refresh jobs data to get updated applicant status
+                        refreshJobs();
 
-                        showSuccessAlert(
-                            "The applicant has been moved to onboarding!"
-                        );
-
-                        // Refresh jobs data to update UI
-                        await refreshJobs();
-
-                        // Navigate to onboarding page after a brief delay
-                        setTimeout(() => {
-                            // Navigate to onboarding page with the applicant's data
-                            navigate("/onboarding", {
-                                state: {
-                                    newOnboarding: true,
-                                    jobId: jobId,
-                                    applicantId: applicantId,
-                                    applicantData: result.applicantData,
-                                    universityId: universityId
-                                },
-                            });
-                        }, 2000);
-                    } else {
-                        setIsLoading(false);
-                        showErrorAlert(
-                            `Failed to move applicant to onboarding: ${result.message}`
-                        );
-                    }
-                } catch (error) {
-                    setIsLoading(false);
-                    showErrorAlert(`Error: ${error.message}`);
+                        // Navigate to the onboarding page with this applicant highlighted
+                        navigate("/onboarding", {
+                            state: {
+                                newOnboarding: true,
+                                jobId: jobId,
+                                applicantId: applicantId,
+                            },
+                        });
+                    }, 1500);
+                } else {
+                    throw new Error(result.message);
                 }
-                // Don't set isLoading to false here, it will stay loading during the transition
-            },
-            "Yes, move to onboarding!",
-            "Cancel",
-            "The applicant has been moved to onboarding!"
-        );
+            })
+            .catch((error) => {
+                console.error("Error hiring applicant:", error);
+                showErrorAlert(`Failed to hire applicant: ${error.message}`);
+            })
+            .finally(() => {
+                setIsLoading(false);
+                setCurrentActionType(null);
+            });
     };
 
     // Execute fail applicant after all checks are passed
@@ -327,7 +328,8 @@ const ApplicantDetails = () => {
                         );
                     } else {
                         throw new Error(
-                            result.message || "Failed to update applicant status"
+                            result.message ||
+                                "Failed to update applicant status"
                         );
                     }
                 } catch (error) {
@@ -344,7 +346,7 @@ const ApplicantDetails = () => {
     // Handle Hire Applicant
     const handleHireApplicant = () => {
         // First check if all interviews have notes
-        if (checkInterviewNotes('hire')) {
+        if (checkInterviewNotes("hire")) {
             executeHireApplicant();
         }
     };
@@ -352,7 +354,7 @@ const ApplicantDetails = () => {
     // Handle Fail Applicant
     const handleFailApplicant = () => {
         // First check if all interviews have notes
-        if (checkInterviewNotes('fail')) {
+        if (checkInterviewNotes("fail")) {
             executeFailApplicant();
         }
     };
@@ -387,17 +389,20 @@ const ApplicantDetails = () => {
             // First close the modal to prevent background becoming black
             handleCloseModal();
 
-            console.log("Scheduling interview with university ID:", universityId);
-            
+            console.log(
+                "Scheduling interview with university ID:",
+                universityId
+            );
+
             // Use job.universityId or the universityId state to pass to the function
             const result = await scheduleInterview(
-                jobId, 
-                applicantId, 
+                jobId,
+                applicantId,
                 {
                     dateTime: data.dateTime,
                     title: data.title,
                     interviewer: data.interviewer,
-                }, 
+                },
                 universityId
             );
 
@@ -451,9 +456,9 @@ const ApplicantDetails = () => {
             setIsEditModalOpen(false);
 
             const result = await updateInterview(
-                jobId, 
-                applicantId, 
-                data.id, 
+                jobId,
+                applicantId,
+                data.id,
                 {
                     dateTime: data.dateTime,
                     title: data.title,
@@ -593,9 +598,11 @@ const ApplicantDetails = () => {
                         // If there are more interviews needing notes, reopen the notes required modal
                         if (interviewsWithoutNotes.length > 1) {
                             // Remove the one we just edited
-                            const updatedInterviews = interviewsWithoutNotes.filter(
-                                interview => interview.id !== selectedInterview.id
-                            );
+                            const updatedInterviews =
+                                interviewsWithoutNotes.filter(
+                                    (interview) =>
+                                        interview.id !== selectedInterview.id
+                                );
                             if (updatedInterviews.length > 0) {
                                 setInterviewsWithoutNotes(updatedInterviews);
                                 setIsNotesRequiredModalOpen(true);
