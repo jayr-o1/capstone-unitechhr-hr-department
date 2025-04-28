@@ -50,10 +50,16 @@ const Onboarding = () => {
     };
 
     // Handle checklist item toggle
-    const handleChecklistToggle = async (jobId, applicantId, taskId, universityId = null) => {
+    const handleChecklistToggle = async (
+        jobId,
+        applicantId,
+        taskId,
+        universityId = null
+    ) => {
         try {
+            setLoading(true);
             let applicantRef;
-            
+
             // Determine which collection to update based on universityId
             if (universityId) {
                 applicantRef = doc(
@@ -65,7 +71,9 @@ const Onboarding = () => {
                     "applicants",
                     applicantId
                 );
-                console.log(`Toggling checklist for university applicant: ${applicantId} in job ${jobId}`);
+                console.log(
+                    `Toggling checklist for university applicant: ${applicantId} in job ${jobId}`
+                );
             } else {
                 applicantRef = doc(
                     db,
@@ -74,9 +82,11 @@ const Onboarding = () => {
                     "applicants",
                     applicantId
                 );
-                console.log(`Toggling checklist for global applicant: ${applicantId} in job ${jobId}`);
+                console.log(
+                    `Toggling checklist for global applicant: ${applicantId} in job ${jobId}`
+                );
             }
-            
+
             const applicantDoc = await getDoc(applicantRef);
             if (!applicantDoc.exists()) {
                 throw new Error("Applicant not found");
@@ -94,9 +104,12 @@ const Onboarding = () => {
                 return task;
             });
 
+            const progress = calculateProgress(updatedChecklist);
+
             await updateDoc(applicantRef, {
                 onboardingChecklist: updatedChecklist,
-                onboardingProgress: calculateProgress(updatedChecklist),
+                onboardingProgress: progress,
+                onboardingUpdatedAt: serverTimestamp(),
             });
 
             // Update local state
@@ -106,8 +119,7 @@ const Onboarding = () => {
                         ? {
                               ...applicant,
                               onboardingChecklist: updatedChecklist,
-                              onboardingProgress:
-                                  calculateProgress(updatedChecklist),
+                              onboardingProgress: progress,
                           }
                         : applicant
                 )
@@ -116,7 +128,9 @@ const Onboarding = () => {
             showSuccessAlert("Checklist updated successfully!");
         } catch (error) {
             console.error("Error updating checklist:", error);
-            showErrorAlert("Failed to update checklist");
+            showErrorAlert("Failed to update checklist: " + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -132,14 +146,22 @@ const Onboarding = () => {
                 // Get the current user's university ID if available
                 if (user) {
                     const userDataResult = await getUserData(user.uid);
-                    if (userDataResult.success && userDataResult.data.universityId) {
+                    if (
+                        userDataResult.success &&
+                        userDataResult.data.universityId
+                    ) {
                         userUniversityId = userDataResult.data.universityId;
-                        console.log("User belongs to university:", userUniversityId);
+                        console.log(
+                            "User belongs to university:",
+                            userUniversityId
+                        );
                     }
                 }
 
                 // First get applicants from global jobs collection
-                console.log("Fetching onboarding applicants from global collection...");
+                console.log(
+                    "Fetching onboarding applicants from global collection..."
+                );
                 const jobsSnapshot = await getDocs(collection(db, "jobs"));
 
                 // For each job, get applicants in onboarding
@@ -151,7 +173,9 @@ const Onboarding = () => {
                     );
 
                     const applicantsSnapshot = await getDocs(applicantsQuery);
-                    console.log(`Found ${applicantsSnapshot.size} onboarding applicants in global job ${jobId}`);
+                    console.log(
+                        `Found ${applicantsSnapshot.size} onboarding applicants in global job ${jobId}`
+                    );
 
                     applicantsSnapshot.docs.forEach((doc) => {
                         onboardingApplicants.push({
@@ -169,7 +193,9 @@ const Onboarding = () => {
 
                 // If user has a university ID, also check university-specific jobs
                 if (userUniversityId) {
-                    console.log(`Fetching onboarding applicants from university ${userUniversityId} collection...`);
+                    console.log(
+                        `Fetching onboarding applicants from university ${userUniversityId} collection...`
+                    );
                     const universityJobsSnapshot = await getDocs(
                         collection(db, "universities", userUniversityId, "jobs")
                     );
@@ -178,19 +204,32 @@ const Onboarding = () => {
                     for (const jobDoc of universityJobsSnapshot.docs) {
                         const jobId = jobDoc.id;
                         const applicantsQuery = query(
-                            collection(db, "universities", userUniversityId, "jobs", jobId, "applicants"),
+                            collection(
+                                db,
+                                "universities",
+                                userUniversityId,
+                                "jobs",
+                                jobId,
+                                "applicants"
+                            ),
                             where("status", "==", "In Onboarding")
                         );
 
-                        const applicantsSnapshot = await getDocs(applicantsQuery);
-                        console.log(`Found ${applicantsSnapshot.size} onboarding applicants in university job ${jobId}`);
+                        const applicantsSnapshot = await getDocs(
+                            applicantsQuery
+                        );
+                        console.log(
+                            `Found ${applicantsSnapshot.size} onboarding applicants in university job ${jobId}`
+                        );
 
                         applicantsSnapshot.docs.forEach((doc) => {
                             // Check if this applicant is already in the list (avoid duplicates)
-                            const existingIndex = onboardingApplicants.findIndex(
-                                app => app.id === doc.id && app.jobId === jobId
-                            );
-                            
+                            const existingIndex =
+                                onboardingApplicants.findIndex(
+                                    (app) =>
+                                        app.id === doc.id && app.jobId === jobId
+                                );
+
                             if (existingIndex === -1) {
                                 onboardingApplicants.push({
                                     id: doc.id,
@@ -199,7 +238,9 @@ const Onboarding = () => {
                                     universityId: userUniversityId,
                                     ...doc.data(),
                                     onboardingStartedAt:
-                                        doc.data().onboardingStartedAt?.toDate() ||
+                                        doc
+                                            .data()
+                                            .onboardingStartedAt?.toDate() ||
                                         new Date(),
                                 });
                             }
@@ -207,7 +248,9 @@ const Onboarding = () => {
                     }
                 }
 
-                console.log(`Total onboarding applicants found: ${onboardingApplicants.length}`);
+                console.log(
+                    `Total onboarding applicants found: ${onboardingApplicants.length}`
+                );
 
                 // Sort by onboarding start date (newest first)
                 onboardingApplicants.sort(
@@ -250,10 +293,17 @@ const Onboarding = () => {
     }, [location]);
 
     // Handle starting the onboarding process for an applicant
-    const handleStartOnboarding = async (jobId, applicantId, universityId = null) => {
+    const handleStartOnboarding = async (
+        jobId,
+        applicantId,
+        universityId = null
+    ) => {
         try {
+            setLoading(true);
+
             let applicantRef;
-            
+            let applicantDoc;
+
             // Determine which collection to update based on universityId
             if (universityId) {
                 applicantRef = doc(
@@ -265,7 +315,9 @@ const Onboarding = () => {
                     "applicants",
                     applicantId
                 );
-                console.log(`Starting onboarding for university applicant: ${applicantId} in job ${jobId}`);
+                console.log(
+                    `Starting onboarding for university applicant: ${applicantId} in job ${jobId}`
+                );
             } else {
                 applicantRef = doc(
                     db,
@@ -274,19 +326,39 @@ const Onboarding = () => {
                     "applicants",
                     applicantId
                 );
-                console.log(`Starting onboarding for global applicant: ${applicantId} in job ${jobId}`);
+                console.log(
+                    `Starting onboarding for global applicant: ${applicantId} in job ${jobId}`
+                );
             }
+
+            applicantDoc = await getDoc(applicantRef);
+            if (!applicantDoc.exists()) {
+                throw new Error("Applicant not found");
+            }
+
+            // Initialize onboarding checklist if not already present
+            const applicantData = applicantDoc.data();
+            const onboardingChecklist =
+                applicantData.onboardingChecklist || defaultChecklist;
 
             await updateDoc(applicantRef, {
                 onboardingStatus: "In Progress",
                 onboardingUpdatedAt: serverTimestamp(),
+                onboardingChecklist: onboardingChecklist,
+                onboardingProgress: calculateProgress(onboardingChecklist),
             });
 
-            // Update the local state
-            setApplicants((prevApplicants) =>
-                prevApplicants.map((applicant) =>
+            // Update local state
+            setApplicants((prev) =>
+                prev.map((applicant) =>
                     applicant.id === applicantId && applicant.jobId === jobId
-                        ? { ...applicant, onboardingStatus: "In Progress" }
+                        ? {
+                              ...applicant,
+                              onboardingStatus: "In Progress",
+                              onboardingChecklist: onboardingChecklist,
+                              onboardingProgress:
+                                  calculateProgress(onboardingChecklist),
+                          }
                         : applicant
                 )
             );
@@ -294,15 +366,25 @@ const Onboarding = () => {
             showSuccessAlert("Onboarding process started!");
         } catch (error) {
             console.error("Error starting onboarding:", error);
-            showErrorAlert("Failed to start onboarding process");
+            showErrorAlert(
+                "Failed to start onboarding process: " + error.message
+            );
+        } finally {
+            setLoading(false);
         }
     };
 
     // Complete onboarding and make applicant an employee
-    const handleCompleteOnboarding = async (jobId, applicantId, universityId = null) => {
+    const handleCompleteOnboarding = async (
+        jobId,
+        applicantId,
+        universityId = null
+    ) => {
         try {
+            setLoading(true);
+
             let applicantRef;
-            
+
             // Determine which collection to update based on universityId
             if (universityId) {
                 applicantRef = doc(
@@ -314,7 +396,9 @@ const Onboarding = () => {
                     "applicants",
                     applicantId
                 );
-                console.log(`Completing onboarding for university applicant: ${applicantId} in job ${jobId}`);
+                console.log(
+                    `Completing onboarding for university applicant: ${applicantId} in job ${jobId}`
+                );
             } else {
                 applicantRef = doc(
                     db,
@@ -323,79 +407,104 @@ const Onboarding = () => {
                     "applicants",
                     applicantId
                 );
-                console.log(`Completing onboarding for global applicant: ${applicantId} in job ${jobId}`);
+                console.log(
+                    `Completing onboarding for global applicant: ${applicantId} in job ${jobId}`
+                );
             }
-            
-            const applicantDoc = await getDoc(applicantRef);
 
+            // Get applicant data
+            const applicantDoc = await getDoc(applicantRef);
             if (!applicantDoc.exists()) {
                 throw new Error("Applicant not found");
             }
 
             const applicantData = applicantDoc.data();
 
-            // Create employee document in the appropriate collection based on universityId
-            let employeesRef;
-            if (universityId) {
-                // For university-specific applicants, add to university's employees subcollection
-                employeesRef = collection(db, "universities", universityId, "employees");
-                console.log(`Adding employee to university ${universityId} collection`);
-            } else {
-                // For global applicants, add to global employees collection
-                employeesRef = collection(db, "employees");
-                console.log(`Adding employee to global collection`);
+            // Check if onboarding is complete
+            const onboardingChecklist =
+                applicantData.onboardingChecklist || defaultChecklist;
+            const progress = calculateProgress(onboardingChecklist);
+
+            if (progress < 100) {
+                throw new Error(
+                    "Cannot complete onboarding until all checklist items are completed"
+                );
             }
-            
+
+            // Create employee data from applicant data
             const employeeData = {
-                name: applicantData.name,
-                email: applicantData.email,
+                name: applicantData.name || "",
+                email: applicantData.email || "",
                 phone: applicantData.phone || "",
                 position:
                     applicantData.applyingFor || applicantData.jobTitle || "",
                 department: applicantData.department || "",
-                dateHired: serverTimestamp(),
+                salary: applicantData.salary || 0,
+                dateStarted: new Date(),
                 status: "New Hire",
-                employeeId: `EMP${Date.now()}`, // Generate unique employee ID
-                salary: applicantData.offeredSalary || "",
-                onboardingCompletedAt: serverTimestamp(),
-                // Include checklist completion data
-                onboardingChecklist: applicantData.onboardingChecklist || [],
-                onboardingProgress: 100,
-                // Additional employee information
-                emergencyContact: applicantData.emergencyContact || {},
-                documents: applicantData.documents || [],
-                bankDetails: applicantData.bankDetails || {},
-                // Track the original application
-                originalApplication: {
-                    jobId: jobId,
-                    applicantId: applicantId,
-                    universityId: universityId,
-                    applicationDate:
-                        applicantData.appliedAt || serverTimestamp(),
-                },
-                // Save the universityId for university-specific employees
-                universityId: universityId || null,
+                role: "Employee",
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
+                onboardingCompletedAt: serverTimestamp(),
+                jobId: jobId,
+                formerApplicantId: applicantId,
+                onboardingChecklist: applicantData.onboardingChecklist || [],
+                onboardingProgress: 100,
+                employeeDetails: {
+                    address: applicantData.address || "",
+                    dateOfBirth: applicantData.dateOfBirth || null,
+                    emergencyContact: applicantData.emergencyContact || "",
+                    emergencyContactPhone:
+                        applicantData.emergencyContactPhone || "",
+                },
+                universityId: universityId || null,
             };
 
-            // Add to appropriate employees collection
-            const newEmployeeRef = await addDoc(employeesRef, employeeData);
-            console.log(`New employee created with ID: ${newEmployeeRef.id} in ${universityId ? 'university' : 'global'} collection`);
+            let newEmployeeDoc;
 
-            // Update applicant document
+            // Add employee to the main database (for backwards compatibility)
+            const mainEmployeesRef = collection(db, "employees");
+            newEmployeeDoc = await addDoc(mainEmployeesRef, employeeData);
+            console.log(
+                "Created new employee in main collection with ID:",
+                newEmployeeDoc.id
+            );
+
+            // If this is a university applicant, also add to university's employees subcollection
+            if (universityId) {
+                const universityEmployeesRef = doc(
+                    db,
+                    "universities",
+                    universityId,
+                    "employees",
+                    newEmployeeDoc.id
+                );
+
+                // Use the same ID from the main collection
+                await setDoc(universityEmployeesRef, {
+                    ...employeeData,
+                    // Add employeeId field which the Employees page expects
+                    employeeId: newEmployeeDoc.id,
+                });
+
+                console.log(
+                    "Created new employee in university collection with ID:",
+                    newEmployeeDoc.id
+                );
+            }
+
+            // Update the applicant's status to reflect completion
             await updateDoc(applicantRef, {
                 status: "Hired",
                 onboardingStatus: "Completed",
                 onboardingCompletedAt: serverTimestamp(),
-                isEmployee: true,
-                employeeId: employeeData.employeeId,
-                employeeDocId: newEmployeeRef.id,
+                employeeId: newEmployeeDoc.id,
+                updatedAt: serverTimestamp(),
             });
 
-            // Update the local state
-            setApplicants((prevApplicants) =>
-                prevApplicants.filter(
+            // Update local state
+            setApplicants((prev) =>
+                prev.filter(
                     (applicant) =>
                         !(
                             applicant.id === applicantId &&
@@ -404,11 +513,9 @@ const Onboarding = () => {
                 )
             );
 
-            showSuccessAlert(
-                "Applicant successfully hired and added to employees!"
-            );
+            showSuccessAlert("Onboarding completed! Employee record created.");
 
-            // Optional: Navigate to the employees page
+            // Navigate to employees page
             setTimeout(() => {
                 navigate("/employees");
             }, 2000);
@@ -417,16 +524,31 @@ const Onboarding = () => {
             showErrorAlert(
                 "Failed to complete onboarding process: " + error.message
             );
+        } finally {
+            setLoading(false);
         }
     };
 
-    // Format date for display
+    // Helper function to format dates
     const formatDate = (date) => {
-        return new Date(date).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-        });
+        if (!date) return "Not started";
+
+        try {
+            const dateObj = date instanceof Date ? date : new Date(date);
+
+            if (isNaN(dateObj.getTime())) {
+                return "Invalid date";
+            }
+
+            return dateObj.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+            });
+        } catch (error) {
+            console.error("Error formatting date:", error);
+            return "Invalid date";
+        }
     };
 
     // Check if this is a page refresh
@@ -436,12 +558,15 @@ const Onboarding = () => {
 
     // Add new task to checklist
     const handleAddTask = async (jobId, applicantId, universityId = null) => {
-        try {
-            const taskText = prompt("Enter task description:");
-            if (!taskText || taskText.trim() === "") return;
+        if (!newTaskText.trim()) {
+            showErrorAlert("Task text cannot be empty");
+            return;
+        }
 
+        try {
+            setLoading(true);
             let applicantRef;
-            
+
             // Determine which collection to update based on universityId
             if (universityId) {
                 applicantRef = doc(
@@ -453,7 +578,9 @@ const Onboarding = () => {
                     "applicants",
                     applicantId
                 );
-                console.log(`Adding task for university applicant: ${applicantId} in job ${jobId}`);
+                console.log(
+                    `Adding task for university applicant: ${applicantId} in job ${jobId}`
+                );
             } else {
                 applicantRef = doc(
                     db,
@@ -462,9 +589,11 @@ const Onboarding = () => {
                     "applicants",
                     applicantId
                 );
-                console.log(`Adding task for global applicant: ${applicantId} in job ${jobId}`);
+                console.log(
+                    `Adding task for global applicant: ${applicantId} in job ${jobId}`
+                );
             }
-            
+
             const applicantDoc = await getDoc(applicantRef);
             if (!applicantDoc.exists()) {
                 throw new Error("Applicant not found");
@@ -474,18 +603,22 @@ const Onboarding = () => {
             const checklist =
                 applicantDoc.data().onboardingChecklist || defaultChecklist;
 
-            // Add new task
-            const newTask = {
-                id: Date.now().toString(),
-                title: taskText,
-                completed: false,
-            };
+            // Generate a unique task ID
+            const newTaskId =
+                Math.max(0, ...checklist.map((task) => task.id)) + 1;
 
-            const updatedChecklist = [...checklist, newTask];
+            // Add new task
+            const updatedChecklist = [
+                ...checklist,
+                { id: newTaskId, task: newTaskText, completed: false },
+            ];
+
+            const progress = calculateProgress(updatedChecklist);
 
             await updateDoc(applicantRef, {
                 onboardingChecklist: updatedChecklist,
-                onboardingProgress: calculateProgress(updatedChecklist),
+                onboardingProgress: progress,
+                onboardingUpdatedAt: serverTimestamp(),
             });
 
             // Update local state
@@ -495,25 +628,41 @@ const Onboarding = () => {
                         ? {
                               ...applicant,
                               onboardingChecklist: updatedChecklist,
-                              onboardingProgress:
-                                  calculateProgress(updatedChecklist),
+                              onboardingProgress: progress,
                           }
                         : applicant
                 )
             );
 
+            // Reset new task text
+            setNewTaskText("");
+            setEditingTask(null);
+
             showSuccessAlert("Task added successfully!");
         } catch (error) {
             console.error("Error adding task:", error);
-            showErrorAlert("Failed to add task");
+            showErrorAlert("Failed to add task: " + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     // Delete task from checklist
-    const handleDeleteTask = async (jobId, applicantId, taskId, universityId = null) => {
+    const handleDeleteTask = async (
+        jobId,
+        applicantId,
+        taskId,
+        universityId = null
+    ) => {
+        // Ask for confirmation before deleting
+        if (!window.confirm("Are you sure you want to delete this task?")) {
+            return;
+        }
+
         try {
+            setLoading(true);
             let applicantRef;
-            
+
             // Determine which collection to update based on universityId
             if (universityId) {
                 applicantRef = doc(
@@ -525,7 +674,9 @@ const Onboarding = () => {
                     "applicants",
                     applicantId
                 );
-                console.log(`Deleting task for university applicant: ${applicantId} in job ${jobId}`);
+                console.log(
+                    `Deleting task for university applicant: ${applicantId} in job ${jobId}`
+                );
             } else {
                 applicantRef = doc(
                     db,
@@ -534,9 +685,11 @@ const Onboarding = () => {
                     "applicants",
                     applicantId
                 );
-                console.log(`Deleting task for global applicant: ${applicantId} in job ${jobId}`);
+                console.log(
+                    `Deleting task for global applicant: ${applicantId} in job ${jobId}`
+                );
             }
-            
+
             const applicantDoc = await getDoc(applicantRef);
             if (!applicantDoc.exists()) {
                 throw new Error("Applicant not found");
@@ -546,14 +699,18 @@ const Onboarding = () => {
             const checklist =
                 applicantDoc.data().onboardingChecklist || defaultChecklist;
 
-            // Remove the task
+            // Remove the specified task
             const updatedChecklist = checklist.filter(
                 (task) => task.id !== taskId
             );
 
+            // Calculate new progress
+            const progress = calculateProgress(updatedChecklist);
+
             await updateDoc(applicantRef, {
                 onboardingChecklist: updatedChecklist,
-                onboardingProgress: calculateProgress(updatedChecklist),
+                onboardingProgress: progress,
+                onboardingUpdatedAt: serverTimestamp(),
             });
 
             // Update local state
@@ -563,8 +720,7 @@ const Onboarding = () => {
                         ? {
                               ...applicant,
                               onboardingChecklist: updatedChecklist,
-                              onboardingProgress:
-                                  calculateProgress(updatedChecklist),
+                              onboardingProgress: progress,
                           }
                         : applicant
                 )
@@ -573,17 +729,29 @@ const Onboarding = () => {
             showSuccessAlert("Task deleted successfully!");
         } catch (error) {
             console.error("Error deleting task:", error);
-            showErrorAlert("Failed to delete task");
+            showErrorAlert("Failed to delete task: " + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     // Edit task in checklist
-    const handleEditTask = async (jobId, applicantId, taskId, newText, universityId = null) => {
-        if (!newText || newText.trim() === "") return;
+    const handleEditTask = async (
+        jobId,
+        applicantId,
+        taskId,
+        newText,
+        universityId = null
+    ) => {
+        if (!newText.trim()) {
+            showErrorAlert("Task text cannot be empty");
+            return;
+        }
 
         try {
+            setLoading(true);
             let applicantRef;
-            
+
             // Determine which collection to update based on universityId
             if (universityId) {
                 applicantRef = doc(
@@ -595,7 +763,9 @@ const Onboarding = () => {
                     "applicants",
                     applicantId
                 );
-                console.log(`Editing task for university applicant: ${applicantId} in job ${jobId}`);
+                console.log(
+                    `Editing task for university applicant: ${applicantId} in job ${jobId}`
+                );
             } else {
                 applicantRef = doc(
                     db,
@@ -604,9 +774,11 @@ const Onboarding = () => {
                     "applicants",
                     applicantId
                 );
-                console.log(`Editing task for global applicant: ${applicantId} in job ${jobId}`);
+                console.log(
+                    `Editing task for global applicant: ${applicantId} in job ${jobId}`
+                );
             }
-            
+
             const applicantDoc = await getDoc(applicantRef);
             if (!applicantDoc.exists()) {
                 throw new Error("Applicant not found");
@@ -616,14 +788,20 @@ const Onboarding = () => {
             const checklist =
                 applicantDoc.data().onboardingChecklist || defaultChecklist;
 
-            // Update the task text
-            const updatedChecklist = checklist.map((task) =>
-                task.id === taskId ? { ...task, title: newText.trim() } : task
-            );
+            // Update task text while preserving completion status
+            const updatedChecklist = checklist.map((task) => {
+                if (task.id === taskId) {
+                    return { ...task, task: newText };
+                }
+                return task;
+            });
+
+            const progress = calculateProgress(updatedChecklist);
 
             await updateDoc(applicantRef, {
                 onboardingChecklist: updatedChecklist,
-                onboardingProgress: calculateProgress(updatedChecklist),
+                onboardingProgress: progress,
+                onboardingUpdatedAt: serverTimestamp(),
             });
 
             // Update local state
@@ -633,17 +811,22 @@ const Onboarding = () => {
                         ? {
                               ...applicant,
                               onboardingChecklist: updatedChecklist,
-                              onboardingProgress:
-                                  calculateProgress(updatedChecklist),
+                              onboardingProgress: progress,
                           }
                         : applicant
                 )
             );
 
+            // Reset editing state
+            setEditingTask(null);
+            setNewTaskText("");
+
             showSuccessAlert("Task updated successfully!");
         } catch (error) {
             console.error("Error updating task:", error);
-            showErrorAlert("Failed to update task");
+            showErrorAlert("Failed to update task: " + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -657,7 +840,13 @@ const Onboarding = () => {
 
     // Show PageLoader during loading state
     if (loading) {
-        return <PageLoader isLoading={true} fullscreen={isPageRefresh} contentOnly={!isPageRefresh} />;
+        return (
+            <PageLoader
+                isLoading={true}
+                fullscreen={isPageRefresh}
+                contentOnly={!isPageRefresh}
+            />
+        );
     }
 
     if (error)
@@ -668,262 +857,229 @@ const Onboarding = () => {
         );
 
     return (
-        <div className="p-6 bg-white shadow-md rounded-lg">
-            {/* Header Section */}
-            <div className="pb-4 border-b border-gray-300">
-                <h1 className="text-3xl font-bold text-gray-900">
+        <div className="p-6">
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-gray-800 mb-2">
                     Applicant Onboarding
                 </h1>
-                <p className="mt-2 text-sm text-gray-600">
+                <p className="text-gray-600">
                     Manage and track applicants in the onboarding process
                 </p>
             </div>
 
-            {/* Content Section */}
-            <div className="p-6">
-                {applicants.length === 0 ? (
-                    <div className="text-center py-10">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-8 h-8 text-gray-400"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"
-                                />
-                            </svg>
-                        </div>
-                        <p className="text-gray-500 text-lg">
-                            No applicants in the onboarding process
-                        </p>
-                    </div>
-                ) : (
-                    <div className="space-y-6">
-                        {applicants.map((applicant) => (
-                            <div
-                                key={`${applicant.jobId}-${applicant.id}`}
-                                id={`applicant-${applicant.jobId}-${applicant.id}`}
-                                className={`border border-gray-300 rounded-lg shadow-sm transition-all ${
-                                    highlightedApplicant ===
-                                    `${applicant.jobId}-${applicant.id}`
-                                        ? "ring-2 ring-blue-500 transform scale-[1.02]"
+            {loading ? (
+                <PageLoader text="Loading onboarding information..." />
+            ) : error ? (
+                <div className="p-4 bg-red-100 text-red-700 rounded-md">
+                    Error: {error}
+                </div>
+            ) : applicants.length === 0 ? (
+                <div className="p-8 bg-gray-50 rounded-lg text-center">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-16 w-16 mx-auto text-gray-400 mb-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                    </svg>
+                    <h3 className="text-lg font-medium text-gray-800 mb-2">
+                        No applicants in the onboarding process
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                        When applicants are hired, they will appear here to
+                        complete the onboarding process.
+                    </p>
+                    <button
+                        onClick={() => navigate("/recruitment")}
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+                    >
+                        Go to Recruitment
+                    </button>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {applicants.map((applicant) => (
+                        <div
+                            key={`${applicant.jobId}-${applicant.id}`}
+                            className={`
+                                bg-white rounded-lg shadow-md overflow-hidden border-t-4
+                                ${
+                                    applicant.onboardingStatus === "Not Started"
+                                        ? "border-yellow-500"
+                                        : applicant.onboardingStatus ===
+                                          "In Progress"
+                                        ? "border-blue-500"
+                                        : "border-green-500"
+                                }
+                                ${
+                                    highlightedApplicant === applicant.id
+                                        ? "ring-2 ring-indigo-500"
                                         : ""
-                                }`}
-                            >
-                                <div className="p-6">
-                                    {/* Applicant Header */}
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div>
-                                            <h2 className="text-xl font-semibold text-gray-900">
-                                                {applicant.name}
-                                            </h2>
-                                            <p className="text-sm text-gray-600 mt-1">
-                                                {applicant.applyingFor ||
-                                                    "Position N/A"}{" "}
-                                                •{" "}
-                                                {applicant.jobTitle ||
-                                                    "Job N/A"}
-                                            </p>
-                                        </div>
-                                        <span
-                                            className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                                applicant.onboardingStatus ===
-                                                "In Progress"
-                                                    ? "bg-blue-100 text-blue-800"
-                                                    : "bg-yellow-100 text-yellow-800"
-                                            }`}
+                                }
+                            `}
+                        >
+                            <div className="p-4 border-b">
+                                <div className="font-medium text-gray-800 text-lg mb-1">
+                                    {applicant.name}
+                                </div>
+                                <div className="text-sm text-gray-600 mb-2">
+                                    {applicant.jobTitle || "Unknown position"}
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span
+                                        className={`text-sm font-medium px-2.5 py-0.5 rounded-full ${
+                                            applicant.onboardingStatus ===
+                                            "Not Started"
+                                                ? "bg-yellow-100 text-yellow-800"
+                                                : applicant.onboardingStatus ===
+                                                  "In Progress"
+                                                ? "bg-blue-100 text-blue-800"
+                                                : "bg-green-100 text-green-800"
+                                        }`}
+                                    >
+                                        {applicant.onboardingStatus ||
+                                            "Not Started"}
+                                    </span>
+                                    <div className="text-sm text-gray-600">
+                                        {applicant.onboardingProgress || 0}%
+                                        complete
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-4">
+                                <div className="h-4 bg-gray-200 rounded-full mb-4">
+                                    <div
+                                        className={`h-4 rounded-full ${
+                                            applicant.onboardingProgress ||
+                                            0 < 50
+                                                ? "bg-yellow-500"
+                                                : (applicant.onboardingProgress ||
+                                                      0) < 100
+                                                ? "bg-blue-500"
+                                                : "bg-green-500"
+                                        }`}
+                                        style={{
+                                            width: `${
+                                                applicant.onboardingProgress ||
+                                                0
+                                            }%`,
+                                        }}
+                                    ></div>
+                                </div>
+
+                                <div className="mb-4">
+                                    <div className="text-sm font-medium text-gray-600 mb-2">
+                                        Onboarding Started
+                                    </div>
+                                    <div className="text-gray-800">
+                                        {formatDate(
+                                            applicant.onboardingStartedAt
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex space-x-2 mb-4">
+                                    {applicant.onboardingStatus ===
+                                        "Not Started" && (
+                                        <button
+                                            onClick={() =>
+                                                handleStartOnboarding(
+                                                    applicant.jobId,
+                                                    applicant.id,
+                                                    applicant.universityId
+                                                )
+                                            }
+                                            className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 transition-colors flex-1"
+                                            disabled={loading}
                                         >
-                                            {applicant.onboardingStatus ||
-                                                "Not Started"}
+                                            Start Onboarding
+                                        </button>
+                                    )}
+
+                                    {applicant.onboardingStatus ===
+                                        "In Progress" && (
+                                        <button
+                                            onClick={() =>
+                                                handleCompleteOnboarding(
+                                                    applicant.jobId,
+                                                    applicant.id,
+                                                    applicant.universityId
+                                                )
+                                            }
+                                            className="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700 transition-colors flex-1"
+                                            disabled={
+                                                loading ||
+                                                applicant.onboardingProgress <
+                                                    100
+                                            }
+                                        >
+                                            Complete Onboarding
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-sm font-medium text-gray-800">
+                                            Onboarding Checklist
                                         </span>
-                                    </div>
-
-                                    {/* Progress and Details Grid */}
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                                        {/* Progress Donut Chart */}
-                                        <div className="flex flex-col items-center justify-center border-r border-gray-200 pr-6">
-                                            <div className="w-32 h-32 relative">
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <span className="text-2xl font-bold text-gray-900">
-                                                        {applicant.onboardingProgress ||
-                                                            0}
-                                                        %
-                                                    </span>
-                                                </div>
-                                                <ResponsiveContainer
-                                                    width="100%"
-                                                    height="100%"
-                                                >
-                                                    <PieChart>
-                                                        <Pie
-                                                            data={[
-                                                                {
-                                                                    value:
-                                                                        applicant.onboardingProgress ||
-                                                                        0,
-                                                                },
-                                                                {
-                                                                    value:
-                                                                        100 -
-                                                                        (applicant.onboardingProgress ||
-                                                                            0),
-                                                                },
-                                                            ]}
-                                                            cx="50%"
-                                                            cy="50%"
-                                                            innerRadius={32}
-                                                            outerRadius={40}
-                                                            startAngle={90}
-                                                            endAngle={-270}
-                                                            dataKey="value"
-                                                        >
-                                                            <Cell fill="#4F46E5" />
-                                                            <Cell fill="#E5E7EB" />
-                                                        </Pie>
-                                                    </PieChart>
-                                                </ResponsiveContainer>
-                                            </div>
-                                            <p className="text-sm text-gray-500 mt-2">
-                                                Completion Progress
-                                            </p>
-                                        </div>
-
-                                        {/* Applicant Details */}
-                                        <div className="col-span-3 grid grid-cols-3 gap-6">
-                                            <div className="border-r border-gray-200 pr-6">
-                                                <p className="text-sm text-gray-500">
-                                                    Email
-                                                </p>
-                                                <p className="font-medium text-gray-900">
-                                                    {applicant.email || "N/A"}
-                                                </p>
-                                            </div>
-                                            <div className="border-r border-gray-200 pr-6">
-                                                <p className="text-sm text-gray-500">
-                                                    Phone
-                                                </p>
-                                                <p className="font-medium text-gray-900">
-                                                    {applicant.phone || "N/A"}
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p className="text-sm text-gray-500">
-                                                    Onboarding Started
-                                                </p>
-                                                <p className="font-medium text-gray-900">
-                                                    {new Date(
-                                                        applicant.onboardingStartedAt
-                                                    ).toLocaleDateString(
-                                                        "en-US",
-                                                        {
-                                                            year: "numeric",
-                                                            month: "long",
-                                                            day: "numeric",
-                                                        }
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Checklist Section */}
-                                    <div className="border-t border-gray-200 pt-6 mt-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-lg font-semibold text-gray-900">
-                                                Onboarding Checklist
-                                            </h3>
-                                            <button
-                                                onClick={() =>
-                                                    toggleChecklist(
-                                                        `${applicant.jobId}-${applicant.id}`
-                                                    )
-                                                }
-                                                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
-                                            >
-                                                <span>
-                                                    {expandedChecklists[
-                                                        `${applicant.jobId}-${applicant.id}`
-                                                    ]
-                                                        ? "Collapse"
-                                                        : "Expand"}
-                                                </span>
+                                        <button
+                                            onClick={() =>
+                                                toggleChecklist(applicant.id)
+                                            }
+                                            className="text-gray-600 hover:text-gray-800"
+                                        >
+                                            {expandedChecklists[
+                                                applicant.id
+                                            ] ? (
                                                 <svg
                                                     xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    strokeWidth={1.5}
-                                                    stroke="currentColor"
-                                                    className={`w-4 h-4 transition-transform duration-200 ${
-                                                        expandedChecklists[
-                                                            `${applicant.jobId}-${applicant.id}`
-                                                        ]
-                                                            ? "rotate-180"
-                                                            : ""
-                                                    }`}
+                                                    className="h-5 w-5"
+                                                    viewBox="0 0 20 20"
+                                                    fill="currentColor"
                                                 >
                                                     <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                                                        fillRule="evenodd"
+                                                        d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                                                        clipRule="evenodd"
                                                     />
                                                 </svg>
-                                            </button>
-                                        </div>
-
-                                        <div
-                                            className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                                                expandedChecklists[
-                                                    `${applicant.jobId}-${applicant.id}`
-                                                ]
-                                                    ? "max-h-[1000px] opacity-100"
-                                                    : "max-h-0 opacity-0"
-                                            }`}
-                                        >
-                                            {/* Add New Task Input */}
-                                            <div className="flex gap-2 mb-4">
-                                                <input
-                                                    type="text"
-                                                    value={newTaskText}
-                                                    onChange={(e) =>
-                                                        setNewTaskText(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    placeholder="Add new task..."
-                                                    className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                                                />
-                                                <button
-                                                    onClick={() =>
-                                                        handleAddTask(
-                                                            applicant.jobId,
-                                                            applicant.id,
-                                                            applicant.universityId
-                                                        )
-                                                    }
-                                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                                                    disabled={
-                                                        !newTaskText.trim()
-                                                    }
+                                            ) : (
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="h-5 w-5"
+                                                    viewBox="0 0 20 20"
+                                                    fill="currentColor"
                                                 >
-                                                    Add Task
-                                                </button>
-                                            </div>
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                            )}
+                                        </button>
+                                    </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                {(
-                                                    applicant.onboardingChecklist ||
-                                                    defaultChecklist
-                                                ).map((item) => (
-                                                    <div
-                                                        key={item.id}
-                                                        className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg group"
-                                                    >
+                                    {expandedChecklists[applicant.id] && (
+                                        <div className="mt-2 space-y-2">
+                                            {(
+                                                applicant.onboardingChecklist ||
+                                                defaultChecklist
+                                            ).map((item) => (
+                                                <div
+                                                    key={item.id}
+                                                    className="flex items-center justify-between group"
+                                                >
+                                                    <div className="flex items-center flex-1">
                                                         <input
                                                             type="checkbox"
                                                             checked={
@@ -937,191 +1093,181 @@ const Onboarding = () => {
                                                                     applicant.universityId
                                                                 )
                                                             }
-                                                            className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                                            className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                                            disabled={
+                                                                loading ||
+                                                                applicant.onboardingStatus ===
+                                                                    "Not Started"
+                                                            }
                                                         />
-                                                        {editingTask ===
-                                                        item.id ? (
-                                                            <input
-                                                                type="text"
-                                                                defaultValue={
-                                                                    item.task
-                                                                }
-                                                                className="flex-1 p-1 border border-gray-300 rounded"
-                                                                onBlur={(e) => {
-                                                                    handleEditTask(
-                                                                        applicant.jobId,
-                                                                        applicant.id,
-                                                                        item.id,
-                                                                        e.target
-                                                                            .value,
-                                                                        applicant.universityId
-                                                                    );
-                                                                }}
-                                                                onKeyDown={(
-                                                                    e
-                                                                ) => {
-                                                                    if (
-                                                                        e.key ===
-                                                                        "Enter"
-                                                                    ) {
-                                                                        handleEditTask(
-                                                                            applicant.jobId,
-                                                                            applicant.id,
-                                                                            item.id,
+                                                        <div className="ml-3 text-sm flex-1">
+                                                            {editingTask ===
+                                                            item.id ? (
+                                                                <div className="flex">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={
+                                                                            newTaskText
+                                                                        }
+                                                                        onChange={(
                                                                             e
-                                                                                .target
-                                                                                .value,
-                                                                            applicant.universityId
-                                                                        );
-                                                                    }
-                                                                }}
-                                                                autoFocus
-                                                            />
-                                                        ) : (
-                                                            <>
+                                                                        ) =>
+                                                                            setNewTaskText(
+                                                                                e
+                                                                                    .target
+                                                                                    .value
+                                                                            )
+                                                                        }
+                                                                        className="border rounded px-2 py-1 text-sm flex-1 mr-2"
+                                                                        autoFocus
+                                                                    />
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            handleEditTask(
+                                                                                applicant.jobId,
+                                                                                applicant.id,
+                                                                                item.id,
+                                                                                newTaskText,
+                                                                                applicant.universityId
+                                                                            )
+                                                                        }
+                                                                        className="bg-green-600 text-white px-2 py-1 rounded text-xs"
+                                                                        disabled={
+                                                                            loading
+                                                                        }
+                                                                    >
+                                                                        Save
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
                                                                 <span
-                                                                    className={`flex-1 text-sm ${
+                                                                    className={`${
                                                                         item.completed
-                                                                            ? "text-gray-500 line-through"
-                                                                            : "text-gray-900"
+                                                                            ? "line-through text-gray-500"
+                                                                            : "text-gray-700"
                                                                     }`}
                                                                 >
                                                                     {item.task}
                                                                 </span>
-                                                                <div className="hidden group-hover:flex gap-2">
-                                                                    <button
-                                                                        onClick={() =>
-                                                                            setEditingTask(
-                                                                                item.id
-                                                                            )
-                                                                        }
-                                                                        className="p-1 text-gray-600 hover:text-blue-600"
-                                                                    >
-                                                                        <svg
-                                                                            xmlns="http://www.w3.org/2000/svg"
-                                                                            fill="none"
-                                                                            viewBox="0 0 24 24"
-                                                                            strokeWidth={
-                                                                                1.5
-                                                                            }
-                                                                            stroke="currentColor"
-                                                                            className="w-4 h-4"
-                                                                        >
-                                                                            <path
-                                                                                strokeLinecap="round"
-                                                                                strokeLinejoin="round"
-                                                                                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-                                                                            />
-                                                                        </svg>
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() =>
-                                                                            handleDeleteTask(
-                                                                                applicant.jobId,
-                                                                                applicant.id,
-                                                                                item.id,
-                                                                                applicant.universityId
-                                                                            )
-                                                                        }
-                                                                        className="p-1 text-gray-600 hover:text-red-600"
-                                                                    >
-                                                                        <svg
-                                                                            xmlns="http://www.w3.org/2000/svg"
-                                                                            fill="none"
-                                                                            viewBox="0 0 24 24"
-                                                                            strokeWidth={
-                                                                                1.5
-                                                                            }
-                                                                            stroke="currentColor"
-                                                                            className="w-4 h-4"
-                                                                        >
-                                                                            <path
-                                                                                strokeLinecap="round"
-                                                                                strokeLinejoin="round"
-                                                                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                                                            />
-                                                                        </svg>
-                                                                    </button>
-                                                                </div>
-                                                            </>
-                                                        )}
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                ))}
-                                            </div>
+                                                    {editingTask !==
+                                                        item.id && (
+                                                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditingTask(
+                                                                        item.id
+                                                                    );
+                                                                    setNewTaskText(
+                                                                        item.task
+                                                                    );
+                                                                }}
+                                                                className="text-gray-500 hover:text-blue-600"
+                                                                disabled={
+                                                                    loading ||
+                                                                    applicant.onboardingStatus ===
+                                                                        "Not Started"
+                                                                }
+                                                            >
+                                                                <svg
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    className="h-4 w-4"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={
+                                                                            2
+                                                                        }
+                                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                                                    />
+                                                                </svg>
+                                                            </button>
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleDeleteTask(
+                                                                        applicant.jobId,
+                                                                        applicant.id,
+                                                                        item.id,
+                                                                        applicant.universityId
+                                                                    )
+                                                                }
+                                                                className="text-gray-500 hover:text-red-600"
+                                                                disabled={
+                                                                    loading ||
+                                                                    applicant.onboardingStatus ===
+                                                                        "Not Started"
+                                                                }
+                                                            >
+                                                                <svg
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    className="h-4 w-4"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={
+                                                                            2
+                                                                        }
+                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                                    />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+
+                                            {/* Add new task input */}
+                                            {applicant.onboardingStatus ===
+                                                "In Progress" && (
+                                                <div className="flex items-center mt-3">
+                                                    <input
+                                                        type="text"
+                                                        value={newTaskText}
+                                                        onChange={(e) =>
+                                                            setNewTaskText(
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        placeholder="Add new task..."
+                                                        className="flex-1 border rounded px-3 py-1 text-sm mr-2"
+                                                        disabled={loading}
+                                                    />
+                                                    <button
+                                                        onClick={() =>
+                                                            handleAddTask(
+                                                                applicant.jobId,
+                                                                applicant.id,
+                                                                applicant.universityId
+                                                            )
+                                                        }
+                                                        className="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700"
+                                                        disabled={
+                                                            loading ||
+                                                            !newTaskText.trim()
+                                                        }
+                                                    >
+                                                        Add
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
-
-                                        {/* Show summary when collapsed */}
-                                        {!expandedChecklists[
-                                            `${applicant.jobId}-${applicant.id}`
-                                        ] && (
-                                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                                                <span>
-                                                    {
-                                                        (
-                                                            applicant.onboardingChecklist ||
-                                                            defaultChecklist
-                                                        ).length
-                                                    }{" "}
-                                                    tasks total
-                                                </span>
-                                                <span>•</span>
-                                                <span>
-                                                    {
-                                                        (
-                                                            applicant.onboardingChecklist ||
-                                                            defaultChecklist
-                                                        ).filter(
-                                                            (item) =>
-                                                                item.completed
-                                                        ).length
-                                                    }{" "}
-                                                    completed
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Action Buttons */}
-                                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 mt-6">
-                                        {applicant.onboardingStatus ===
-                                        "Not Started" ? (
-                                            <button
-                                                onClick={() =>
-                                                    handleStartOnboarding(
-                                                        applicant.jobId,
-                                                        applicant.id,
-                                                        applicant.universityId
-                                                    )
-                                                }
-                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                                            >
-                                                Start Onboarding
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={() =>
-                                                    handleCompleteOnboarding(
-                                                        applicant.jobId,
-                                                        applicant.id,
-                                                        applicant.universityId
-                                                    )
-                                                }
-                                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
-                                                disabled={
-                                                    applicant.onboardingProgress !==
-                                                    100
-                                                }
-                                            >
-                                                Complete & Hire
-                                            </button>
-                                        )}
-                                    </div>
+                                    )}
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

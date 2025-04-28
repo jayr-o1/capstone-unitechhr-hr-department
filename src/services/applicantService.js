@@ -1,4 +1,4 @@
- import { db } from "../firebase";
+import { db } from "../firebase";
 import {
     doc,
     updateDoc,
@@ -11,50 +11,81 @@ import {
 } from "firebase/firestore";
 
 // Update applicant status (Pending, Interviewing, Hired, Failed)
-export const updateApplicantStatus = async (jobId, applicantId, status, universityId = null) => {
+export const updateApplicantStatus = async (
+    jobId,
+    applicantId,
+    status,
+    universityId = null
+) => {
     try {
-        console.log(`Updating applicant status - Job ID: ${jobId}, Applicant ID: ${applicantId}, New Status: ${status}, University ID: ${universityId || 'none'}`);
-        
+        console.log(
+            `Updating applicant status - Job ID: ${jobId}, Applicant ID: ${applicantId}, New Status: ${status}, University ID: ${
+                universityId || "none"
+            }`
+        );
+
         const updatedStatus = status === "Hired" ? "In Onboarding" : status;
-        
+
         // Update data to be applied
         const updateData = {
             status: updatedStatus,
             statusUpdatedAt: serverTimestamp(),
-            // For onboarding applicants, add onboarding metadata
-            ...(updatedStatus === "In Onboarding" && {
-                onboardingStartedAt: serverTimestamp(),
-                onboardingStatus: "Not Started",
-            }),
         };
+
+        // For onboarding applicants, add onboarding metadata
+        if (updatedStatus === "In Onboarding") {
+            updateData.onboardingStartedAt = serverTimestamp();
+            updateData.onboardingStatus = "Not Started";
+            updateData.onboardingProgress = 0;
+            updateData.onboardingChecklist = [
+                {
+                    id: 1,
+                    task: "Complete personal information form",
+                    completed: false,
+                },
+                { id: 2, task: "Submit required documents", completed: false },
+                { id: 3, task: "Review company policies", completed: false },
+                { id: 4, task: "Complete IT setup", completed: false },
+                { id: 5, task: "Schedule orientation", completed: false },
+                { id: 6, task: "Sign employment contract", completed: false },
+            ];
+        }
 
         if (universityId) {
             // Prioritize university collection when universityId is provided
             const universityApplicantRef = doc(
-                db, 
-                "universities", 
-                universityId, 
-                "jobs", 
-                jobId, 
-                "applicants", 
+                db,
+                "universities",
+                universityId,
+                "jobs",
+                jobId,
+                "applicants",
                 applicantId
             );
-            
+
             // Get the university applicant data
             const universityApplicantDoc = await getDoc(universityApplicantRef);
-            
+
             if (!universityApplicantDoc.exists()) {
-                console.error("❌ Applicant not found in university collection");
-                return { success: false, message: "Applicant not found in university collection" };
+                console.error(
+                    "❌ Applicant not found in university collection"
+                );
+                return {
+                    success: false,
+                    message: "Applicant not found in university collection",
+                };
             }
-            
+
             const applicantData = universityApplicantDoc.data();
-            console.log("Current university applicant data:", { status: applicantData.status, name: applicantData.name });
-            
+            console.log("Current university applicant data:", {
+                status: applicantData.status,
+                name: applicantData.name,
+            });
+
             // Update in university collection
             await updateDoc(universityApplicantRef, updateData);
             console.log("✅ Updated applicant status in university collection");
-            
+
             return {
                 success: true,
                 applicantId: applicantId,
@@ -69,22 +100,34 @@ export const updateApplicantStatus = async (jobId, applicantId, status, universi
             };
         } else {
             // Reference to the applicant document in the main collection
-            const applicantRef = doc(db, "jobs", jobId, "applicants", applicantId);
-            
+            const applicantRef = doc(
+                db,
+                "jobs",
+                jobId,
+                "applicants",
+                applicantId
+            );
+
             // Get the applicant data
             const applicantDoc = await getDoc(applicantRef);
             if (!applicantDoc.exists()) {
                 console.error("❌ Applicant not found in global collection");
-                return { success: false, message: "Applicant not found in global collection" };
+                return {
+                    success: false,
+                    message: "Applicant not found in global collection",
+                };
             }
-            
+
             const applicantData = applicantDoc.data();
-            console.log("Current global applicant data:", { status: applicantData.status, name: applicantData.name });
-            
+            console.log("Current global applicant data:", {
+                status: applicantData.status,
+                name: applicantData.name,
+            });
+
             // Update in global collection
             await updateDoc(applicantRef, updateData);
             console.log("✅ Updated applicant status in global collection");
-            
+
             return {
                 success: true,
                 applicantId: applicantId,
@@ -105,39 +148,64 @@ export const updateApplicantStatus = async (jobId, applicantId, status, universi
 };
 
 // Schedule an interview for an applicant
-export const scheduleInterview = async (jobId, applicantId, interviewData, universityId = null) => {
+export const scheduleInterview = async (
+    jobId,
+    applicantId,
+    interviewData,
+    universityId = null
+) => {
     try {
-        console.log(`Scheduling interview - Job ID: ${jobId}, Applicant ID: ${applicantId}, University ID: ${universityId || 'none'}`);
-        
+        console.log(
+            `Scheduling interview - Job ID: ${jobId}, Applicant ID: ${applicantId}, University ID: ${
+                universityId || "none"
+            }`
+        );
+
         // Add interview data with metadata
         const interviewWithMetadata = {
             ...interviewData,
             scheduledAt: serverTimestamp(),
             status: "Scheduled", // Scheduled, Completed, Canceled
         };
-        
+
         // Get applicant reference based on whether we're in university context or global
         let applicantRef;
         let applicantDoc;
         let applicantData;
-        
+
         if (universityId) {
             // Use university's collection if universityId is provided
-            applicantRef = doc(db, "universities", universityId, "jobs", jobId, "applicants", applicantId);
+            applicantRef = doc(
+                db,
+                "universities",
+                universityId,
+                "jobs",
+                jobId,
+                "applicants",
+                applicantId
+            );
             applicantDoc = await getDoc(applicantRef);
-            
+
             if (!applicantDoc.exists()) {
-                console.error("❌ Applicant not found in university collection");
-                return { success: false, message: "Applicant not found in university collection" };
+                console.error(
+                    "❌ Applicant not found in university collection"
+                );
+                return {
+                    success: false,
+                    message: "Applicant not found in university collection",
+                };
             }
-            
+
             applicantData = applicantDoc.data();
-            console.log("Current university applicant data:", { status: applicantData.status, name: applicantData.name });
-            
+            console.log("Current university applicant data:", {
+                status: applicantData.status,
+                name: applicantData.name,
+            });
+
             // Create a new interview in the university collection
             const interviewsRef = collection(
                 db,
-                "universities", 
+                "universities",
                 universityId,
                 "jobs",
                 jobId,
@@ -145,47 +213,57 @@ export const scheduleInterview = async (jobId, applicantId, interviewData, unive
                 applicantId,
                 "interviews"
             );
-            
+
             // Generate a document reference with an ID
             const newInterviewRef = doc(interviewsRef);
             const interviewId = newInterviewRef.id;
-            
-            console.log(`Created interview with ID: ${interviewId} in university collection`);
-            
+
+            console.log(
+                `Created interview with ID: ${interviewId} in university collection`
+            );
+
             // Save the interview data to university collection
             await setDoc(newInterviewRef, interviewWithMetadata);
             console.log("✅ Interview saved to university collection");
-            
+
             // Update applicant status in university collection
             try {
-                console.log(`Updating university applicant status from ${applicantData.status} to Interviewing...`);
-                
+                console.log(
+                    `Updating university applicant status from ${applicantData.status} to Interviewing...`
+                );
+
                 const updateData = {
                     status: "Interviewing",
-                    statusUpdatedAt: serverTimestamp()
+                    statusUpdatedAt: serverTimestamp(),
                 };
-                
+
                 await updateDoc(applicantRef, updateData);
                 console.log("✅ Status updated in university collection");
             } catch (statusError) {
-                console.error("❌ Error updating university applicant status:", statusError);
+                console.error(
+                    "❌ Error updating university applicant status:",
+                    statusError
+                );
                 // Continue with interview creation even if status update fails
             }
-            
+
             return { success: true, interviewId };
         } else {
             // Use global collection when no universityId is provided
             applicantRef = doc(db, "jobs", jobId, "applicants", applicantId);
             applicantDoc = await getDoc(applicantRef);
-            
+
             if (!applicantDoc.exists()) {
                 console.error("❌ Applicant not found in global collection");
                 return { success: false, message: "Applicant not found" };
             }
-            
+
             applicantData = applicantDoc.data();
-            console.log("Current global applicant data:", { status: applicantData.status, name: applicantData.name });
-            
+            console.log("Current global applicant data:", {
+                status: applicantData.status,
+                name: applicantData.name,
+            });
+
             // Add a new interview to the interviews subcollection in global collection
             const interviewsRef = collection(
                 db,
@@ -195,33 +273,40 @@ export const scheduleInterview = async (jobId, applicantId, interviewData, unive
                 applicantId,
                 "interviews"
             );
-            
+
             // Generate a document reference with an ID
             const newInterviewRef = doc(interviewsRef);
             const interviewId = newInterviewRef.id;
-            
-            console.log(`Created interview with ID: ${interviewId} in global collection`);
-            
+
+            console.log(
+                `Created interview with ID: ${interviewId} in global collection`
+            );
+
             // Save the interview data to global collection
             await setDoc(newInterviewRef, interviewWithMetadata);
             console.log("✅ Interview saved to global collection");
-            
+
             // Update applicant status in global collection
             try {
-                console.log(`Updating global applicant status from ${applicantData.status} to Interviewing...`);
-                
+                console.log(
+                    `Updating global applicant status from ${applicantData.status} to Interviewing...`
+                );
+
                 const updateData = {
                     status: "Interviewing",
-                    statusUpdatedAt: serverTimestamp()
+                    statusUpdatedAt: serverTimestamp(),
                 };
-                
+
                 await updateDoc(applicantRef, updateData);
                 console.log("✅ Status updated in global collection");
             } catch (statusError) {
-                console.error("❌ Error updating global applicant status:", statusError);
+                console.error(
+                    "❌ Error updating global applicant status:",
+                    statusError
+                );
                 // Continue with interview creation even if status update fails
             }
-            
+
             return { success: true, interviewId };
         }
     } catch (error) {
@@ -231,11 +316,15 @@ export const scheduleInterview = async (jobId, applicantId, interviewData, unive
 };
 
 // Get all interviews for an applicant
-export const getApplicantInterviews = async (jobId, applicantId, universityId = null) => {
+export const getApplicantInterviews = async (
+    jobId,
+    applicantId,
+    universityId = null
+) => {
     try {
         // Reference to the interviews subcollection
         let interviewsRef;
-        
+
         if (universityId) {
             // Prioritize university collection when universityId is provided
             interviewsRef = collection(
@@ -248,8 +337,10 @@ export const getApplicantInterviews = async (jobId, applicantId, universityId = 
                 applicantId,
                 "interviews"
             );
-            
-            console.log(`Getting interviews from university collection - Job ID: ${jobId}, Applicant ID: ${applicantId}, University ID: ${universityId}`);
+
+            console.log(
+                `Getting interviews from university collection - Job ID: ${jobId}, Applicant ID: ${applicantId}, University ID: ${universityId}`
+            );
         } else {
             // Fall back to global collection
             interviewsRef = collection(
@@ -260,10 +351,12 @@ export const getApplicantInterviews = async (jobId, applicantId, universityId = 
                 applicantId,
                 "interviews"
             );
-            
-            console.log(`Getting interviews from global collection - Job ID: ${jobId}, Applicant ID: ${applicantId}`);
+
+            console.log(
+                `Getting interviews from global collection - Job ID: ${jobId}, Applicant ID: ${applicantId}`
+            );
         }
-        
+
         const querySnapshot = await getDocs(interviewsRef);
 
         // Map the interview documents to an array
@@ -271,7 +364,7 @@ export const getApplicantInterviews = async (jobId, applicantId, universityId = 
             id: doc.id,
             ...doc.data(),
         }));
-        
+
         console.log(`Found ${interviews.length} interviews`);
 
         return { success: true, interviews };
@@ -282,13 +375,18 @@ export const getApplicantInterviews = async (jobId, applicantId, universityId = 
 };
 
 // Add or update notes for an applicant
-export const updateApplicantNotes = async (jobId, applicantId, notes, universityId = null) => {
+export const updateApplicantNotes = async (
+    jobId,
+    applicantId,
+    notes,
+    universityId = null
+) => {
     try {
         const updateData = {
             notes: notes,
             notesUpdatedAt: serverTimestamp(),
         };
-        
+
         if (universityId) {
             // Prioritize university collection when universityId is provided
             const universityApplicantRef = doc(
@@ -300,17 +398,23 @@ export const updateApplicantNotes = async (jobId, applicantId, notes, university
                 "applicants",
                 applicantId
             );
-            
+
             await updateDoc(universityApplicantRef, updateData);
             console.log("✅ Applicant notes updated in university collection");
-            
+
             return { success: true };
         } else {
             // Update in global collection
-            const applicantRef = doc(db, "jobs", jobId, "applicants", applicantId);
+            const applicantRef = doc(
+                db,
+                "jobs",
+                jobId,
+                "applicants",
+                applicantId
+            );
             await updateDoc(applicantRef, updateData);
             console.log("✅ Applicant notes updated in global collection");
-            
+
             return { success: true };
         }
     } catch (error) {
@@ -332,7 +436,7 @@ export const updateInterview = async (
             ...interviewData,
             lastUpdated: serverTimestamp(),
         };
-        
+
         if (universityId) {
             // Prioritize university collection when universityId is provided
             const universityInterviewRef = doc(
@@ -346,10 +450,10 @@ export const updateInterview = async (
                 "interviews",
                 interviewId
             );
-            
+
             await updateDoc(universityInterviewRef, updateData);
             console.log("✅ Interview updated in university collection");
-            
+
             return { success: true };
         } else {
             // Update in global collection
@@ -362,10 +466,10 @@ export const updateInterview = async (
                 "interviews",
                 interviewId
             );
-            
+
             await updateDoc(interviewRef, updateData);
             console.log("✅ Interview updated in global collection");
-            
+
             return { success: true };
         }
     } catch (error) {
@@ -408,10 +512,10 @@ export const updateInterviewNotes = async (
                 "interviews",
                 interviewId
             );
-            
+
             await updateDoc(universityInterviewRef, updateData);
             console.log("✅ Interview notes updated in university collection");
-            
+
             return { success: true };
         } else {
             // Update in global collection
@@ -424,10 +528,10 @@ export const updateInterviewNotes = async (
                 "interviews",
                 interviewId
             );
-            
+
             await updateDoc(interviewRef, updateData);
             console.log("✅ Interview notes updated in global collection");
-            
+
             return { success: true };
         }
     } catch (error) {
