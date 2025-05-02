@@ -532,16 +532,17 @@ const Layout = () => {
     }, [navigate]);
 
     // Combine all loading states for the main layout
-    const isPageLoading = authLoading || isLoading || jobsLoading;
+    const isAuthLoading = authLoading;
+    const isContentLoading = isLoading || jobsLoading;
 
-    // Only render layout content when user role and data are ready
-    if (isPageLoading) {
-        console.log("Layout is still loading. authLoading:", authLoading, "isLoading:", isLoading, "jobsLoading:", jobsLoading);
+    // If we're still loading auth but don't have user details yet, we need the full page loader
+    if (isAuthLoading && !userDetails) {
+        console.log("Layout is still loading auth without user details - showing full page loader");
         return <PageLoader message="Loading HR Portal..." />;
     }
 
     // If no valid HR role, redirect to login
-    if (!userDetails || (userDetails.role !== 'hr_head' && userDetails.role !== 'hr_personnel' && userDetails.role !== 'admin')) {
+    if (!isAuthLoading && (!userDetails || (userDetails.role !== 'hr_head' && userDetails.role !== 'hr_personnel' && userDetails.role !== 'admin'))) {
         console.error("Invalid HR role detected:", userDetails?.role, "- Redirecting to login");
         navigate("/", { replace: true });
         return null;
@@ -593,15 +594,16 @@ const Layout = () => {
                 <div className="relative flex-1 h-[calc(100vh-4rem)] p-4 bg-gray-100 overflow-y-auto">
                     {/* PageLoader positioned relative to the content container only */}
                     <PageLoader 
-                        isLoading={isLoading || (jobsLoading && location.pathname.includes('/recruitment/'))} 
+                        isLoading={isContentLoading} 
                         fullscreen={false}
                         contentOnly={true}
+                        message={jobsLoading && location.pathname.includes('/recruitment/') ? "Loading recruitment data..." : "Loading content..."}
                     />
 
                     {/* Outlet with conditional opacity and pointer-events */}
                     <div
                         className={
-                            isLoading || (jobsLoading && location.pathname.includes('/recruitment/')) 
+                            isContentLoading
                             ? "opacity-50 pointer-events-none" 
                             : ""
                         }

@@ -140,7 +140,7 @@ const EmployeeLayout = () => {
               <FontAwesomeIcon icon={faBell} className="w-4 h-4" />
             </button>
             <div className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold">
-              {user?.displayName?.charAt(0) || userDetails?.name?.charAt(0) || 'U'}
+              {user?.displayName?.charAt(0) || userDetails?.name?.charAt(0) || userDetails?.displayName?.charAt(0) || userDetails?.fullName?.charAt(0) || 'U'}
             </div>
           </div>
         </div>
@@ -190,11 +190,11 @@ const EmployeeLayout = () => {
             <div className="mt-auto p-4 border-t">
               <div className="flex items-center mb-4 bg-gray-100 p-3 rounded-xl shadow-sm">
                 <div className="bg-blue-100 text-blue-600 rounded-full w-10 h-10 flex items-center justify-center font-bold">
-                  {user?.displayName?.charAt(0) || userDetails?.name?.charAt(0) || 'U'}
+                  {user?.displayName?.charAt(0) || userDetails?.name?.charAt(0) || userDetails?.displayName?.charAt(0) || userDetails?.fullName?.charAt(0) || 'U'}
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-700 truncate max-w-[140px]">
-                    {user?.displayName || userDetails?.name || 'Employee'}
+                    {userDetails?.name || user?.displayName || userDetails?.displayName || userDetails?.fullName || 'Employee'}
                   </p>
                   <p className="text-xs text-gray-500 truncate max-w-[140px]">
                     {userDetails?.position || userDetails?.role || 'Employee'}
@@ -234,18 +234,16 @@ const EmployeeLayout = () => {
 
           {/* Page Content */}
           <div className="flex-1 overflow-y-auto p-4">
-            <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
+            <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 relative">
               {/* Employee Page Loader */}
-              {isLoading && (
-                <EmployeePageLoader 
-                  isLoading={true} 
-                  contentOnly={true} 
-                  message={`Loading ${getCurrentPageTitle().toLowerCase()}...`}
-                />
-              )}
+              <EmployeePageLoader 
+                isLoading={isLoading} 
+                contentOnly={true} 
+                message={`Loading ${getCurrentPageTitle().toLowerCase()}...`}
+              />
               
               {/* Outlet for page content */}
-              <div className={isLoading ? 'hidden' : 'block'}>
+              <div className={isLoading ? 'opacity-50 pointer-events-none' : ''}>
                 <Outlet />
               </div>
             </div>

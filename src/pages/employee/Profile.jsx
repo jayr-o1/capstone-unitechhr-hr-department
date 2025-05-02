@@ -910,11 +910,11 @@ const EmployeeProfile = () => {
         <div className="flex flex-col md:flex-row md:items-center">
           <div className="md:mr-6 mb-4 md:mb-0 flex justify-center md:justify-start">
             <div className="w-24 h-24 md:w-32 md:h-32 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl md:text-4xl font-bold">
-              {employeeData?.name?.charAt(0) || 'JD'}
+              {employeeData?.name?.charAt(0) || userDetails?.name?.charAt(0) || user?.displayName?.charAt(0) || userDetails?.displayName?.charAt(0) || userDetails?.fullName?.charAt(0) || 'U'}
             </div>
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">{employeeData?.name || 'Jane Doe'}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">{employeeData?.name || userDetails?.name || user?.displayName || userDetails?.displayName || userDetails?.fullName || 'Employee'}</h1>
             <p className="text-gray-600 text-sm md:text-base mb-2">{employeeData?.position || 'Associate Professor'} - {employeeData?.department || 'Computer Science'}</p>
             <div className="flex flex-col md:flex-row md:items-center text-sm mt-3 space-y-2 md:space-y-0 md:space-x-4">
               <div className="flex items-center justify-center md:justify-start">

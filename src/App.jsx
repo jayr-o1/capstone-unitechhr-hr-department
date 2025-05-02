@@ -605,14 +605,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
         allowedRoles
     });
     
-    // If still loading auth state, show a loader
+    // If still loading auth state, render a minimal loading component
+    // that will allow layout components to be rendered alongside it
     if (auth?.loading) {
-        console.log("ProtectedRoute: Auth is still loading, showing loader");
-        return (
-            <div className="w-full h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
-            </div>
-        );
+        console.log("ProtectedRoute: Auth is still loading, showing content loader");
+        return children;
     }
 
     // If user is not authenticated, redirect to login

@@ -149,8 +149,8 @@ const SystemAdminLayout = () => {
   };
 
   // Show loader while auth is still loading or layout is initializing
-  if (authLoading || loading) {
-    return <PageLoader />;
+  if (authLoading) {
+    return <PageLoader message="Loading System Admin Portal..." />;
   }
 
   // Extra validation check before rendering layout
@@ -183,8 +183,19 @@ const SystemAdminLayout = () => {
         />
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6">
-          <Outlet />
+        <main className="relative flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6">
+          {/* Content-only loader */}
+          <PageLoader 
+            isLoading={loading} 
+            fullscreen={false}
+            contentOnly={true}
+            message="Loading system admin content..."
+          />
+          
+          {/* Wrap Outlet in a div that becomes transparent during loading */}
+          <div className={loading ? "opacity-50 pointer-events-none" : ""}>
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

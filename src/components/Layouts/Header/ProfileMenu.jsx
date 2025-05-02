@@ -13,7 +13,7 @@ const ProfileMenu = ({ onClose, onLogout, userEmail, userData }) => {
     };
 
     // Get display name and position from userData but remove the position part from display name
-    let displayName = userData?.displayName || userData?.fullName || "User";
+    let displayName = userData?.name || userData?.displayName || userData?.fullName || user?.displayName || "User";
     
     // Remove any text in parentheses (like "HR Head") from the display name
     displayName = displayName.replace(/\s*\([^)]*\)\s*/g, "").trim();
