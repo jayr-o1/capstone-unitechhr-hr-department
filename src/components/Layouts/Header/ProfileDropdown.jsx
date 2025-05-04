@@ -54,8 +54,8 @@ const ProfileDropdown = () => {
         setIsOpen(false);
     };
 
-    // Extract name from displayName or use email as fallback
-    const name = userData?.displayName || user?.displayName || user?.email || '';
+    // Extract name from all possible name fields
+    const name = userData?.name || userData?.displayName || userData?.fullName || user?.displayName || user?.email || '';
     const position = userData?.position || 'HR Personnel';
 
     return (

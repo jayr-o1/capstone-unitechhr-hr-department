@@ -211,7 +211,7 @@ const EmployeeDashboard = () => {
     );
   }
 
-  const displayName = user?.displayName || employeeData?.name || userDetails?.name || 'Employee';
+  const displayName = userDetails?.name || employeeData?.name || user?.displayName || userDetails?.displayName || userDetails?.fullName || 'Employee';
   const position = employeeData?.position || userDetails?.position || 'Staff';
   const universityName = university?.name || userDetails?.universityName || 'Your University';
   const department = employeeData?.department || userDetails?.department || 'Not Assigned';
