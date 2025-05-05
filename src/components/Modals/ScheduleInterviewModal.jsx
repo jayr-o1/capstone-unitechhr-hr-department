@@ -1,4 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getUniversityEmployees } from "../../services/employeeService";
+import { getUserData } from "../../services/userService";
+import { auth } from "../../firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../../firebase";
 
 const ScheduleInterviewModal = ({
     isOpen,
@@ -10,6 +15,61 @@ const ScheduleInterviewModal = ({
 }) => {
     const [title, setTitle] = useState(""); // State for interview title
     const [interviewer, setInterviewer] = useState(""); // State for interviewer
+    const [interviewers, setInterviewers] = useState([]); // State for interviewers list
+    const [loading, setLoading] = useState(true); // State for loading status
+
+    useEffect(() => {
+        const fetchInterviewers = async () => {
+            try {
+                const user = auth.currentUser;
+                if (!user) return;
+
+                // Get user data to find university ID
+                const userDataResult = await getUserData(user.uid);
+                if (userDataResult.success && userDataResult.data.universityId) {
+                    const universityId = userDataResult.data.universityId;
+                    const interviewersList = [];
+
+                    // Fetch employees
+                    const employeesResult = await getUniversityEmployees(universityId);
+                    if (employeesResult.success) {
+                        interviewersList.push(...employeesResult.employees.map(emp => ({
+                            id: emp.id,
+                            name: emp.name,
+                            position: emp.position,
+                            type: 'employee'
+                        })));
+                    }
+
+                    // Fetch HR personnel with recruitment/onboarding permissions
+                    const hrPersonnelRef = collection(db, "universities", universityId, "hr_personnel");
+                    const hrPersonnelSnapshot = await getDocs(hrPersonnelRef);
+                    
+                    hrPersonnelSnapshot.forEach(doc => {
+                        const hrData = doc.data();
+                        if (hrData.permissions && (hrData.permissions.recruitment || hrData.permissions.onboarding)) {
+                            interviewersList.push({
+                                id: doc.id,
+                                name: hrData.name,
+                                position: hrData.position || 'HR Personnel',
+                                type: 'hr_personnel'
+                            });
+                        }
+                    });
+
+                    setInterviewers(interviewersList);
+                }
+            } catch (error) {
+                console.error("Error fetching interviewers:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (isOpen) {
+            fetchInterviewers();
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -72,14 +132,23 @@ const ScheduleInterviewModal = ({
                         <label className="block text-gray-700 text-sm font-medium mb-2">
                             Interviewer:
                         </label>
-                        <input
-                            type="text"
+                        <select
                             value={interviewer}
                             onChange={(e) => setInterviewer(e.target.value)}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9AADEA] focus:border-[#9AADEA] transition-all"
-                            placeholder="e.g., John Doe"
                             required
-                        />
+                        >
+                            <option value="">Select an interviewer</option>
+                            {loading ? (
+                                <option value="" disabled>Loading interviewers...</option>
+                            ) : (
+                                interviewers.map((person) => (
+                                    <option key={person.id} value={person.name}>
+                                        {person.name} ({person.position}) {person.type === 'hr_personnel' ? '(HR)' : ''}
+                                    </option>
+                                ))
+                            )}
+                        </select>
                     </div>
 
                     {/* Modal Footer */}
