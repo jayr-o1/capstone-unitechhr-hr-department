@@ -272,29 +272,40 @@ const Recruitment = () => {
     return (
         <div className="flex-1 flex relative">
             {/* Left Side (Job Posts & Pagination) */}
-            <div className="w-2/3 flex flex-col justify-between">
-                <JobList
-                    key={`job-list-main-${refreshCounter}`}
-                    jobs={currentJobs}
-                    onCloseJob={handleCloseJob}
-                    onOpenJob={handleOpenJob}
-                    onEditJob={handleOpenEditModal}
-                    onDelete={refreshJobList} // Pass the refresh function to JobList
-                />
-                <PaginationControls
-                    currentPage={currentPage}
-                    totalJobs={filteredJobs.length}
-                    jobsPerPage={jobsPerPage}
-                    onNextPage={() => setCurrentPage((prev) => prev + 1)}
-                    onPrevPage={() =>
-                        setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                />
+            <div className="w-2/3 flex flex-col">
+                <div className="bg-white rounded-lg shadow-md p-6 h-[calc(100vh-7rem)] flex flex-col">
+                    <h2 className="text-xl font-semibold text-gray-700 mb-4">
+                        Job Listings
+                    </h2>
+                    <div className="flex-1 overflow-y-auto min-h-[400px]">
+                        <JobList
+                            key={`job-list-main-${refreshCounter}`}
+                            jobs={currentJobs}
+                            onCloseJob={handleCloseJob}
+                            onOpenJob={handleOpenJob}
+                            onEditJob={handleOpenEditModal}
+                            onDelete={refreshJobList}
+                        />
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                        <PaginationControls
+                            currentPage={currentPage}
+                            totalJobs={filteredJobs.length}
+                            jobsPerPage={jobsPerPage}
+                            onNextPage={() =>
+                                setCurrentPage((prev) => prev + 1)
+                            }
+                            onPrevPage={() =>
+                                setCurrentPage((prev) => Math.max(prev - 1, 1))
+                            }
+                        />
+                    </div>
+                </div>
             </div>
 
             {/* Right Side (Filters) */}
             <div className="w-1/3 pl-4">
-                <div className="bg-white rounded-lg shadow-md p-6 flex flex-col">
+                <div className="bg-white rounded-lg shadow-md p-6 h-[calc(100vh-7rem)] flex flex-col">
                     {/* Controls Section */}
                     <div className="relative w-full mb-4">
                         <h3 className="absolute left-3 -top-3 bg-white px-2 text-gray-400 text-sm font-semibold">
