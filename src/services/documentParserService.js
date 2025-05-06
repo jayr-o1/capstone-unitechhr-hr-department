@@ -7,6 +7,8 @@ const API_CONFIG = {
         extract: `/api/extract`, // Resume and certificate parsing endpoint
         health: `/health`, // Health check endpoint
     },
+    // Direct URL to the API server (no proxy)
+    directApiUrl: "http://localhost:5000",
     timeout: 60000, // 60 second timeout for file processing
 };
 
@@ -42,42 +44,60 @@ const fetchWithTimeout = async (url, options, timeout) => {
  * @returns {Promise<boolean>} - Promise that resolves to true if server is running
  */
 export const checkApiHealth = async () => {
+    // First try the proxied endpoint
     try {
-        // Try a direct request with no-cors mode first
-        console.log("Checking API health using no-cors mode");
+        console.log("Checking proxied API health endpoint");
         const response = await fetch(API_CONFIG.endpoints.health, {
             method: "GET",
-            mode: "no-cors", // This will prevent CORS errors but returns opaque response
+            mode: "cors",
             cache: "no-cache",
             headers: {
                 "Content-Type": "text/plain",
             },
         });
 
-        // With no-cors, we can't check response.ok directly because response is opaque
-        // So if we get here without an error, it means the server is likely running
-        console.log("Health check request completed without network errors");
-        return true;
-    } catch (error) {
-        // If even no-cors fails, try a different approach - just make a HEAD request
-        try {
-            console.log(
-                "First health check failed, trying alternative HEAD request"
-            );
-            await fetch(API_CONFIG.endpoints.health, {
-                method: "HEAD",
-                mode: "no-cors",
-                cache: "no-cache",
-            });
-            console.log("HEAD request completed without network errors");
+        console.log(`Proxied health check response status: ${response.status}`);
+
+        if (response.ok) {
+            console.log("Proxied health check successful");
             return true;
-        } catch (finalError) {
-            console.error(
-                "All API health check approaches failed:",
-                finalError
-            );
-            return false;
         }
+
+        // Even if we get a 500 error from proxy, try direct URL
+        console.log("Proxied health check returned error, trying direct URL");
+    } catch (error) {
+        console.error("Error with proxied health check:", error);
+    }
+
+    // Try direct URL as fallback
+    try {
+        const directUrl = `${API_CONFIG.directApiUrl}/health`;
+        console.log(`Checking direct API health at: ${directUrl}`);
+
+        const response = await fetch(directUrl, {
+            method: "GET",
+            mode: "cors",
+            cache: "no-cache",
+            headers: {
+                "Content-Type": "text/plain",
+            },
+        });
+
+        console.log(`Direct health check response status: ${response.status}`);
+
+        if (response.ok) {
+            console.log("Direct health check successful");
+            return true;
+        }
+
+        // Even with error status, API is running
+        console.log(
+            "Direct health check completed with error status, but server is running"
+        );
+        return true;
+    } catch (finalError) {
+        console.error("All API health checks failed:", finalError);
+        return false;
     }
 };
 
@@ -186,76 +206,284 @@ export const extractSkillsFromDocument = async (documentUrl, documentType) => {
         // Download the file from the URL
         console.log("Downloading document from URL");
         const fileBlob = await downloadFile(documentUrl);
-        console.log("File downloaded, size:", fileBlob.size);
+        console.log(
+            `File downloaded, size: ${fileBlob.size} bytes, type: ${fileBlob.type}`
+        );
 
         // Create form data with the file
         const formData = new FormData();
-        const fileName = `document.${documentUrl.split(".").pop() || "pdf"}`;
+        const fileName = `document.${
+            documentUrl.split(".").pop().split("?")[0] || "pdf"
+        }`;
         formData.append("file", fileBlob, fileName);
         formData.append("documentType", documentType);
 
-        console.log("Sending document to API for processing");
+        console.log(
+            `Sending document ${fileName} with type ${documentType} to API endpoint: ${API_CONFIG.endpoints.extract}`
+        );
 
-        // Make the API request with appropriate headers to help with CORS
-        const response = await fetch(API_CONFIG.endpoints.extract, {
-            method: "POST",
-            body: formData,
-            headers: {
-                // Don't set Content-Type header when using FormData
-                // as the browser will set it correctly with the boundary
-                Accept: "application/json",
-            },
-            // Longer timeout for file processing
-            signal: AbortSignal.timeout(API_CONFIG.timeout),
-        });
+        try {
+            // Make the API request
+            let response = null;
+            let useDirectUrl = false;
 
-        // Handle non-OK responses
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("API error response:", errorText);
-            throw new Error(`API returned ${response.status}: ${errorText}`);
-        }
+            try {
+                // First try using the proxied URL
+                console.log("Attempting request through Vite proxy...");
 
-        const data = await response.json();
-        console.log("Received data from API:", data);
+                response = await fetch(API_CONFIG.endpoints.extract, {
+                    method: "POST",
+                    headers: {
+                        Accept: "multipart/form-data",
+                    },
+                    body: formData,
+                });
 
-        // Process the skills data
-        let extractedSkills = [];
-        if (data.skills && Array.isArray(data.skills)) {
-            extractedSkills = data.skills.map((skill) => {
-                if (typeof skill === "string") {
-                    return {
-                        name: skill,
-                        proficiency: 70,
-                        isCertified: documentType.includes("certifi"),
-                        category: documentType.includes("certifi")
-                            ? "certification"
-                            : "technical",
-                    };
-                } else {
-                    return {
-                        name: skill.name || skill.skill || "Unknown Skill",
-                        proficiency: skill.proficiency || 70,
-                        isCertified:
-                            skill.isCertified ||
-                            documentType.includes("certifi"),
-                        category:
-                            skill.category ||
-                            (documentType.includes("certifi")
-                                ? "certification"
-                                : "technical"),
-                        confidence: skill.confidence,
-                    };
+                // Handle the response
+                console.log(`API proxy response status: ${response.status}`);
+
+                // If proxy returns 500, try direct URL as fallback
+                if (response.status === 500) {
+                    console.log(
+                        "Proxy request failed with 500 error, trying direct URL..."
+                    );
+                    useDirectUrl = true;
                 }
-            });
-        }
+            } catch (proxyError) {
+                console.error("Error with proxy request:", proxyError);
+                console.log("Attempting direct API request as fallback...");
+                useDirectUrl = true;
+            }
 
-        return {
-            success: true,
-            skills: extractedSkills,
-            message: data.message || "Skills extracted successfully",
-            raw_text: data.raw_text || null,
-        };
+            // If proxy failed, try direct URL
+            if (useDirectUrl) {
+                try {
+                    const directUrl = `${API_CONFIG.directApiUrl}/api/extract`;
+                    console.log(
+                        `Sending request directly to API at: ${directUrl}`
+                    );
+
+                    // Create a new FormData with the same file for the direct request
+                    const directFormData = new FormData();
+
+                    // Get the file and type from the original FormData
+                    const file = formData.get("file");
+                    const docType = formData.get("documentType");
+
+                    // Verify we have a file
+                    if (!file || !file.size) {
+                        console.error(
+                            "No valid file available for direct API request"
+                        );
+                        throw new Error(
+                            "No valid file was found in the form data for the API request"
+                        );
+                    }
+
+                    // Add the file to the new FormData
+                    // Try both 'files' (plural) and 'file' (singular) to improve compatibility with different APIs
+                    directFormData.append("files", file); // Primary field name matching Postman
+                    directFormData.append("file", file); // Alternative field name for compatibility
+
+                    console.log(
+                        `Added file ${file.name} (${file.size} bytes) to direct request`
+                    );
+
+                    // Add the document type
+                    if (docType) {
+                        directFormData.append("documentType", docType);
+                        console.log(
+                            `Added document type ${docType} to direct request`
+                        );
+                    } else {
+                        directFormData.append("documentType", "unknown");
+                        console.log(`No document type found, using 'unknown'`);
+                    }
+
+                    // Final verification - check both field names
+                    const addedFilesPlural = directFormData.getAll("files");
+                    const addedFilesSingular = directFormData.getAll("file");
+                    console.log(
+                        `Direct request contains ${addedFilesPlural.length} 'files' and ${addedFilesSingular.length} 'file' entries`
+                    );
+
+                    if (
+                        addedFilesPlural.length === 0 &&
+                        addedFilesSingular.length === 0
+                    ) {
+                        console.error(
+                            "No valid files were added to the direct request FormData"
+                        );
+                        throw new Error(
+                            "No valid files could be added to the API request"
+                        );
+                    }
+
+                    response = await fetch(directUrl, {
+                        method: "POST",
+                        // Don't set Content-Type header, browser will set it with boundary
+                        body: directFormData,
+                        mode: "cors", // Important for cross-origin requests
+                        credentials: "omit", // Don't send cookies
+                    });
+
+                    console.log(
+                        `Direct API response status: ${response.status}`
+                    );
+                } catch (directError) {
+                    console.error(
+                        "Error with direct API request:",
+                        directError
+                    );
+                    throw new Error(
+                        `Failed to connect to API server: ${directError.message}`
+                    );
+                }
+            }
+
+            let responseText = await response.text();
+            console.log(
+                `API response status: ${response.status}, text: ${responseText}`
+            );
+
+            // Check if the request was successful
+            if (!response.ok) {
+                throw new Error(
+                    `API returned ${response.status}: ${responseText}`
+                );
+            }
+
+            // Try to parse the response as JSON
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error("Error parsing API response:", parseError);
+                throw new Error(
+                    `Invalid JSON response from API: ${responseText.substring(
+                        0,
+                        100
+                    )}...`
+                );
+            }
+
+            console.log("Parsed API response:", data);
+
+            // Process and deduplicate the skills
+            const allSkills = [];
+            const processedSkillNames = new Set();
+
+            // Log the response structure for debugging
+            console.log("API Response structure:", {
+                hasSkills: !!(
+                    data &&
+                    data.skills &&
+                    Array.isArray(data.skills)
+                ),
+                hasResultSkills: !!(
+                    data &&
+                    data.result &&
+                    data.result.skills &&
+                    Array.isArray(data.result.skills)
+                ),
+                topLevelKeys: Object.keys(data || {}),
+                resultKeys: Object.keys((data && data.result) || {}),
+            });
+
+            // Check if skills are in the expected format or in the result object
+            const skillsArray =
+                data && data.skills && Array.isArray(data.skills)
+                    ? data.skills
+                    : data &&
+                      data.result &&
+                      data.result.skills &&
+                      Array.isArray(data.result.skills)
+                    ? data.result.skills
+                    : [];
+
+            if (skillsArray.length > 0) {
+                console.log(
+                    `Found ${skillsArray.length} skills in the API response`
+                );
+                console.log("Sample skill structure:", skillsArray[0]);
+
+                skillsArray.forEach((skill) => {
+                    // Check if skill is a string or an object with name property
+                    const skillName =
+                        typeof skill === "string"
+                            ? skill
+                            : skill.name || skill.skill || "Unknown Skill";
+
+                    if (!skillName) return;
+
+                    if (!processedSkillNames.has(skillName.toLowerCase())) {
+                        processedSkillNames.add(skillName.toLowerCase());
+
+                        // Convert to standard format
+                        const standardizedSkill = {
+                            name: skillName,
+                            proficiency:
+                                typeof skill === "string"
+                                    ? 70
+                                    : skill.proficiency ||
+                                      (skill.proficiency_level
+                                          ? parseInt(skill.proficiency_level)
+                                          : null) ||
+                                      (typeof skill.proficiency === "string" &&
+                                      skill.proficiency === "Intermediate"
+                                          ? 70
+                                          : typeof skill.proficiency ===
+                                                "string" &&
+                                            skill.proficiency === "Advanced"
+                                          ? 90
+                                          : typeof skill.proficiency ===
+                                                "string" &&
+                                            skill.proficiency === "Beginner"
+                                          ? 50
+                                          : 70),
+                            isCertified:
+                                typeof skill === "string"
+                                    ? false
+                                    : skill.isCertified ||
+                                      skill.is_backed ||
+                                      false,
+                            category:
+                                typeof skill === "string"
+                                    ? "technical"
+                                    : skill.category ||
+                                      (skill.is_technical
+                                          ? "technical"
+                                          : "soft_skill") ||
+                                      "technical",
+                            confidence:
+                                typeof skill === "string"
+                                    ? 0.7
+                                    : skill.confidence || 0.7,
+                        };
+
+                        allSkills.push(standardizedSkill);
+                    }
+                });
+
+                console.log(
+                    `Successfully processed ${allSkills.length} unique skills`
+                );
+            } else {
+                console.warn(
+                    "No skills found in API response or invalid response format"
+                );
+            }
+
+            return {
+                success: true,
+                skills: allSkills,
+                message: data.message || "Skills extracted successfully",
+                raw_text: data.raw_text || null,
+            };
+        } catch (apiError) {
+            console.error("API error during skill extraction:", apiError);
+            throw apiError; // Re-throw to be caught by the outer catch block
+        }
     } catch (error) {
         console.error(`Error extracting skills from ${documentType}:`, error);
         return {
@@ -326,17 +554,24 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
             try {
                 console.log(`Downloading document from URL: ${doc.url}`);
                 const fileBlob = await downloadFile(doc.url);
+                console.log(
+                    `Downloaded file blob, size: ${fileBlob.size} bytes, type: ${fileBlob.type}`
+                );
 
                 // Add file to FormData with a unique name including document type and index
                 const fileName =
                     doc.name ||
-                    `document_${i}.${doc.url.split(".").pop() || "pdf"}`;
-                formData.append(`files`, fileBlob, fileName);
+                    `document_${i}.${
+                        doc.url.split(".").pop().split("?")[0] || "pdf"
+                    }`;
+                formData.append("file", fileBlob, fileName);
 
                 // Also add the document type so the API knows what kind of document this is
-                formData.append(`docTypes`, doc.type);
+                formData.append("documentType", doc.type);
 
-                console.log(`Added document ${fileName} to form data`);
+                console.log(
+                    `Added document ${fileName} with type ${doc.type} to form data`
+                );
             } catch (error) {
                 console.error(`Error downloading document ${doc.url}:`, error);
                 // Continue with other documents if one fails
@@ -344,7 +579,8 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
         }
 
         // Check if any files were successfully added
-        if (formData.getAll("files").length === 0) {
+        const formDataFiles = formData.getAll("file");
+        if (formDataFiles.length === 0) {
             console.error("No files could be downloaded for processing");
             return {
                 success: false,
@@ -353,63 +589,276 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
             };
         }
 
-        // Send all files to the API in a single request
-        console.log("Sending documents to API for processing");
-
-        // Make API request with appropriate headers to help with CORS
-        const response = await fetch(API_CONFIG.endpoints.extract, {
-            method: "POST",
-            body: formData,
-            headers: {
-                // Don't set Content-Type header when using FormData
-                // as the browser will set it correctly with the boundary
-                Accept: "application/json",
-            },
-            // Longer timeout for file processing
-            signal: AbortSignal.timeout(API_CONFIG.timeout),
+        console.log(
+            `Successfully added ${formDataFiles.length} files to FormData`
+        );
+        formDataFiles.forEach((file, index) => {
+            console.log(
+                `File ${index}: name=${file.name}, size=${file.size}, type=${file.type}`
+            );
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("API error response:", errorText);
-            throw new Error(`API returned ${response.status}: ${errorText}`);
+        // Send all files to the API in a single request
+        console.log(
+            `Sending documents to API endpoint: ${API_CONFIG.endpoints.extract}`
+        );
+
+        let response = null;
+        let useDirectUrl = false;
+
+        try {
+            // First try using the proxied URL
+            console.log("Attempting request through Vite proxy...");
+
+            // Make API request with appropriate headers
+            response = await fetch(API_CONFIG.endpoints.extract, {
+                method: "POST",
+                headers: {
+                    Accept: "multipart/form-data",
+                },
+                body: formData,
+                // Set longer timeout for large files
+                signal: AbortSignal.timeout(API_CONFIG.timeout),
+            });
+
+            // Handle the response
+            console.log(`API proxy response status: ${response.status}`);
+
+            // If proxy returns 500, try direct URL as fallback
+            if (response.status === 500) {
+                console.log(
+                    "Proxy request failed with 500 error, trying direct URL..."
+                );
+                useDirectUrl = true;
+            }
+        } catch (proxyError) {
+            console.error("Error with proxy request:", proxyError);
+            console.log("Attempting direct API request as fallback...");
+            useDirectUrl = true;
         }
 
-        const data = await response.json();
-        console.log("Received data from API:", data);
+        // If proxy failed, try direct URL
+        if (useDirectUrl) {
+            try {
+                const directUrl = `${API_CONFIG.directApiUrl}/api/extract`;
+                console.log(`Sending request directly to API at: ${directUrl}`);
+
+                // Create a new FormData with the same files for the direct request
+                const directFormData = new FormData();
+                const files = formData.getAll("file");
+                const types = formData.getAll("documentType");
+
+                // Verify we have files
+                if (!files || files.length === 0) {
+                    console.error("No files available for direct API request");
+                    throw new Error(
+                        "No files were found in the form data for the API request"
+                    );
+                }
+
+                // Log what we're adding to the new FormData
+                console.log(
+                    `Recreating FormData with ${files.length} files for direct API request`
+                );
+
+                // Add each file and type to the new FormData
+                files.forEach((file, i) => {
+                    if (!file || !file.size) {
+                        console.warn(`File at index ${i} is invalid or empty`);
+                        return; // Skip this file
+                    }
+
+                    // Try both 'files' (plural) and 'file' (singular) to improve compatibility with different APIs
+                    directFormData.append("files", file); // Primary field name matching Postman
+                    directFormData.append("file", file); // Alternative field name for compatibility
+
+                    if (types[i]) {
+                        directFormData.append("documentType", types[i]);
+                    } else {
+                        directFormData.append("documentType", "unknown");
+                    }
+                    console.log(
+                        `Added file ${file.name} (${
+                            file.size
+                        } bytes) with type ${
+                            types[i] || "unknown"
+                        } to direct request`
+                    );
+                });
+
+                // Final verification - check both field names
+                const addedFilesPlural = directFormData.getAll("files");
+                const addedFilesSingular = directFormData.getAll("file");
+                console.log(
+                    `Direct request contains ${addedFilesPlural.length} 'files' and ${addedFilesSingular.length} 'file' entries`
+                );
+
+                if (
+                    addedFilesPlural.length === 0 &&
+                    addedFilesSingular.length === 0
+                ) {
+                    console.error(
+                        "No valid files were added to the direct request FormData"
+                    );
+                    throw new Error(
+                        "No valid files could be added to the API request"
+                    );
+                }
+
+                console.log(
+                    `Direct request contains ${addedFilesPlural.length} files`
+                );
+
+                response = await fetch(directUrl, {
+                    method: "POST",
+                    // Don't set Content-Type header, browser will set it with boundary
+                    body: directFormData,
+                    mode: "cors", // Important for cross-origin requests
+                    credentials: "omit", // Don't send cookies
+                    signal: AbortSignal.timeout(API_CONFIG.timeout),
+                });
+
+                console.log(`Direct API response status: ${response.status}`);
+            } catch (directError) {
+                console.error("Error with direct API request:", directError);
+                throw new Error(
+                    `Failed to connect to API server: ${directError.message}`
+                );
+            }
+        }
+
+        // Even with 500 error, attempt to get the response text if available
+        let responseText = "";
+        try {
+            responseText = await response.text();
+            console.log(`API response text length: ${responseText.length}`);
+            if (responseText.length < 500) {
+                console.log(`Full response: ${responseText}`);
+            } else {
+                console.log(
+                    `Response preview: ${responseText.substring(0, 500)}...`
+                );
+            }
+        } catch (textError) {
+            console.error("Error reading response text:", textError);
+        }
+
+        // Check if the request was successful
+        if (!response.ok) {
+            throw new Error(`API returned ${response.status}: ${responseText}`);
+        }
+
+        // Try to parse the response as JSON
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error("Error parsing API response:", parseError);
+            throw new Error(
+                `Invalid JSON response from API: ${responseText.substring(
+                    0,
+                    100
+                )}...`
+            );
+        }
+
+        console.log("Parsed API response:", data);
 
         // Process and deduplicate the skills
         const allSkills = [];
         const processedSkillNames = new Set();
 
-        if (data.skills && Array.isArray(data.skills)) {
-            data.skills.forEach((skill) => {
+        // Log the response structure for debugging
+        console.log("API Response structure:", {
+            hasSkills: !!(data && data.skills && Array.isArray(data.skills)),
+            hasResultSkills: !!(
+                data &&
+                data.result &&
+                data.result.skills &&
+                Array.isArray(data.result.skills)
+            ),
+            topLevelKeys: Object.keys(data || {}),
+            resultKeys: Object.keys((data && data.result) || {}),
+        });
+
+        // Check if skills are in the expected format or in the result object
+        const skillsArray =
+            data && data.skills && Array.isArray(data.skills)
+                ? data.skills
+                : data &&
+                  data.result &&
+                  data.result.skills &&
+                  Array.isArray(data.result.skills)
+                ? data.result.skills
+                : [];
+
+        if (skillsArray.length > 0) {
+            console.log(
+                `Found ${skillsArray.length} skills in the API response`
+            );
+            console.log("Sample skill structure:", skillsArray[0]);
+
+            skillsArray.forEach((skill) => {
+                // Check if skill is a string or an object with name property
                 const skillName =
-                    typeof skill === "string" ? skill : skill.name;
+                    typeof skill === "string"
+                        ? skill
+                        : skill.name || skill.skill || "Unknown Skill";
 
                 if (!skillName) return;
 
                 if (!processedSkillNames.has(skillName.toLowerCase())) {
                     processedSkillNames.add(skillName.toLowerCase());
 
-                    if (typeof skill === "string") {
-                        allSkills.push({
-                            name: skill,
-                            proficiency: 70,
-                            isCertified: false,
-                            category: "technical",
-                        });
-                    } else {
-                        allSkills.push({
-                            name: skillName,
-                            proficiency: skill.proficiency || 70,
-                            isCertified: skill.isCertified || false,
-                            category: skill.category || "technical",
-                            confidence: skill.confidence,
-                        });
-                    }
+                    // Convert to standard format
+                    const standardizedSkill = {
+                        name: skillName,
+                        proficiency:
+                            typeof skill === "string"
+                                ? 70
+                                : skill.proficiency ||
+                                  (skill.proficiency_level
+                                      ? parseInt(skill.proficiency_level)
+                                      : null) ||
+                                  (typeof skill.proficiency === "string" &&
+                                  skill.proficiency === "Intermediate"
+                                      ? 70
+                                      : typeof skill.proficiency === "string" &&
+                                        skill.proficiency === "Advanced"
+                                      ? 90
+                                      : typeof skill.proficiency === "string" &&
+                                        skill.proficiency === "Beginner"
+                                      ? 50
+                                      : 70),
+                        isCertified:
+                            typeof skill === "string"
+                                ? false
+                                : skill.isCertified || skill.is_backed || false,
+                        category:
+                            typeof skill === "string"
+                                ? "technical"
+                                : skill.category ||
+                                  (skill.is_technical
+                                      ? "technical"
+                                      : "soft_skill") ||
+                                  "technical",
+                        confidence:
+                            typeof skill === "string"
+                                ? 0.7
+                                : skill.confidence || 0.7,
+                    };
+
+                    allSkills.push(standardizedSkill);
                 }
             });
+
+            console.log(
+                `Successfully processed ${allSkills.length} unique skills`
+            );
+        } else {
+            console.warn(
+                "No skills found in API response or invalid response format"
+            );
         }
 
         return {
