@@ -18,5 +18,20 @@ export default defineConfig({
                 },
             },
         }),
-    ]
+    ],
+    server: {
+        proxy: {
+            // Proxy API requests to avoid CORS issues
+            "/api": {
+                target: "http://localhost:5000",
+                changeOrigin: true,
+                secure: false,
+            },
+            "/health": {
+                target: "http://localhost:5000",
+                changeOrigin: true,
+                secure: false,
+            },
+        },
+    },
 });
