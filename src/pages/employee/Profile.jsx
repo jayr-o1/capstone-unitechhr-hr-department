@@ -41,10 +41,17 @@ import {
     faSpinner,
     faClipboardList,
     faInfoCircle,
+    faDownload,
 } from "@fortawesome/free-solid-svg-icons";
 import toast from "react-hot-toast";
 import EmployeePageLoader from "../../components/employee/EmployeePageLoader";
-import { getStorage, ref } from "firebase/storage";
+import {
+    getStorage,
+    ref,
+    uploadBytes,
+    getDownloadURL,
+    deleteObject,
+} from "firebase/storage";
 import { db, storage, auth } from "../../firebase";
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 // Import custom alert components
@@ -68,8 +75,8 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
 
     // Document type options
     const documentTypeOptions = [
-        { value: "certification", label: "Certification" },
         { value: "resume", label: "Resume/CV" },
+        { value: "certification", label: "Certification" },
         { value: "degree", label: "Degree/Diploma" },
         { value: "training", label: "Training Document" },
         { value: "identification", label: "ID Document" },
@@ -119,13 +126,13 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
     };
 
     // Function to format file size in a readable way
-    const formatFileSize = (sizeInBytes) => {
-        if (sizeInBytes < 1024) {
-            return `${sizeInBytes} B`;
-        } else if (sizeInBytes < 1024 * 1024) {
-            return `${(sizeInBytes / 1024).toFixed(1)} KB`;
+    const formatFileSize = (bytes) => {
+        if (bytes < 1024) {
+            return `${bytes} B`;
+        } else if (bytes < 1024 * 1024) {
+            return `${(bytes / 1024).toFixed(1)} KB`;
         } else {
-            return `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
         }
     };
 
@@ -301,8 +308,8 @@ const DocumentUploadModal = ({ isOpen, onClose, onUpload, loading }) => {
                                         or drag and drop
                                     </p>
                                     <p className="text-xs text-gray-400 mt-2">
-                                        Supported files: PDF, Word, Excel,
-                                        Images
+                                        Maximum file size: 10MB. Supported
+                                        formats: PDF, DOC, DOCX, JPG, PNG
                                     </p>
                                 </div>
                             )}
@@ -404,6 +411,12 @@ const EmployeeProfile = () => {
     const fileInputRef = useRef(null);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [activeDocumentFilter, setActiveDocumentFilter] = useState("all");
+    const [documentType, setDocumentType] = useState("certification");
+    const [documentDescription, setDocumentDescription] = useState("");
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [isDocumentFormOpen, setIsDocumentFormOpen] = useState(false);
+    const [downloadLoading, setDownloadLoading] = useState(false);
 
     // Skills state
     const [extractingSkills, setExtractingSkills] = useState(false);
@@ -594,149 +607,190 @@ const EmployeeProfile = () => {
     };
 
     // Handle document upload
-    const handleDocumentUpload = async (file, docType, description) => {
-        if (!file || !userDetails?.universityId) {
+    const handleDocumentUpload = async () => {
+        if (!selectedFile || !userDetails?.universityId) {
             showErrorAlert(
-                !file ? "No file selected" : "Cannot determine your university"
+                !selectedFile
+                    ? "No file selected"
+                    : "Cannot determine your university"
             );
+            return;
+        }
+
+        if (!documentType) {
+            showErrorAlert("Please select a document type");
             return;
         }
 
         try {
             setUploading(true);
+            setUploadProgress(0);
             setError(null);
 
-            // Debug before upload
-            console.log("===== UPLOAD DEBUGGING =====");
-            console.log("File to upload:", file);
-            console.log("Auth state:", auth.currentUser);
-            console.log("Storage instance:", storage);
-            console.log("User ID:", user.uid);
-            console.log("University ID:", userDetails.universityId);
+            console.log("Uploading document:", selectedFile.name);
 
-            // Check if the storage instance is valid
-            if (!storage) {
-                console.error("Storage instance is not available");
-                setError(
-                    "Storage connection not available. Please refresh the page."
-                );
+            // Validate file size (max 10MB)
+            const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+            if (selectedFile.size > maxSize) {
                 showErrorAlert(
-                    "Storage connection not available. Please refresh the page."
+                    `File size exceeds the maximum limit of 10MB. Current size: ${formatFileSize(
+                        selectedFile.size
+                    )}`
                 );
                 setUploading(false);
                 return;
             }
 
-            // Get file extension and create additional metadata
-            const fileExtension = file.name.split(".").pop().toLowerCase();
-            const fileSize = file.size;
-            const fileType = file.type || `application/${fileExtension}`;
+            // Validate file type
+            const allowedTypes = [
+                "application/pdf",
+                "application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "image/jpeg",
+                "image/png",
+                "image/gif",
+                "application/vnd.ms-excel",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ];
 
-            // Prepare metadata to enrich the document object
-            const documentMetadata = {
-                fileSize,
-                fileType,
-                originalName: file.name,
-                uploadedBy: user.displayName || user.email || "Employee",
-                type: docType, // Document type from form
-                description: description || "",
-                createdAt: new Date().toISOString(),
-                uploadStatus: "completed",
-            };
+            if (!allowedTypes.includes(selectedFile.type)) {
+                showErrorAlert(
+                    `File type not supported. Please upload a PDF, DOC, DOCX, JPG, or PNG file. Current type: ${selectedFile.type}`
+                );
+                setUploading(false);
+                return;
+            }
 
-            // Upload the document
-            const result = await uploadEmployeeDocument(
-                user.uid,
+            // Determine employee ID and document ID
+            let employeeId = user.uid;
+            let employeeDocId = user.uid;
+
+            // Check if this is a mock user ID from direct employee login
+            if (user.uid.startsWith("emp_")) {
+                // Extract the actual employee ID from the mock user ID
+                const parts = user.uid.split("_");
+                if (parts.length >= 2) {
+                    employeeId = parts[1];
+                    console.log(
+                        "Extracted employeeId from mock user:",
+                        employeeId
+                    );
+                    employeeDocId = employeeId;
+                }
+            }
+
+            // Create a reference to the file in Firebase Storage
+            const fileExtension = selectedFile.name
+                .split(".")
+                .pop()
+                .toLowerCase();
+            const timestamp = Date.now();
+            const fileName = `${documentType}_${timestamp}.${fileExtension}`;
+            const filePath = `universities/${userDetails.universityId}/employees/${employeeId}/documents/${fileName}`;
+            const storageRef = ref(storage, filePath);
+
+            // Determine file type for display
+            const displayFileType = getFileExtension(selectedFile.name);
+
+            // Upload the file
+            const uploadTask = uploadBytes(storageRef, selectedFile);
+            setUploadProgress(25);
+
+            // Wait for the upload to complete
+            await uploadTask;
+            setUploadProgress(50);
+
+            // Get the download URL
+            const downloadURL = await getDownloadURL(storageRef);
+            setUploadProgress(75);
+
+            // Add document metadata to Firestore
+            const employeeRef = doc(
+                db,
+                "universities",
                 userDetails.universityId,
-                file,
-                docType,
-                description
+                "employees",
+                employeeDocId
             );
 
-            console.log("Upload result:", result);
-            console.log("===== END UPLOAD DEBUGGING =====");
+            const newDocument = {
+                id: `doc_${timestamp}`,
+                type: documentType || "other", // Document category (resume, certificate, etc.)
+                description: documentDescription || "",
+                fileName: selectedFile.name,
+                name: selectedFile.name, // Adding name field for compatibility
+                fileSize: selectedFile.size,
+                fileType: displayFileType, // User-friendly file type
+                fileExtension: fileExtension, // Raw file extension
+                mimeType: selectedFile.type || `application/${fileExtension}`, // MIME type
+                uploadedAt: new Date(),
+                filePath: filePath,
+                downloadURL: downloadURL,
+                url: downloadURL, // Adding url field for compatibility
+            };
 
-            if (result.success) {
-                // Create a more complete document object by combining the result with our metadata
-                const enhancedDocument = {
-                    ...result.document, // This contains name, url, etc.
-                    ...documentMetadata,
-                    id: result.document.id || `doc_${Date.now()}`,
-                };
+            console.log("Updating employee document with ID:", employeeDocId);
 
-                // Update document in Firestore with the enhanced data
-                try {
-                    const employeeRef = doc(
-                        db,
-                        "universities",
-                        userDetails.universityId,
-                        "employees",
-                        user.uid
-                    );
-                    const employeeDoc = await getDoc(employeeRef);
+            // Update the employee document with the new document information
+            const employeeDoc = await getDoc(employeeRef);
+            if (employeeDoc.exists()) {
+                const employeeData = employeeDoc.data();
+                const currentDocuments = employeeData.documents || [];
 
-                    if (employeeDoc.exists()) {
-                        const employeeData = employeeDoc.data();
-                        const currentDocuments = employeeData.documents || [];
-
-                        // Find the document we just uploaded and update it with enhanced metadata
-                        const updatedDocuments = currentDocuments.map((doc) => {
-                            if (doc.name === enhancedDocument.name) {
-                                return enhancedDocument;
-                            }
-                            return doc;
-                        });
-
-                        // Update Firestore
-                        await updateDoc(employeeRef, {
-                            documents: updatedDocuments,
-                        });
-
-                        console.log("Enhanced document metadata saved");
-                    }
-                } catch (err) {
-                    console.error(
-                        "Warning: Could not save enhanced metadata",
-                        err
-                    );
-                    // Continue anyway as the document was uploaded successfully
-                }
-
-                setSuccess("Document uploaded successfully");
-                showSuccessAlert("Document uploaded successfully");
-
-                // Refresh documents
-                const docsData = await getEmployeeDocuments(
-                    user.uid,
-                    userDetails.universityId
-                );
-                if (docsData.success) {
-                    setDocuments(docsData.documents);
-                }
-
-                // Close modal and reset state
-                setIsUploadModalOpen(false);
+                await updateDoc(employeeRef, {
+                    documents: [...currentDocuments, newDocument],
+                    updatedAt: serverTimestamp(),
+                });
             } else {
-                setError(result.message || "Failed to upload document");
-                showErrorAlert(result.message || "Failed to upload document");
+                console.error(
+                    "Employee document not found with ID:",
+                    employeeDocId
+                );
+                showErrorAlert(
+                    "Employee record not found. Please contact support."
+                );
+                setUploading(false);
+                return;
             }
+
+            setUploadProgress(100);
+
+            // Update local state
+            setDocuments((prev) => [...prev, newDocument]);
+
+            // Reset form
+            setSelectedFile(null);
+            setDocumentDescription("");
+            setIsDocumentFormOpen(false);
+
+            // If this is a file input, clear it
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+
+            showSuccessAlert("Document uploaded successfully");
         } catch (err) {
             console.error("Error uploading document:", err);
-            console.error("Error details:", {
-                code: err.code,
-                message: err.message,
-                stack: err.stack,
-            });
-            setError("An error occurred while uploading document");
-            showErrorAlert("An error occurred while uploading document");
+            showErrorAlert(
+                `An error occurred while uploading document: ${err.message}`
+            );
         } finally {
             setUploading(false);
         }
     };
 
     const handleDeleteDocument = async (documentId, fileName) => {
-        showWarningAlert(
-            "Are you sure you want to delete this document?",
+        // Find the document to delete
+        const docToDelete = documents.find((doc) => doc.id === documentId);
+
+        if (!docToDelete) {
+            showErrorAlert("Document not found");
+            return;
+        }
+
+        const documentName = docToDelete.fileName || docToDelete.name;
+        showDeleteConfirmation(
+            documentName,
             async () => {
                 try {
                     setError(null);
@@ -748,12 +802,27 @@ const EmployeeProfile = () => {
                         return;
                     }
 
-                    // Find the document to check if it's using base64
-                    const docToDelete = documents.find(
-                        (doc) => doc.id === documentId
-                    );
-                    const isBase64Document =
-                        docToDelete && docToDelete.base64Content;
+                    // Determine employee ID and document ID
+                    let employeeId = user.uid;
+                    let employeeDocId = user.uid;
+
+                    // Check if this is a mock user ID from direct employee login
+                    if (user.uid.startsWith("emp_")) {
+                        // Extract the actual employee ID from the mock user ID
+                        const parts = user.uid.split("_");
+                        if (parts.length >= 2) {
+                            employeeId = parts[1];
+                            console.log(
+                                "Extracted employeeId from mock user:",
+                                employeeId
+                            );
+                            employeeDocId = employeeId;
+                        }
+                    }
+
+                    console.log("Deleting document:", docToDelete);
+
+                    const isBase64Document = docToDelete.base64Content;
 
                     // If it's a base64 document, we only need to update Firestore
                     if (isBase64Document) {
@@ -763,7 +832,7 @@ const EmployeeProfile = () => {
                             "universities",
                             userDetails.universityId,
                             "employees",
-                            user.uid
+                            employeeDocId
                         );
                         const employeeDoc = await getDoc(employeeRef);
 
@@ -794,37 +863,117 @@ const EmployeeProfile = () => {
                             showErrorAlert("Employee document not found");
                         }
                     } else {
-                        // For regular Firebase Storage documents, use the deleteEmployeeDocument function
-                        const result = await deleteEmployeeDocument(
-                            user.uid,
-                            userDetails.universityId,
-                            documentId,
-                            fileName
-                        );
+                        try {
+                            // Try to delete from Firebase Storage first using the document's stored filePath
+                            if (docToDelete.filePath) {
+                                // Use the exact path stored when the file was uploaded
+                                console.log(
+                                    "Deleting file from path:",
+                                    docToDelete.filePath
+                                );
+                                const storageRef = ref(
+                                    storage,
+                                    docToDelete.filePath
+                                );
+                                await deleteObject(storageRef);
+                            } else {
+                                // Fallback to the old method if filePath is not available
+                                console.log(
+                                    "No filePath available, using constructed path"
+                                );
+                                const storageRef = ref(
+                                    storage,
+                                    `universities/${userDetails.universityId}/employees/${employeeId}/documents/${fileName}`
+                                );
+                                await deleteObject(storageRef);
+                            }
 
-                        if (result.success) {
-                            setSuccess("Document deleted successfully");
-                            showSuccessAlert("Document deleted successfully");
+                            // Update Firestore document
+                            const employeeRef = doc(
+                                db,
+                                "universities",
+                                userDetails.universityId,
+                                "employees",
+                                employeeDocId
+                            );
 
-                            // Update local state
-                            setDocuments((prev) =>
-                                prev.filter((doc) => doc.id !== documentId)
+                            const employeeDoc = await getDoc(employeeRef);
+                            if (employeeDoc.exists()) {
+                                const employeeData = employeeDoc.data();
+                                const updatedDocuments = (
+                                    employeeData.documents || []
+                                ).filter((doc) => doc.id !== documentId);
+
+                                await updateDoc(employeeRef, {
+                                    documents: updatedDocuments,
+                                    updatedAt: serverTimestamp(),
+                                });
+
+                                setSuccess("Document deleted successfully");
+                                showSuccessAlert(
+                                    "Document deleted successfully"
+                                );
+
+                                // Update local state
+                                setDocuments((prev) =>
+                                    prev.filter((doc) => doc.id !== documentId)
+                                );
+                            } else {
+                                throw new Error("Employee document not found");
+                            }
+                        } catch (storageError) {
+                            console.error(
+                                "Error deleting from storage:",
+                                storageError
                             );
-                        } else {
-                            setError(
-                                result.message || "Failed to delete document"
+
+                            // Even if the file deletion fails, try to remove it from Firestore
+                            // This helps with cleaning up records for files that might not exist in storage
+                            const employeeRef = doc(
+                                db,
+                                "universities",
+                                userDetails.universityId,
+                                "employees",
+                                employeeDocId
                             );
-                            showErrorAlert(
-                                result.message || "Failed to delete document"
-                            );
+
+                            const employeeDoc = await getDoc(employeeRef);
+                            if (employeeDoc.exists()) {
+                                const employeeData = employeeDoc.data();
+                                const updatedDocuments = (
+                                    employeeData.documents || []
+                                ).filter((doc) => doc.id !== documentId);
+
+                                await updateDoc(employeeRef, {
+                                    documents: updatedDocuments,
+                                    updatedAt: serverTimestamp(),
+                                });
+
+                                setSuccess(
+                                    "Document record deleted (file may not exist in storage)"
+                                );
+                                showSuccessAlert("Document record deleted");
+
+                                // Update local state
+                                setDocuments((prev) =>
+                                    prev.filter((doc) => doc.id !== documentId)
+                                );
+                            } else {
+                                throw new Error("Employee document not found");
+                            }
                         }
                     }
                 } catch (err) {
                     console.error("Error deleting document:", err);
                     setError("An error occurred while deleting document");
-                    showErrorAlert("An error occurred while deleting document");
+                    showErrorAlert(
+                        "An error occurred while deleting document: " +
+                            err.message
+                    );
                 }
-            }
+            },
+            "File name does not match!",
+            "Document deleted successfully"
         );
     };
 
@@ -1031,6 +1180,125 @@ const EmployeeProfile = () => {
             );
         } finally {
             setExtractingSkills(false);
+        }
+    };
+
+    // Format file size in a readable way
+    const formatFileSize = (bytes) => {
+        if (bytes < 1024) {
+            return `${bytes} B`;
+        } else if (bytes < 1024 * 1024) {
+            return `${(bytes / 1024).toFixed(1)} KB`;
+        } else {
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+        }
+    };
+
+    // Get file extension from filename
+    const getFileExtension = (filename) => {
+        if (!filename) return "";
+        return filename.split(".").pop().toUpperCase();
+    };
+
+    // Format date for display
+    const formatDate = (date) => {
+        if (!date) return "—";
+        if (typeof date === "string") return date;
+
+        try {
+            // Handle Firebase Timestamp
+            if (date.toDate && typeof date.toDate === "function") {
+                date = date.toDate();
+            }
+
+            // Format date
+            return new Date(date).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+            });
+        } catch (err) {
+            console.error("Error formatting date:", err);
+            return "Invalid date";
+        }
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSelectedFile(file);
+        }
+    };
+
+    // Handle document download
+    const handleDocumentDownload = async (
+        downloadURL,
+        fileName,
+        documentObj
+    ) => {
+        try {
+            setDownloadLoading(true);
+
+            // Determine employee ID and document ID
+            let employeeId = user.uid;
+            let employeeDocId = user.uid;
+
+            // Check if this is a mock user ID from direct employee login
+            if (user.uid.startsWith("emp_")) {
+                // Extract the actual employee ID from the mock user ID
+                const parts = user.uid.split("_");
+                if (parts.length >= 2) {
+                    employeeId = parts[1];
+                    console.log(
+                        "Download - Extracted employeeId from mock user:",
+                        employeeId
+                    );
+                    employeeDocId = employeeId;
+                }
+            }
+
+            if (!downloadURL) {
+                // If no direct URL, try to get it from storage
+                if (documentObj?.filePath) {
+                    try {
+                        const storageRef = ref(storage, documentObj.filePath);
+                        downloadURL = await getDownloadURL(storageRef);
+                    } catch (err) {
+                        console.error(
+                            "Failed to get fresh URL from storage:",
+                            err
+                        );
+                        showErrorAlert("Download URL not available");
+                        setDownloadLoading(false);
+                        return;
+                    }
+                } else {
+                    showErrorAlert("Download URL not available");
+                    setDownloadLoading(false);
+                    return;
+                }
+            }
+
+            // Create a temporary anchor element
+            const link = document.createElement("a");
+            link.href = downloadURL;
+            link.setAttribute("download", fileName || "document");
+            link.setAttribute("target", "_blank");
+            document.body.appendChild(link);
+
+            // Trigger download
+            link.click();
+
+            // Clean up
+            document.body.removeChild(link);
+
+            console.log(`Document downloaded successfully: ${fileName}`);
+            showSuccessAlert("Document download started");
+        } catch (error) {
+            console.error("Error downloading document:", error);
+            showErrorAlert("Failed to download document");
+        } finally {
+            setDownloadLoading(false);
         }
     };
 
@@ -1441,189 +1709,376 @@ const EmployeeProfile = () => {
                 <div className="bg-white rounded-lg shadow-md p-5">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold">Documents</h2>
-                        <div className="flex space-x-2">
-                            {extractingSkills ? (
-                                <button
-                                    className="flex items-center text-sm bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed"
-                                    disabled
-                                >
-                                    <FontAwesomeIcon
-                                        icon={faSpinner}
-                                        spin
-                                        className="mr-2"
-                                    />
-                                    Extracting Skills...
-                                </button>
-                            ) : (
-                                documents.length > 0 && (
-                                    <button
-                                        onClick={extractSkillsFromDocuments}
-                                        className="flex items-center text-sm bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                        <button
+                            onClick={() => setIsDocumentFormOpen(true)}
+                            className="px-3 py-1 bg-[#9AADEA] text-white rounded-lg hover:bg-[#7b8edc] transition"
+                        >
+                            Upload Document
+                        </button>
+                    </div>
+
+                    {/* Document Upload Form */}
+                    {isDocumentFormOpen && (
+                        <div className="mb-6 border border-gray-200 rounded-lg p-4">
+                            <h4 className="font-medium mb-3">
+                                Upload a New Document
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Document Category*
+                                    </label>
+                                    <select
+                                        value={documentType}
+                                        onChange={(e) =>
+                                            setDocumentType(e.target.value)
+                                        }
+                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                     >
-                                        <FontAwesomeIcon
-                                            icon={faMagic}
-                                            className="mr-2"
-                                        />
-                                        Extract Skills
-                                    </button>
-                                )
-                            )}
-                            <button
-                                onClick={handleUploadDocument}
-                                className="flex items-center text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                                disabled={uploading}
-                            >
-                                {uploading ? (
-                                    <span>Uploading...</span>
-                                ) : (
-                                    <>
-                                        <FontAwesomeIcon
-                                            icon={faUpload}
-                                            className="mr-2"
-                                        />
-                                        Upload Document
-                                    </>
+                                        <option value="resume">
+                                            Resume/CV
+                                        </option>
+                                        <option value="certification">
+                                            Certificate
+                                        </option>
+                                        <option value="degree">
+                                            Degree/Diploma
+                                        </option>
+                                        <option value="training">
+                                            Training Document
+                                        </option>
+                                        <option value="identification">
+                                            ID Document
+                                        </option>
+                                        <option value="contract">
+                                            Contract
+                                        </option>
+                                        <option value="transcript">
+                                            Academic Transcript
+                                        </option>
+                                        <option value="reference">
+                                            Reference Letter
+                                        </option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Description
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={documentDescription}
+                                        onChange={(e) =>
+                                            setDocumentDescription(
+                                                e.target.value
+                                            )
+                                        }
+                                        placeholder="Brief description of the document"
+                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    File*
+                                </label>
+                                <input
+                                    type="file"
+                                    onChange={handleFileChange}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                                />
+                                {selectedFile && (
+                                    <div className="mt-2 flex items-center text-sm text-gray-600">
+                                        <span className="mr-2">
+                                            <FontAwesomeIcon
+                                                icon={getFileIcon(
+                                                    selectedFile.name
+                                                )}
+                                            />
+                                        </span>
+                                        <div>
+                                            <p className="font-medium">
+                                                {selectedFile.name}
+                                            </p>
+                                            <p>
+                                                {formatFileSize(
+                                                    selectedFile.size
+                                                )}{" "}
+                                                -{" "}
+                                                {getFileExtension(
+                                                    selectedFile.name
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
                                 )}
-                            </button>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Maximum file size: 10MB. Supported formats:
+                                    PDF, DOC, DOCX, JPG, PNG
+                                </p>
+                            </div>
+
+                            {uploading && (
+                                <div className="mb-4">
+                                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div
+                                            className="bg-blue-600 h-2.5 rounded-full"
+                                            style={{
+                                                width: `${uploadProgress}%`,
+                                            }}
+                                        ></div>
+                                    </div>
+                                    <p className="text-xs text-center text-gray-500 mt-1">
+                                        Uploading: {uploadProgress}%
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    onClick={() => setIsDocumentFormOpen(false)}
+                                    className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDocumentUpload}
+                                    disabled={!selectedFile || uploading}
+                                    className={`px-3 py-1 rounded-lg ${
+                                        selectedFile && !uploading
+                                            ? "bg-[#9AADEA] text-white hover:bg-[#7b8edc]"
+                                            : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                    } transition`}
+                                >
+                                    {uploading
+                                        ? "Uploading..."
+                                        : "Upload Document"}
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
-                    {/* Document Upload Modal */}
-                    <DocumentUploadModal
-                        isOpen={isUploadModalOpen}
-                        onClose={handleCloseUploadModal}
-                        onUpload={handleDocumentUpload}
-                        loading={uploading}
-                    />
+                    {/* Document categories with tabs */}
+                    {documents && documents.length > 0 ? (
+                        <div>
+                            {/* Category tabs */}
+                            <div className="border-b border-gray-200 mb-4">
+                                <nav
+                                    className="-mb-px flex space-x-4"
+                                    aria-label="Document categories"
+                                >
+                                    <button
+                                        onClick={() =>
+                                            setActiveDocumentFilter("all")
+                                        }
+                                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                                            !activeDocumentFilter ||
+                                            activeDocumentFilter === "all"
+                                                ? "border-[#9AADEA] text-[#9AADEA]"
+                                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                        }`}
+                                    >
+                                        All Documents
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            setActiveDocumentFilter("resume")
+                                        }
+                                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                                            activeDocumentFilter === "resume"
+                                                ? "border-[#9AADEA] text-[#9AADEA]"
+                                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                        }`}
+                                    >
+                                        Resumes/CVs
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            setActiveDocumentFilter(
+                                                "certification"
+                                            )
+                                        }
+                                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                                            activeDocumentFilter ===
+                                            "certification"
+                                                ? "border-[#9AADEA] text-[#9AADEA]"
+                                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                        }`}
+                                    >
+                                        Certificates
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            setActiveDocumentFilter("other")
+                                        }
+                                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                                            activeDocumentFilter === "other"
+                                                ? "border-[#9AADEA] text-[#9AADEA]"
+                                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                        }`}
+                                    >
+                                        Other Documents
+                                    </button>
+                                </nav>
+                            </div>
 
-                    {/* Document Categories */}
-                    <div className="mb-6">
-                        <ul className="flex border-b">
-                            <li className="mr-1">
-                                <button
-                                    onClick={() =>
-                                        setActiveDocumentFilter("all")
-                                    }
-                                    className={`py-2 px-4 rounded-t-md ${
-                                        activeDocumentFilter === "all"
-                                            ? "bg-blue-100 text-blue-600 font-medium border-b-2 border-blue-600"
-                                            : "text-gray-600 hover:bg-gray-100"
-                                    }`}
-                                >
-                                    All Documents
-                                </button>
-                            </li>
-                            <li className="mr-1">
-                                <button
-                                    onClick={() =>
-                                        setActiveDocumentFilter("resume")
-                                    }
-                                    className={`py-2 px-4 rounded-t-md ${
-                                        activeDocumentFilter === "resume"
-                                            ? "bg-blue-100 text-blue-600 font-medium border-b-2 border-blue-600"
-                                            : "text-gray-600 hover:bg-gray-100"
-                                    }`}
-                                >
-                                    Resumes/CVs
-                                </button>
-                            </li>
-                            <li className="mr-1">
-                                <button
-                                    onClick={() =>
-                                        setActiveDocumentFilter("certification")
-                                    }
-                                    className={`py-2 px-4 rounded-t-md ${
-                                        activeDocumentFilter === "certification"
-                                            ? "bg-blue-100 text-blue-600 font-medium border-b-2 border-blue-600"
-                                            : "text-gray-600 hover:bg-gray-100"
-                                    }`}
-                                >
-                                    Certificates
-                                </button>
-                            </li>
-                            <li className="mr-1">
-                                <button
-                                    onClick={() =>
-                                        setActiveDocumentFilter("other")
-                                    }
-                                    className={`py-2 px-4 rounded-t-md ${
-                                        activeDocumentFilter === "other"
-                                            ? "bg-blue-100 text-blue-600 font-medium border-b-2 border-blue-600"
-                                            : "text-gray-600 hover:bg-gray-100"
-                                    }`}
-                                >
-                                    Other Documents
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
+                            {/* Documents List */}
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                File
+                                            </th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Category
+                                            </th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Description
+                                            </th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Uploaded
+                                            </th>
+                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {documents
+                                            .filter(
+                                                (document) =>
+                                                    !activeDocumentFilter ||
+                                                    activeDocumentFilter ===
+                                                        "all" ||
+                                                    document.type ===
+                                                        activeDocumentFilter ||
+                                                    (activeDocumentFilter ===
+                                                        "other" &&
+                                                        document.type !==
+                                                            "resume" &&
+                                                        document.type !==
+                                                            "certificate")
+                                            )
+                                            .map((document) => (
+                                                <tr
+                                                    key={document.id}
+                                                    className="hover:bg-gray-50"
+                                                >
+                                                    <td className="px-4 py-3 whitespace-nowrap">
+                                                        <div className="flex items-center">
+                                                            <FontAwesomeIcon
+                                                                icon={getFileIcon(
+                                                                    document.fileName ||
+                                                                        document.name ||
+                                                                        ""
+                                                                )}
+                                                                className="text-blue-500 mr-3"
+                                                            />
+                                                            <div>
+                                                                <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                                                                    {document.fileName ||
+                                                                        document.name ||
+                                                                        "Untitled Document"}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500">
+                                                                    {getFileExtension(
+                                                                        document.fileName ||
+                                                                            document.name ||
+                                                                            ""
+                                                                    )}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3 whitespace-nowrap">
+                                                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                            {document.type
+                                                                ? document.type
+                                                                      .charAt(0)
+                                                                      .toUpperCase() +
+                                                                  document.type.slice(
+                                                                      1
+                                                                  )
+                                                                : "Other"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                                        {document.description ||
+                                                            "-"}
+                                                    </td>
+                                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                                        {formatDate(
+                                                            document.uploadedAt?.toDate?.() ||
+                                                                document.uploadedAt ||
+                                                                document.createdAt?.toDate?.() ||
+                                                                document.createdAt
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                                                        <div className="flex justify-end space-x-2">
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleDocumentDownload(
+                                                                        document.downloadURL ||
+                                                                            document.url,
+                                                                        document.fileName ||
+                                                                            document.name,
+                                                                        document
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    downloadLoading
+                                                                }
+                                                                className={`text-blue-600 hover:text-blue-800 ${
+                                                                    downloadLoading
+                                                                        ? "opacity-50 cursor-not-allowed"
+                                                                        : ""
+                                                                }`}
+                                                                title="Download document"
+                                                            >
+                                                                <FontAwesomeIcon
+                                                                    icon={
+                                                                        faDownload
+                                                                    }
+                                                                />
+                                                            </button>
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleDeleteDocument(
+                                                                        document.id,
+                                                                        document.fileName ||
+                                                                            document.name
+                                                                    )
+                                                                }
+                                                                className="text-red-600 hover:text-red-800"
+                                                                title="Delete document"
+                                                            >
+                                                                <FontAwesomeIcon
+                                                                    icon={
+                                                                        faTrashAlt
+                                                                    }
+                                                                />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
 
-                    {documents.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500 border border-dashed border-gray-300 rounded-lg">
-                            <FontAwesomeIcon
-                                icon={faFileAlt}
-                                className="text-4xl mb-3"
-                            />
-                            <p>No documents uploaded yet</p>
-                            <button
-                                onClick={handleUploadDocument}
-                                className="mt-3 text-blue-500 hover:text-blue-700 hover:underline"
-                            >
-                                Upload your first document
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th
-                                            scope="col"
-                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                        >
-                                            File
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                        >
-                                            Category
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                        >
-                                            Description
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                        >
-                                            Uploaded
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                        >
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {documents
-                                        .filter((doc) => {
-                                            if (activeDocumentFilter === "all")
+                                        {documents.filter((doc) => {
+                                            if (
+                                                !activeDocumentFilter ||
+                                                activeDocumentFilter === "all"
+                                            )
                                                 return true;
-
-                                            // For resume tab
                                             if (
                                                 activeDocumentFilter ===
                                                     "resume" &&
                                                 doc.type === "resume"
                                             )
                                                 return true;
-
-                                            // For certificates tab - include certification and certificate types
                                             if (
                                                 activeDocumentFilter ===
                                                     "certification" &&
@@ -1631,205 +2086,59 @@ const EmployeeProfile = () => {
                                                     doc.type === "certificate")
                                             )
                                                 return true;
-
-                                            // For other documents tab
                                             if (
                                                 activeDocumentFilter ===
                                                     "other" &&
-                                                ![
-                                                    "resume",
-                                                    "certification",
-                                                    "certificate",
-                                                    "degree",
-                                                    "identification",
-                                                ].includes(doc.type)
+                                                doc.type !== "resume" &&
+                                                doc.type !== "certificate" &&
+                                                doc.type !== "certification"
                                             )
                                                 return true;
-
                                             return false;
-                                        })
-                                        .map((document) => (
-                                            <tr
-                                                key={document.id}
-                                                className="hover:bg-gray-50"
-                                            >
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center">
-                                                        <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-blue-50 rounded-lg">
-                                                            <FontAwesomeIcon
-                                                                icon={getFileIcon(
-                                                                    document.name
-                                                                )}
-                                                                className="text-blue-500 text-lg"
-                                                            />
-                                                        </div>
-                                                        <div className="ml-4">
-                                                            <div className="text-sm font-medium text-gray-900">
-                                                                {document.name}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">
-                                                                {document.name
-                                                                    .split(".")
-                                                                    .pop()
-                                                                    .toUpperCase()}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                        {document.type
-                                                            ? document.type
-                                                                  .charAt(0)
-                                                                  .toUpperCase() +
-                                                              document.type.slice(
-                                                                  1
-                                                              )
-                                                            : "Document"}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-900">
-                                                        {document.description ||
-                                                            "—"}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {document.createdAt?.toLocaleDateString?.() ||
-                                                        document.createdAt
-                                                            ?.toDate?.()
-                                                            ?.toLocaleDateString() ||
-                                                        "Recent upload"}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <div className="flex space-x-2 justify-end">
-                                                        {document.url &&
-                                                            document.url !==
-                                                                "pending_upload" && (
-                                                                <a
-                                                                    href={
-                                                                        document.url
-                                                                    }
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="text-blue-600 hover:text-blue-900"
-                                                                    title="Download"
-                                                                >
-                                                                    <svg
-                                                                        xmlns="http://www.w3.org/2000/svg"
-                                                                        className="h-5 w-5"
-                                                                        fill="none"
-                                                                        viewBox="0 0 24 24"
-                                                                        stroke="currentColor"
-                                                                    >
-                                                                        <path
-                                                                            strokeLinecap="round"
-                                                                            strokeLinejoin="round"
-                                                                            strokeWidth={
-                                                                                2
-                                                                            }
-                                                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                                                                        />
-                                                                    </svg>
-                                                                </a>
-                                                            )}
-                                                        <button
-                                                            onClick={() =>
-                                                                handleDeleteDocument(
-                                                                    document.id,
-                                                                    document.fileName ||
-                                                                        document.name
-                                                                )
-                                                            }
-                                                            className="text-red-600 hover:text-red-900"
-                                                            title="Delete"
-                                                        >
-                                                            <svg
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                                className="h-5 w-5"
-                                                                fill="none"
-                                                                viewBox="0 0 24 24"
-                                                                stroke="currentColor"
-                                                            >
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    strokeWidth={
-                                                                        2
-                                                                    }
-                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v10M9 7h6m-6 0H5m9-3h2M7.862 21H16.138A2 2 0 0018.138 19.142L19 7"
-                                                                />
-                                                            </svg>
-                                                        </button>
-                                                    </div>
+                                        }).length === 0 && (
+                                            <tr>
+                                                <td
+                                                    colSpan="5"
+                                                    className="px-6 py-8 text-center"
+                                                >
+                                                    <FontAwesomeIcon
+                                                        icon={faFileAlt}
+                                                        className="text-4xl mb-3"
+                                                    />
+                                                    <p className="text-gray-500">
+                                                        No documents found in
+                                                        this category
+                                                    </p>
+                                                    <button
+                                                        onClick={() =>
+                                                            setIsDocumentFormOpen(
+                                                                true
+                                                            )
+                                                        }
+                                                        className="mt-2 text-blue-500 hover:text-blue-700"
+                                                    >
+                                                        Upload a document
+                                                    </button>
                                                 </td>
                                             </tr>
-                                        ))}
-
-                                    {documents.filter((doc) => {
-                                        if (activeDocumentFilter === "all")
-                                            return true;
-
-                                        // For resume tab
-                                        if (
-                                            activeDocumentFilter === "resume" &&
-                                            doc.type === "resume"
-                                        )
-                                            return true;
-
-                                        // For certificates tab - include certification and certificate types
-                                        if (
-                                            activeDocumentFilter ===
-                                                "certification" &&
-                                            (doc.type === "certification" ||
-                                                doc.type === "certificate")
-                                        )
-                                            return true;
-
-                                        // For other documents tab
-                                        if (
-                                            activeDocumentFilter === "other" &&
-                                            ![
-                                                "resume",
-                                                "certification",
-                                                "certificate",
-                                                "degree",
-                                                "identification",
-                                            ].includes(doc.type)
-                                        )
-                                            return true;
-
-                                        return false;
-                                    }).length === 0 && (
-                                        <tr>
-                                            <td
-                                                colSpan="5"
-                                                className="px-6 py-8 text-center"
-                                            >
-                                                <p className="text-gray-500">
-                                                    No documents found in this
-                                                    category
-                                                </p>
-                                                <button
-                                                    onClick={
-                                                        handleUploadDocument
-                                                    }
-                                                    className="mt-2 text-blue-500 hover:text-blue-700 hover:underline"
-                                                >
-                                                    Upload a{" "}
-                                                    {activeDocumentFilter ===
-                                                    "resume"
-                                                        ? "resume"
-                                                        : activeDocumentFilter ===
-                                                          "certification"
-                                                        ? "certificate"
-                                                        : "document"}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-8 text-gray-500 border border-dashed border-gray-300 rounded-lg">
+                            <FontAwesomeIcon
+                                icon={faFileAlt}
+                                className="text-4xl mb-3"
+                            />
+                            <p>No documents uploaded yet</p>
+                            <button
+                                onClick={() => setIsDocumentFormOpen(true)}
+                                className="mt-3 text-blue-500 hover:text-blue-700 hover:underline"
+                            >
+                                Upload your first document
+                            </button>
                         </div>
                     )}
                 </div>
@@ -1918,47 +2227,63 @@ const EmployeeProfile = () => {
                     )}
 
                     {/* Skills display */}
-                    <div className="overflow-x-auto">
-                        <div className="space-y-4 mt-4">
-                            {skills.length > 0 ? (
-                                skills.map((skill) => (
-                                    <div
-                                        key={skill.id}
-                                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow transition-shadow"
+                    <div className="overflow-x-auto mt-4">
+                        <table className="min-w-full divide-y divide-gray-200 border border-gray-200 shadow-sm rounded-lg overflow-hidden">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th
+                                        scope="col"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
-                                        <div className="flex justify-between items-center mb-2">
-                                            <div>
-                                                <div className="flex items-center">
-                                                    <h4 className="font-medium">
-                                                        {skill.name}
-                                                    </h4>
-                                                    {skill.isCertified && (
-                                                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                            <FontAwesomeIcon
-                                                                icon={faCheck}
-                                                                className="mr-1"
-                                                            />
-                                                            Certified
-                                                        </span>
-                                                    )}
-                                                </div>
+                                        Skill
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Category
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Proficiency
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Certified
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {skills.length > 0 ? (
+                                    skills.map((skill) => (
+                                        <tr key={skill.id}>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="font-medium text-gray-900">
+                                                    {skill.name}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
                                                 <span
-                                                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
-                                                    ${
-                                                        skill.category ===
-                                                        "technical"
-                                                            ? "bg-blue-100 text-blue-800"
-                                                            : skill.category ===
-                                                              "language"
-                                                            ? "bg-green-100 text-green-800"
-                                                            : skill.category ===
-                                                              "certification"
-                                                            ? "bg-purple-100 text-purple-800"
-                                                            : skill.category ===
-                                                              "soft"
-                                                            ? "bg-yellow-100 text-yellow-800"
-                                                            : "bg-gray-100 text-gray-800"
-                                                    }`}
+                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                        ${
+                                                            skill.category ===
+                                                            "technical"
+                                                                ? "bg-blue-100 text-blue-800"
+                                                                : skill.category ===
+                                                                  "language"
+                                                                ? "bg-green-100 text-green-800"
+                                                                : skill.category ===
+                                                                  "certification"
+                                                                ? "bg-purple-100 text-purple-800"
+                                                                : skill.category ===
+                                                                  "soft"
+                                                                ? "bg-yellow-100 text-yellow-800"
+                                                                : "bg-gray-100 text-gray-800"
+                                                        }`}
                                                 >
                                                     {skill.category
                                                         ? skill.category
@@ -1969,49 +2294,70 @@ const EmployeeProfile = () => {
                                                           )
                                                         : "Technical"}
                                                 </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-                                            <div
-                                                className="bg-purple-600 h-2.5 rounded-full"
-                                                style={{
-                                                    width: `${skill.proficiency}%`,
-                                                }}
-                                            ></div>
-                                        </div>
-
-                                        <div className="flex justify-between text-xs text-gray-500 mb-2">
-                                            <span>Beginner</span>
-                                            <span>Intermediate</span>
-                                            <span>Advanced</span>
-                                            <span>Expert</span>
-                                        </div>
-
-                                        {skill.notes && (
-                                            <p className="text-sm text-gray-600 mt-2 italic">
-                                                {skill.notes}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="w-full flex items-center">
+                                                    <div className="mr-2 min-w-[70px] text-xs">
+                                                        {skill.proficiency <= 25
+                                                            ? "Beginner"
+                                                            : skill.proficiency <=
+                                                              50
+                                                            ? "Intermediate"
+                                                            : skill.proficiency <=
+                                                              75
+                                                            ? "Advanced"
+                                                            : "Expert"}
+                                                    </div>
+                                                    <div className="w-32 bg-gray-200 rounded-full h-2.5 relative">
+                                                        <div
+                                                            className="bg-purple-600 h-2.5 rounded-full"
+                                                            style={{
+                                                                width: `${skill.proficiency}%`,
+                                                            }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                {skill.isCertified ? (
+                                                    <span className="flex justify-center">
+                                                        <FontAwesomeIcon
+                                                            icon={faCheck}
+                                                            className="text-green-600"
+                                                        />
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400">
+                                                        ―
+                                                    </span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td
+                                            colSpan="4"
+                                            className="px-6 py-8 text-center"
+                                        >
+                                            <FontAwesomeIcon
+                                                icon={faGraduationCap}
+                                                className="text-gray-400 text-3xl mb-2"
+                                            />
+                                            <p className="text-gray-500 text-center">
+                                                No skills extracted yet.
                                             </p>
-                                        )}
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="text-center py-6 border border-dashed border-gray-300 rounded-lg">
-                                    <FontAwesomeIcon
-                                        icon={faGraduationCap}
-                                        className="text-gray-400 text-3xl mb-2"
-                                    />
-                                    <p className="text-gray-500">
-                                        No skills extracted yet.
-                                    </p>
-                                    <p className="mt-2 text-sm text-gray-500">
-                                        Upload documents and use the "Extract
-                                        Skills from Documents" button to
-                                        automatically extract your skills.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                                            <p className="mt-2 text-sm text-gray-500 text-center">
+                                                Upload documents and use the
+                                                "Extract Skills from Documents"
+                                                button to automatically extract
+                                                your skills.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}

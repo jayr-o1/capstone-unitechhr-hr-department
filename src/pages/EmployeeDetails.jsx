@@ -896,8 +896,16 @@ const EmployeeDetails = () => {
             return;
         }
 
+        // Find the skill by id to get its name
+        const skillToDelete = employee.skills.find((skill) => skill.id === id);
+
+        if (!skillToDelete) {
+            showErrorAlert("Skill not found");
+            return;
+        }
+
         showDeleteConfirmation(
-            `Are you sure you want to delete this skill?`,
+            skillToDelete.name, // Expected input (skill name)
             async () => {
                 try {
                     const employeeRef = doc(
@@ -929,8 +937,8 @@ const EmployeeDetails = () => {
                     showErrorAlert("Failed to delete skill");
                 }
             },
-            "Yes, delete skill",
-            "Cancel"
+            "Skill name does not match", // Error message if input doesn't match
+            "Skill deleted successfully" // Success message after deletion
         );
     };
 
