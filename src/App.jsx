@@ -35,7 +35,7 @@ import { JobProvider } from "./contexts/JobContext";
 import AuthProvider, { useAuth } from "./contexts/AuthProvider";
 import { scheduleJobsCleanup } from "./utils/cleanupUtil";
 import { getUserData } from "./services/userService";
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from "react-hot-toast";
 
 // System Admin imports
 import SystemAdminLayout from "./components/Layouts/SystemAdminLayout";
@@ -79,70 +79,110 @@ const SystemAdminUniversities = () => {
                         // Get employees count
                         let employeesCount = 0;
                         try {
-                            const employeesRef = collection(db, "universities", uni.id, "employees");
-                            const employeesSnapshot = await getDocs(employeesRef);
+                            const employeesRef = collection(
+                                db,
+                                "universities",
+                                uni.id,
+                                "employees"
+                            );
+                            const employeesSnapshot = await getDocs(
+                                employeesRef
+                            );
                             employeesCount = employeesSnapshot.size;
                         } catch (err) {
-                            console.error(`Error fetching employees for university ${uni.id}:`, err);
+                            console.error(
+                                `Error fetching employees for university ${uni.id}:`,
+                                err
+                            );
                         }
 
                         // Get HR heads count
                         let hrHeadsCount = 0;
                         let hrHeadsList = [];
                         try {
-                            const hrHeadsRef = collection(db, "universities", uni.id, "hr_head");
+                            const hrHeadsRef = collection(
+                                db,
+                                "universities",
+                                uni.id,
+                                "hr_head"
+                            );
                             const hrHeadsSnapshot = await getDocs(hrHeadsRef);
                             hrHeadsCount = hrHeadsSnapshot.size;
-                            hrHeadsList = hrHeadsSnapshot.docs.map(doc => ({
+                            hrHeadsList = hrHeadsSnapshot.docs.map((doc) => ({
                                 id: doc.id,
-                                ...doc.data()
+                                ...doc.data(),
                             }));
                         } catch (err) {
-                            console.error(`Error fetching HR heads for university ${uni.id}:`, err);
+                            console.error(
+                                `Error fetching HR heads for university ${uni.id}:`,
+                                err
+                            );
                         }
 
                         // Get HR personnel count
                         let hrPersonnelCount = 0;
                         let hrPersonnelList = [];
                         try {
-                            const hrPersonnelRef = collection(db, "universities", uni.id, "hr_personnel");
-                            const hrPersonnelSnapshot = await getDocs(hrPersonnelRef);
+                            const hrPersonnelRef = collection(
+                                db,
+                                "universities",
+                                uni.id,
+                                "hr_personnel"
+                            );
+                            const hrPersonnelSnapshot = await getDocs(
+                                hrPersonnelRef
+                            );
                             hrPersonnelCount = hrPersonnelSnapshot.size;
-                            hrPersonnelList = hrPersonnelSnapshot.docs.map(doc => ({
-                                id: doc.id,
-                                ...doc.data()
-                            }));
+                            hrPersonnelList = hrPersonnelSnapshot.docs.map(
+                                (doc) => ({
+                                    id: doc.id,
+                                    ...doc.data(),
+                                })
+                            );
                         } catch (err) {
-                            console.error(`Error fetching HR personnel for university ${uni.id}:`, err);
+                            console.error(
+                                `Error fetching HR personnel for university ${uni.id}:`,
+                                err
+                            );
                         }
 
                         // Get jobs count
                         let jobsCount = 0;
                         try {
-                            const jobsRef = collection(db, "universities", uni.id, "jobs");
+                            const jobsRef = collection(
+                                db,
+                                "universities",
+                                uni.id,
+                                "jobs"
+                            );
                             const jobsSnapshot = await getDocs(jobsRef);
                             jobsCount = jobsSnapshot.size;
                         } catch (err) {
-                            console.error(`Error fetching jobs for university ${uni.id}:`, err);
+                            console.error(
+                                `Error fetching jobs for university ${uni.id}:`,
+                                err
+                            );
                         }
-                        
+
                         return {
                             id: uni.id,
                             name: uni.name,
-                            code: uni.code || 'N/A',
+                            code: uni.code || "N/A",
                             hrHeads: hrHeadsCount,
                             hrHeadsList: hrHeadsList,
                             hrPersonnel: hrPersonnelCount,
                             hrPersonnelList: hrPersonnelList,
                             employees: employeesCount,
                             jobs: jobsCount,
-                            createdAt: uni.createdAt ? 
-                                new Date(uni.createdAt.seconds * 1000).toLocaleDateString() : 
-                                'N/A'
+                            createdAt: uni.createdAt
+                                ? new Date(
+                                      uni.createdAt.seconds * 1000
+                                  ).toLocaleDateString()
+                                : "N/A",
                         };
                     })
                 );
-                
+
                 setUniversities(universitiesWithCounts);
             } else {
                 setError("Failed to load universities");
@@ -164,7 +204,7 @@ const SystemAdminUniversities = () => {
         setSelectedUniversity(university);
         setFormData({
             name: university.name,
-            code: university.code === 'N/A' ? '' : university.code,
+            code: university.code === "N/A" ? "" : university.code,
         });
         setShowEditModal(true);
     };
@@ -172,18 +212,20 @@ const SystemAdminUniversities = () => {
     const handleDeleteUniversity = async (universityId) => {
         try {
             // Show confirmation dialog
-            const confirmDelete = window.confirm("Are you sure you want to delete this university? This action cannot be undone and will delete all associated data.");
-            
+            const confirmDelete = window.confirm(
+                "Are you sure you want to delete this university? This action cannot be undone and will delete all associated data."
+            );
+
             if (!confirmDelete) {
                 return;
             }
-            
+
             // Delete university logic would go here
             // For now, just remove from the state for demo purposes
-            setUniversities(prevUniversities => 
-                prevUniversities.filter(uni => uni.id !== universityId)
+            setUniversities((prevUniversities) =>
+                prevUniversities.filter((uni) => uni.id !== universityId)
             );
-            
+
             toast.success("University deleted successfully");
         } catch (error) {
             console.error("Error deleting university:", error);
@@ -195,14 +237,14 @@ const SystemAdminUniversities = () => {
         const { name, value } = e.target;
         setFormData({
             ...formData,
-            [name]: value
+            [name]: value,
         });
-        
+
         // Clear error when user types
         if (formErrors[name]) {
             setFormErrors({
                 ...formErrors,
-                [name]: null
+                [name]: null,
             });
         }
     };
@@ -220,29 +262,29 @@ const SystemAdminUniversities = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         const errors = validateForm();
         if (Object.keys(errors).length > 0) {
             setFormErrors(errors);
             return;
         }
-        
+
         setIsSubmitting(true);
-        
+
         try {
             // In a real application, you would call an API to update the university
             // For now, just update the state
-            const updatedUniversities = universities.map(uni => {
+            const updatedUniversities = universities.map((uni) => {
                 if (uni.id === selectedUniversity.id) {
                     return {
                         ...uni,
                         name: formData.name,
-                        code: formData.code
+                        code: formData.code,
                     };
                 }
                 return uni;
             });
-            
+
             setUniversities(updatedUniversities);
             setShowEditModal(false);
             toast.success("University updated successfully");
@@ -258,14 +300,14 @@ const SystemAdminUniversities = () => {
         <div className="container mx-auto">
             <div className="mb-6 flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Universities Management</h1>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                        Universities Management
+                    </h1>
                     <p className="text-gray-600">
                         Add, edit, and manage universities in the system.
                     </p>
                 </div>
-                <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
-                >
+                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center">
                     <span className="mr-2">+</span>
                     Add University
                 </button>
@@ -275,7 +317,9 @@ const SystemAdminUniversities = () => {
             {loading ? (
                 <div className="bg-white rounded-lg shadow-sm p-8 text-center">
                     <div className="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="mt-2 text-gray-600">Loading universities...</p>
+                    <p className="mt-2 text-gray-600">
+                        Loading universities...
+                    </p>
                 </div>
             ) : error ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
@@ -284,7 +328,9 @@ const SystemAdminUniversities = () => {
                 </div>
             ) : universities.length === 0 ? (
                 <div className="bg-gray-50 rounded-lg shadow-sm p-8 text-center">
-                    <p className="text-gray-600">No universities found in the system.</p>
+                    <p className="text-gray-600">
+                        No universities found in the system.
+                    </p>
                     <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                         Add Your First University
                     </button>
@@ -296,37 +342,66 @@ const SystemAdminUniversities = () => {
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th
+                                        scope="col"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
                                         Name
                                     </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th
+                                        scope="col"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
                                         Code
                                     </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th
+                                        scope="col"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
                                         HR Heads
                                     </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th
+                                        scope="col"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
                                         HR Personnel
                                     </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th
+                                        scope="col"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
                                         Employees
                                     </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th
+                                        scope="col"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
                                         Jobs
                                     </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th
+                                        scope="col"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
                                         Created
                                     </th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th
+                                        scope="col"
+                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
                                         Actions
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {universities.map((university) => (
-                                    <tr key={university.id} className="hover:bg-gray-50">
+                                    <tr
+                                        key={university.id}
+                                        className="hover:bg-gray-50"
+                                    >
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="font-medium text-gray-900">{university.name}</div>
+                                            <div className="font-medium text-gray-900">
+                                                {university.name}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-blue-100 text-blue-800">
@@ -349,20 +424,30 @@ const SystemAdminUniversities = () => {
                                             {university.createdAt}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <button 
-                                                onClick={() => handleViewUniversity(university)}
+                                            <button
+                                                onClick={() =>
+                                                    handleViewUniversity(
+                                                        university
+                                                    )
+                                                }
                                                 className="text-green-600 hover:text-green-900 mr-3"
                                             >
                                                 View
                                             </button>
-                                            <button 
-                                                onClick={() => handleEditClick(university)}
+                                            <button
+                                                onClick={() =>
+                                                    handleEditClick(university)
+                                                }
                                                 className="text-blue-600 hover:text-blue-900 mr-3"
                                             >
                                                 Edit
                                             </button>
-                                            <button 
-                                                onClick={() => handleDeleteUniversity(university.id)}
+                                            <button
+                                                onClick={() =>
+                                                    handleDeleteUniversity(
+                                                        university.id
+                                                    )
+                                                }
                                                 className="text-red-600 hover:text-red-900"
                                             >
                                                 Delete
@@ -385,37 +470,65 @@ const SystemAdminUniversities = () => {
                                 <h3 className="text-lg font-medium text-gray-900">
                                     {selectedUniversity.name} Details
                                 </h3>
-                                <button 
+                                <button
                                     onClick={() => setShowViewModal(false)}
                                     className="text-gray-400 hover:text-gray-500"
                                 >
                                     <span className="sr-only">Close</span>
-                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    <svg
+                                        className="h-6 w-6"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
                                     </svg>
                                 </button>
                             </div>
                         </div>
                         <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
                             <div className="mb-6">
-                                <h4 className="text-md font-semibold text-gray-700 mb-2">University Information</h4>
+                                <h4 className="text-md font-semibold text-gray-700 mb-2">
+                                    University Information
+                                </h4>
                                 <div className="bg-gray-50 p-3 rounded-md">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <p className="text-sm text-gray-500">Name</p>
-                                            <p className="font-medium">{selectedUniversity.name}</p>
+                                            <p className="text-sm text-gray-500">
+                                                Name
+                                            </p>
+                                            <p className="font-medium">
+                                                {selectedUniversity.name}
+                                            </p>
                                         </div>
                                         <div>
-                                            <p className="text-sm text-gray-500">Code</p>
-                                            <p className="font-medium">{selectedUniversity.code}</p>
+                                            <p className="text-sm text-gray-500">
+                                                Code
+                                            </p>
+                                            <p className="font-medium">
+                                                {selectedUniversity.code}
+                                            </p>
                                         </div>
                                         <div>
-                                            <p className="text-sm text-gray-500">Created</p>
-                                            <p className="font-medium">{selectedUniversity.createdAt}</p>
+                                            <p className="text-sm text-gray-500">
+                                                Created
+                                            </p>
+                                            <p className="font-medium">
+                                                {selectedUniversity.createdAt}
+                                            </p>
                                         </div>
                                         <div>
-                                            <p className="text-sm text-gray-500">ID</p>
-                                            <p className="font-medium text-xs">{selectedUniversity.id}</p>
+                                            <p className="text-sm text-gray-500">
+                                                ID
+                                            </p>
+                                            <p className="font-medium text-xs">
+                                                {selectedUniversity.id}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -425,77 +538,130 @@ const SystemAdminUniversities = () => {
                                 <h4 className="text-md font-semibold text-gray-700 mb-2">
                                     HR Heads ({selectedUniversity.hrHeads})
                                 </h4>
-                                {selectedUniversity.hrHeadsList && selectedUniversity.hrHeadsList.length > 0 ? (
+                                {selectedUniversity.hrHeadsList &&
+                                selectedUniversity.hrHeadsList.length > 0 ? (
                                     <div className="bg-gray-50 rounded-md divide-y divide-gray-200">
-                                        {selectedUniversity.hrHeadsList.map(head => (
-                                            <div key={head.id} className="p-3">
-                                                <div className="flex items-start">
-                                                    <div className="mr-3">
-                                                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                                                            {head.displayName?.charAt(0) || head.email?.charAt(0) || 'U'}
+                                        {selectedUniversity.hrHeadsList.map(
+                                            (head) => (
+                                                <div
+                                                    key={head.id}
+                                                    className="p-3"
+                                                >
+                                                    <div className="flex items-start">
+                                                        <div className="mr-3">
+                                                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                                                                {head.displayName?.charAt(
+                                                                    0
+                                                                ) ||
+                                                                    head.email?.charAt(
+                                                                        0
+                                                                    ) ||
+                                                                    "U"}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-medium">{head.displayName || 'No Name'}</p>
-                                                        <p className="text-sm text-gray-500">{head.email}</p>
-                                                        <div className="mt-1">
-                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                                HR Head
-                                                            </span>
+                                                        <div>
+                                                            <p className="font-medium">
+                                                                {head.displayName ||
+                                                                    "No Name"}
+                                                            </p>
+                                                            <p className="text-sm text-gray-500">
+                                                                {head.email}
+                                                            </p>
+                                                            <div className="mt-1">
+                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                    HR Head
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        )}
                                     </div>
                                 ) : (
-                                    <p className="text-gray-500 text-sm">No HR Heads found for this university.</p>
+                                    <p className="text-gray-500 text-sm">
+                                        No HR Heads found for this university.
+                                    </p>
                                 )}
                             </div>
 
                             <div className="mb-6">
                                 <h4 className="text-md font-semibold text-gray-700 mb-2">
-                                    HR Personnel ({selectedUniversity.hrPersonnel})
+                                    HR Personnel (
+                                    {selectedUniversity.hrPersonnel})
                                 </h4>
-                                {selectedUniversity.hrPersonnelList && selectedUniversity.hrPersonnelList.length > 0 ? (
+                                {selectedUniversity.hrPersonnelList &&
+                                selectedUniversity.hrPersonnelList.length >
+                                    0 ? (
                                     <div className="bg-gray-50 rounded-md divide-y divide-gray-200">
-                                        {selectedUniversity.hrPersonnelList.map(personnel => (
-                                            <div key={personnel.id} className="p-3">
-                                                <div className="flex items-start">
-                                                    <div className="mr-3">
-                                                        <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold">
-                                                            {personnel.displayName?.charAt(0) || personnel.email?.charAt(0) || 'U'}
+                                        {selectedUniversity.hrPersonnelList.map(
+                                            (personnel) => (
+                                                <div
+                                                    key={personnel.id}
+                                                    className="p-3"
+                                                >
+                                                    <div className="flex items-start">
+                                                        <div className="mr-3">
+                                                            <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold">
+                                                                {personnel.displayName?.charAt(
+                                                                    0
+                                                                ) ||
+                                                                    personnel.email?.charAt(
+                                                                        0
+                                                                    ) ||
+                                                                    "U"}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-medium">{personnel.displayName || 'No Name'}</p>
-                                                        <p className="text-sm text-gray-500">{personnel.email}</p>
-                                                        <div className="mt-1">
-                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                                HR Personnel
-                                                            </span>
+                                                        <div>
+                                                            <p className="font-medium">
+                                                                {personnel.displayName ||
+                                                                    "No Name"}
+                                                            </p>
+                                                            <p className="text-sm text-gray-500">
+                                                                {
+                                                                    personnel.email
+                                                                }
+                                                            </p>
+                                                            <div className="mt-1">
+                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                                    HR Personnel
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        )}
                                     </div>
                                 ) : (
-                                    <p className="text-gray-500 text-sm">No HR Personnel found for this university.</p>
+                                    <p className="text-gray-500 text-sm">
+                                        No HR Personnel found for this
+                                        university.
+                                    </p>
                                 )}
                             </div>
 
                             <div>
-                                <h4 className="text-md font-semibold text-gray-700 mb-2">Summary</h4>
+                                <h4 className="text-md font-semibold text-gray-700 mb-2">
+                                    Summary
+                                </h4>
                                 <div className="bg-gray-50 p-3 rounded-md">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <p className="text-sm text-gray-500">Total Employees</p>
-                                            <p className="font-medium">{selectedUniversity.employees}</p>
+                                            <p className="text-sm text-gray-500">
+                                                Total Employees
+                                            </p>
+                                            <p className="font-medium">
+                                                {selectedUniversity.employees}
+                                            </p>
                                         </div>
                                         <div>
-                                            <p className="text-sm text-gray-500">Jobs</p>
-                                            <p className="font-medium">{selectedUniversity.jobs}</p>
+                                            <p className="text-sm text-gray-500">
+                                                Jobs
+                                            </p>
+                                            <p className="font-medium">
+                                                {selectedUniversity.jobs}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -522,13 +688,23 @@ const SystemAdminUniversities = () => {
                                 <h3 className="text-lg font-medium text-gray-900">
                                     Edit University
                                 </h3>
-                                <button 
+                                <button
                                     onClick={() => setShowEditModal(false)}
                                     className="text-gray-400 hover:text-gray-500"
                                 >
                                     <span className="sr-only">Close</span>
-                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    <svg
+                                        className="h-6 w-6"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
                                     </svg>
                                 </button>
                             </div>
@@ -536,7 +712,10 @@ const SystemAdminUniversities = () => {
                         <form onSubmit={handleSubmit}>
                             <div className="px-6 py-4">
                                 <div className="mb-4">
-                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                                    <label
+                                        htmlFor="name"
+                                        className="block text-sm font-medium text-gray-700"
+                                    >
                                         University Name
                                     </label>
                                     <input
@@ -545,14 +724,23 @@ const SystemAdminUniversities = () => {
                                         id="name"
                                         value={formData.name}
                                         onChange={handleFormChange}
-                                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${formErrors.name ? 'border-red-300' : ''}`}
+                                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                                            formErrors.name
+                                                ? "border-red-300"
+                                                : ""
+                                        }`}
                                     />
                                     {formErrors.name && (
-                                        <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {formErrors.name}
+                                        </p>
                                     )}
                                 </div>
                                 <div className="mb-4">
-                                    <label htmlFor="code" className="block text-sm font-medium text-gray-700">
+                                    <label
+                                        htmlFor="code"
+                                        className="block text-sm font-medium text-gray-700"
+                                    >
                                         University Code
                                     </label>
                                     <input
@@ -561,10 +749,16 @@ const SystemAdminUniversities = () => {
                                         id="code"
                                         value={formData.code}
                                         onChange={handleFormChange}
-                                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${formErrors.code ? 'border-red-300' : ''}`}
+                                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
+                                            formErrors.code
+                                                ? "border-red-300"
+                                                : ""
+                                        }`}
                                     />
                                     {formErrors.code && (
-                                        <p className="mt-1 text-sm text-red-600">{formErrors.code}</p>
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {formErrors.code}
+                                        </p>
                                     )}
                                 </div>
                             </div>
@@ -581,7 +775,9 @@ const SystemAdminUniversities = () => {
                                     disabled={isSubmitting}
                                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
                                 >
-                                    {isSubmitting ? 'Saving...' : 'Save Changes'}
+                                    {isSubmitting
+                                        ? "Saving..."
+                                        : "Save Changes"}
                                 </button>
                             </div>
                         </form>
@@ -595,20 +791,22 @@ const SystemAdminUniversities = () => {
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     const auth = useAuth();
-    
+
     console.log("ProtectedRoute: Auth state", {
         user: auth?.user ? "exists" : "null",
         userRole: auth?.userDetails?.role,
         loading: auth?.loading,
-        isSystemAdmin: auth?.userDetails?.role === 'system_admin',
-        isEmployee: auth?.userDetails?.role === 'employee',
-        allowedRoles
+        isSystemAdmin: auth?.userDetails?.role === "system_admin",
+        isEmployee: auth?.userDetails?.role === "employee",
+        allowedRoles,
     });
-    
+
     // If still loading auth state, render a minimal loading component
     // that will allow layout components to be rendered alongside it
     if (auth?.loading) {
-        console.log("ProtectedRoute: Auth is still loading, showing content loader");
+        console.log(
+            "ProtectedRoute: Auth is still loading, showing content loader"
+        );
         return children;
     }
 
@@ -620,13 +818,19 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
     // If user is authenticated but no userDetails or role, something is wrong
     if (!auth?.userDetails?.role) {
-        console.log("ProtectedRoute: Missing userDetails or role, showing error");
+        console.log(
+            "ProtectedRoute: Missing userDetails or role, showing error"
+        );
         return (
             <div className="w-full h-screen flex flex-col items-center justify-center text-center px-4">
-                <h1 className="text-xl font-semibold text-red-600 mb-2">Authentication Error</h1>
-                <p className="text-gray-700 mb-4">There was a problem with your login session.</p>
-                <button 
-                    onClick={() => window.location.href = '/'}
+                <h1 className="text-xl font-semibold text-red-600 mb-2">
+                    Authentication Error
+                </h1>
+                <p className="text-gray-700 mb-4">
+                    There was a problem with your login session.
+                </p>
+                <button
+                    onClick={() => (window.location.href = "/")}
                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
                     Return to Login
@@ -636,13 +840,18 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     }
 
     // Check if the user's role is allowed for this route
-    if (allowedRoles.length > 0 && !allowedRoles.includes(auth.userDetails.role)) {
-        console.log(`ProtectedRoute: User role ${auth.userDetails.role} not allowed for this route`);
-        
+    if (
+        allowedRoles.length > 0 &&
+        !allowedRoles.includes(auth.userDetails.role)
+    ) {
+        console.log(
+            `ProtectedRoute: User role ${auth.userDetails.role} not allowed for this route`
+        );
+
         // Redirect based on role
-        if (auth.userDetails.role === 'system_admin') {
+        if (auth.userDetails.role === "system_admin") {
             return <Navigate to="/system-admin/dashboard" />;
-        } else if (auth.userDetails.role === 'employee') {
+        } else if (auth.userDetails.role === "employee") {
             return <Navigate to="/employee/dashboard" />;
         } else {
             return <Navigate to="/dashboard" />;
@@ -656,13 +865,13 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
 function AppContent() {
     const auth = useAuth();
-    
-    console.log("AppContent: Auth context", { 
-        isObject: !!auth, 
+
+    console.log("AppContent: Auth context", {
+        isObject: !!auth,
         hasUser: !!auth?.user,
-        loading: auth?.loading
+        loading: auth?.loading,
     });
-    
+
     const { user, userDetails } = auth || {};
 
     useEffect(() => {
@@ -706,40 +915,46 @@ function AppContent() {
                 try {
                     // Get user data to find university ID
                     const userDataResult = await getUserData(user.uid);
-                    if (userDataResult.success && userDataResult.data.universityId) {
+                    if (
+                        userDataResult.success &&
+                        userDataResult.data.universityId
+                    ) {
                         // Schedule cleanup to run once per day (1440 minutes) with the university ID
-                        const stopCleanup = scheduleJobsCleanup(1440, userDataResult.data.universityId);
-                        
+                        const stopCleanup = scheduleJobsCleanup(
+                            1440,
+                            userDataResult.data.universityId
+                        );
+
                         // Store the cleanup function to be called on unmount
                         return stopCleanup;
                     }
                 } catch (error) {
                     console.error("Error getting user's university:", error);
                 }
-                
+
                 // Return no-op function if we couldn't get the universityId
                 return () => {};
             };
-            
+
             // Start the process and get the cleanup function
             const cleanupPromise = getUserUniversity();
-            
+
             // Clean up function when component unmounts
             return () => {
-                cleanupPromise.then(stopCleanup => stopCleanup());
+                cleanupPromise.then((stopCleanup) => stopCleanup());
             };
         }
     }, [user]);
 
     // Check if user is an employee or system admin
-    const isEmployee = userDetails?.role === 'employee';
-    const isSystemAdmin = userDetails?.role === 'system_admin';
+    const isEmployee = userDetails?.role === "employee";
+    const isSystemAdmin = userDetails?.role === "system_admin";
 
     return (
         <Router>
             {/* Toast notifications */}
             <Toaster position="top-right" />
-            
+
             <Routes>
                 {/* Authentication Routes */}
                 {!user ? (
@@ -770,18 +985,29 @@ function AppContent() {
                         <Route
                             path="/system-admin"
                             element={
-                                <ProtectedRoute allowedRoles={['system_admin']}>
+                                <ProtectedRoute allowedRoles={["system_admin"]}>
                                     <SystemAdminLayout />
                                 </ProtectedRoute>
                             }
                         >
                             <Route
                                 index
-                                element={<Navigate to="/system-admin/dashboard" />}
+                                element={
+                                    <Navigate to="/system-admin/dashboard" />
+                                }
                             />
-                            <Route path="dashboard" element={<SystemAdminDashboard />} />
-                            <Route path="universities" element={<SystemAdminUniversities />} />
-                            <Route path="licenses" element={<SystemAdminLicenses />} />
+                            <Route
+                                path="dashboard"
+                                element={<SystemAdminDashboard />}
+                            />
+                            <Route
+                                path="universities"
+                                element={<SystemAdminUniversities />}
+                            />
+                            <Route
+                                path="licenses"
+                                element={<SystemAdminLicenses />}
+                            />
                             {/* Add other system admin routes here */}
                         </Route>
                         {/* Redirect other routes to system admin dashboard if user is system admin */}
@@ -796,7 +1022,7 @@ function AppContent() {
                         <Route
                             path="/employee"
                             element={
-                                <ProtectedRoute allowedRoles={['employee']}>
+                                <ProtectedRoute allowedRoles={["employee"]}>
                                     <EmployeeLayout />
                                 </ProtectedRoute>
                             }
@@ -805,8 +1031,14 @@ function AppContent() {
                                 index
                                 element={<Navigate to="/employee/dashboard" />}
                             />
-                            <Route path="dashboard" element={<EmployeeDashboard />} />
-                            <Route path="profile" element={<EmployeeProfile />} />
+                            <Route
+                                path="dashboard"
+                                element={<EmployeeDashboard />}
+                            />
+                            <Route
+                                path="profile"
+                                element={<EmployeeProfile />}
+                            />
                             <Route path="career" element={<CareerProgress />} />
                         </Route>
                         {/* Redirect HR routes to employee dashboard if user is an employee */}
@@ -821,7 +1053,13 @@ function AppContent() {
                         <Route
                             path="/"
                             element={
-                                <ProtectedRoute allowedRoles={['hr_head', 'hr_personnel', 'admin']}>
+                                <ProtectedRoute
+                                    allowedRoles={[
+                                        "hr_head",
+                                        "hr_personnel",
+                                        "admin",
+                                    ]}
+                                >
                                     <Layout />
                                 </ProtectedRoute>
                             }
@@ -861,7 +1099,10 @@ function AppContent() {
 
                             <Route path="onboarding" element={<Onboarding />} />
                             <Route path="employees" element={<Employees />} />
-                            <Route path="employees/:employeeId" element={<EmployeeDetails />} />
+                            <Route
+                                path="employees/:employeeId"
+                                element={<EmployeeDetails />}
+                            />
                             <Route path="clusters" element={<Clusters />} />
                             <Route path="profile" element={<Profile />} />
                             <Route path="license" element={<License />} />
@@ -869,8 +1110,11 @@ function AppContent() {
                                 path="subscription"
                                 element={<Subscription />}
                             />
-                            <Route path="hr-management" element={<HRHeadPanel />} />
-                            
+                            <Route
+                                path="hr-management"
+                                element={<HRHeadPanel />}
+                            />
+
                             {/* Redirect employee routes to dashboard if user is HR */}
                             <Route
                                 path="employee/*"
