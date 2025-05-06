@@ -134,7 +134,7 @@ const JobCard = ({ job, onCloseJob, onOpenJob, onEditJob, onDelete }) => {
     return (
         <div
             id={`job-${job.id}`}
-            className="bg-white rounded-lg p-5 shadow-md flex justify-between items-center gap-4"
+            className="border border-gray-300 rounded-lg p-5 bg-white flex justify-between items-center gap-4 hover:border-blue-300 transition-colors duration-200"
         >
             <div className="flex-1">
                 <div className="flex items-center gap-2">

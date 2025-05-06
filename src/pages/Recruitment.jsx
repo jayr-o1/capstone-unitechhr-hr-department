@@ -274,9 +274,6 @@ const Recruitment = () => {
             {/* Left Side (Job Posts & Pagination) */}
             <div className="w-2/3 flex flex-col">
                 <div className="bg-white rounded-lg shadow-md p-6 h-[calc(100vh-7rem)] flex flex-col">
-                    <h2 className="text-xl font-semibold text-gray-700 mb-4">
-                        Job Listings
-                    </h2>
                     <div className="flex-1 overflow-y-auto min-h-[400px]">
                         <JobList
                             key={`job-list-main-${refreshCounter}`}

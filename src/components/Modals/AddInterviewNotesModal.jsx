@@ -9,13 +9,13 @@ const AddInterviewNotesModal = ({ isOpen, onClose, interview, onSave }) => {
     // Format date for display
     const formatDate = (dateTime) => {
         try {
-            return new Date(dateTime).toLocaleDateString('en-US', {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit'
+            return new Date(dateTime).toLocaleDateString("en-US", {
+                weekday: "short",
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
             });
         } catch (error) {
             return "Invalid date";
@@ -33,7 +33,7 @@ const AddInterviewNotesModal = ({ isOpen, onClose, interview, onSave }) => {
     };
 
     return (
-        <div 
+        <div
             className="fixed inset-0 flex items-center justify-center z-50"
             style={{
                 background: "rgba(0, 0, 0, 0.6)",
@@ -45,7 +45,7 @@ const AddInterviewNotesModal = ({ isOpen, onClose, interview, onSave }) => {
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">
                     Add Interview Feedback
                 </h2>
-                
+
                 <div className="mb-4">
                     <div className="mb-2 text-sm font-medium text-gray-700">
                         Interview Details:
@@ -60,11 +60,15 @@ const AddInterviewNotesModal = ({ isOpen, onClose, interview, onSave }) => {
                         </p>
                     </div>
                 </div>
-                
+
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label htmlFor="interviewNotes" className="block text-sm font-medium text-gray-700 mb-1">
-                            Feedback Notes <span className="text-red-500">*</span>
+                        <label
+                            htmlFor="interviewNotes"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                        >
+                            Feedback Notes{" "}
+                            <span className="text-red-500">*</span>
                         </label>
                         <textarea
                             id="interviewNotes"
@@ -76,9 +80,12 @@ const AddInterviewNotesModal = ({ isOpen, onClose, interview, onSave }) => {
                             required
                         />
                     </div>
-                    
+
                     <div className="mb-5">
-                        <label htmlFor="interviewStatus" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            htmlFor="interviewStatus"
+                            className="block text-sm font-medium text-gray-700 mb-1"
+                        >
                             Interview Status
                         </label>
                         <select
@@ -87,12 +94,11 @@ const AddInterviewNotesModal = ({ isOpen, onClose, interview, onSave }) => {
                             value={status}
                             onChange={(e) => setStatus(e.target.value)}
                         >
-                            <option value="Scheduled">Scheduled</option>
                             <option value="Completed">Completed</option>
                             <option value="Canceled">Canceled</option>
                         </select>
                     </div>
-                    
+
                     <div className="flex justify-end space-x-3">
                         <button
                             type="button"
@@ -114,4 +120,4 @@ const AddInterviewNotesModal = ({ isOpen, onClose, interview, onSave }) => {
     );
 };
 
-export default AddInterviewNotesModal; 
+export default AddInterviewNotesModal;
