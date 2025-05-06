@@ -23,22 +23,25 @@ const Sidebar = ({ userRole, userPermissions }) => {
     const hasPermission = (path) => {
         // HR Heads have access to everything
         if (isHRHead) return true;
-        
+
         // HR Personnel need specific permissions
         if (userRole === "hr_personnel") {
             // Dashboard is accessible to everyone
             if (path === "/dashboard") return true;
-            
+
             // Check specific module permissions
-            if (path === "/recruitment" && userPermissions?.recruitment) return true;
-            if (path === "/onboarding" && userPermissions?.onboarding) return true;
-            if (path === "/employees" && userPermissions?.employees) return true;
+            if (path === "/recruitment" && userPermissions?.recruitment)
+                return true;
+            if (path === "/onboarding" && userPermissions?.onboarding)
+                return true;
+            if (path === "/employees" && userPermissions?.employees)
+                return true;
             if (path === "/clusters" && userPermissions?.clusters) return true;
-            
+
             // Any other path is restricted
             return false;
         }
-        
+
         // Default allow for non-HR roles (shouldn't happen but just in case)
         return true;
     };
@@ -89,7 +92,7 @@ const Sidebar = ({ userRole, userPermissions }) => {
             ),
         },
         {
-            name: "Development Clusters",
+            name: "Training & Development",
             path: "/clusters",
             icon: (
                 <ClustersIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
@@ -130,11 +133,12 @@ const Sidebar = ({ userRole, userPermissions }) => {
                                 <li
                                     key={index}
                                     className={`mx-4 ${
-                                        itemHasPermission 
-                                            ? "bg-gray-100 rounded-xl shadow-md hover:bg-gray-200 transition-colors duration-200" 
+                                        itemHasPermission
+                                            ? "bg-gray-100 rounded-xl shadow-md hover:bg-gray-200 transition-colors duration-200"
                                             : "bg-gray-100 rounded-xl shadow-md opacity-50 cursor-not-allowed"
                                     } ${
-                                        location.pathname === item.path && itemHasPermission
+                                        location.pathname === item.path &&
+                                        itemHasPermission
                                             ? "bg-gray-200" // Active page styling
                                             : "bg-gray-100"
                                     }`}
@@ -178,18 +182,18 @@ const Sidebar = ({ userRole, userPermissions }) => {
                             >
                                 <div className="mb-2 flex items-center justify-center w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10">
                                     {/* Custom logout icon in red */}
-                                    <svg 
-                                        xmlns="http://www.w3.org/2000/svg" 
-                                        fill="none" 
-                                        viewBox="0 0 24 24" 
-                                        strokeWidth={1.5} 
-                                        stroke="currentColor" 
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={1.5}
+                                        stroke="currentColor"
                                         className="w-full h-full text-red-600"
                                     >
-                                        <path 
-                                            strokeLinecap="round" 
-                                            strokeLinejoin="round" 
-                                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" 
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
                                         />
                                     </svg>
                                 </div>
