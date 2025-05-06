@@ -1005,25 +1005,32 @@ const Onboarding = () => {
                                     )}
 
                                     {applicant.onboardingStatus ===
-                                        "In Progress" && (
-                                        <button
-                                            onClick={() =>
-                                                handleCompleteOnboarding(
-                                                    applicant.jobId,
-                                                    applicant.id,
-                                                    applicant.universityId
-                                                )
-                                            }
-                                            className="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700 transition-colors flex-1"
-                                            disabled={
-                                                loading ||
-                                                applicant.onboardingProgress <
-                                                    100
-                                            }
-                                        >
-                                            Complete Onboarding
-                                        </button>
-                                    )}
+                                        "In Progress" &&
+                                        applicant.onboardingProgress ===
+                                            100 && (
+                                            <button
+                                                onClick={() =>
+                                                    handleCompleteOnboarding(
+                                                        applicant.jobId,
+                                                        applicant.id,
+                                                        applicant.universityId
+                                                    )
+                                                }
+                                                className="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700 transition-colors flex-1"
+                                                disabled={loading}
+                                            >
+                                                Complete Onboarding
+                                            </button>
+                                        )}
+
+                                    {applicant.onboardingStatus ===
+                                        "In Progress" &&
+                                        applicant.onboardingProgress < 100 && (
+                                            <div className="text-sm text-gray-600 italic py-1.5 text-center flex-1">
+                                                Complete all tasks to finish
+                                                onboarding
+                                            </div>
+                                        )}
                                 </div>
 
                                 <div>
