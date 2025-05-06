@@ -406,21 +406,7 @@ const EmployeeProfile = () => {
     const [activeDocumentFilter, setActiveDocumentFilter] = useState("all");
 
     // Skills state
-    const [isAddingSkill, setIsAddingSkill] = useState(false);
-    const [editingSkill, setEditingSkill] = useState(null);
-    const [skillForm, setSkillForm] = useState({
-        name: "",
-        category: "technical",
-        proficiency: 50,
-        notes: "",
-        isCertified: false,
-    });
-
     const [extractingSkills, setExtractingSkills] = useState(false);
-    const [extractedSkills, setExtractedSkills] = useState([]);
-    const [skillsExtracted, setSkillsExtracted] = useState(false);
-
-    // Add the setProcessingSkills state variable
     const [processingSkills, setProcessingSkills] = useState(false);
 
     // Debug Firebase Storage on component mount
@@ -524,31 +510,6 @@ const EmployeeProfile = () => {
                     if (docsData.success) {
                         console.log("Documents loaded:", docsData.documents);
                         setDocuments(docsData.documents);
-
-                        // Now check if we should automatically extract skills
-                        // Only do this if we have documents and no extraction has been done yet
-                        if (
-                            docsData.documents &&
-                            docsData.documents.length > 0 &&
-                            !skillsExtracted
-                        ) {
-                            // Check if API is available before attempting extraction
-                            const isApiAvailable = await checkApiHealth();
-
-                            if (isApiAvailable) {
-                                console.log(
-                                    "API is available, automatically extracting skills from initial documents"
-                                );
-                                // Set a small delay to avoid blocking the UI
-                                setTimeout(() => {
-                                    extractSkillsFromDocuments();
-                                }, 1000);
-                            } else {
-                                console.log(
-                                    "API is not available, skipping automatic skill extraction"
-                                );
-                            }
-                        }
                     } else {
                         console.error(
                             "Failed to load documents:",
@@ -924,239 +885,6 @@ const EmployeeProfile = () => {
         return faFileAlt;
     };
 
-    const handleRemoveSkill = (skillId) => {
-        showWarningAlert(
-            "Are you sure you want to delete this skill?",
-            () => deleteSkill(skillId),
-            "Yes, Delete",
-            "Cancel",
-            "Skill deleted successfully"
-        );
-    };
-
-    const resetSkillForm = () => {
-        setSkillForm({
-            name: "",
-            category: "technical",
-            proficiency: 50,
-            notes: "",
-            isCertified: false,
-        });
-    };
-
-    const handleEditSkill = (skill) => {
-        setEditingSkill(skill);
-        setIsAddingSkill(true);
-        setSkillForm({
-            name: skill.name,
-            category: skill.category || "technical",
-            proficiency: skill.proficiency || 50,
-            notes: skill.notes || "",
-            isCertified: skill.isCertified || false,
-        });
-
-        // Scroll to the form
-        if (skillsSectionRef.current) {
-            skillsSectionRef.current.scrollIntoView({ behavior: "smooth" });
-        }
-    };
-
-    const handleAddSkill = () => {
-        setIsAddingSkill(true);
-        setEditingSkill(null);
-        resetSkillForm();
-    };
-
-    const handleCancelSkill = () => {
-        setIsAddingSkill(false);
-        setEditingSkill(null);
-        resetSkillForm();
-    };
-
-    const handleSaveSkill = async () => {
-        try {
-            setError(null);
-            setSuccess(null);
-
-            if (!userDetails || !userDetails.universityId) {
-                setError("User details not available");
-                return;
-            }
-
-            if (!skillForm.name) {
-                setError("Skill name is required");
-                return;
-            }
-
-            let result;
-
-            if (editingSkill) {
-                // Update existing skill
-                result = await updateEmployeeSkill(
-                    user.uid,
-                    userDetails.universityId,
-                    editingSkill.id,
-                    skillForm
-                );
-            } else {
-                // Add new skill
-                result = await addEmployeeSkill(
-                    user.uid,
-                    userDetails.universityId,
-                    skillForm
-                );
-            }
-
-            if (result.success) {
-                setSuccess(
-                    editingSkill
-                        ? "Skill updated successfully"
-                        : "Skill added successfully"
-                );
-
-                // Refresh skills
-                const skillsData = await getEmployeeSkills(
-                    user.uid,
-                    userDetails.universityId
-                );
-                if (skillsData.success) {
-                    setSkills(skillsData.skills || []);
-                }
-
-                // Reset form
-                setIsAddingSkill(false);
-                setEditingSkill(null);
-                resetSkillForm();
-            } else {
-                setError(
-                    result.message ||
-                        `Failed to ${editingSkill ? "update" : "add"} skill`
-                );
-            }
-        } catch (err) {
-            console.error(
-                `Error ${editingSkill ? "updating" : "adding"} skill:`,
-                err
-            );
-            setError(
-                `An error occurred while ${
-                    editingSkill ? "updating" : "adding"
-                } skill`
-            );
-        }
-    };
-
-    const deleteSkill = async (skillId) => {
-        try {
-            setError(null);
-            setSuccess(null);
-
-            if (!userDetails || !userDetails.universityId) {
-                setError("User details not available");
-                return;
-            }
-
-            const result = await deleteEmployeeSkill(
-                user.uid,
-                userDetails.universityId,
-                skillId
-            );
-
-            if (result.success) {
-                setSuccess("Skill deleted successfully");
-
-                // Update local state
-                setSkills((prev) =>
-                    prev.filter((skill) => skill.id !== skillId)
-                );
-            } else {
-                setError(result.message || "Failed to delete skill");
-            }
-        } catch (err) {
-            console.error("Error deleting skill:", err);
-            setError("An error occurred while deleting skill");
-        }
-    };
-
-    // Add extracted skills to the skills list
-    const addExtractedSkills = async () => {
-        if (extractedSkills.length === 0) {
-            showWarningAlert("No skills have been extracted");
-            return;
-        }
-
-        try {
-            setProcessingSkills(true);
-
-            // Keep track of successfully added skills
-            let addedCount = 0;
-
-            // Filter out skills that are already in the user's skill list
-            const newSkills = extractedSkills.filter(
-                (extractedSkill) =>
-                    !skills.some(
-                        (existingSkill) =>
-                            existingSkill.name.toLowerCase() ===
-                            extractedSkill.name.toLowerCase()
-                    )
-            );
-
-            if (newSkills.length === 0) {
-                showWarningAlert(
-                    "All extracted skills are already in your skill list"
-                );
-                setProcessingSkills(false);
-                return;
-            }
-
-            // Add each skill individually
-            for (const skill of newSkills) {
-                if (userDetails && userDetails.universityId) {
-                    const result = await addEmployeeSkill(
-                        user.uid,
-                        userDetails.universityId,
-                        {
-                            name: skill.name,
-                            level: skill.proficiency || "Beginner", // Default to Beginner if no proficiency
-                            certified: skill.isCertified || false,
-                        }
-                    );
-
-                    if (result.success) {
-                        addedCount++;
-                    }
-                }
-            }
-
-            if (addedCount > 0) {
-                // Refresh skills list
-                const updatedSkills = await getEmployeeSkills(
-                    user.uid,
-                    userDetails.universityId
-                );
-
-                if (updatedSkills.success) {
-                    setSkills(updatedSkills.skills || []);
-                    showSuccessAlert(
-                        `Successfully added ${addedCount} skills to your profile`
-                    );
-
-                    // Clear extracted skills after adding them
-                    setExtractedSkills([]);
-                }
-            } else {
-                showWarningAlert("Failed to add any skills");
-            }
-        } catch (error) {
-            console.error("Error adding extracted skills:", error);
-            showErrorAlert(
-                "Failed to add skills: " + (error.message || "Unknown error")
-            );
-        } finally {
-            setProcessingSkills(false);
-        }
-    };
-
     // Extract skills from documents
     const extractSkillsFromDocuments = async () => {
         try {
@@ -1209,13 +937,68 @@ const EmployeeProfile = () => {
                     result.skills &&
                     result.skills.length > 0
                 ) {
-                    setExtractedSkills(result.skills);
-                    setSkillsExtracted(true);
+                    // Replace existing skills with extracted skills
+                    const updatedSkills = result.replace(skills);
+
+                    // Update local state first
+                    setSkills(updatedSkills);
 
                     // Show success message
                     showSuccessAlert(
-                        `Successfully extracted ${result.skills.length} skills from your documents`
+                        `Successfully extracted and updated ${result.skills.length} skills from your documents`
                     );
+
+                    // Also update on the server
+                    if (userDetails && userDetails.universityId) {
+                        // Set processing flag
+                        setProcessingSkills(true);
+
+                        try {
+                            // Delete existing skills first
+                            for (const skill of skills) {
+                                if (skill.id) {
+                                    await deleteEmployeeSkill(
+                                        user.uid,
+                                        userDetails.universityId,
+                                        skill.id
+                                    );
+                                }
+                            }
+
+                            // Add each updated skill
+                            for (const skill of updatedSkills) {
+                                await addEmployeeSkill(
+                                    user.uid,
+                                    userDetails.universityId,
+                                    {
+                                        name: skill.name,
+                                        level: skill.proficiency || "Beginner",
+                                        certified: skill.isCertified || false,
+                                    }
+                                );
+                            }
+
+                            // Refresh skills from server to get IDs
+                            const refreshedSkills = await getEmployeeSkills(
+                                user.uid,
+                                userDetails.universityId
+                            );
+
+                            if (refreshedSkills.success) {
+                                setSkills(refreshedSkills.skills || []);
+                            }
+
+                            showSuccessAlert("Skills updated on your profile");
+                        } catch (serverError) {
+                            console.error(
+                                "Error updating skills on server:",
+                                serverError
+                            );
+                            showErrorAlert("Failed to update skills on server");
+                        } finally {
+                            setProcessingSkills(false);
+                        }
+                    }
 
                     // Switch to skills tab to show the extracted skills
                     setActiveTab("skills");
@@ -2058,177 +1841,64 @@ const EmployeeProfile = () => {
                         <h3 className="text-xl font-semibold text-gray-800">
                             Skills
                         </h3>
-                        {!isAddingSkill && (
-                            <div className="flex space-x-2">
-                                <button
-                                    onClick={() => extractSkillsFromDocuments()}
-                                    className={`flex items-center text-sm px-4 py-2 rounded-md ${
-                                        extractingSkills ||
-                                        documents.length === 0
-                                            ? "bg-gray-300 cursor-not-allowed"
-                                            : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                                    }`}
-                                    disabled={
-                                        extractingSkills ||
-                                        documents.length === 0 ||
-                                        processingSkills
-                                    }
-                                    title={
-                                        documents.length === 0
-                                            ? "Upload documents first to extract skills"
-                                            : ""
-                                    }
-                                >
-                                    {extractingSkills ? (
-                                        <>
-                                            <svg
-                                                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <circle
-                                                    className="opacity-25"
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="10"
-                                                    stroke="currentColor"
-                                                    strokeWidth="4"
-                                                ></circle>
-                                                <path
-                                                    className="opacity-75"
-                                                    fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                                ></path>
-                                            </svg>
-                                            Processing...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FontAwesomeIcon
-                                                icon={faMagic}
-                                                className="mr-2"
-                                            />
-                                            Extract Skills from Documents
-                                        </>
-                                    )}
-                                </button>
-
-                                <button
-                                    onClick={addExtractedSkills}
-                                    className={`flex items-center text-sm px-4 py-2 rounded-md ${
-                                        extractedSkills.length === 0 ||
-                                        processingSkills
-                                            ? "bg-gray-300 cursor-not-allowed"
-                                            : "bg-purple-600 hover:bg-purple-700 text-white"
-                                    }`}
-                                    disabled={
-                                        extractedSkills.length === 0 ||
-                                        processingSkills
-                                    }
-                                >
-                                    {processingSkills ? (
-                                        <>
-                                            <svg
-                                                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <circle
-                                                    className="opacity-25"
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="10"
-                                                    stroke="currentColor"
-                                                    strokeWidth="4"
-                                                ></circle>
-                                                <path
-                                                    className="opacity-75"
-                                                    fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                                ></path>
-                                            </svg>
-                                            Saving...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FontAwesomeIcon
-                                                icon={faClipboardList}
-                                                className="mr-2"
-                                            />
-                                            Add Extracted (
-                                            {extractedSkills.length})
-                                        </>
-                                    )}
-                                </button>
-
-                                <button
-                                    onClick={handleAddSkill}
-                                    className="flex items-center text-sm px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
-                                >
-                                    <FontAwesomeIcon
-                                        icon={faPlus}
-                                        className="mr-2"
-                                    />
-                                    Add Skill Manually
-                                </button>
-                            </div>
-                        )}
+                        <div className="flex space-x-2">
+                            <button
+                                onClick={() => extractSkillsFromDocuments()}
+                                className={`flex items-center text-sm px-4 py-2 rounded-md ${
+                                    extractingSkills || documents.length === 0
+                                        ? "bg-gray-300 cursor-not-allowed"
+                                        : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                                }`}
+                                disabled={
+                                    extractingSkills ||
+                                    documents.length === 0 ||
+                                    processingSkills
+                                }
+                                title={
+                                    documents.length === 0
+                                        ? "Upload documents first to extract skills"
+                                        : ""
+                                }
+                            >
+                                {extractingSkills ? (
+                                    <>
+                                        <svg
+                                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            ></circle>
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            ></path>
+                                        </svg>
+                                        Processing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FontAwesomeIcon
+                                            icon={faMagic}
+                                            className="mr-2"
+                                        />
+                                        Extract Skills from Documents
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Add the extracted skills panel here, above the existing skills table */}
-                    {extractedSkills.length > 0 && !isAddingSkill && (
-                        <div className="mb-6 p-4 border border-purple-200 rounded-lg bg-purple-50">
-                            <div className="flex justify-between items-center mb-2">
-                                <h3 className="font-medium text-purple-800">
-                                    <FontAwesomeIcon
-                                        icon={faMagic}
-                                        className="mr-2"
-                                    />
-                                    New Skills Extracted from Your Documents
-                                </h3>
-                                <span className="text-xs text-purple-600">
-                                    {extractedSkills.length} skills found
-                                </span>
-                            </div>
-                            <div className="flex flex-wrap gap-2 mt-3">
-                                {extractedSkills.map((skill, index) => (
-                                    <span
-                                        key={index}
-                                        className={`px-3 py-1.5 text-sm ${
-                                            skill.isCertified
-                                                ? "bg-green-100 border border-green-300 text-green-800"
-                                                : "bg-white border border-purple-300 text-purple-800"
-                                        } rounded-full flex items-center`}
-                                    >
-                                        {skill.name}
-                                        {skill.proficiency && (
-                                            <span className="ml-1 text-xs bg-gray-100 px-1 rounded">
-                                                {skill.proficiency}
-                                            </span>
-                                        )}
-                                        {skill.isCertified && (
-                                            <FontAwesomeIcon
-                                                icon={faCheck}
-                                                className="ml-1 text-green-600"
-                                                title="Certified"
-                                            />
-                                        )}
-                                    </span>
-                                ))}
-                            </div>
-                            <div className="mt-4 text-sm text-gray-600">
-                                <p>
-                                    Click "Add Extracted" to add these skills to
-                                    your profile
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
                     {/* No documents message */}
-                    {!isAddingSkill && documents.length === 0 && (
+                    {!extractingSkills && documents.length === 0 && (
                         <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <p className="text-blue-700 flex items-center">
                                 <FontAwesomeIcon
@@ -2247,293 +1917,102 @@ const EmployeeProfile = () => {
                         </div>
                     )}
 
-                    {isAddingSkill ? (
-                        // Skill addition form
-                        <form onSubmit={handleSkillSubmit} className="mt-4">
-                            <div className="mb-6 border border-gray-200 rounded-lg p-4">
-                                <h4 className="font-medium mb-3">
-                                    {editingSkill
-                                        ? "Edit Skill"
-                                        : "Add New Skill"}
-                                </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Category
-                                        </label>
-                                        <select
-                                            value={skillForm.category}
-                                            onChange={(e) =>
-                                                setSkillForm({
-                                                    ...skillForm,
-                                                    category: e.target.value,
-                                                })
-                                            }
-                                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                                        >
-                                            <option value="technical">
-                                                Technical
-                                            </option>
-                                            <option value="soft">
-                                                Soft Skill
-                                            </option>
-                                            <option value="language">
-                                                Language
-                                            </option>
-                                            <option value="certification">
-                                                Certification
-                                            </option>
-                                            <option value="other">Other</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Skill Name*
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={skillForm.name}
-                                            onChange={(e) =>
-                                                setSkillForm({
-                                                    ...skillForm,
-                                                    name: e.target.value,
-                                                })
-                                            }
-                                            placeholder="e.g., JavaScript, Leadership, Communication"
-                                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                                        />
-                                    </div>
-                                </div>
+                    {/* Skills display */}
+                    <div className="overflow-x-auto">
+                        <div className="space-y-4 mt-4">
+                            {skills.length > 0 ? (
+                                skills.map((skill) => (
+                                    <div
+                                        key={skill.id}
+                                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow transition-shadow"
+                                    >
+                                        <div className="flex justify-between items-center mb-2">
+                                            <div>
+                                                <div className="flex items-center">
+                                                    <h4 className="font-medium">
+                                                        {skill.name}
+                                                    </h4>
+                                                    {skill.isCertified && (
+                                                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                            <FontAwesomeIcon
+                                                                icon={faCheck}
+                                                                className="mr-1"
+                                                            />
+                                                            Certified
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <span
+                                                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
+                                                    ${
+                                                        skill.category ===
+                                                        "technical"
+                                                            ? "bg-blue-100 text-blue-800"
+                                                            : skill.category ===
+                                                              "language"
+                                                            ? "bg-green-100 text-green-800"
+                                                            : skill.category ===
+                                                              "certification"
+                                                            ? "bg-purple-100 text-purple-800"
+                                                            : skill.category ===
+                                                              "soft"
+                                                            ? "bg-yellow-100 text-yellow-800"
+                                                            : "bg-gray-100 text-gray-800"
+                                                    }`}
+                                                >
+                                                    {skill.category
+                                                        ? skill.category
+                                                              .charAt(0)
+                                                              .toUpperCase() +
+                                                          skill.category.slice(
+                                                              1
+                                                          )
+                                                        : "Technical"}
+                                                </span>
+                                            </div>
+                                        </div>
 
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Proficiency Level* (
-                                        {skillForm.proficiency}%)
-                                    </label>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="100"
-                                        step="5"
-                                        value={skillForm.proficiency}
-                                        onChange={(e) =>
-                                            setSkillForm({
-                                                ...skillForm,
-                                                proficiency: parseInt(
-                                                    e.target.value
-                                                ),
-                                            })
-                                        }
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+                                            <div
+                                                className="bg-purple-600 h-2.5 rounded-full"
+                                                style={{
+                                                    width: `${skill.proficiency}%`,
+                                                }}
+                                            ></div>
+                                        </div>
+
+                                        <div className="flex justify-between text-xs text-gray-500 mb-2">
+                                            <span>Beginner</span>
+                                            <span>Intermediate</span>
+                                            <span>Advanced</span>
+                                            <span>Expert</span>
+                                        </div>
+
+                                        {skill.notes && (
+                                            <p className="text-sm text-gray-600 mt-2 italic">
+                                                {skill.notes}
+                                            </p>
+                                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-6 border border-dashed border-gray-300 rounded-lg">
+                                    <FontAwesomeIcon
+                                        icon={faGraduationCap}
+                                        className="text-gray-400 text-3xl mb-2"
                                     />
-                                    <div className="flex justify-between text-xs mt-1 text-gray-500">
-                                        <span>Beginner</span>
-                                        <span>Intermediate</span>
-                                        <span>Advanced</span>
-                                        <span>Expert</span>
-                                    </div>
-                                </div>
-
-                                <div className="mb-4">
-                                    <div className="flex items-center">
-                                        <input
-                                            id="is-certified"
-                                            type="checkbox"
-                                            checked={skillForm.isCertified}
-                                            onChange={(e) =>
-                                                setSkillForm({
-                                                    ...skillForm,
-                                                    isCertified:
-                                                        e.target.checked,
-                                                    category: e.target.checked
-                                                        ? "certification"
-                                                        : skillForm.category,
-                                                })
-                                            }
-                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                        />
-                                        <label
-                                            htmlFor="is-certified"
-                                            className="ml-2 block text-sm text-gray-900"
-                                        >
-                                            This skill is certified
-                                        </label>
-                                    </div>
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        Check this box if you have a
-                                        certification for this skill
+                                    <p className="text-gray-500">
+                                        No skills extracted yet.
+                                    </p>
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        Upload documents and use the "Extract
+                                        Skills from Documents" button to
+                                        automatically extract your skills.
                                     </p>
                                 </div>
-
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Notes (Optional)
-                                    </label>
-                                    <textarea
-                                        value={skillForm.notes}
-                                        onChange={(e) =>
-                                            setSkillForm({
-                                                ...skillForm,
-                                                notes: e.target.value,
-                                            })
-                                        }
-                                        placeholder="Additional details about this skill"
-                                        rows="3"
-                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                                    ></textarea>
-                                </div>
-
-                                <div className="flex justify-end gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={handleCancelSkill}
-                                        className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={!skillForm.name}
-                                        className={`px-3 py-1 rounded-lg ${
-                                            skillForm.name
-                                                ? "bg-blue-600 text-white hover:bg-blue-700"
-                                                : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                        } transition`}
-                                    >
-                                        {editingSkill
-                                            ? "Update Skill"
-                                            : "Add Skill"}
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    ) : (
-                        // Skills table
-                        <div className="overflow-x-auto">
-                            <div className="space-y-4 mt-4">
-                                {skills.length > 0 ? (
-                                    skills.map((skill) => (
-                                        <div
-                                            key={skill.id}
-                                            className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow transition-shadow"
-                                        >
-                                            <div className="flex justify-between items-center mb-2">
-                                                <div>
-                                                    <div className="flex items-center">
-                                                        <h4 className="font-medium">
-                                                            {skill.name}
-                                                        </h4>
-                                                        {skill.isCertified && (
-                                                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                                <FontAwesomeIcon
-                                                                    icon={
-                                                                        faCheck
-                                                                    }
-                                                                    className="mr-1"
-                                                                />
-                                                                Certified
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <span
-                                                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
-                                                        ${
-                                                            skill.category ===
-                                                            "technical"
-                                                                ? "bg-blue-100 text-blue-800"
-                                                                : skill.category ===
-                                                                  "language"
-                                                                ? "bg-green-100 text-green-800"
-                                                                : skill.category ===
-                                                                  "certification"
-                                                                ? "bg-purple-100 text-purple-800"
-                                                                : skill.category ===
-                                                                  "soft"
-                                                                ? "bg-yellow-100 text-yellow-800"
-                                                                : "bg-gray-100 text-gray-800"
-                                                        }`}
-                                                    >
-                                                        {skill.category
-                                                            ? skill.category
-                                                                  .charAt(0)
-                                                                  .toUpperCase() +
-                                                              skill.category.slice(
-                                                                  1
-                                                              )
-                                                            : "Technical"}
-                                                    </span>
-                                                </div>
-                                                <div className="flex space-x-2">
-                                                    <button
-                                                        onClick={() =>
-                                                            handleEditSkill(
-                                                                skill
-                                                            )
-                                                        }
-                                                        className="text-blue-600 hover:text-blue-800 p-1"
-                                                    >
-                                                        <FontAwesomeIcon
-                                                            icon={faEdit}
-                                                        />
-                                                    </button>
-                                                    <button
-                                                        onClick={() =>
-                                                            handleRemoveSkill(
-                                                                skill.id
-                                                            )
-                                                        }
-                                                        className="text-red-600 hover:text-red-800 p-1"
-                                                    >
-                                                        <FontAwesomeIcon
-                                                            icon={faTrashAlt}
-                                                        />
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-                                                <div
-                                                    className="bg-purple-600 h-2.5 rounded-full"
-                                                    style={{
-                                                        width: `${skill.proficiency}%`,
-                                                    }}
-                                                ></div>
-                                            </div>
-
-                                            <div className="flex justify-between text-xs text-gray-500 mb-2">
-                                                <span>Beginner</span>
-                                                <span>Intermediate</span>
-                                                <span>Advanced</span>
-                                                <span>Expert</span>
-                                            </div>
-
-                                            {skill.notes && (
-                                                <p className="text-sm text-gray-600 mt-2 italic">
-                                                    {skill.notes}
-                                                </p>
-                                            )}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-6 border border-dashed border-gray-300 rounded-lg">
-                                        <FontAwesomeIcon
-                                            icon={faGraduationCap}
-                                            className="text-gray-400 text-3xl mb-2"
-                                        />
-                                        <p className="text-gray-500">
-                                            No skills added yet.
-                                        </p>
-                                        <button
-                                            onClick={handleAddSkill}
-                                            className="mt-3 text-blue-500 hover:text-blue-700 hover:underline"
-                                        >
-                                            Add your first skill
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+                            )}
                         </div>
-                    )}
+                    </div>
                 </div>
             )}
         </div>

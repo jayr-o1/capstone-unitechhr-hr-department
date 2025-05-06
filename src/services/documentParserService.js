@@ -479,6 +479,8 @@ export const extractSkillsFromDocument = async (documentUrl, documentType) => {
                 skills: allSkills,
                 message: data.message || "Skills extracted successfully",
                 raw_text: data.raw_text || null,
+                replace: (existingSkills) =>
+                    replaceSkills(existingSkills, allSkills),
             };
         } catch (apiError) {
             console.error("API error during skill extraction:", apiError);
@@ -492,6 +494,7 @@ export const extractSkillsFromDocument = async (documentUrl, documentType) => {
                 error.message ||
                 `Failed to extract skills from ${documentType}`,
             skills: [],
+            replace: (existingSkills) => existingSkills,
         };
     }
 };
@@ -508,6 +511,7 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
                 success: false,
                 message: "No valid documents provided",
                 skills: [],
+                replace: (existingSkills) => existingSkills,
             };
         }
 
@@ -528,6 +532,7 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
                 success: false,
                 message: "No valid resume or certificate documents found",
                 skills: [],
+                replace: (existingSkills) => existingSkills,
             };
         }
 
@@ -586,6 +591,7 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
                 success: false,
                 message: "Failed to download any valid documents",
                 skills: [],
+                replace: (existingSkills) => existingSkills,
             };
         }
 
@@ -865,6 +871,8 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
             success: true,
             skills: allSkills,
             message: `Successfully extracted ${allSkills.length} unique skills from ${validDocuments.length} documents`,
+            replace: (existingSkills) =>
+                replaceSkills(existingSkills, allSkills),
         };
     } catch (error) {
         console.error("Error in batch skill extraction:", error);
@@ -872,6 +880,71 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
             success: false,
             message: error.message || "Failed to extract skills from documents",
             skills: [],
+            replace: (existingSkills) => existingSkills,
         };
     }
+};
+
+/**
+ * Replace existing skills with newly extracted skills
+ * @param {Array} existingSkills - Array of existing skills
+ * @param {Array} newSkills - Array of newly extracted skills
+ * @returns {Array} - Array of updated skills
+ */
+export const replaceSkills = (existingSkills = [], newSkills = []) => {
+    console.log(
+        `Replacing ${existingSkills.length} existing skills with ${newSkills.length} newly extracted skills`
+    );
+
+    // If no new skills, return existing skills
+    if (!newSkills || newSkills.length === 0) {
+        console.log("No new skills to replace with, keeping existing skills");
+        return existingSkills;
+    }
+
+    // Create a map of existing skills by name for quick lookups
+    const existingSkillsMap = new Map();
+    existingSkills.forEach((skill) => {
+        if (skill && skill.name) {
+            existingSkillsMap.set(skill.name.toLowerCase(), skill);
+        }
+    });
+
+    // Process new skills
+    const updatedSkills = [];
+    const processedNames = new Set();
+
+    // First add all the new skills
+    newSkills.forEach((skill) => {
+        if (!skill || !skill.name) return;
+
+        const lowerName = skill.name.toLowerCase();
+        processedNames.add(lowerName);
+
+        // Add the new skill with any existing data merged in
+        const existingSkill = existingSkillsMap.get(lowerName);
+        if (existingSkill) {
+            // Merge properties, preferring new skill values but keeping existing ones if not present
+            updatedSkills.push({
+                ...existingSkill,
+                ...skill,
+                // Preserve higher proficiency if available
+                proficiency: Math.max(
+                    skill.proficiency || 0,
+                    existingSkill.proficiency || 0
+                ),
+                // Preserve certification status
+                isCertified:
+                    skill.isCertified || existingSkill.isCertified || false,
+            });
+        } else {
+            // Just add the new skill
+            updatedSkills.push(skill);
+        }
+    });
+
+    console.log(
+        `Skills replacement complete. ${updatedSkills.length} skills in the updated list.`
+    );
+    return updatedSkills;
 };
