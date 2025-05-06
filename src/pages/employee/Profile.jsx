@@ -422,6 +422,10 @@ const EmployeeProfile = () => {
     const [extractingSkills, setExtractingSkills] = useState(false);
     const [processingSkills, setProcessingSkills] = useState(false);
 
+    // Add a new state variable to track if skills need processing
+    const [skillsNeedProcessing, setSkillsNeedProcessing] = useState(false);
+    const [processedSkills, setProcessedSkills] = useState([]);
+
     // Debug Firebase Storage on component mount
     useEffect(() => {
         console.log("===== FIREBASE STORAGE DEBUGGING =====");
@@ -487,42 +491,48 @@ const EmployeeProfile = () => {
     }, [activeTab]);
 
     useEffect(() => {
+        // Initial data loading
         const loadData = async () => {
             try {
-                if (userDetails && userDetails.universityId) {
-                    setLoading(true);
+                setLoading(true);
+                setError(null);
 
-                    // Fetch employee data
-                    const empData = await getEmployeeData(
-                        user.uid,
-                        userDetails.universityId
-                    );
-                    if (empData.success) {
-                        setEmployeeData(empData.data);
+                if (!user || !userDetails?.universityId) {
+                    setError("User details not available");
+                    setLoading(false);
+                    return;
+                }
 
-                        // Initialize form data
-                        setFormData({
-                            name: empData.data.name || user.displayName || "",
-                            email: empData.data.email || user.email || "",
-                            phone: empData.data.phone || "",
-                            position: empData.data.position || "",
-                            department: empData.data.department || "",
-                            bio: empData.data.bio || "",
-                            address: empData.data.address || "",
-                            education: empData.data.education || "",
-                        });
-                    } else {
-                        setError("Failed to load employee data");
-                    }
+                console.log("Loading profile for:", user.uid);
 
-                    // Fetch documents
+                // Get employee data
+                const employeeData = await getEmployeeData(
+                    user.uid,
+                    userDetails.universityId
+                );
+
+                if (employeeData.success) {
+                    setEmployeeData(employeeData.data);
+
+                    // Set form data based on employee data
+                    setFormData({
+                        name: employeeData.data.name || "",
+                        email: employeeData.data.email || "",
+                        phone: employeeData.data.phone || "",
+                        position: employeeData.data.position || "",
+                        department: employeeData.data.department || "",
+                        bio: employeeData.data.bio || "",
+                        address: employeeData.data.address || "",
+                        education: employeeData.data.education || "",
+                    });
+
+                    // Get documents
                     const docsData = await getEmployeeDocuments(
                         user.uid,
                         userDetails.universityId
                     );
                     if (docsData.success) {
-                        console.log("Documents loaded:", docsData.documents);
-                        setDocuments(docsData.documents);
+                        setDocuments(docsData.documents || []);
                     } else {
                         console.error(
                             "Failed to load documents:",
@@ -536,7 +546,43 @@ const EmployeeProfile = () => {
                         userDetails.universityId
                     );
                     if (skillsData.success) {
-                        setSkills(skillsData.skills || []);
+                        console.log(
+                            "Skills loaded from Firestore:",
+                            skillsData.skills
+                        );
+
+                        // Store original skills from Firestore
+                        const loadedSkills = skillsData.skills || [];
+                        setSkills(loadedSkills);
+
+                        // Process skills immediately for display
+                        const processedSkills = loadedSkills.map((skill) => {
+                            // Calculate proficiency value for progress bar
+                            let proficiencyValue = 25; // Default
+
+                            if (typeof skill.proficiency === "string") {
+                                const profString = skill.proficiency.trim();
+                                if (profString === "Beginner")
+                                    proficiencyValue = 25;
+                                else if (profString === "Intermediate")
+                                    proficiencyValue = 50;
+                                else if (profString === "Advanced")
+                                    proficiencyValue = 75;
+                                else if (profString === "Expert")
+                                    proficiencyValue = 100;
+                            }
+
+                            return {
+                                ...skill,
+                                proficiencyValue,
+                            };
+                        });
+
+                        // Set processed skills for display
+                        setProcessedSkills(processedSkills);
+
+                        // We don't need additional processing since we've done it already
+                        setSkillsNeedProcessing(false);
                     }
 
                     setLoading(false);
@@ -1086,67 +1132,227 @@ const EmployeeProfile = () => {
                     result.skills &&
                     result.skills.length > 0
                 ) {
+                    // Process skills to ensure proper format
+                    const processedSkills = result.skills.map((skill) => {
+                        // Log the raw skill data from API
+                        console.log("Raw skill data from API:", skill);
+
+                        // Keep the exact proficiency string from the API
+                        const originalProficiency =
+                            skill.proficiency || "Beginner";
+                        console.log(
+                            `Original proficiency from API for ${skill.name}: "${originalProficiency}"`
+                        );
+
+                        // Convert proficiency string to numeric value for progress bar only
+                        const proficiencyValue =
+                            originalProficiency === "Beginner"
+                                ? 25
+                                : originalProficiency === "Intermediate"
+                                ? 50
+                                : originalProficiency === "Advanced"
+                                ? 75
+                                : originalProficiency === "Expert"
+                                ? 100
+                                : 25; // Default to 25 (Beginner)
+
+                        // Check if the skill is certified (is_backed is true)
+                        // Convert to boolean explicitly
+                        const isCertified =
+                            skill.is_backed === true ||
+                            skill.isCertified === true ||
+                            Boolean(skill.is_backed);
+
+                        console.log(
+                            `Processing skill: ${
+                                skill.name
+                            }, proficiency: ${originalProficiency}, is_backed: ${
+                                skill.is_backed
+                            } (${typeof skill.is_backed}), isCertified: ${isCertified}`
+                        );
+
+                        return {
+                            ...skill,
+                            id: `skill_${Date.now()}_${Math.random()
+                                .toString(36)
+                                .substr(2, 9)}`,
+                            proficiency: originalProficiency, // Keep exact original string
+                            proficiencyValue: proficiencyValue, // For progress bar
+                            isCertified: isCertified,
+                            is_backed: Boolean(skill.is_backed),
+                            createdAt: new Date(),
+                        };
+                    });
+
                     // Replace existing skills with extracted skills
-                    const updatedSkills = result.replace(skills);
+                    const updatedSkills = result.replace
+                        ? result.replace(skills)
+                        : [...processedSkills];
 
                     // Update local state first
                     setSkills(updatedSkills);
+
+                    // Also update processedSkills for UI rendering
+                    setProcessedSkills(updatedSkills);
 
                     // Show success message
                     showSuccessAlert(
                         `Successfully extracted and updated ${result.skills.length} skills from your documents`
                     );
 
-                    // Also update on the server
-                    if (userDetails && userDetails.universityId) {
-                        // Set processing flag
+                    // Save directly to Firestore
+                    try {
                         setProcessingSkills(true);
 
-                        try {
-                            // Delete existing skills first
-                            for (const skill of skills) {
-                                if (skill.id) {
-                                    await deleteEmployeeSkill(
-                                        user.uid,
-                                        userDetails.universityId,
-                                        skill.id
-                                    );
-                                }
-                            }
+                        // Determine employee ID
+                        let employeeId = user.uid;
+                        let employeeDocId = user.uid;
 
-                            // Add each updated skill
-                            for (const skill of updatedSkills) {
-                                await addEmployeeSkill(
-                                    user.uid,
-                                    userDetails.universityId,
-                                    {
-                                        name: skill.name,
-                                        level: skill.proficiency || "Beginner",
-                                        certified: skill.isCertified || false,
-                                    }
+                        // Check if this is a mock user ID from direct employee login
+                        if (user.uid.startsWith("emp_")) {
+                            const parts = user.uid.split("_");
+                            if (parts.length >= 2) {
+                                employeeId = parts[1];
+                                console.log(
+                                    "Extracted employeeId from mock user:",
+                                    employeeId
+                                );
+                                employeeDocId = employeeId;
+                            }
+                        }
+
+                        // Create Firestore-compatible skill objects
+                        const firestoreSkills = updatedSkills.map((skill) => {
+                            // Log each skill's raw data to debug
+                            console.log(
+                                "Processing for Firestore:",
+                                JSON.stringify(skill)
+                            );
+
+                            // Ensure we're keeping original proficiency exactly as it came from API
+                            const originalProficiency =
+                                skill.proficiency || "Beginner";
+                            console.log(
+                                `Skill ${skill.name} proficiency: "${originalProficiency}"`
+                            );
+
+                            return {
+                                id:
+                                    skill.id ||
+                                    `skill_${Date.now()}_${Math.random()
+                                        .toString(36)
+                                        .substr(2, 9)}`,
+                                name: skill.name,
+                                // Ensure original string proficiency is preserved
+                                proficiency: originalProficiency,
+                                isCertified:
+                                    Boolean(skill.isCertified) ||
+                                    Boolean(skill.is_backed),
+                                notes: skill.notes || "",
+                                createdAt: new Date(),
+                            };
+                        });
+
+                        // Add debug logging for the final skills being saved
+                        console.log(
+                            "Final skills being saved to Firestore:",
+                            firestoreSkills
+                                .map((s) => `${s.name}: ${s.proficiency}`)
+                                .join(", ")
+                        );
+
+                        console.log(
+                            "Saving skills to Firestore:",
+                            firestoreSkills
+                        );
+
+                        // Update the employee document
+                        const employeeRef = doc(
+                            db,
+                            "universities",
+                            userDetails.universityId,
+                            "employees",
+                            employeeDocId
+                        );
+
+                        await updateDoc(employeeRef, {
+                            skills: firestoreSkills,
+                            updatedAt: serverTimestamp(),
+                        });
+
+                        // Update both skills with the exact Firestore skills to maintain consistency
+                        console.log(
+                            "Setting skills state with Firestore skills",
+                            firestoreSkills
+                        );
+                        setSkills(firestoreSkills);
+
+                        // Generate processed skills with numeric values for UI display
+                        const displaySkills = firestoreSkills.map((skill) => {
+                            // Log original skill proficiency from Firestore
+                            console.log(
+                                `Processing display for ${skill.name}: original proficiency="${skill.proficiency}"`
+                            );
+
+                            // Get numeric value for progress bar using more robust approach
+                            let proficiencyValue = 25; // Default to Beginner (25%)
+
+                            if (typeof skill.proficiency === "string") {
+                                const profString = skill.proficiency.trim();
+
+                                if (profString === "Beginner")
+                                    proficiencyValue = 25;
+                                else if (profString === "Intermediate")
+                                    proficiencyValue = 50;
+                                else if (profString === "Advanced")
+                                    proficiencyValue = 75;
+                                else if (profString === "Expert")
+                                    proficiencyValue = 100;
+                                else proficiencyValue = 25; // Default to Beginner
+
+                                console.log(
+                                    `Mapping "${profString}" to progress value: ${proficiencyValue}%`
+                                );
+                            } else if (typeof skill.proficiency === "number") {
+                                proficiencyValue = skill.proficiency;
+                                console.log(
+                                    `Using numeric proficiency: ${proficiencyValue}%`
+                                );
+                            } else {
+                                console.log(
+                                    `Unknown proficiency type, defaulting to Beginner (25%)`
                                 );
                             }
 
-                            // Refresh skills from server to get IDs
-                            const refreshedSkills = await getEmployeeSkills(
-                                user.uid,
-                                userDetails.universityId
-                            );
+                            return {
+                                ...skill,
+                                proficiencyValue, // Add numeric value for progress bar
+                            };
+                        });
 
-                            if (refreshedSkills.success) {
-                                setSkills(refreshedSkills.skills || []);
-                            }
+                        console.log(
+                            "Final processed skills for display:",
+                            displaySkills
+                                .map(
+                                    (s) =>
+                                        `${s.name}: proficiency="${s.proficiency}", value=${s.proficiencyValue}%`
+                                )
+                                .join(", ")
+                        );
 
-                            showSuccessAlert("Skills updated on your profile");
-                        } catch (serverError) {
-                            console.error(
-                                "Error updating skills on server:",
-                                serverError
-                            );
-                            showErrorAlert("Failed to update skills on server");
-                        } finally {
-                            setProcessingSkills(false);
-                        }
+                        // Set the processed skills for UI display
+                        setProcessedSkills(displaySkills);
+
+                        // Show success alert
+                        showSuccessAlert("Skills updated successfully!");
+                    } catch (serverError) {
+                        console.error(
+                            "Error updating skills on server:",
+                            serverError
+                        );
+                        showErrorAlert("Failed to update skills on server");
+                    } finally {
+                        setProcessingSkills(false);
                     }
 
                     // Switch to skills tab to show the extracted skills
@@ -1301,6 +1507,125 @@ const EmployeeProfile = () => {
             setDownloadLoading(false);
         }
     };
+
+    // Add a debug output for skills when they are updated
+    useEffect(() => {
+        if (skills.length > 0) {
+            console.log("Current skills array:", skills);
+
+            // Process the Firestore skills to add visual elements
+            const processedSkills = skills.map((skill) => {
+                // Convert proficiency to numeric value for progress bar
+                let proficiencyValue = 0;
+                if (typeof skill.proficiency === "string") {
+                    proficiencyValue =
+                        skill.proficiency === "Beginner"
+                            ? 25
+                            : skill.proficiency === "Intermediate"
+                            ? 50
+                            : skill.proficiency === "Advanced"
+                            ? 75
+                            : skill.proficiency === "Expert"
+                            ? 100
+                            : 25;
+                } else if (typeof skill.proficiency === "number") {
+                    proficiencyValue = skill.proficiency;
+                }
+
+                // Debug each skill's certification status
+                console.log(
+                    `Skill: ${skill.name}, proficiency: ${skill.proficiency}, proficiencyValue: ${proficiencyValue}, isCertified: ${skill.isCertified}`
+                );
+
+                return {
+                    ...skill,
+                    proficiencyValue, // Add numeric value for progress bar
+                };
+            });
+
+            // Update the skills state with the processed skills
+            setSkills(processedSkills);
+        }
+    }, []); // Modified dependency array to prevent infinite loop
+
+    // Replace the old skills useEffect with this one that runs only when skillsNeedProcessing is true
+    useEffect(() => {
+        if (skillsNeedProcessing && skills.length > 0) {
+            console.log("Processing skills for display...");
+            console.log(
+                "Original skills from Firestore:",
+                JSON.stringify(skills)
+            );
+
+            // Process the Firestore skills to add visual elements
+            const newProcessedSkills = skills.map((skill) => {
+                // Log the raw skill data from Firestore
+                console.log(`Raw Firestore skill [${skill.name}]:`, skill);
+                console.log(
+                    `Proficiency type: ${typeof skill.proficiency}, value: "${
+                        skill.proficiency
+                    }"`
+                );
+
+                // Convert proficiency to numeric value for progress bar
+                let proficiencyValue = 0;
+
+                // Make sure we handle the proficiency string properly with exact case matching
+                if (typeof skill.proficiency === "string") {
+                    // Using exact string matching to ensure correct mapping
+                    const proficiencyStr = skill.proficiency.trim();
+                    if (proficiencyStr === "Beginner") {
+                        proficiencyValue = 25;
+                    } else if (proficiencyStr === "Intermediate") {
+                        proficiencyValue = 50;
+                    } else if (proficiencyStr === "Advanced") {
+                        proficiencyValue = 75;
+                    } else if (proficiencyStr === "Expert") {
+                        proficiencyValue = 100;
+                    } else {
+                        // Default to Beginner if string doesn't match known values
+                        proficiencyValue = 25;
+                    }
+
+                    console.log(
+                        `Mapped "${proficiencyStr}" to proficiency value: ${proficiencyValue}%`
+                    );
+                } else if (typeof skill.proficiency === "number") {
+                    // If it's already a number, use it directly
+                    proficiencyValue = skill.proficiency;
+                    console.log(
+                        `Using numeric proficiency value: ${proficiencyValue}%`
+                    );
+                } else {
+                    // Default to Beginner if neither string nor number
+                    proficiencyValue = 25;
+                    console.log(
+                        `Defaulting to Beginner (25%) for unknown proficiency type`
+                    );
+                }
+
+                return {
+                    ...skill,
+                    proficiencyValue, // Add numeric value for progress bar without changing original proficiency
+                };
+            });
+
+            // Log the final processed skills
+            console.log(
+                "Final processed skills for display:",
+                newProcessedSkills
+                    .map(
+                        (s) =>
+                            `${s.name}: ${s.proficiency} (${s.proficiencyValue}%)`
+                    )
+                    .join(", ")
+            );
+
+            // Update the processed skills state without modifying the original skills
+            setProcessedSkills(newProcessedSkills);
+            setSkillsNeedProcessing(false);
+        }
+    }, [skillsNeedProcessing, skills]);
 
     if (loading) {
         return (
@@ -2241,12 +2566,6 @@ const EmployeeProfile = () => {
                                         scope="col"
                                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                     >
-                                        Category
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
                                         Proficiency
                                     </th>
                                     <th
@@ -2258,8 +2577,8 @@ const EmployeeProfile = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {skills.length > 0 ? (
-                                    skills.map((skill) => (
+                                {processedSkills.length > 0 ? (
+                                    processedSkills.map((skill) => (
                                         <tr key={skill.id}>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="font-medium text-gray-900">
@@ -2267,77 +2586,65 @@ const EmployeeProfile = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                        ${
-                                                            skill.category ===
-                                                            "technical"
-                                                                ? "bg-blue-100 text-blue-800"
-                                                                : skill.category ===
-                                                                  "language"
-                                                                ? "bg-green-100 text-green-800"
-                                                                : skill.category ===
-                                                                  "certification"
-                                                                ? "bg-purple-100 text-purple-800"
-                                                                : skill.category ===
-                                                                  "soft"
-                                                                ? "bg-yellow-100 text-yellow-800"
-                                                                : "bg-gray-100 text-gray-800"
-                                                        }`}
-                                                >
-                                                    {skill.category
-                                                        ? skill.category
-                                                              .charAt(0)
-                                                              .toUpperCase() +
-                                                          skill.category.slice(
-                                                              1
-                                                          )
-                                                        : "Technical"}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="w-full flex items-center">
                                                     <div className="mr-2 min-w-[70px] text-xs">
-                                                        {skill.proficiency <= 25
-                                                            ? "Beginner"
-                                                            : skill.proficiency <=
-                                                              50
-                                                            ? "Intermediate"
-                                                            : skill.proficiency <=
-                                                              75
-                                                            ? "Advanced"
-                                                            : "Expert"}
+                                                        {skill.proficiency ||
+                                                            "Beginner"}
                                                     </div>
                                                     <div className="w-32 bg-gray-200 rounded-full h-2.5 relative">
                                                         <div
                                                             className="bg-purple-600 h-2.5 rounded-full"
                                                             style={{
-                                                                width: `${skill.proficiency}%`,
+                                                                width: `${
+                                                                    skill.proficiencyValue ||
+                                                                    (skill.proficiency ===
+                                                                    "Beginner"
+                                                                        ? 25
+                                                                        : skill.proficiency ===
+                                                                          "Intermediate"
+                                                                        ? 50
+                                                                        : skill.proficiency ===
+                                                                          "Advanced"
+                                                                        ? 75
+                                                                        : 100)
+                                                                }%`,
                                                             }}
                                                         ></div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                {skill.isCertified ? (
-                                                    <span className="flex justify-center">
-                                                        <FontAwesomeIcon
-                                                            icon={faCheck}
-                                                            className="text-green-600"
-                                                        />
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-gray-400">
-                                                        ―
-                                                    </span>
-                                                )}
+                                                <span
+                                                    title={`isCertified: ${skill.isCertified}, is_backed: ${skill.is_backed}`}
+                                                >
+                                                    {Boolean(
+                                                        skill.isCertified
+                                                    ) ||
+                                                    Boolean(skill.is_backed) ? (
+                                                        <span className="text-green-600">
+                                                            <FontAwesomeIcon
+                                                                icon={faCheck}
+                                                                className="mr-1"
+                                                            />
+                                                            Yes
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-gray-400">
+                                                            <FontAwesomeIcon
+                                                                icon={faTimes}
+                                                                className="mr-1"
+                                                            />
+                                                            No
+                                                        </span>
+                                                    )}
+                                                </span>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
                                         <td
-                                            colSpan="4"
+                                            colSpan="3"
                                             className="px-6 py-8 text-center"
                                         >
                                             <FontAwesomeIcon

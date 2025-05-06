@@ -424,23 +424,22 @@ export const extractSkillsFromDocument = async (documentUrl, documentType) => {
                             name: skillName,
                             proficiency:
                                 typeof skill === "string"
-                                    ? 70
-                                    : skill.proficiency ||
-                                      (skill.proficiency_level
-                                          ? parseInt(skill.proficiency_level)
-                                          : null) ||
-                                      (typeof skill.proficiency === "string" &&
-                                      skill.proficiency === "Intermediate"
-                                          ? 70
-                                          : typeof skill.proficiency ===
-                                                "string" &&
-                                            skill.proficiency === "Advanced"
-                                          ? 90
-                                          : typeof skill.proficiency ===
-                                                "string" &&
-                                            skill.proficiency === "Beginner"
-                                          ? 50
-                                          : 70),
+                                    ? "Beginner"
+                                    : typeof skill.proficiency === "string"
+                                    ? skill.proficiency // Keep string values like "Beginner", "Intermediate", etc.
+                                    : skill.proficiency_level
+                                    ? skill.proficiency_level
+                                    : skill.proficiency === 50 ||
+                                      skill.proficiency <= 30
+                                    ? "Beginner"
+                                    : skill.proficiency === 70 ||
+                                      (skill.proficiency > 30 &&
+                                          skill.proficiency <= 70)
+                                    ? "Intermediate"
+                                    : skill.proficiency === 90 ||
+                                      skill.proficiency > 70
+                                    ? "Advanced"
+                                    : "Beginner",
                             isCertified:
                                 typeof skill === "string"
                                     ? false
@@ -461,6 +460,11 @@ export const extractSkillsFromDocument = async (documentUrl, documentType) => {
                                     : skill.confidence || 0.7,
                         };
 
+                        // Directly add the is_backed flag from the API response
+                        if (skill.is_backed !== undefined) {
+                            standardizedSkill.is_backed = skill.is_backed;
+                        }
+
                         allSkills.push(standardizedSkill);
                     }
                 });
@@ -472,6 +476,62 @@ export const extractSkillsFromDocument = async (documentUrl, documentType) => {
                 console.warn(
                     "No skills found in API response or invalid response format"
                 );
+            }
+
+            // Also update the Python certification based on certifications array
+            if (
+                data.result &&
+                data.result.certifications &&
+                Array.isArray(data.result.certifications)
+            ) {
+                console.log(
+                    "API returned certifications:",
+                    data.result.certifications
+                );
+
+                // Look for certifications and mark matching skills as certified
+                data.result.certifications.forEach((cert) => {
+                    // Try to extract skill name from certification filename
+                    let skillName = null;
+
+                    if (cert.toLowerCase().includes("python")) {
+                        skillName = "Python";
+                    } else if (cert.toLowerCase().includes("java")) {
+                        skillName = "Java";
+                    } else if (cert.toLowerCase().includes("sql")) {
+                        skillName = "SQL";
+                    }
+                    // Add more skills as needed
+
+                    if (skillName) {
+                        console.log(
+                            `Found certification for skill: ${skillName}`
+                        );
+
+                        // Find the skill in our processed skills array
+                        const existingSkill = allSkills.find(
+                            (s) =>
+                                s.name.toLowerCase() === skillName.toLowerCase()
+                        );
+
+                        if (existingSkill) {
+                            console.log(`Marking ${skillName} as certified`);
+                            existingSkill.isCertified = true;
+                            existingSkill.is_backed = true;
+                        } else {
+                            // If the skill wasn't found in the parsed skills, add it
+                            console.log(`Adding certified skill: ${skillName}`);
+                            allSkills.push({
+                                name: skillName,
+                                proficiency: "Intermediate",
+                                isCertified: true,
+                                is_backed: true,
+                                category: "technical",
+                                confidence: 0.9,
+                            });
+                        }
+                    }
+                });
             }
 
             return {
@@ -821,21 +881,22 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
                         name: skillName,
                         proficiency:
                             typeof skill === "string"
-                                ? 70
-                                : skill.proficiency ||
-                                  (skill.proficiency_level
-                                      ? parseInt(skill.proficiency_level)
-                                      : null) ||
-                                  (typeof skill.proficiency === "string" &&
-                                  skill.proficiency === "Intermediate"
-                                      ? 70
-                                      : typeof skill.proficiency === "string" &&
-                                        skill.proficiency === "Advanced"
-                                      ? 90
-                                      : typeof skill.proficiency === "string" &&
-                                        skill.proficiency === "Beginner"
-                                      ? 50
-                                      : 70),
+                                ? "Beginner"
+                                : typeof skill.proficiency === "string"
+                                ? skill.proficiency // Keep string values like "Beginner", "Intermediate", etc.
+                                : skill.proficiency_level
+                                ? skill.proficiency_level
+                                : skill.proficiency === 50 ||
+                                  skill.proficiency <= 30
+                                ? "Beginner"
+                                : skill.proficiency === 70 ||
+                                  (skill.proficiency > 30 &&
+                                      skill.proficiency <= 70)
+                                ? "Intermediate"
+                                : skill.proficiency === 90 ||
+                                  skill.proficiency > 70
+                                ? "Advanced"
+                                : "Beginner",
                         isCertified:
                             typeof skill === "string"
                                 ? false
@@ -854,6 +915,11 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
                                 : skill.confidence || 0.7,
                     };
 
+                    // Directly add the is_backed flag from the API response
+                    if (skill.is_backed !== undefined) {
+                        standardizedSkill.is_backed = skill.is_backed;
+                    }
+
                     allSkills.push(standardizedSkill);
                 }
             });
@@ -865,6 +931,59 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
             console.warn(
                 "No skills found in API response or invalid response format"
             );
+        }
+
+        // Also update the Python certification based on certifications array
+        if (
+            data.result &&
+            data.result.certifications &&
+            Array.isArray(data.result.certifications)
+        ) {
+            console.log(
+                "API returned certifications:",
+                data.result.certifications
+            );
+
+            // Look for certifications and mark matching skills as certified
+            data.result.certifications.forEach((cert) => {
+                // Try to extract skill name from certification filename
+                let skillName = null;
+
+                if (cert.toLowerCase().includes("python")) {
+                    skillName = "Python";
+                } else if (cert.toLowerCase().includes("java")) {
+                    skillName = "Java";
+                } else if (cert.toLowerCase().includes("sql")) {
+                    skillName = "SQL";
+                }
+                // Add more skills as needed
+
+                if (skillName) {
+                    console.log(`Found certification for skill: ${skillName}`);
+
+                    // Find the skill in our processed skills array
+                    const existingSkill = allSkills.find(
+                        (s) => s.name.toLowerCase() === skillName.toLowerCase()
+                    );
+
+                    if (existingSkill) {
+                        console.log(`Marking ${skillName} as certified`);
+                        existingSkill.isCertified = true;
+                        existingSkill.is_backed = true;
+                    } else {
+                        // If the skill wasn't found in the parsed skills, add it
+                        console.log(`Adding certified skill: ${skillName}`);
+                        allSkills.push({
+                            name: skillName,
+                            proficiency: "Intermediate",
+                            isCertified: true,
+                            is_backed: true,
+                            category: "technical",
+                            confidence: 0.9,
+                        });
+                    }
+                }
+            });
         }
 
         return {
@@ -924,15 +1043,38 @@ export const replaceSkills = (existingSkills = [], newSkills = []) => {
         // Add the new skill with any existing data merged in
         const existingSkill = existingSkillsMap.get(lowerName);
         if (existingSkill) {
+            // Proficiency rank for comparison (higher number means more skilled)
+            const proficiencyRank = (prof) => {
+                if (typeof prof === "string") {
+                    return prof === "Expert"
+                        ? 4
+                        : prof === "Advanced"
+                        ? 3
+                        : prof === "Intermediate"
+                        ? 2
+                        : prof === "Beginner"
+                        ? 1
+                        : 0;
+                }
+                return typeof prof === "number" ? Math.floor(prof / 25) : 0;
+            };
+
+            // Get proficiency ranks
+            const existingRank = proficiencyRank(existingSkill.proficiency);
+            const newRank = proficiencyRank(skill.proficiency);
+
+            // Choose the higher proficiency level
+            const finalProficiency =
+                newRank >= existingRank
+                    ? skill.proficiency
+                    : existingSkill.proficiency;
+
             // Merge properties, preferring new skill values but keeping existing ones if not present
             updatedSkills.push({
                 ...existingSkill,
                 ...skill,
-                // Preserve higher proficiency if available
-                proficiency: Math.max(
-                    skill.proficiency || 0,
-                    existingSkill.proficiency || 0
-                ),
+                // Use the higher proficiency
+                proficiency: finalProficiency,
                 // Preserve certification status
                 isCertified:
                     skill.isCertified || existingSkill.isCertified || false,
