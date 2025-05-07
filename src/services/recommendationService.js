@@ -38,6 +38,40 @@ const fetchWithTimeout = async (url, options, timeout) => {
 };
 
 /**
+ * Convert string proficiency level to numeric value
+ * @param {string|number} proficiency - Proficiency level as string or number
+ * @returns {number} - Numeric proficiency value (0-100)
+ */
+const convertProficiencyToNumber = (proficiency) => {
+    // If already a number, return it (ensuring it's within 0-100 range)
+    if (typeof proficiency === "number") {
+        return Math.min(Math.max(proficiency, 0), 100);
+    }
+
+    // If it's a string that's a number (e.g. "75"), parse it
+    if (!isNaN(parseInt(proficiency))) {
+        return Math.min(Math.max(parseInt(proficiency), 0), 100);
+    }
+
+    // Convert text proficiency levels to numbers
+    switch (proficiency?.toLowerCase?.()) {
+        case "expert":
+            return 90;
+        case "advanced":
+            return 75;
+        case "intermediate":
+            return 50;
+        case "basic":
+        case "beginner":
+            return 30;
+        case "novice":
+            return 15;
+        default:
+            return 50; // Default to intermediate if unknown
+    }
+};
+
+/**
  * Get teaching specialization recommendations based on skills
  * @param {Array} skills - Array of skill objects with name, proficiency, and isCertified
  * @returns {Promise} - Promise that resolves to recommendations
@@ -49,7 +83,14 @@ export const getTeachingRecommendations = async (skills) => {
             throw new Error("Skills must be an array");
         }
 
-        console.log("Sending skills to recommendations API:", skills);
+        // Format skills keeping the string proficiency values
+        const formattedSkills = skills.map((skill) => ({
+            name: skill.name,
+            proficiency: skill.proficiency, // Keep as string
+            isCertified: Boolean(skill.isCertified),
+        }));
+
+        console.log("Sending skills to recommendations API:", formattedSkills);
 
         // Call the API with timeout
         const response = await fetchWithTimeout(
@@ -60,7 +101,7 @@ export const getTeachingRecommendations = async (skills) => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    skills: skills,
+                    skills: formattedSkills,
                 }),
             },
             API_CONFIG.timeout

@@ -867,6 +867,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
 function AppContent() {
     const auth = useAuth();
+    const [initialRoute, setInitialRoute] = useState(null);
 
     console.log("AppContent: Auth context", {
         isObject: !!auth,
@@ -875,6 +876,32 @@ function AppContent() {
     });
 
     const { user, userDetails } = auth || {};
+
+    // Check for saved page state for employees and set initial route
+    useEffect(() => {
+        if (userDetails?.role === "employee" && userDetails?.universityId) {
+            // Check for saved development goals state
+            const savedDevGoalsState = localStorage.getItem(
+                `unitech_devgoals_state_${userDetails.universityId}`
+            );
+
+            if (savedDevGoalsState) {
+                try {
+                    const parsedState = JSON.parse(savedDevGoalsState);
+                    const lastVisited = new Date(parsedState.lastVisited);
+                    const now = new Date();
+                    const hoursSinceLastVisit =
+                        (now - lastVisited) / (1000 * 60 * 60);
+
+                    if (hoursSinceLastVisit < 24) {
+                        setInitialRoute("/employee/development-goals");
+                    }
+                } catch (err) {
+                    console.error("Error parsing saved state:", err);
+                }
+            }
+        }
+    }, [userDetails]);
 
     useEffect(() => {
         // Page refresh detection
@@ -1047,10 +1074,14 @@ function AppContent() {
                                 element={<DevelopmentGoals />}
                             />
                         </Route>
-                        {/* Redirect HR routes to employee dashboard if user is an employee */}
+                        {/* Redirect to the initial route or employee dashboard if user is an employee */}
                         <Route
                             path="*"
-                            element={<Navigate to="/employee/dashboard" />}
+                            element={
+                                <Navigate
+                                    to={initialRoute || "/employee/dashboard"}
+                                />
+                            }
                         />
                     </>
                 ) : (

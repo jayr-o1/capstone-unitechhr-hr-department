@@ -164,12 +164,86 @@ const DevelopmentGoals = () => {
     const [recommendations, setRecommendations] = useState(null);
     const [loadingRecommendations, setLoadingRecommendations] = useState(false);
 
+    // Persist current state to localStorage
+    const saveStateToLocalStorage = useCallback(() => {
+        if (user && userDetails?.universityId) {
+            const stateToSave = {
+                activeSection,
+                selectedSpecializations,
+                lastVisited: new Date().toISOString(),
+            };
+            localStorage.setItem(
+                `unitech_devgoals_state_${userDetails.universityId}`,
+                JSON.stringify(stateToSave)
+            );
+        }
+    }, [activeSection, selectedSpecializations, user, userDetails]);
+
+    // Load saved state from localStorage
+    useEffect(() => {
+        if (user && userDetails?.universityId) {
+            const savedState = localStorage.getItem(
+                `unitech_devgoals_state_${userDetails.universityId}`
+            );
+
+            if (savedState) {
+                try {
+                    const parsedState = JSON.parse(savedState);
+
+                    // Only restore state if it's recent (within 24 hours)
+                    const lastVisited = new Date(parsedState.lastVisited);
+                    const now = new Date();
+                    const hoursSinceLastVisit =
+                        (now - lastVisited) / (1000 * 60 * 60);
+
+                    if (hoursSinceLastVisit < 24) {
+                        if (parsedState.activeSection) {
+                            setActiveSection(parsedState.activeSection);
+                        }
+
+                        // We'll load specializations from the database rather than localStorage
+                        // as they need to be synced across devices
+                    }
+                } catch (err) {
+                    console.error("Error parsing saved state:", err);
+                }
+            }
+        }
+    }, [user, userDetails]);
+
+    // Save state when component unmounts or when state changes
+    useEffect(() => {
+        saveStateToLocalStorage();
+
+        // Add event listener to save state when user is about to leave
+        window.addEventListener("beforeunload", saveStateToLocalStorage);
+
+        return () => {
+            window.removeEventListener("beforeunload", saveStateToLocalStorage);
+            saveStateToLocalStorage();
+        };
+    }, [activeSection, selectedSpecializations, saveStateToLocalStorage]);
+
     // Load employee data and skills
     useEffect(() => {
         const loadData = async () => {
             try {
                 if (userDetails && userDetails.universityId) {
                     setLoading(true);
+
+                    // Update page URL in history to ensure it's tracked correctly
+                    // This helps when user accesses the page directly (not through navigation)
+                    const url = new URL(window.location.href);
+                    if (
+                        url.pathname === "/employee/development-goals" &&
+                        window.history.state === null
+                    ) {
+                        window.history.replaceState(
+                            { key: `employee-devgoals-${Date.now()}` },
+                            "Development Goals",
+                            url.pathname
+                        );
+                    }
 
                     // Fetch employee data
                     const empData = await getEmployeeData(
@@ -236,10 +310,7 @@ const DevelopmentGoals = () => {
             // Format skills as needed by the API
             const formattedSkills = skillsData.map((skill) => ({
                 name: skill.name,
-                proficiency:
-                    typeof skill.proficiency === "number"
-                        ? skill.proficiency
-                        : parseInt(skill.proficiency) || 50,
+                proficiency: skill.proficiency,
                 isCertified: skill.isCertified || false,
             }));
 
@@ -252,15 +323,18 @@ const DevelopmentGoals = () => {
                     result.recommendations
                 );
 
-                // Process and set recommendations
+                // Process the API response based on structure
                 if (Array.isArray(result.recommendations)) {
                     // Handle array format
                     setRecommendations({
                         recommendations: result.recommendations,
                         user_skills: formattedSkills,
                     });
+                } else if (result.recommendations.recommendations) {
+                    // Handle the case where API returns {recommendations: [...], user_skills: [...]}
+                    setRecommendations(result.recommendations);
                 } else {
-                    // Handle object format with specializations property
+                    // Fallback for other formats
                     const processedRecs = {
                         recommendations:
                             result.recommendations.specializations ||
@@ -384,9 +458,53 @@ const DevelopmentGoals = () => {
 
     // Add this function after the toggleSpecialization function
     const handleAddTrainingNeed = (rec, skill) => {
+        // Find the relevant specialization ID based on recommendation data
+        let specializationId = rec.id; // First try explicit ID
+
+        if (!specializationId) {
+            // If no ID, try to match by specialization name to our predefined specializations
+            const specialization = DEVELOPMENT_SPECIALIZATIONS.find(
+                (s) =>
+                    s.title
+                        .toLowerCase()
+                        .includes(rec.specialization?.toLowerCase()) ||
+                    rec.specialization
+                        ?.toLowerCase()
+                        .includes(s.title.toLowerCase())
+            );
+
+            if (specialization) {
+                specializationId = specialization.id;
+            } else {
+                // Fallback based on recommendation type if no match found
+                if (rec.specialization?.toLowerCase().includes("web")) {
+                    specializationId = "web_instructor";
+                } else if (
+                    rec.specialization?.toLowerCase().includes("database")
+                ) {
+                    specializationId = "db_instructor";
+                } else if (
+                    rec.specialization?.toLowerCase().includes("machine") ||
+                    rec.specialization?.toLowerCase().includes("ai")
+                ) {
+                    specializationId = "ml_instructor";
+                } else if (
+                    rec.specialization?.toLowerCase().includes("mobile")
+                ) {
+                    specializationId = "mobile_instructor";
+                } else if (
+                    rec.specialization?.toLowerCase().includes("cyber")
+                ) {
+                    specializationId = "cybersecurity_instructor";
+                } else {
+                    specializationId = "web_instructor"; // Default fallback
+                }
+            }
+        }
+
         // If not already selected, add the specialization
-        if (!selectedSpecializations.includes(rec.id)) {
-            toggleSpecialization(rec.id || `web_instructor`);
+        if (!selectedSpecializations.includes(specializationId)) {
+            toggleSpecialization(specializationId);
         }
 
         // Scroll to skill gaps section
@@ -625,7 +743,7 @@ const DevelopmentGoals = () => {
                                             {rec.missing_skills &&
                                                 rec.missing_skills.length >
                                                     0 && (
-                                                    <div>
+                                                    <div className="mb-3">
                                                         <div className="text-xs text-gray-500 mb-1 flex items-center">
                                                             <FontAwesomeIcon
                                                                 icon={
@@ -660,6 +778,116 @@ const DevelopmentGoals = () => {
                                                                               skill}
                                                                     </span>
                                                                 )
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                            {/* Recommended Courses - New Section */}
+                                            {rec.recommended_courses &&
+                                                rec.recommended_courses.length >
+                                                    0 && (
+                                                    <div className="mt-2">
+                                                        <div
+                                                            className="text-xs mb-2 font-medium text-gray-500 flex items-center cursor-pointer"
+                                                            onClick={() => {
+                                                                // Toggle visibility of courses if needed
+                                                                const coursesList =
+                                                                    document.getElementById(
+                                                                        `courses-list-${index}`
+                                                                    );
+                                                                if (
+                                                                    coursesList
+                                                                ) {
+                                                                    coursesList.classList.toggle(
+                                                                        "hidden"
+                                                                    );
+                                                                }
+                                                            }}
+                                                        >
+                                                            <FontAwesomeIcon
+                                                                icon={faBook}
+                                                                className="text-blue-500 mr-1"
+                                                            />
+                                                            Recommended Courses:
+                                                            <FontAwesomeIcon
+                                                                icon={
+                                                                    faArrowRight
+                                                                }
+                                                                className="ml-1 text-gray-400"
+                                                                size="xs"
+                                                            />
+                                                        </div>
+                                                        <div
+                                                            id={`courses-list-${index}`}
+                                                            className="pl-1 text-sm"
+                                                        >
+                                                            {rec.recommended_courses
+                                                                .slice(0, 2)
+                                                                .map(
+                                                                    (
+                                                                        course,
+                                                                        courseIdx
+                                                                    ) => (
+                                                                        <div
+                                                                            key={
+                                                                                courseIdx
+                                                                            }
+                                                                            className="mb-1 pb-1 border-b border-gray-100 last:border-b-0"
+                                                                        >
+                                                                            <div className="font-medium text-gray-700 flex items-center">
+                                                                                <span className="mr-1 text-xs bg-blue-100 text-blue-800 px-1 rounded">
+                                                                                    {
+                                                                                        course.code
+                                                                                    }
+                                                                                </span>
+                                                                                {
+                                                                                    course.name
+                                                                                }
+                                                                            </div>
+                                                                            <div className="text-xs text-gray-600">
+                                                                                {
+                                                                                    course.description
+                                                                                }
+                                                                            </div>
+                                                                            <div className="text-xs text-gray-500 mt-1">
+                                                                                <span className="capitalize">
+                                                                                    {
+                                                                                        course.level
+                                                                                    }
+                                                                                </span>
+                                                                                {course.year &&
+                                                                                    course.semester && (
+                                                                                        <span>
+                                                                                            {" "}
+                                                                                            •
+                                                                                            Year{" "}
+                                                                                            {
+                                                                                                course.year
+                                                                                            }
+
+                                                                                            ,
+                                                                                            Sem{" "}
+                                                                                            {
+                                                                                                course.semester
+                                                                                            }
+                                                                                        </span>
+                                                                                    )}
+                                                                            </div>
+                                                                        </div>
+                                                                    )
+                                                                )}
+                                                            {rec
+                                                                .recommended_courses
+                                                                .length > 2 && (
+                                                                <div className="text-xs text-blue-600 cursor-pointer hover:underline mt-1">
+                                                                    +{" "}
+                                                                    {rec
+                                                                        .recommended_courses
+                                                                        .length -
+                                                                        2}{" "}
+                                                                    more courses
+                                                                </div>
                                                             )}
                                                         </div>
                                                     </div>
