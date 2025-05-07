@@ -25,6 +25,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import HRHeadPanel from "./pages/HRHeadPanel";
 import License from "./pages/License";
+import SkillGapAnalysis from "./pages/hr/SkillGapAnalysis";
 
 // Employee pages
 import EmployeeDashboard from "./pages/employee/Dashboard";
@@ -1109,6 +1110,10 @@ function AppContent() {
                                 element={<EmployeeDetails />}
                             />
                             <Route path="clusters" element={<Clusters />} />
+                            <Route
+                                path="training-needs"
+                                element={<SkillGapAnalysis />}
+                            />
                             <Route path="profile" element={<Profile />} />
                             <Route path="license" element={<License />} />
                             <Route

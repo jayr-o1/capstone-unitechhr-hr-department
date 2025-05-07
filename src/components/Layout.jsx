@@ -428,6 +428,7 @@ const Layout = () => {
         "/profile": "User Profile",
         "/subscription": "Subscription",
         "/hr-management": "HR Management",
+        "/training-needs": "Training Needs",
     };
 
     // Get the job title if on a job details page - memoized to prevent unnecessary calculations
@@ -623,6 +624,16 @@ const Layout = () => {
                     }
                     break; // Break after processing 2 levels of recruitment path if no applicant
                 }
+            } else if (
+                segment === "training-needs" ||
+                segment === "skill-gap-analysis"
+            ) {
+                // Handle both the new and old path formats
+                breadcrumb.push({
+                    title: "Training Needs",
+                    path: "/training-needs",
+                });
+                break;
             } else if (segment === "onboarding") {
                 breadcrumb.push({
                     title: "Onboarding",
