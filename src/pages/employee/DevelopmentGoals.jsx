@@ -328,10 +328,14 @@ const DevelopmentGoals = () => {
 
     if (loading) {
         return (
-            <EmployeePageLoader
-                isLoading={true}
-                message="Loading teaching development goals..."
-            />
+            <div className="min-h-[400px] border border-gray-200 rounded-lg flex items-center justify-center">
+                <EmployeePageLoader
+                    isLoading={true}
+                    message="Loading teaching development goals..."
+                    contentOnly={true}
+                    fullscreen={false}
+                />
+            </div>
         );
     }
 

@@ -130,6 +130,12 @@ const EmployeeLayout = () => {
         return currentRoute?.name || "Employee Portal";
     };
 
+    // Update document title when page changes
+    useEffect(() => {
+        const pageTitle = getCurrentPageTitle();
+        document.title = `Unitech HR | ${pageTitle}`;
+    }, [location.pathname]);
+
     return (
         <div className="flex flex-col h-screen bg-gray-100">
             {/* Mobile Header with Toggle Button - Always visible on mobile */}
