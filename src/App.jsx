@@ -25,12 +25,13 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import HRHeadPanel from "./pages/HRHeadPanel";
 import License from "./pages/License";
+import SkillGapAnalysis from "./pages/hr/SkillGapAnalysis";
 
 // Employee pages
 import EmployeeDashboard from "./pages/employee/Dashboard";
 import EmployeeProfile from "./pages/employee/Profile";
 import CareerProgress from "./pages/employee/CareerProgress";
-import TeachingGoals from "./pages/employee/TeachingGoals";
+import DevelopmentGoals from "./pages/employee/DevelopmentGoals";
 
 import { JobProvider } from "./contexts/JobContext";
 import AuthProvider, { useAuth } from "./contexts/AuthProvider";
@@ -866,6 +867,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
 function AppContent() {
     const auth = useAuth();
+    const [initialRoute, setInitialRoute] = useState(null);
 
     console.log("AppContent: Auth context", {
         isObject: !!auth,
@@ -874,6 +876,32 @@ function AppContent() {
     });
 
     const { user, userDetails } = auth || {};
+
+    // Check for saved page state for employees and set initial route
+    useEffect(() => {
+        if (userDetails?.role === "employee" && userDetails?.universityId) {
+            // Check for saved development goals state
+            const savedDevGoalsState = localStorage.getItem(
+                `unitech_devgoals_state_${userDetails.universityId}`
+            );
+
+            if (savedDevGoalsState) {
+                try {
+                    const parsedState = JSON.parse(savedDevGoalsState);
+                    const lastVisited = new Date(parsedState.lastVisited);
+                    const now = new Date();
+                    const hoursSinceLastVisit =
+                        (now - lastVisited) / (1000 * 60 * 60);
+
+                    if (hoursSinceLastVisit < 24) {
+                        setInitialRoute("/employee/development-goals");
+                    }
+                } catch (err) {
+                    console.error("Error parsing saved state:", err);
+                }
+            }
+        }
+    }, [userDetails]);
 
     useEffect(() => {
         // Page refresh detection
@@ -1042,14 +1070,18 @@ function AppContent() {
                             />
                             <Route path="career" element={<CareerProgress />} />
                             <Route
-                                path="teaching-goals"
-                                element={<TeachingGoals />}
+                                path="development-goals"
+                                element={<DevelopmentGoals />}
                             />
                         </Route>
-                        {/* Redirect HR routes to employee dashboard if user is an employee */}
+                        {/* Redirect to the initial route or employee dashboard if user is an employee */}
                         <Route
                             path="*"
-                            element={<Navigate to="/employee/dashboard" />}
+                            element={
+                                <Navigate
+                                    to={initialRoute || "/employee/dashboard"}
+                                />
+                            }
                         />
                     </>
                 ) : (
@@ -1109,6 +1141,10 @@ function AppContent() {
                                 element={<EmployeeDetails />}
                             />
                             <Route path="clusters" element={<Clusters />} />
+                            <Route
+                                path="training-needs"
+                                element={<SkillGapAnalysis />}
+                            />
                             <Route path="profile" element={<Profile />} />
                             <Route path="license" element={<License />} />
                             <Route

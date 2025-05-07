@@ -225,15 +225,7 @@ const EmployeeDashboard = () => {
     };
 
     const handleViewCareerDetails = () => {
-        navigate(
-            "/employee/teaching-goals",
-            { state: { fromDashboard: true } },
-            {
-                search: new URLSearchParams({
-                    section: "overview",
-                }).toString(),
-            }
-        );
+        navigate("/employee/development-goals");
     };
 
     const handleViewAllActivities = () => {
@@ -455,7 +447,7 @@ const EmployeeDashboard = () => {
                 <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border border-gray-100">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-lg md:text-xl font-bold text-gray-800">
-                            Teaching Goals
+                            Teaching Development Goals
                         </h2>
                         <button
                             onClick={handleViewCareerDetails}
@@ -471,7 +463,7 @@ const EmployeeDashboard = () => {
 
                     {careerPaths.length > 0 ? (
                         <div className="relative">
-                            {/* Teaching Specializations */}
+                            {/* Development Specializations */}
                             <div className="border-l-2 border-blue-500 ml-3 pl-4 space-y-4">
                                 <div className="relative">
                                     <div className="absolute -left-6 top-0 bg-blue-500 w-3 h-3 rounded-full"></div>
@@ -480,7 +472,8 @@ const EmployeeDashboard = () => {
                                     </h3>
                                     <p className="text-xs md:text-sm text-gray-500">
                                         Select your teaching specializations and
-                                        track your skill development progress.
+                                        track your pedagogical skill
+                                        development.
                                     </p>
                                 </div>
                                 <div className="relative">
@@ -490,7 +483,7 @@ const EmployeeDashboard = () => {
                                     </h3>
                                     <p className="text-xs md:text-sm text-gray-500">
                                         Identify skills you need to develop to
-                                        excel in your teaching specializations.
+                                        excel in educating college students.
                                     </p>
                                 </div>
                             </div>
@@ -498,8 +491,8 @@ const EmployeeDashboard = () => {
                     ) : (
                         <div className="text-center p-4 bg-gray-50 rounded-xl">
                             <p className="text-gray-500 text-sm">
-                                Set your teaching goals to track your
-                                professional development.
+                                Set your teaching development goals to track
+                                your professional growth as an educator.
                             </p>
                         </div>
                     )}
@@ -556,8 +549,9 @@ const EmployeeDashboard = () => {
                                 Welcome to Your Employee Portal
                             </h3>
                             <p className="text-xs text-gray-500">
-                                You can track your teaching goals, skills
-                                development, and more from this dashboard.
+                                You can track your teaching development goals,
+                                skills development, and more from this
+                                dashboard.
                             </p>
                         </div>
                     </div>

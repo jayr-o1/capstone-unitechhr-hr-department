@@ -37,6 +37,8 @@ const Sidebar = ({ userRole, userPermissions }) => {
             if (path === "/employees" && userPermissions?.employees)
                 return true;
             if (path === "/clusters" && userPermissions?.clusters) return true;
+            if (path === "/training-needs" && userPermissions?.clusters)
+                return true;
 
             // Any other path is restricted
             return false;
@@ -92,8 +94,8 @@ const Sidebar = ({ userRole, userPermissions }) => {
             ),
         },
         {
-            name: "Skill Gap Development",
-            path: "/clusters",
+            name: "Training Needs",
+            path: "/training-needs",
             icon: (
                 <ClustersIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
             ),

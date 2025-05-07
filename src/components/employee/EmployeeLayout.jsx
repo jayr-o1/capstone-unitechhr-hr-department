@@ -32,6 +32,37 @@ const EmployeeLayout = () => {
             // This is either a first visit or a page refresh
             sessionStorage.setItem("isPageRefresh", "true");
             sessionStorage.setItem("employeeSessionStarted", "true");
+
+            // Check if we need to redirect to development goals page
+            if (userDetails?.universityId) {
+                const savedState = localStorage.getItem(
+                    `unitech_devgoals_state_${userDetails.universityId}`
+                );
+
+                if (savedState) {
+                    try {
+                        const parsedState = JSON.parse(savedState);
+
+                        // Only redirect if state is recent (within 24 hours)
+                        const lastVisited = new Date(parsedState.lastVisited);
+                        const now = new Date();
+                        const hoursSinceLastVisit =
+                            (now - lastVisited) / (1000 * 60 * 60);
+
+                        if (
+                            hoursSinceLastVisit < 24 &&
+                            location.pathname !== "/employee/development-goals"
+                        ) {
+                            navigate("/employee/development-goals");
+                        }
+                    } catch (err) {
+                        console.error(
+                            "Error parsing saved development goals state:",
+                            err
+                        );
+                    }
+                }
+            }
         } else {
             // This is a navigation within the app
             sessionStorage.setItem("isPageRefresh", "false");
@@ -41,7 +72,7 @@ const EmployeeLayout = () => {
         return () => {
             sessionStorage.removeItem("isPageRefresh");
         };
-    }, []);
+    }, [userDetails, location.pathname, navigate]);
 
     // Debug user authentication
     useEffect(() => {
@@ -109,9 +140,9 @@ const EmployeeLayout = () => {
         },
         { name: "Profile", icon: faUser, path: "/employee/profile" },
         {
-            name: "Teaching Goals",
+            name: "Development Goals",
             icon: faChalkboardTeacher,
-            path: "/employee/teaching-goals",
+            path: "/employee/development-goals",
         },
     ];
 
@@ -129,6 +160,12 @@ const EmployeeLayout = () => {
         );
         return currentRoute?.name || "Employee Portal";
     };
+
+    // Update document title when page changes
+    useEffect(() => {
+        const pageTitle = getCurrentPageTitle();
+        document.title = `Unitech HR | ${pageTitle}`;
+    }, [location.pathname]);
 
     return (
         <div className="flex flex-col h-screen bg-gray-100">
