@@ -30,7 +30,7 @@ import License from "./pages/License";
 import EmployeeDashboard from "./pages/employee/Dashboard";
 import EmployeeProfile from "./pages/employee/Profile";
 import CareerProgress from "./pages/employee/CareerProgress";
-import TeachingGoals from "./pages/employee/TeachingGoals";
+import DevelopmentGoals from "./pages/employee/DevelopmentGoals";
 
 import { JobProvider } from "./contexts/JobContext";
 import AuthProvider, { useAuth } from "./contexts/AuthProvider";
@@ -1042,8 +1042,8 @@ function AppContent() {
                             />
                             <Route path="career" element={<CareerProgress />} />
                             <Route
-                                path="teaching-goals"
-                                element={<TeachingGoals />}
+                                path="development-goals"
+                                element={<DevelopmentGoals />}
                             />
                         </Route>
                         {/* Redirect HR routes to employee dashboard if user is an employee */}

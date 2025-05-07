@@ -109,9 +109,9 @@ const EmployeeLayout = () => {
         },
         { name: "Profile", icon: faUser, path: "/employee/profile" },
         {
-            name: "Teaching Goals",
+            name: "Development Goals",
             icon: faChalkboardTeacher,
-            path: "/employee/teaching-goals",
+            path: "/employee/development-goals",
         },
     ];
 
