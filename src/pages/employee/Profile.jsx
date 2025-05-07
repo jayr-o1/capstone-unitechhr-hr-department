@@ -426,6 +426,9 @@ const EmployeeProfile = () => {
     const [skillsNeedProcessing, setSkillsNeedProcessing] = useState(false);
     const [processedSkills, setProcessedSkills] = useState([]);
 
+    // Ref to track if automatic extraction has been triggered
+    const autoExtractionTriggered = useRef(false);
+
     // Debug Firebase Storage on component mount
     useEffect(() => {
         console.log("===== FIREBASE STORAGE DEBUGGING =====");
@@ -477,8 +480,13 @@ const EmployeeProfile = () => {
             navigate(`${location.pathname}?${params.toString()}`, {
                 replace: true,
             });
+
+            // Reset the auto extraction flag when changing tabs
+            if (activeTab !== "skills") {
+                autoExtractionTriggered.current = false;
+            }
         }
-    }, [activeTab]);
+    }, [activeTab, location.pathname, navigate]);
 
     // Check for active tab in navigation state
     useEffect(() => {
@@ -1626,6 +1634,72 @@ const EmployeeProfile = () => {
             setSkillsNeedProcessing(false);
         }
     }, [skillsNeedProcessing, skills]);
+
+    // Auto-extract skills when loading the skills tab via URL parameter
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const tabParam = params.get("tab");
+        const currentPath = location.pathname;
+        const isEmployeeProfilePath = currentPath === "/employee/profile";
+        const isDirectTabAccess = params.has("tab") && tabParam === "skills";
+
+        // Only trigger extraction for the exact URL the user specified
+        const isExactUrl =
+            isEmployeeProfilePath &&
+            isDirectTabAccess &&
+            Object.fromEntries(params.entries()).tab === "skills" &&
+            params.toString() === "tab=skills";
+
+        // Only trigger extraction when the URL exactly matches http://localhost:5173/employee/profile?tab=skills
+        if (
+            isExactUrl &&
+            documents.length > 0 &&
+            !extractingSkills &&
+            !processingSkills &&
+            !autoExtractionTriggered.current
+        ) {
+            // Only auto-extract if there are no existing skills
+            if (processedSkills.length === 0) {
+                // Check for valid documents (resume, certification, or certificate)
+                const validDocuments = documents.filter(
+                    (doc) =>
+                        doc.url &&
+                        doc.url !== "pending_upload" &&
+                        (doc.type === "resume" ||
+                            doc.type === "certification" ||
+                            doc.type === "certificate")
+                );
+
+                if (validDocuments.length > 0) {
+                    console.log(
+                        "Auto-triggering skills extraction from URL parameter"
+                    );
+                    autoExtractionTriggered.current = true;
+                    extractSkillsFromDocuments();
+                } else {
+                    console.log(
+                        "No valid documents found for automatic skill extraction"
+                    );
+                }
+            } else {
+                console.log(
+                    "Skills already exist, skipping automatic extraction"
+                );
+            }
+        }
+
+        // Cleanup function to reset the flag when component unmounts
+        return () => {
+            autoExtractionTriggered.current = false;
+        };
+    }, [
+        location.search,
+        location.pathname,
+        documents,
+        extractingSkills,
+        processingSkills,
+        processedSkills,
+    ]);
 
     if (loading) {
         return (
