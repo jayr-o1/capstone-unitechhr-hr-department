@@ -2,9 +2,8 @@
  * Service for handling skill recommendations API calls
  */
 
-// Base API URL - use environment variable with fallback to localhost for development
-const API_BASE_URL =
-    import.meta.env.VITE_RECOMMENDATION_API_URL || "http://localhost:5001";
+// Base API URL - use environment variable with fallback to proxy URL for development
+const API_BASE_URL = import.meta.env.VITE_RECOMMENDATION_API_URL || ""; // Empty string to use relative path with proxy
 
 // API Configuration
 const API_CONFIG = {

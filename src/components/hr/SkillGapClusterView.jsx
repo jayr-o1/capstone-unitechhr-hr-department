@@ -110,8 +110,13 @@ const SkillGapClusterView = () => {
                     skillData.employeeCount++;
                     skillData.employees.push({
                         id: employee.id,
-                        name: employee.firstName + " " + employee.lastName,
-                        department: employee.department || "Unknown",
+                        name:
+                            gap.employeeName ||
+                            (employee.firstName && employee.lastName
+                                ? employee.firstName + " " + employee.lastName
+                                : "Unknown Employee"),
+                        department:
+                            employee.department || gap.department || "Unknown",
                         gapPercentage: gap.gap,
                         currentLevel: gap.currentLevel,
                         requiredLevel: gap.requiredLevel,

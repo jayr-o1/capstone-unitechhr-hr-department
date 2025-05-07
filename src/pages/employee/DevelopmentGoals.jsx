@@ -30,9 +30,21 @@ import {
     faUserGraduate,
     faInfoCircle,
     faSync,
+    faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import EmployeePageLoader from "../../components/employee/EmployeePageLoader";
 import { toast } from "react-hot-toast";
+import {
+    collection,
+    setDoc,
+    doc,
+    query,
+    where,
+    getDocs,
+    deleteDoc,
+} from "firebase/firestore";
+import { db } from "../../firebase";
+import { serverTimestamp } from "firebase/firestore";
 
 // Mock data for development specializations
 const DEVELOPMENT_SPECIALIZATIONS = [
@@ -163,6 +175,8 @@ const DevelopmentGoals = () => {
     const [skillGaps, setSkillGaps] = useState([]);
     const [recommendations, setRecommendations] = useState(null);
     const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+    const [selectedApiRecommendations, setSelectedApiRecommendations] =
+        useState([]);
 
     // Persist current state to localStorage
     const saveStateToLocalStorage = useCallback(() => {
@@ -170,6 +184,7 @@ const DevelopmentGoals = () => {
             const stateToSave = {
                 activeSection,
                 selectedSpecializations,
+                selectedApiRecommendations,
                 lastVisited: new Date().toISOString(),
             };
             localStorage.setItem(
@@ -177,7 +192,13 @@ const DevelopmentGoals = () => {
                 JSON.stringify(stateToSave)
             );
         }
-    }, [activeSection, selectedSpecializations, user, userDetails]);
+    }, [
+        activeSection,
+        selectedSpecializations,
+        selectedApiRecommendations,
+        user,
+        userDetails,
+    ]);
 
     // Load saved state from localStorage
     useEffect(() => {
@@ -201,6 +222,18 @@ const DevelopmentGoals = () => {
                             setActiveSection(parsedState.activeSection);
                         }
 
+                        // Load API recommendations if they exist
+                        if (
+                            parsedState.selectedApiRecommendations &&
+                            Array.isArray(
+                                parsedState.selectedApiRecommendations
+                            )
+                        ) {
+                            setSelectedApiRecommendations(
+                                parsedState.selectedApiRecommendations
+                            );
+                        }
+
                         // We'll load specializations from the database rather than localStorage
                         // as they need to be synced across devices
                     }
@@ -222,7 +255,12 @@ const DevelopmentGoals = () => {
             window.removeEventListener("beforeunload", saveStateToLocalStorage);
             saveStateToLocalStorage();
         };
-    }, [activeSection, selectedSpecializations, saveStateToLocalStorage]);
+    }, [
+        activeSection,
+        selectedSpecializations,
+        selectedApiRecommendations,
+        saveStateToLocalStorage,
+    ]);
 
     // Load employee data and skills
     useEffect(() => {
@@ -253,6 +291,14 @@ const DevelopmentGoals = () => {
                     if (empData.success) {
                         setEmployeeData(empData.data);
 
+                        // Log employee data for debugging
+                        console.log("Loaded employee data:", {
+                            name: empData.data.name,
+                            firstName: empData.data.firstName,
+                            lastName: empData.data.lastName,
+                            displayName: userDetails.displayName,
+                        });
+
                         // Fetch employee skills
                         const skillsData = await getEmployeeSkills(
                             user.uid,
@@ -266,14 +312,25 @@ const DevelopmentGoals = () => {
                                 setSelectedSpecializations(
                                     empData.data.teachingSpecializations
                                 );
-
-                                // Calculate skill gaps based on selected specializations
-                                const gaps = calculateSkillGaps(
-                                    skillsData.skills,
-                                    empData.data.teachingSpecializations
-                                );
-                                setSkillGaps(gaps);
                             }
+
+                            // Load saved API recommendations if they exist
+                            if (
+                                empData.data.apiRecommendations &&
+                                Array.isArray(empData.data.apiRecommendations)
+                            ) {
+                                setSelectedApiRecommendations(
+                                    empData.data.apiRecommendations
+                                );
+                            }
+
+                            // Calculate skill gaps based on selected specializations
+                            const gaps = calculateSkillGaps(
+                                skillsData.skills,
+                                empData.data.teachingSpecializations,
+                                empData.data.recommendations
+                            );
+                            setSkillGaps(gaps);
 
                             // Fetch recommendations from API
                             if (skillsData.skills.length > 0) {
@@ -367,7 +424,11 @@ const DevelopmentGoals = () => {
     };
 
     // Calculate skill gaps between employee skills and required skills for specializations
-    const calculateSkillGaps = (employeeSkills, specializations) => {
+    const calculateSkillGaps = (
+        employeeSkills,
+        specializations,
+        recommendationsData = null
+    ) => {
         const gaps = [];
 
         if (!employeeSkills || !specializations || specializations.length === 0)
@@ -384,16 +445,72 @@ const DevelopmentGoals = () => {
                 // For each required skill in the specialization
                 specialization.requiredSkills.forEach((requiredSkill) => {
                     // Find the employee's current level for this skill
-                    const employeeSkill = employeeSkills.find(
-                        (skill) =>
+                    // We need to do a fuzzy match since API skill names might not match exactly
+                    const employeeSkill = employeeSkills.find((skill) => {
+                        // Try exact match first
+                        if (
                             skill.name.toLowerCase() ===
                             requiredSkill.name.toLowerCase()
-                    );
+                        ) {
+                            return true;
+                        }
+
+                        // Try partial match (e.g., "JavaScript" should match "JavaScript (ES6+)")
+                        if (
+                            requiredSkill.name
+                                .toLowerCase()
+                                .includes(skill.name.toLowerCase()) ||
+                            skill.name
+                                .toLowerCase()
+                                .includes(requiredSkill.name.toLowerCase())
+                        ) {
+                            return true;
+                        }
+
+                        // Special case matches for common skills that might have different names
+                        const skillMap = {
+                            javascript: ["js", "javascript"],
+                            html: ["html5", "html/css", "html5/css3"],
+                            css: ["css3", "html/css", "html5/css3"],
+                            python: ["python programming", "python/r"],
+                            "machine learning": ["ml", "ai/ml"],
+                            "artificial intelligence": ["ai", "ai/ml"],
+                            communication: [
+                                "teaching",
+                                "student communication",
+                            ],
+                            "teaching methods": [
+                                "teaching",
+                                "instruction",
+                                "education",
+                            ],
+                        };
+
+                        const skillKey = skill.name.toLowerCase();
+                        const requiredSkillKey =
+                            requiredSkill.name.toLowerCase();
+
+                        // Check if either skill is in our map and matches the other
+                        for (const [key, aliases] of Object.entries(skillMap)) {
+                            if (
+                                (skillKey === key ||
+                                    aliases.includes(skillKey)) &&
+                                (requiredSkillKey === key ||
+                                    aliases.includes(requiredSkillKey))
+                            ) {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    });
 
                     const currentLevel = employeeSkill
                         ? typeof employeeSkill.proficiency === "number"
                             ? employeeSkill.proficiency
-                            : parseInt(employeeSkill.proficiency) || 0
+                            : convertProficiencyToNumber(
+                                  employeeSkill.proficiency
+                              ) || 0
                         : 0;
 
                     // If the employee's level is below the minimum required
@@ -408,6 +525,67 @@ const DevelopmentGoals = () => {
                         });
                     }
                 });
+
+                // Also check for any missing skills from the API recommendations
+                if (
+                    recommendationsData &&
+                    recommendationsData.recommendations
+                ) {
+                    const matchingRecs =
+                        recommendationsData.recommendations.filter((rec) => {
+                            return (
+                                rec.specialization
+                                    ?.toLowerCase()
+                                    .includes(
+                                        specialization.title.toLowerCase()
+                                    ) ||
+                                specialization.title
+                                    .toLowerCase()
+                                    .includes(rec.specialization?.toLowerCase())
+                            );
+                        });
+
+                    matchingRecs.forEach((rec) => {
+                        if (
+                            rec.missing_skills &&
+                            rec.missing_skills.length > 0
+                        ) {
+                            rec.missing_skills.forEach((missingSkill) => {
+                                const skillName =
+                                    typeof missingSkill === "string"
+                                        ? missingSkill
+                                        : missingSkill.name;
+
+                                // Check if this missing skill is already in our gaps
+                                const alreadyInGaps = gaps.some(
+                                    (gap) =>
+                                        gap.skill.toLowerCase() ===
+                                            skillName.toLowerCase() ||
+                                        gap.skill
+                                            .toLowerCase()
+                                            .includes(
+                                                skillName.toLowerCase()
+                                            ) ||
+                                        skillName
+                                            .toLowerCase()
+                                            .includes(gap.skill.toLowerCase())
+                                );
+
+                                // If not already in gaps, add it with default values
+                                if (!alreadyInGaps) {
+                                    gaps.push({
+                                        skill: skillName,
+                                        specialization: specialization.title,
+                                        currentLevel: 0,
+                                        requiredLevel: 60, // Default to intermediate-advanced level requirement
+                                        gap: 60, // Gap is the same as required level if current is 0
+                                        isFromApi: true, // Mark that this came from API recommendations
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
             }
         });
 
@@ -418,8 +596,9 @@ const DevelopmentGoals = () => {
     // Toggle a specialization selection
     const toggleSpecialization = async (specializationId) => {
         let updatedSpecializations = [...selectedSpecializations];
+        const isRemoving = updatedSpecializations.includes(specializationId);
 
-        if (updatedSpecializations.includes(specializationId)) {
+        if (isRemoving) {
             // Remove the specialization
             updatedSpecializations = updatedSpecializations.filter(
                 (id) => id !== specializationId
@@ -431,9 +610,7 @@ const DevelopmentGoals = () => {
 
         setSelectedSpecializations(updatedSpecializations);
 
-        // Calculate new skill gaps
-        const newGaps = calculateSkillGaps(skills, updatedSpecializations);
-        setSkillGaps(newGaps);
+        // The useEffect will handle updating the skill gaps
 
         // Save to employee profile
         if (userDetails?.universityId) {
@@ -446,6 +623,25 @@ const DevelopmentGoals = () => {
 
                 if (result.success) {
                     toast.success("Development goals updated successfully");
+
+                    // Find the specialization data for skill gaps
+                    const specialization = DEVELOPMENT_SPECIALIZATIONS.find(
+                        (spec) => spec.id === specializationId
+                    );
+
+                    if (specialization) {
+                        if (isRemoving) {
+                            // Remove the specialization's skill gaps from HR view
+                            await removeSpecializationSkillGapsForHR(
+                                specialization.title
+                            );
+                        } else {
+                            // Add the specialization's skill gaps to HR view
+                            await updateSpecializationSkillGapsForHR(
+                                specialization
+                            );
+                        }
+                    }
                 } else {
                     toast.error("Failed to update development goals");
                 }
@@ -453,6 +649,165 @@ const DevelopmentGoals = () => {
                 console.error("Error saving development goals:", err);
                 toast.error("An error occurred while saving goals");
             }
+        }
+    };
+
+    // Add function to update HR view for predefined specializations
+    const updateSpecializationSkillGapsForHR = async (specialization) => {
+        try {
+            if (!userDetails?.universityId || !user?.uid || !specialization)
+                return;
+
+            // Determine employee ID and document ID
+            let employeeId = user.uid;
+            let employeeDocId = user.uid;
+
+            if (user.uid.startsWith("emp_")) {
+                // Extract the employee ID from the mock user ID
+                const parts = user.uid.split("_");
+                if (parts.length >= 2) {
+                    employeeId = parts[1];
+                    employeeDocId = employeeId;
+                }
+            }
+
+            // Reference to the employee's skillGaps subcollection
+            const skillGapsRef = collection(
+                db,
+                "universities",
+                userDetails.universityId,
+                "employees",
+                employeeDocId,
+                "skillGaps"
+            );
+
+            // Find the employee's current skills
+            const employeeSkills = skills || [];
+
+            // Create proper employee name - prioritize direct name field
+            const employeeName =
+                employeeData?.name || userDetails?.displayName || "Unknown";
+
+            console.log("Using employee name for HR skill gaps:", employeeName);
+
+            // For each required skill, check if the employee has it at the required level
+            for (const requiredSkill of specialization.requiredSkills) {
+                // Find matching employee skill
+                const employeeSkill = employeeSkills.find((skill) => {
+                    // Try exact match first
+                    if (
+                        skill.name.toLowerCase() ===
+                        requiredSkill.name.toLowerCase()
+                    ) {
+                        return true;
+                    }
+
+                    // Try partial match
+                    if (
+                        requiredSkill.name
+                            .toLowerCase()
+                            .includes(skill.name.toLowerCase()) ||
+                        skill.name
+                            .toLowerCase()
+                            .includes(requiredSkill.name.toLowerCase())
+                    ) {
+                        return true;
+                    }
+
+                    return false;
+                });
+
+                // Convert proficiency to number for comparison
+                const currentLevel = employeeSkill
+                    ? typeof employeeSkill.proficiency === "number"
+                        ? employeeSkill.proficiency
+                        : convertProficiencyToNumber(
+                              employeeSkill.proficiency
+                          ) || 0
+                    : 0;
+
+                // If employee's level is below required level, create a skill gap
+                if (currentLevel < requiredSkill.minimumProficiency) {
+                    // Create a unique ID for this skill gap
+                    const gapId = `gap_${Date.now()}_${Math.random()
+                        .toString(36)
+                        .substring(2, 9)}`;
+
+                    // Create the skill gap document
+                    await setDoc(doc(skillGapsRef, gapId), {
+                        skill: requiredSkill.name,
+                        specialization: specialization.title,
+                        currentLevel: currentLevel,
+                        requiredLevel: requiredSkill.minimumProficiency,
+                        gap: requiredSkill.minimumProficiency - currentLevel,
+                        isFromApi: false,
+                        createdAt: serverTimestamp(),
+                        employeeName: employeeName,
+                        department: employeeData?.department || "Unknown",
+                    });
+                }
+            }
+
+            console.log(
+                `Added skill gaps for ${specialization.title} to HR training needs for ${employeeName}`
+            );
+        } catch (error) {
+            console.error(
+                "Error saving specialization skill gaps for HR:",
+                error
+            );
+        }
+    };
+
+    // Add function to remove skill gaps for a predefined specialization
+    const removeSpecializationSkillGapsForHR = async (specializationTitle) => {
+        try {
+            if (!userDetails?.universityId || !user?.uid) return;
+
+            // Determine employee ID and document ID
+            let employeeId = user.uid;
+            let employeeDocId = user.uid;
+
+            if (user.uid.startsWith("emp_")) {
+                // Extract the employee ID from the mock user ID
+                const parts = user.uid.split("_");
+                if (parts.length >= 2) {
+                    employeeId = parts[1];
+                    employeeDocId = employeeId;
+                }
+            }
+
+            // Reference to the employee's skillGaps subcollection
+            const skillGapsRef = collection(
+                db,
+                "universities",
+                userDetails.universityId,
+                "employees",
+                employeeDocId,
+                "skillGaps"
+            );
+
+            // Query for skill gaps related to this specialization
+            const q = query(
+                skillGapsRef,
+                where("specialization", "==", specializationTitle)
+            );
+
+            const querySnapshot = await getDocs(q);
+
+            // Delete each matching skill gap
+            querySnapshot.forEach(async (doc) => {
+                await deleteDoc(doc.ref);
+            });
+
+            console.log(
+                `Removed skill gaps for ${specializationTitle} from HR training needs`
+            );
+        } catch (error) {
+            console.error(
+                "Error removing specialization skill gaps for HR:",
+                error
+            );
         }
     };
 
@@ -535,6 +890,492 @@ const DevelopmentGoals = () => {
         return "Novice";
     };
 
+    // Convert string proficiency level to numeric value
+    const convertProficiencyToNumber = (proficiency) => {
+        // If already a number, return it (ensuring it's within 0-100 range)
+        if (typeof proficiency === "number") {
+            return Math.min(Math.max(proficiency, 0), 100);
+        }
+
+        // If it's a string that's a number (e.g. "75"), parse it
+        if (!isNaN(parseInt(proficiency))) {
+            return Math.min(Math.max(parseInt(proficiency), 0), 100);
+        }
+
+        // Convert text proficiency levels to numbers
+        switch (proficiency?.toLowerCase?.()) {
+            case "expert":
+                return 90;
+            case "advanced":
+                return 75;
+            case "intermediate":
+                return 50;
+            case "basic":
+            case "beginner":
+                return 30;
+            case "novice":
+                return 15;
+            default:
+                return 50; // Default to intermediate if unknown
+        }
+    };
+
+    // Modify the handleSelectRecommendation function to save skill gaps to the skillGaps subcollection for each employee
+    const handleSelectRecommendation = (recommendation) => {
+        // Check if this recommendation is already selected
+        const isSelected = selectedApiRecommendations.some(
+            (rec) => rec.specialization === recommendation.specialization
+        );
+
+        let updatedRecommendations;
+        if (isSelected) {
+            // Remove if already selected
+            updatedRecommendations = selectedApiRecommendations.filter(
+                (rec) => rec.specialization !== recommendation.specialization
+            );
+        } else {
+            // Add if not selected
+            updatedRecommendations = [
+                ...selectedApiRecommendations,
+                recommendation,
+            ];
+        }
+
+        // Update state
+        setSelectedApiRecommendations(updatedRecommendations);
+
+        // Also update selectedSpecializations to keep backward compatibility
+        // but this will effectively be unused
+        let updatedSpecializations = [...selectedSpecializations];
+
+        // Find matching predefined specialization (if any)
+        const matchingSpec = DEVELOPMENT_SPECIALIZATIONS.find(
+            (s) =>
+                s.title
+                    .toLowerCase()
+                    .includes(recommendation.specialization?.toLowerCase()) ||
+                recommendation.specialization
+                    ?.toLowerCase()
+                    .includes(s.title.toLowerCase())
+        );
+
+        const specId = matchingSpec ? matchingSpec.id : null;
+
+        if (specId) {
+            if (isSelected) {
+                // Remove from selectedSpecializations
+                updatedSpecializations = updatedSpecializations.filter(
+                    (id) => id !== specId
+                );
+            } else if (!updatedSpecializations.includes(specId)) {
+                // Add to selectedSpecializations
+                updatedSpecializations.push(specId);
+            }
+
+            setSelectedSpecializations(updatedSpecializations);
+        }
+
+        // Show toast message
+        if (!isSelected) {
+            toast.success(
+                `Added ${
+                    recommendation.specialization || "specialization"
+                } to your development goals`
+            );
+        } else {
+            toast.success(
+                `Removed ${
+                    recommendation.specialization || "specialization"
+                } from your development goals`
+            );
+        }
+
+        // Save to employee profile and update skill gaps collection for HR
+        if (userDetails?.universityId) {
+            try {
+                // Update employee profile with specializations
+                updateEmployeeProfile(user.uid, userDetails.universityId, {
+                    teachingSpecializations: updatedSpecializations,
+                    apiRecommendations: updatedRecommendations,
+                });
+
+                // Only proceed with saving to skill gaps if we're adding a recommendation
+                if (
+                    !isSelected &&
+                    recommendation.missing_skills &&
+                    recommendation.missing_skills.length > 0
+                ) {
+                    // Add missing skills to the skillGaps subcollection for HR visibility
+                    updateSkillGapsForHR(recommendation);
+                } else if (isSelected) {
+                    // Remove this recommendation's skills from the skillGaps subcollection
+                    removeSkillGapsForHR(recommendation);
+                }
+            } catch (err) {
+                console.error("Error saving development goals:", err);
+                toast.error("An error occurred while saving goals");
+            }
+        }
+    };
+
+    // Add new function to update the skillGaps subcollection for HR visibility
+    const updateSkillGapsForHR = async (recommendation) => {
+        try {
+            if (!userDetails?.universityId || !user?.uid) return;
+
+            // Determine employee ID and document ID
+            let employeeId = user.uid;
+            let employeeDocId = user.uid;
+
+            if (user.uid.startsWith("emp_")) {
+                // Extract the employee ID from the mock user ID
+                const parts = user.uid.split("_");
+                if (parts.length >= 2) {
+                    employeeId = parts[1];
+                    employeeDocId = employeeId;
+                }
+            }
+
+            // Reference to the employee's skillGaps subcollection
+            const skillGapsRef = collection(
+                db,
+                "universities",
+                userDetails.universityId,
+                "employees",
+                employeeDocId,
+                "skillGaps"
+            );
+
+            // Create proper employee name - prioritize direct name field
+            const employeeName =
+                employeeData?.name || userDetails?.displayName || "Unknown";
+
+            console.log("Using employee name for HR skill gaps:", employeeName);
+
+            // Add each missing skill as a separate document in the skillGaps subcollection
+            if (
+                recommendation.missing_skills &&
+                recommendation.missing_skills.length > 0
+            ) {
+                for (const missingSkill of recommendation.missing_skills) {
+                    const skillName =
+                        typeof missingSkill === "string"
+                            ? missingSkill
+                            : missingSkill.name || "";
+
+                    // Create a unique ID for this skill gap
+                    const gapId = `gap_${Date.now()}_${Math.random()
+                        .toString(36)
+                        .substring(2, 9)}`;
+
+                    // Create the skill gap document
+                    await setDoc(doc(skillGapsRef, gapId), {
+                        skill: skillName,
+                        specialization: recommendation.specialization,
+                        currentLevel: 0,
+                        requiredLevel: 70,
+                        requiredLevelText: "Advanced",
+                        gap: 70,
+                        isFromApi: true,
+                        createdAt: serverTimestamp(),
+                        employeeName: employeeName,
+                        department: employeeData?.department || "Unknown",
+                    });
+                }
+
+                console.log(
+                    `Added ${recommendation.missing_skills.length} skill gaps to HR training needs for ${employeeName}`
+                );
+            }
+        } catch (error) {
+            console.error("Error saving skill gaps for HR:", error);
+        }
+    };
+
+    // Add function to remove skill gaps for a recommendation
+    const removeSkillGapsForHR = async (recommendation) => {
+        try {
+            if (!userDetails?.universityId || !user?.uid) return;
+
+            // Determine employee ID and document ID
+            let employeeId = user.uid;
+            let employeeDocId = user.uid;
+
+            if (user.uid.startsWith("emp_")) {
+                // Extract the employee ID from the mock user ID
+                const parts = user.uid.split("_");
+                if (parts.length >= 2) {
+                    employeeId = parts[1];
+                    employeeDocId = employeeId;
+                }
+            }
+
+            // Reference to the employee's skillGaps subcollection
+            const skillGapsRef = collection(
+                db,
+                "universities",
+                userDetails.universityId,
+                "employees",
+                employeeDocId,
+                "skillGaps"
+            );
+
+            // Query for skill gaps related to this specialization
+            const q = query(
+                skillGapsRef,
+                where("specialization", "==", recommendation.specialization)
+            );
+
+            const querySnapshot = await getDocs(q);
+
+            // Delete each matching skill gap
+            querySnapshot.forEach(async (doc) => {
+                await deleteDoc(doc.ref);
+            });
+
+            console.log(
+                `Removed skill gaps for ${recommendation.specialization} from HR training needs`
+            );
+        } catch (error) {
+            console.error("Error removing skill gaps for HR:", error);
+        }
+    };
+
+    // Update isRecommendationSelected to check selectedApiRecommendations directly
+    const isRecommendationSelected = (recommendation) => {
+        return selectedApiRecommendations.some(
+            (rec) => rec.specialization === recommendation.specialization
+        );
+    };
+
+    // Update the calculateApiRecommendationGaps function to include text proficiency
+    const calculateApiRecommendationGaps = (employeeSkills, apiRecs) => {
+        const gaps = [];
+
+        if (!employeeSkills || !apiRecs || apiRecs.length === 0) return [];
+
+        apiRecs.forEach((rec) => {
+            // Check if this recommendation has missing skills
+            if (rec.missing_skills && rec.missing_skills.length > 0) {
+                rec.missing_skills.forEach((missingSkill) => {
+                    const skillName =
+                        typeof missingSkill === "string"
+                            ? missingSkill
+                            : missingSkill.name || "";
+
+                    // Check if this skill is already in the gaps list
+                    const existingGap = gaps.find(
+                        (g) =>
+                            g.skill.toLowerCase() === skillName.toLowerCase() &&
+                            g.specialization === rec.specialization
+                    );
+
+                    if (!existingGap) {
+                        gaps.push({
+                            skill: skillName,
+                            specialization: rec.specialization,
+                            currentLevel: 0,
+                            requiredLevel: 70, // Default required level (numeric)
+                            requiredLevelText: "Advanced", // Text version for display
+                            gap: 70,
+                            isFromApi: true,
+                            apiRec: rec,
+                        });
+                    }
+                });
+            }
+        });
+
+        return gaps;
+    };
+
+    // Update the useEffect to calculate all gaps
+    useEffect(() => {
+        // Only proceed if we have skills
+        if (skills.length === 0) return;
+
+        let allGaps = [];
+
+        // First, calculate gaps from predefined specializations if any are selected
+        if (selectedSpecializations.length > 0 && recommendations) {
+            const predefinedGaps = calculateSkillGaps(
+                skills,
+                selectedSpecializations,
+                recommendations
+            );
+            allGaps = [...predefinedGaps];
+        }
+
+        // Then add gaps from API recommendations
+        if (selectedApiRecommendations.length > 0) {
+            const apiGaps = calculateApiRecommendationGaps(
+                skills,
+                selectedApiRecommendations
+            );
+
+            // Merge with existing gaps, avoiding duplicates
+            apiGaps.forEach((newGap) => {
+                const existingIndex = allGaps.findIndex(
+                    (g) =>
+                        g.skill.toLowerCase() === newGap.skill.toLowerCase() &&
+                        g.specialization === newGap.specialization
+                );
+
+                if (existingIndex === -1) {
+                    allGaps.push(newGap);
+                }
+            });
+        }
+
+        // Sort gaps by gap size (largest first)
+        setSkillGaps(allGaps.sort((a, b) => b.gap - a.gap));
+    }, [
+        skills,
+        selectedSpecializations,
+        recommendations,
+        selectedApiRecommendations,
+    ]);
+
+    // Add a clearAllApiRecommendations function
+    const clearAllRecommendations = async () => {
+        if (
+            selectedApiRecommendations.length === 0 &&
+            selectedSpecializations.length === 0
+        )
+            return;
+
+        try {
+            // Save empty arrays to employee profile
+            if (userDetails?.universityId) {
+                const result = await updateEmployeeProfile(
+                    user.uid,
+                    userDetails.universityId,
+                    {
+                        teachingSpecializations: [],
+                        apiRecommendations: [],
+                    }
+                );
+
+                if (result.success) {
+                    setSelectedApiRecommendations([]);
+                    setSelectedSpecializations([]);
+                    setSkillGaps([]);
+
+                    // Also clear all skill gaps from HR view
+                    await clearAllSkillGapsForHR();
+
+                    toast.success("All development goals cleared");
+                } else {
+                    toast.error("Failed to clear development goals");
+                }
+            }
+        } catch (err) {
+            console.error("Error clearing development goals:", err);
+            toast.error("An error occurred while clearing goals");
+        }
+    };
+
+    // Add a function to clear all skill gaps from HR view
+    const clearAllSkillGapsForHR = async () => {
+        try {
+            if (!userDetails?.universityId || !user?.uid) return;
+
+            // Determine employee ID and document ID
+            let employeeId = user.uid;
+            let employeeDocId = user.uid;
+
+            if (user.uid.startsWith("emp_")) {
+                // Extract the employee ID from the mock user ID
+                const parts = user.uid.split("_");
+                if (parts.length >= 2) {
+                    employeeId = parts[1];
+                    employeeDocId = employeeId;
+                }
+            }
+
+            // Reference to the employee's skillGaps subcollection
+            const skillGapsRef = collection(
+                db,
+                "universities",
+                userDetails.universityId,
+                "employees",
+                employeeDocId,
+                "skillGaps"
+            );
+
+            // Get all skill gaps documents
+            const snapshot = await getDocs(skillGapsRef);
+
+            // Delete each document
+            snapshot.forEach(async (doc) => {
+                await deleteDoc(doc.ref);
+            });
+
+            console.log("Cleared all skill gaps from HR training needs");
+        } catch (error) {
+            console.error("Error clearing all skill gaps for HR:", error);
+        }
+    };
+
+    // Function to recreate HR skill gaps with correct employee name
+    const refreshHRSkillGaps = async () => {
+        try {
+            if (!userDetails?.universityId || !user?.uid || !employeeData)
+                return;
+
+            // Only proceed if we have selected specializations or API recommendations
+            if (
+                selectedSpecializations.length === 0 &&
+                selectedApiRecommendations.length === 0
+            )
+                return;
+
+            console.log(
+                "Refreshing HR skill gaps with correct employee name..."
+            );
+
+            // First clear all existing skill gaps
+            await clearAllSkillGapsForHR();
+
+            // Then recreate them for API recommendations
+            for (const recommendation of selectedApiRecommendations) {
+                await updateSkillGapsForHR(recommendation);
+            }
+
+            // And for predefined specializations
+            for (const specializationId of selectedSpecializations) {
+                const specialization = DEVELOPMENT_SPECIALIZATIONS.find(
+                    (spec) => spec.id === specializationId
+                );
+                if (specialization) {
+                    await updateSpecializationSkillGapsForHR(specialization);
+                }
+            }
+
+            console.log("HR skill gaps refreshed successfully");
+        } catch (error) {
+            console.error("Error refreshing HR skill gaps:", error);
+        }
+    };
+
+    // Add useEffect to run the refresh function once employee data is loaded
+    useEffect(() => {
+        if (employeeData && skills.length > 0) {
+            // Log employee data for debugging
+            console.log(
+                "Running refresh of HR skill gaps with employee data:",
+                {
+                    name: employeeData.name,
+                    id: user.uid,
+                    displayName: userDetails?.displayName,
+                }
+            );
+
+            // Force refresh of all skill gaps with correct employee name
+            refreshHRSkillGaps();
+        }
+    }, [employeeData, skills]);
+
     if (loading) {
         return (
             <div className="min-h-[400px] border border-gray-200 rounded-lg flex items-center justify-center">
@@ -612,13 +1453,26 @@ const DevelopmentGoals = () => {
                 {/* API Recommendations Section */}
                 {recommendations && (
                     <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                        <h2 className="text-xl font-semibold mb-4 flex items-center">
-                            <FontAwesomeIcon
-                                icon={faLightbulb}
-                                className="text-yellow-500 mr-2"
-                            />
-                            Recommended Specializations
-                        </h2>
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-semibold flex items-center">
+                                <FontAwesomeIcon
+                                    icon={faLightbulb}
+                                    className="text-yellow-500 mr-2"
+                                />
+                                Recommended Specializations
+                            </h2>
+
+                            {/* Selection summary */}
+                            {selectedSpecializations.length > 0 && (
+                                <div className="text-sm bg-green-100 text-green-800 px-3 py-1.5 rounded-full flex items-center">
+                                    <FontAwesomeIcon
+                                        icon={faCheckCircle}
+                                        className="mr-1.5"
+                                    />
+                                    {selectedSpecializations.length} selected
+                                </div>
+                            )}
+                        </div>
 
                         {loadingRecommendations ? (
                             <div className="flex justify-center items-center p-8">
@@ -638,8 +1492,54 @@ const DevelopmentGoals = () => {
                                     .map((rec, index) => (
                                         <div
                                             key={index}
-                                            className="border rounded-xl p-4 bg-gradient-to-br from-blue-50 to-purple-50"
+                                            className={`border rounded-xl p-4 bg-gradient-to-br from-blue-50 to-purple-50 relative ${
+                                                // Check if this recommendation is selected
+                                                isRecommendationSelected(rec)
+                                                    ? "border-green-400 shadow-md"
+                                                    : ""
+                                            }`}
                                         >
+                                            {/* Selection button */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleSelectRecommendation(
+                                                        rec
+                                                    );
+                                                }}
+                                                className={`absolute top-3 right-3 p-2 rounded-full shadow-sm transition-colors ${
+                                                    isRecommendationSelected(
+                                                        rec
+                                                    )
+                                                        ? "bg-green-500 text-white hover:bg-green-600"
+                                                        : "bg-white text-blue-500 hover:bg-blue-50"
+                                                }`}
+                                                title={
+                                                    isRecommendationSelected(
+                                                        rec
+                                                    )
+                                                        ? `Remove ${
+                                                              rec.specialization ||
+                                                              "specialization"
+                                                          } from goals`
+                                                        : `Add ${
+                                                              rec.specialization ||
+                                                              "specialization"
+                                                          } to goals`
+                                                }
+                                            >
+                                                <FontAwesomeIcon
+                                                    icon={
+                                                        isRecommendationSelected(
+                                                            rec
+                                                        )
+                                                            ? faCheckCircle
+                                                            : faChartLine
+                                                    }
+                                                    className="text-lg"
+                                                />
+                                            </button>
+
                                             <div className="flex items-start mb-3">
                                                 <div className="bg-blue-100 p-2 rounded-full mr-3">
                                                     <FontAwesomeIcon
@@ -667,7 +1567,7 @@ const DevelopmentGoals = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <h3 className="font-medium text-gray-800">
+                                                    <h3 className="font-medium text-gray-800 pr-7">
                                                         {rec.specialization}
                                                     </h3>
                                                     <p className="text-sm text-gray-500 mt-1">
@@ -904,140 +1804,298 @@ const DevelopmentGoals = () => {
                             </div>
                         )}
 
-                        {recommendations.user_skills && (
-                            <div className="mt-4 pt-4 border-t border-gray-200">
-                                <h3 className="font-medium text-gray-800 mb-2">
-                                    Your Current Skills
-                                </h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {recommendations.user_skills.map(
-                                        (skill, index) => (
-                                            <span
-                                                key={index}
-                                                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                                                    skill.isCertified
-                                                        ? "bg-green-100 text-green-800"
-                                                        : "bg-blue-100 text-blue-800"
-                                                }`}
-                                            >
-                                                {skill.name}
-                                                <span className="ml-1 text-xs opacity-75">
-                                                    ({skill.proficiency})
+                        {/* User Skills Section */}
+                        {recommendations.user_skills &&
+                            recommendations.user_skills.length > 0 && (
+                                <div className="mt-4 pt-4 border-t border-gray-200">
+                                    <h3 className="font-medium text-gray-800 mb-2">
+                                        Your Current Skills
+                                    </h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {recommendations.user_skills.map(
+                                            (skill, index) => (
+                                                <span
+                                                    key={index}
+                                                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                                                        skill.isCertified
+                                                            ? "bg-green-100 text-green-800"
+                                                            : "bg-blue-100 text-blue-800"
+                                                    }`}
+                                                >
+                                                    {skill.name}
+                                                    <span className="ml-1 text-xs opacity-75">
+                                                        ({skill.proficiency})
+                                                    </span>
+                                                    {skill.isCertified && (
+                                                        <FontAwesomeIcon
+                                                            icon={faCheckCircle}
+                                                            className="ml-1 text-green-600"
+                                                        />
+                                                    )}
                                                 </span>
-                                                {skill.isCertified && (
-                                                    <FontAwesomeIcon
-                                                        icon={faCheckCircle}
-                                                        className="ml-1 text-green-600"
-                                                    />
-                                                )}
-                                            </span>
-                                        )
-                                    )}
+                                            )
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
                     </div>
                 )}
 
-                {/* Specializations Selection */}
-                <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center">
-                        <FontAwesomeIcon
-                            icon={faUserGraduate}
-                            className="text-purple-500 mr-2"
-                        />
-                        Development Specializations
-                    </h2>
+                {/* Specializations Selection - Only show when no recommendations available */}
+                {(!recommendations ||
+                    !recommendations.recommendations ||
+                    recommendations.recommendations.length === 0) &&
+                    !loadingRecommendations && (
+                        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                            <h2 className="text-xl font-semibold mb-4 flex items-center">
+                                <FontAwesomeIcon
+                                    icon={faUserGraduate}
+                                    className="text-purple-500 mr-2"
+                                />
+                                Development Specializations
+                            </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {DEVELOPMENT_SPECIALIZATIONS.map((specialization) => (
-                            <div
-                                key={specialization.id}
-                                className={`border rounded-xl p-4 cursor-pointer transition-all ${
-                                    selectedSpecializations.includes(
-                                        specialization.id
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {DEVELOPMENT_SPECIALIZATIONS.map(
+                                    (specialization) => (
+                                        <div
+                                            key={specialization.id}
+                                            className={`border rounded-xl p-4 cursor-pointer transition-all ${
+                                                selectedSpecializations.includes(
+                                                    specialization.id
+                                                )
+                                                    ? `bg-${specialization.color}-50 border-${specialization.color}-300`
+                                                    : "bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                            }`}
+                                            onClick={() =>
+                                                toggleSpecialization(
+                                                    specialization.id
+                                                )
+                                            }
+                                        >
+                                            <div className="flex items-start">
+                                                <div
+                                                    className={`bg-${specialization.color}-100 p-3 rounded-full mr-3`}
+                                                >
+                                                    <FontAwesomeIcon
+                                                        icon={
+                                                            specialization.icon
+                                                        }
+                                                        className={`text-${specialization.color}-600 text-xl`}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center">
+                                                        <h3 className="font-medium text-gray-800">
+                                                            {
+                                                                specialization.title
+                                                            }
+                                                        </h3>
+                                                        {selectedSpecializations.includes(
+                                                            specialization.id
+                                                        ) && (
+                                                            <FontAwesomeIcon
+                                                                icon={
+                                                                    faCheckCircle
+                                                                }
+                                                                className="ml-2 text-green-500"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-gray-500 mt-1">
+                                                        {
+                                                            specialization.description
+                                                        }
+                                                    </p>
+                                                    <div className="mt-3">
+                                                        <div className="text-xs text-gray-500 mb-1">
+                                                            Required skills:
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {specialization.requiredSkills
+                                                                .slice(0, 3)
+                                                                .map(
+                                                                    (
+                                                                        skill,
+                                                                        idx
+                                                                    ) => (
+                                                                        <span
+                                                                            key={
+                                                                                idx
+                                                                            }
+                                                                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-${specialization.color}-100 text-${specialization.color}-800`}
+                                                                        >
+                                                                            {
+                                                                                skill.name
+                                                                            }
+                                                                        </span>
+                                                                    )
+                                                                )}
+                                                            {specialization
+                                                                .requiredSkills
+                                                                .length > 3 && (
+                                                                <span className="text-xs text-gray-500">
+                                                                    +
+                                                                    {specialization
+                                                                        .requiredSkills
+                                                                        .length -
+                                                                        3}{" "}
+                                                                    more
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     )
-                                        ? `bg-${specialization.color}-50 border-${specialization.color}-300`
-                                        : "bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                                }`}
-                                onClick={() =>
-                                    toggleSpecialization(specialization.id)
-                                }
-                            >
-                                <div className="flex items-start">
-                                    <div
-                                        className={`bg-${specialization.color}-100 p-3 rounded-full mr-3`}
-                                    >
-                                        <FontAwesomeIcon
-                                            icon={specialization.icon}
-                                            className={`text-${specialization.color}-600 text-xl`}
-                                        />
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center">
-                                            <h3 className="font-medium text-gray-800">
-                                                {specialization.title}
-                                            </h3>
-                                            {selectedSpecializations.includes(
-                                                specialization.id
-                                            ) && (
-                                                <FontAwesomeIcon
-                                                    icon={faCheckCircle}
-                                                    className="ml-2 text-green-500"
-                                                />
-                                            )}
-                                        </div>
-                                        <p className="text-sm text-gray-500 mt-1">
-                                            {specialization.description}
-                                        </p>
-                                        <div className="mt-3">
-                                            <div className="text-xs text-gray-500 mb-1">
-                                                Required skills:
-                                            </div>
-                                            <div className="flex flex-wrap gap-1">
-                                                {specialization.requiredSkills
-                                                    .slice(0, 3)
-                                                    .map((skill, idx) => (
-                                                        <span
-                                                            key={idx}
-                                                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-${specialization.color}-100 text-${specialization.color}-800`}
-                                                        >
-                                                            {skill.name}
-                                                        </span>
-                                                    ))}
-                                                {specialization.requiredSkills
-                                                    .length > 3 && (
-                                                    <span className="text-xs text-gray-500">
-                                                        +
-                                                        {specialization
-                                                            .requiredSkills
-                                                            .length - 3}{" "}
-                                                        more
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                )}
                             </div>
-                        ))}
-                    </div>
-                </div>
+                        </div>
+                    )}
 
-                {/* Training Needs Section - Only show if specializations are selected */}
-                {selectedSpecializations.length > 0 && (
+                {/* Training Needs Section */}
+                {(selectedSpecializations.length > 0 ||
+                    selectedApiRecommendations.length > 0) && (
                     <div
                         id="training-needs-section"
                         className="bg-white rounded-xl shadow-md p-6 border border-gray-100"
                     >
-                        <h2 className="text-xl font-semibold mb-4 flex items-center">
-                            <FontAwesomeIcon
-                                icon={faLightbulb}
-                                className="text-yellow-500 mr-2"
-                            />
-                            Training Needs
+                        <h2 className="text-xl font-semibold mb-4 flex items-center justify-between">
+                            <div className="flex items-center">
+                                <FontAwesomeIcon
+                                    icon={faLightbulb}
+                                    className="text-yellow-500 mr-2"
+                                />
+                                Training Needs
+                            </div>
+                            <span className="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                                {selectedSpecializations.length +
+                                    selectedApiRecommendations.length}{" "}
+                                specialization
+                                {selectedSpecializations.length +
+                                    selectedApiRecommendations.length !==
+                                1
+                                    ? "s"
+                                    : ""}{" "}
+                                selected
+                            </span>
                         </h2>
 
+                        {/* List of Selected Specializations */}
+                        <div className="mb-5 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="text-sm font-medium text-gray-700">
+                                    Selected Specializations:
+                                </h3>
+                                {(selectedSpecializations.length > 1 ||
+                                    selectedApiRecommendations.length > 0) && (
+                                    <button
+                                        onClick={clearAllRecommendations}
+                                        className="text-xs text-red-600 hover:text-red-800 font-medium flex items-center"
+                                    >
+                                        <FontAwesomeIcon
+                                            icon={faTimes}
+                                            className="mr-1"
+                                        />
+                                        Clear All
+                                    </button>
+                                )}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {/* Show predefined specializations */}
+                                {selectedSpecializations.map((specId) => {
+                                    const spec =
+                                        DEVELOPMENT_SPECIALIZATIONS.find(
+                                            (s) => s.id === specId
+                                        );
+                                    if (!spec) return null;
+
+                                    return (
+                                        <div
+                                            key={`predef-${specId}`}
+                                            className="inline-flex items-center px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm"
+                                        >
+                                            <FontAwesomeIcon
+                                                icon={spec.icon}
+                                                className={`text-${spec.color}-500 mr-2`}
+                                            />
+                                            <span className="text-sm font-medium text-gray-700">
+                                                {spec.title}
+                                            </span>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleSpecialization(
+                                                        specId
+                                                    );
+                                                }}
+                                                className="ml-2 text-gray-400 hover:text-red-500"
+                                                title={`Remove ${spec.title}`}
+                                            >
+                                                <FontAwesomeIcon
+                                                    icon={faTimes}
+                                                />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+
+                                {/* Show API recommendations */}
+                                {selectedApiRecommendations.map(
+                                    (rec, index) => {
+                                        // Determine an appropriate icon based on recommendation type
+                                        const getIcon = (rec) => {
+                                            if (rec.icon === "code")
+                                                return faCode;
+                                            if (rec.icon === "database")
+                                                return faDatabase;
+                                            if (rec.icon === "robot")
+                                                return faRobot;
+                                            if (rec.icon === "mobile")
+                                                return faMobile;
+                                            if (rec.icon === "cloud")
+                                                return faCloud;
+                                            if (rec.icon === "megaphone")
+                                                return faBriefcase;
+                                            return faGraduationCap;
+                                        };
+
+                                        return (
+                                            <div
+                                                key={`api-${index}`}
+                                                className="inline-flex items-center px-3 py-1.5 bg-white border border-blue-200 rounded-lg shadow-sm"
+                                            >
+                                                <FontAwesomeIcon
+                                                    icon={getIcon(rec)}
+                                                    className="text-blue-500 mr-2"
+                                                />
+                                                <span className="text-sm font-medium text-gray-700">
+                                                    {rec.specialization}
+                                                </span>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        // Use handleSelectRecommendation to toggle this recommendation
+                                                        handleSelectRecommendation(
+                                                            rec
+                                                        );
+                                                    }}
+                                                    className="ml-2 text-gray-400 hover:text-red-500"
+                                                    title={`Remove ${rec.specialization}`}
+                                                >
+                                                    <FontAwesomeIcon
+                                                        icon={faTimes}
+                                                    />
+                                                </button>
+                                            </div>
+                                        );
+                                    }
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Rest of the Training Needs section */}
                         {skillGaps.length > 0 ? (
                             <div>
                                 <p className="mb-4 text-gray-600">
@@ -1049,7 +2107,11 @@ const DevelopmentGoals = () => {
                                     {skillGaps.map((gap, index) => (
                                         <div
                                             key={index}
-                                            className="bg-yellow-50 p-4 rounded-lg border border-yellow-200"
+                                            className={`p-4 rounded-lg border ${
+                                                gap.isFromApi
+                                                    ? "bg-blue-50 border-blue-200"
+                                                    : "bg-yellow-50 border-yellow-200"
+                                            }`}
                                         >
                                             <div className="flex justify-between items-center mb-2">
                                                 <div>
@@ -1059,14 +2121,29 @@ const DevelopmentGoals = () => {
                                                     <span className="ml-2 text-sm text-gray-500">
                                                         for {gap.specialization}
                                                     </span>
+                                                    {gap.isFromApi && (
+                                                        <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                                            Recommended
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                <span className="text-sm px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">
+                                                <span
+                                                    className={`text-sm px-2 py-1 rounded-full ${
+                                                        gap.isFromApi
+                                                            ? "bg-blue-100 text-blue-800"
+                                                            : "bg-yellow-100 text-yellow-800"
+                                                    }`}
+                                                >
                                                     Gap: {gap.gap}%
                                                 </span>
                                             </div>
                                             <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
                                                 <div
-                                                    className="bg-yellow-400 h-2.5 rounded-full"
+                                                    className={`h-2.5 rounded-full ${
+                                                        gap.isFromApi
+                                                            ? "bg-blue-400"
+                                                            : "bg-yellow-400"
+                                                    }`}
                                                     style={{
                                                         width: `${gap.currentLevel}%`,
                                                     }}
@@ -1074,11 +2151,19 @@ const DevelopmentGoals = () => {
                                             </div>
                                             <div className="flex justify-between text-xs text-gray-500">
                                                 <span>
-                                                    Current: {gap.currentLevel}%
+                                                    Current:{" "}
+                                                    {gap.isFromApi
+                                                        ? gap.currentLevel > 0
+                                                            ? "Beginner"
+                                                            : "None"
+                                                        : `${gap.currentLevel}%`}
                                                 </span>
                                                 <span>
                                                     Required:{" "}
-                                                    {gap.requiredLevel}%
+                                                    {gap.isFromApi &&
+                                                    gap.requiredLevelText
+                                                        ? gap.requiredLevelText
+                                                        : `${gap.requiredLevel}%`}
                                                 </span>
                                             </div>
                                         </div>
