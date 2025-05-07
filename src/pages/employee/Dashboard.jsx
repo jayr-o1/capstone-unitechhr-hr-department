@@ -15,6 +15,7 @@ import {
     faArrowRight,
     faIdBadge,
     faBriefcase,
+    faChalkboardTeacher,
 } from "@fortawesome/free-solid-svg-icons";
 import toast from "react-hot-toast";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -225,11 +226,11 @@ const EmployeeDashboard = () => {
 
     const handleViewCareerDetails = () => {
         navigate(
-            "/employee/career",
+            "/employee/teaching-goals",
             { state: { fromDashboard: true } },
             {
                 search: new URLSearchParams({
-                    section: "career-path",
+                    section: "overview",
                 }).toString(),
             }
         );
@@ -454,7 +455,7 @@ const EmployeeDashboard = () => {
                 <div className="bg-white rounded-xl shadow-md p-4 md:p-6 border border-gray-100">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-lg md:text-xl font-bold text-gray-800">
-                            Career Path
+                            Teaching Goals
                         </h2>
                         <button
                             onClick={handleViewCareerDetails}
@@ -470,25 +471,35 @@ const EmployeeDashboard = () => {
 
                     {careerPaths.length > 0 ? (
                         <div className="relative">
-                            {/* Career Path Timeline */}
+                            {/* Teaching Specializations */}
                             <div className="border-l-2 border-blue-500 ml-3 pl-4 space-y-4">
-                                {careerPaths.slice(0, 2).map((path, index) => (
-                                    <div key={index} className="relative">
-                                        <div className="absolute -left-6 top-0 bg-blue-500 w-3 h-3 rounded-full"></div>
-                                        <h3 className="text-sm md:text-md font-semibold">
-                                            {path.position || path.title}
-                                        </h3>
-                                        <p className="text-xs md:text-sm text-gray-500 line-clamp-2">
-                                            {path.description}
-                                        </p>
-                                    </div>
-                                ))}
+                                <div className="relative">
+                                    <div className="absolute -left-6 top-0 bg-blue-500 w-3 h-3 rounded-full"></div>
+                                    <h3 className="text-sm md:text-md font-semibold">
+                                        Teaching Specializations
+                                    </h3>
+                                    <p className="text-xs md:text-sm text-gray-500">
+                                        Select your teaching specializations and
+                                        track your skill development progress.
+                                    </p>
+                                </div>
+                                <div className="relative">
+                                    <div className="absolute -left-6 top-0 bg-blue-500 w-3 h-3 rounded-full"></div>
+                                    <h3 className="text-sm md:text-md font-semibold">
+                                        Skill Gap Analysis
+                                    </h3>
+                                    <p className="text-xs md:text-sm text-gray-500">
+                                        Identify skills you need to develop to
+                                        excel in your teaching specializations.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     ) : (
                         <div className="text-center p-4 bg-gray-50 rounded-xl">
                             <p className="text-gray-500 text-sm">
-                                No career path information available yet.
+                                Set your teaching goals to track your
+                                professional development.
                             </p>
                         </div>
                     )}
@@ -518,7 +529,7 @@ const EmployeeDashboard = () => {
                     <div className="flex items-start p-3 rounded-lg bg-gray-50">
                         <div className="bg-blue-100 p-2 rounded-lg mr-3 flex-shrink-0">
                             <FontAwesomeIcon
-                                icon={faChartLine}
+                                icon={faChalkboardTeacher}
                                 className="text-blue-600 text-sm"
                             />
                         </div>
@@ -545,8 +556,8 @@ const EmployeeDashboard = () => {
                                 Welcome to Your Employee Portal
                             </h3>
                             <p className="text-xs text-gray-500">
-                                You can track your career progress, documents,
-                                and more from this dashboard.
+                                You can track your teaching goals, skills
+                                development, and more from this dashboard.
                             </p>
                         </div>
                     </div>
