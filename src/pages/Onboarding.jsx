@@ -460,45 +460,28 @@ const Onboarding = () => {
                 universityId: universityId || null,
             };
 
-            let newEmployeeDoc;
+            let newEmployeeId;
 
-            // Add employee to the main database (for backwards compatibility)
-            const mainEmployeesRef = collection(db, "employees");
-            newEmployeeDoc = await addDoc(mainEmployeesRef, employeeData);
+            // For employees coming from onboarding, store in no-id-employees collection first
+            const noIdEmployeesRef = collection(db, "no-id-employees");
+            const newEmployeeDoc = await addDoc(noIdEmployeesRef, {
+                ...employeeData,
+                fromOnboarding: true, // Flag to identify onboarding-sourced employees
+                pendingIdAssignment: true, // Flag to indicate ID needs to be assigned
+            });
+
+            newEmployeeId = newEmployeeDoc.id;
             console.log(
-                "Created new employee in main collection with ID:",
-                newEmployeeDoc.id
+                "Created new employee in no-id-employees collection with ID:",
+                newEmployeeId
             );
-
-            // If this is a university applicant, also add to university's employees subcollection
-            if (universityId) {
-                const universityEmployeesRef = doc(
-                    db,
-                    "universities",
-                    universityId,
-                    "employees",
-                    newEmployeeDoc.id
-                );
-
-                // Use the same ID from the main collection
-                await setDoc(universityEmployeesRef, {
-                    ...employeeData,
-                    // Add employeeId field which the Employees page expects
-                    employeeId: newEmployeeDoc.id,
-                });
-
-                console.log(
-                    "Created new employee in university collection with ID:",
-                    newEmployeeDoc.id
-                );
-            }
 
             // Update the applicant's status to reflect completion
             await updateDoc(applicantRef, {
                 status: "Hired",
                 onboardingStatus: "Completed",
                 onboardingCompletedAt: serverTimestamp(),
-                employeeId: newEmployeeDoc.id,
+                employeeId: newEmployeeId,
                 updatedAt: serverTimestamp(),
             });
 

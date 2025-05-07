@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import {
+    doc,
+    updateDoc,
+    serverTimestamp,
+    getDoc,
+    setDoc,
+    deleteDoc,
+} from "firebase/firestore";
 import { db } from "../../firebase";
 import showSuccessAlert from "../Alerts/SuccessAlert";
 import showWarningAlert from "../Alerts/WarningAlert";
@@ -9,13 +16,20 @@ import { hashPassword } from "../../utils/passwordUtilsFixed";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
-const EditCredentialsModal = ({ isOpen, onClose, employee, universityId, onEmployeeUpdated }) => {
+const EditCredentialsModal = ({
+    isOpen,
+    onClose,
+    employee,
+    universityId,
+    onEmployeeUpdated,
+}) => {
     const [formData, setFormData] = useState({
         employeeId: "",
         password: "",
     });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Load employee data when the employee prop changes
     useEffect(() => {
@@ -58,61 +72,76 @@ const EditCredentialsModal = ({ isOpen, onClose, employee, universityId, onEmplo
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.employeeId) {
-            showErrorAlert("Employee ID is required!");
-            return;
-        }
+        try {
+            setIsSubmitting(true);
 
-        if (!universityId || !employee?.id) {
-            showErrorAlert("Missing required information to update employee credentials.");
-            return;
-        }
+            // Check if this is a no-id employee first
+            const noIdEmployeeRef = doc(db, "no-id-employees", employee.id);
+            const noIdEmployeeDoc = await getDoc(noIdEmployeeRef);
 
-        showWarningAlert(
-            "Are you sure you want to update this employee's credentials?",
-            async () => {
-                setLoading(true);
-                
-                try {
-                    const employeeRef = doc(db, "universities", universityId, "employees", employee.id);
-                    
-                    // Prepare update data
-                    const updateData = {
-                        employeeId: formData.employeeId,
-                        updatedAt: serverTimestamp(),
-                    };
+            if (noIdEmployeeDoc.exists()) {
+                // This is a no-id employee, move them to university collection
+                const employeeData = noIdEmployeeDoc.data();
 
-                    // Handle password separately - only update if changed
-                    if (formData.password) {
-                        const hashedPassword = await hashPassword(formData.password);
-                        updateData.password = hashedPassword;
-                    }
+                // Create in university collection with the employeeId as the document ID
+                const universityEmployeesRef = doc(
+                    db,
+                    "universities",
+                    universityId,
+                    "employees",
+                    formData.employeeId // Using employeeId (e.g., UNT-00001) as the document ID
+                );
 
-                    // Update the employee document
-                    await updateDoc(employeeRef, updateData);
+                // Move the employee data to university collection
+                await setDoc(universityEmployeesRef, {
+                    ...employeeData,
+                    id: formData.employeeId, // Set the id field to match document ID
+                    employeeId: formData.employeeId,
+                    password: formData.password
+                        ? await hashPassword(formData.password)
+                        : employeeData.password,
+                    updatedAt: serverTimestamp(),
+                    pendingIdAssignment: false,
+                });
 
-                    // Show success alert
-                    showSuccessAlert("Employee credentials updated successfully!");
-                    
-                    // Wait a bit before closing and refreshing
-                    setTimeout(() => {
-                        onClose(); // Close the modal
-                        
-                        // Call the callback to refresh employee data
-                        if (typeof onEmployeeUpdated === 'function') {
-                            onEmployeeUpdated();
-                        }
-                    }, 2000);
-                } catch (error) {
-                    console.error("Error updating employee credentials:", error);
-                    showErrorAlert("Failed to update employee credentials. Please try again.");
-                } finally {
-                    setLoading(false);
+                // Delete from no-id-employees collection
+                await deleteDoc(noIdEmployeeRef);
+
+                console.log(
+                    "Moved employee to university collection with ID:",
+                    formData.employeeId
+                );
+            } else {
+                // Regular employee update
+                const employeeRef = doc(
+                    db,
+                    `universities/${universityId}/employees/${employee.id}`
+                );
+
+                // Update only what has changed
+                const updates = {
+                    employeeId: formData.employeeId,
+                    updatedAt: serverTimestamp(),
+                };
+
+                if (formData.password) {
+                    updates.password = await hashPassword(formData.password);
                 }
-            },
-            "Yes, update credentials",
-            "Cancel"
-        );
+
+                await updateDoc(employeeRef, updates);
+            }
+
+            showSuccessAlert("Employee credentials updated successfully!");
+            onClose();
+
+            // Refresh the page to reflect changes
+            window.location.reload();
+        } catch (error) {
+            console.error("Error updating employee credentials:", error);
+            showErrorAlert(error.message);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -129,7 +158,9 @@ const EditCredentialsModal = ({ isOpen, onClose, employee, universityId, onEmplo
             <div className="bg-white rounded-lg p-8 w-full max-w-md shadow-lg relative z-50 flex flex-col">
                 {/* Modal Header */}
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="font-bold text-2xl">Edit Employee Credentials</h2>
+                    <h2 className="font-bold text-2xl">
+                        Edit Employee Credentials
+                    </h2>
                     <button
                         onClick={onClose}
                         className="cursor-pointer text-gray-500 hover:text-gray-700 text-xl"
@@ -181,7 +212,9 @@ const EditCredentialsModal = ({ isOpen, onClose, employee, universityId, onEmplo
                                 onClick={togglePasswordVisibility}
                                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500 hover:text-gray-700"
                             >
-                                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                                <FontAwesomeIcon
+                                    icon={showPassword ? faEyeSlash : faEye}
+                                />
                             </button>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
@@ -220,4 +253,4 @@ const EditCredentialsModal = ({ isOpen, onClose, employee, universityId, onEmplo
     );
 };
 
-export default EditCredentialsModal; 
+export default EditCredentialsModal;

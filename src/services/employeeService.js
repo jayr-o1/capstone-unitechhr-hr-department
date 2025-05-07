@@ -202,6 +202,9 @@ export const getUniversityEmployees = async (universityId) => {
             };
         }
 
+        let employees = [];
+
+        // Get employees from university subcollection
         const employeesRef = collection(
             db,
             "universities",
@@ -210,10 +213,31 @@ export const getUniversityEmployees = async (universityId) => {
         );
         const querySnapshot = await getDocs(employeesRef);
 
-        const employees = querySnapshot.docs.map((doc) => ({
+        employees = querySnapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
         }));
+
+        // Get employees from no-id-employees collection that belong to this university
+        const noIdEmployeesRef = collection(db, "no-id-employees");
+        const noIdQuery = query(
+            noIdEmployeesRef,
+            where("universityId", "==", universityId)
+        );
+        const noIdSnapshot = await getDocs(noIdQuery);
+
+        const noIdEmployees = noIdSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            fromNoIdCollection: true, // Flag to identify these employees
+        }));
+
+        // Combine both sets of employees
+        employees = [...employees, ...noIdEmployees];
+
+        console.log(
+            `Found ${employees.length} total employees (${noIdEmployees.length} from no-id-employees)`
+        );
 
         return { success: true, employees };
     } catch (error) {
@@ -244,35 +268,7 @@ export const getEmployeeData = async (userId, universityId) => {
             }
         }
 
-        // Check for employees by employeeId field first
-        if (employeeId !== userId) {
-            // For mock users, we need to query by employeeId field
-            const employeesRef = collection(
-                db,
-                "universities",
-                universityId,
-                "employees"
-            );
-            const q = query(
-                employeesRef,
-                where("employeeId", "==", employeeId)
-            );
-            const querySnapshot = await getDocs(q);
-
-            if (!querySnapshot.empty) {
-                // Get the first matching employee
-                const employeeDoc = querySnapshot.docs[0];
-                return {
-                    success: true,
-                    data: {
-                        id: employeeDoc.id,
-                        ...employeeDoc.data(),
-                    },
-                };
-            }
-        }
-
-        // Fallback to direct document lookup by ID
+        // First check in university's employees collection
         const employeeRef = doc(
             db,
             "universities",
@@ -290,14 +286,33 @@ export const getEmployeeData = async (userId, universityId) => {
                     ...employeeDoc.data(),
                 },
             };
-        } else {
-            return {
-                success: false,
-                message: "Employee not found",
-            };
         }
+
+        // If not found in university collection, check no-id-employees collection
+        const noIdEmployeeRef = doc(db, "no-id-employees", employeeId);
+        const noIdEmployeeDoc = await getDoc(noIdEmployeeRef);
+
+        if (noIdEmployeeDoc.exists()) {
+            const employeeData = noIdEmployeeDoc.data();
+            // Verify this employee belongs to the requested university
+            if (employeeData.universityId === universityId) {
+                return {
+                    success: true,
+                    data: {
+                        id: noIdEmployeeDoc.id,
+                        ...employeeData,
+                        fromNoIdCollection: true, // Flag to identify these employees
+                    },
+                };
+            }
+        }
+
+        return {
+            success: false,
+            message: "Employee not found",
+        };
     } catch (error) {
-        console.error("Error fetching employee data:", error);
+        console.error("Error getting employee data:", error);
         return {
             success: false,
             message: error.message,
