@@ -471,6 +471,44 @@ const Onboarding = () => {
                         onboardingUpdatedAt: serverTimestamp(),
                     });
 
+                    // Create a new employee record in the no-id-employees collection
+                    if (universityId) {
+                        try {
+                            // Create employee record without an employee ID yet
+                            const noIdEmployeesRef = collection(
+                                db,
+                                "no-id-employees"
+                            );
+                            await addDoc(noIdEmployeesRef, {
+                                name: applicantData.name,
+                                email: applicantData.email,
+                                phone: applicantData.phone || "",
+                                position: applicantData.jobTitle || "",
+                                department: applicantData.department || "",
+                                bio: applicantData.summary || "",
+                                address: applicantData.address || "",
+                                dateHired: serverTimestamp(),
+                                status: "Active",
+                                universityId: universityId,
+                                createdAt: serverTimestamp(),
+                                updatedAt: serverTimestamp(),
+                                fromApplicant: true,
+                                applicationId: applicantId,
+                                jobId: jobId,
+                            });
+
+                            console.log(
+                                "Created employee record in no-id-employees collection"
+                            );
+                        } catch (error) {
+                            console.error(
+                                "Error creating employee record:",
+                                error
+                            );
+                            // Continue with onboarding completion even if employee creation fails
+                        }
+                    }
+
                     // Update local state
                     setApplicants((prev) =>
                         prev.map((applicant) =>
@@ -486,11 +524,13 @@ const Onboarding = () => {
                         )
                     );
 
-                    showSuccessAlert("Onboarding completed successfully!");
-                } catch (error) {
-                    console.error("Error completing onboarding:", error);
+                    showSuccessAlert(
+                        "Onboarding completed successfully! The employee record has been created and is ready to be assigned an employee ID."
+                    );
+                } catch (err) {
+                    console.error("Error completing onboarding:", err);
                     showErrorAlert(
-                        "Failed to complete onboarding: " + error.message
+                        "Failed to complete onboarding: " + err.message
                     );
                 } finally {
                     setLoading(false);
