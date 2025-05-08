@@ -32,6 +32,21 @@ export default defineConfig({
                         console.log("proxy error", err);
                     });
                     proxy.on("proxyReq", (proxyReq, req, _res) => {
+                        // Log the content type for debugging
+                        console.log(
+                            "Request Content-Type:",
+                            req.headers['content-type']
+                        );
+                        
+                        // For multipart/form-data, don't modify the content-type header
+                        if (req.headers['content-type'] && 
+                            req.headers['content-type'].startsWith('multipart/form-data')) {
+                            console.log("Preserving multipart/form-data Content-Type");
+                            
+                            // Important: For multipart requests, we should NOT touch the body or headers 
+                            // as that will break the boundary definition
+                        }
+                        
                         console.log(
                             "Sending Request to the Target:",
                             req.method,
@@ -46,6 +61,16 @@ export default defineConfig({
                         );
                     });
                 },
+                // Adding specific options for handling file uploads
+                handleRequest: (req, res, next) => {
+                    // Allow larger file uploads
+                    req.maxBodyLength = 50 * 1024 * 1024; // 50MB
+                    next();
+                },
+                // Important: Preserve the original body of the request
+                selfHandleResponse: false,
+                // Increase timeout for file uploads
+                timeout: 60000,
             },
             "/health": {
                 target: "http://localhost:5000",

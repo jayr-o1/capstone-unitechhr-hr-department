@@ -110,16 +110,14 @@ const downloadFile = async (url) => {
     try {
         console.log(`Downloading file from: ${url}`);
 
-        // If it's a Firebase Storage URL, try to proxy it
+        // If it's a Firebase Storage URL, try to proxy it directly first
         if (url.includes("firebasestorage.googleapis.com")) {
             console.log(
                 "Firebase Storage URL detected, attempting to proxy..."
             );
 
             try {
-                // Try using a CORS proxy service
-                // For demo or development purposes, we can use a public CORS proxy
-                // For production, you should set up your own proxy server
+                // Always use CORS proxy for Firebase Storage URLs to avoid CORS issues
                 const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(
                     url
                 )}`;
@@ -133,8 +131,9 @@ const downloadFile = async (url) => {
                     );
                 }
 
-                console.log("Successfully proxied file download");
-                return await response.blob();
+                const blob = await response.blob();
+                console.log(`Successfully proxied file download, size: ${blob.size} bytes, type: ${blob.type}`);
+                return blob;
             } catch (proxyError) {
                 console.error(
                     "Error using proxy for Firebase Storage:",
@@ -161,7 +160,9 @@ const downloadFile = async (url) => {
 
                 // Create a small mock file with the correct mime type
                 const mockFileContent = "Mock file content for testing";
-                return new Blob([mockFileContent], { type: mimeType });
+                const mockBlob = new Blob([mockFileContent], { type: mimeType });
+                console.log(`Created mock file, size: ${mockBlob.size} bytes, type: ${mimeType}`);
+                return mockBlob;
             }
         }
 
@@ -230,22 +231,22 @@ export const extractSkillsFromDocument = async (documentUrl, documentType) => {
             try {
                 // First try using the proxied URL
                 console.log("Attempting request through Vite proxy...");
-
+                
+                // Don't set explicit content-type header with FormData
+                // The browser will set it automatically with the correct boundary
                 response = await fetch(API_CONFIG.endpoints.extract, {
                     method: "POST",
-                    headers: {
-                        Accept: "multipart/form-data",
-                    },
                     body: formData,
+                    // Important: Don't set headers for FormData/multipart
                 });
-
+                
                 // Handle the response
                 console.log(`API proxy response status: ${response.status}`);
-
-                // If proxy returns 500, try direct URL as fallback
-                if (response.status === 500) {
+                
+                // If proxy returns error, try direct URL as fallback
+                if (!response.ok) {
                     console.log(
-                        "Proxy request failed with 500 error, trying direct URL..."
+                        `Proxy request failed with ${response.status} error, trying direct URL...`
                     );
                     useDirectUrl = true;
                 }
@@ -613,6 +614,9 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
         // Create a FormData instance for multiple files
         const formData = new FormData();
 
+        // Track document types separately to better handle API requirements
+        const documentTypes = [];
+
         // Download and add each document to the form data
         for (let i = 0; i < validDocuments.length; i++) {
             const doc = validDocuments[i];
@@ -623,16 +627,21 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
                     `Downloaded file blob, size: ${fileBlob.size} bytes, type: ${fileBlob.type}`
                 );
 
-                // Add file to FormData with a unique name including document type and index
-                const fileName =
-                    doc.name ||
-                    `document_${i}.${
-                        doc.url.split(".").pop().split("?")[0] || "pdf"
-                    }`;
-                formData.append("file", fileBlob, fileName);
-
-                // Also add the document type so the API knows what kind of document this is
-                formData.append("documentType", doc.type);
+                // Create a File object from the Blob to ensure the filename is preserved
+                const fileName = doc.name || `document_${i}.${doc.url.split(".").pop().split("?")[0] || "pdf"}`;
+                const file = new File([fileBlob], fileName, { type: fileBlob.type });
+                
+                // Add file to FormData - make sure to use the field name expected by the API
+                formData.append("files", file); // Primary field expected by API
+                
+                // Also append as "file" for backward compatibility
+                formData.append("file", file);
+                
+                // Store the document type
+                documentTypes.push(doc.type);
+                
+                // Also add document type to formData (may be needed by some APIs)
+                formData.append("documentTypes", doc.type);
 
                 console.log(
                     `Added document ${fileName} with type ${doc.type} to form data`
@@ -644,8 +653,9 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
         }
 
         // Check if any files were successfully added
-        const formDataFiles = formData.getAll("file");
-        if (formDataFiles.length === 0) {
+        const formDataFiles = formData.getAll("files");
+        const formDataFilesSingular = formData.getAll("file");
+        if (formDataFiles.length === 0 && formDataFilesSingular.length === 0) {
             console.error("No files could be downloaded for processing");
             return {
                 success: false,
@@ -656,13 +666,17 @@ export const extractSkillsFromMultipleDocuments = async (documents) => {
         }
 
         console.log(
-            `Successfully added ${formDataFiles.length} files to FormData`
+            `Successfully added ${formDataFiles.length} files to FormData (as "files") and ${formDataFilesSingular.length} (as "file")`
         );
-        formDataFiles.forEach((file, index) => {
-            console.log(
-                `File ${index}: name=${file.name}, size=${file.size}, type=${file.type}`
-            );
-        });
+
+        // Log detailed file information to help with debugging
+        const filesInfo = formDataFiles.map((file, index) => ({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            index: index
+        }));
+        console.log("Files info:", filesInfo);
 
         // Send all files to the API in a single request
         console.log(
