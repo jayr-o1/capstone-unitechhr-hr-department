@@ -100,7 +100,7 @@ const SkillGapClusterView = () => {
                             skill: skillName,
                             employeeCount: 0,
                             employees: [],
-                            averageGapPercentage: 0,
+                            trainingPriority: 0,
                             totalGap: 0,
                             specializations: new Set(), // Track which specializations need this skill
                         });
@@ -132,12 +132,16 @@ const SkillGapClusterView = () => {
             }
         });
 
-        // Calculate average gap for each skill
+        // Calculate training priority for each skill
         const clustersArray = [];
         skillMap.forEach((cluster) => {
-            cluster.averageGapPercentage = Math.round(
-                cluster.totalGap / cluster.employeeCount
+            // Calculate training priority based on employee count and gap size
+            // Scale from 1-10 instead of using percentages
+            cluster.trainingPriority = Math.min(
+                10,
+                Math.round((cluster.employeeCount * 2 + cluster.totalGap / 100) / 2)
             );
+            
             // Sort employees by gap size (largest first)
             cluster.employees.sort((a, b) => b.gapPercentage - a.gapPercentage);
             // Convert specializations Set to Array
@@ -172,6 +176,12 @@ const SkillGapClusterView = () => {
         if (employeeCount >= 5)
             return "bg-yellow-100 border-yellow-300 text-yellow-800";
         return "bg-blue-100 border-blue-300 text-blue-800";
+    };
+
+    const getTrainingPriorityLabel = (priority) => {
+        if (priority >= 8) return "High";
+        if (priority >= 5) return "Medium";
+        return "Low";
     };
 
     const getTotalEmployeesWithTrainingNeeds = () => {
@@ -341,8 +351,7 @@ const SkillGapClusterView = () => {
                                                 </span>
                                             </div>
                                             <div className="text-sm mt-1">
-                                                Avg. training need:{" "}
-                                                {cluster.averageGapPercentage}%
+                                                Training priority: {getTrainingPriorityLabel(cluster.trainingPriority)}
                                             </div>
                                             {cluster.specializationsArray &&
                                                 cluster.specializationsArray
@@ -382,10 +391,7 @@ const SkillGapClusterView = () => {
                                                         <div className="text-right">
                                                             <div className="flex items-center">
                                                                 <span className="text-gray-600 text-sm">
-                                                                    {
-                                                                        employee.currentLevel
-                                                                    }
-                                                                    %
+                                                                    Current
                                                                 </span>
                                                                 <FontAwesomeIcon
                                                                     icon={
@@ -394,17 +400,14 @@ const SkillGapClusterView = () => {
                                                                     className="mx-2 text-gray-400 text-xs"
                                                                 />
                                                                 <span className="text-green-600 text-sm">
-                                                                    {
-                                                                        employee.requiredLevel
-                                                                    }
-                                                                    %
+                                                                    Required
                                                                 </span>
                                                             </div>
                                                             <div className="w-32 bg-gray-200 rounded-full h-2 mt-1">
                                                                 <div
                                                                     className="bg-indigo-600 h-2 rounded-full"
                                                                     style={{
-                                                                        width: `${employee.currentLevel}%`,
+                                                                        width: `${Math.min(100, Math.max(5, employee.currentLevel))}%`,
                                                                     }}
                                                                 ></div>
                                                             </div>
@@ -458,24 +461,17 @@ const SkillGapClusterView = () => {
                                             <div
                                                 className="bg-indigo-600 h-2.5 rounded-full"
                                                 style={{
-                                                    width: `${
-                                                        100 -
-                                                        cluster.averageGapPercentage
-                                                    }%`,
+                                                    width: `${Math.min(95, Math.max(20, cluster.trainingPriority * 10))}%`,
                                                 }}
                                             ></div>
                                         </div>
 
                                         <div className="flex justify-between text-sm mb-4">
                                             <span>
-                                                Current:{" "}
-                                                {100 -
-                                                    cluster.averageGapPercentage}
-                                                %
+                                                Priority: {getTrainingPriorityLabel(cluster.trainingPriority)}
                                             </span>
                                             <span>
-                                                Need:{" "}
-                                                {cluster.averageGapPercentage}%
+                                                {cluster.employeeCount} need training
                                             </span>
                                         </div>
 

@@ -21,7 +21,36 @@ export default defineConfig({
     ],
     server: {
         proxy: {
-            // Proxy API requests to avoid CORS issues
+            // Proxy recommendations API requests first (more specific rule)
+            "/api/recommendations": {
+                target: "http://localhost:5001",
+                changeOrigin: true,
+                secure: false,
+                rewrite: (path) => path.replace(/^\/api\/recommendations/, '/api/recommendations'),
+                configure: (proxy, _options) => {
+                    proxy.on("error", (err, _req, _res) => {
+                        console.log("recommendations proxy error", err);
+                    });
+                    proxy.on("proxyReq", (proxyReq, req, _res) => {
+                        console.log(
+                            "Sending Recommendations Request:",
+                            req.method,
+                            req.url,
+                            "to http://localhost:5001"
+                        );
+                    });
+                    proxy.on("proxyRes", (proxyRes, req, _res) => {
+                        console.log(
+                            "Received Recommendations Response:",
+                            proxyRes.statusCode,
+                            req.url
+                        );
+                    });
+                },
+                // Increase timeout for the recommendation API
+                timeout: 60000,
+            },
+            // Then proxy general API requests
             "/api": {
                 target: "http://localhost:5000",
                 changeOrigin: true,
@@ -50,7 +79,8 @@ export default defineConfig({
                         console.log(
                             "Sending Request to the Target:",
                             req.method,
-                            req.url
+                            req.url,
+                            "to http://localhost:5000"
                         );
                     });
                     proxy.on("proxyRes", (proxyRes, req, _res) => {
@@ -77,32 +107,6 @@ export default defineConfig({
                 changeOrigin: true,
                 secure: false,
                 rewrite: (path) => path,
-            },
-            // Proxy recommendations API requests
-            "/api/recommendations": {
-                target: "http://localhost:5001",
-                changeOrigin: true,
-                secure: false,
-                rewrite: (path) => path,
-                configure: (proxy, _options) => {
-                    proxy.on("error", (err, _req, _res) => {
-                        console.log("recommendations proxy error", err);
-                    });
-                    proxy.on("proxyReq", (proxyReq, req, _res) => {
-                        console.log(
-                            "Sending Recommendations Request:",
-                            req.method,
-                            req.url
-                        );
-                    });
-                    proxy.on("proxyRes", (proxyRes, req, _res) => {
-                        console.log(
-                            "Received Recommendations Response:",
-                            proxyRes.statusCode,
-                            req.url
-                        );
-                    });
-                },
             },
         },
     },

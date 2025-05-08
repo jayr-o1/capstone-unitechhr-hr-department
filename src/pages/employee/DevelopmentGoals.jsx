@@ -371,43 +371,80 @@ const DevelopmentGoals = () => {
                 isCertified: skill.isCertified || false,
             }));
 
-            // Call the recommendation API
-            const result = await getTeachingRecommendations(formattedSkills);
+            console.log("Sending skills to API:", formattedSkills);
+            
+            try {
+                // Call the recommendation API
+                const result = await getTeachingRecommendations(formattedSkills);
 
-            if (result.success && result.recommendations) {
-                console.log(
-                    "Received teaching recommendations:",
-                    result.recommendations
-                );
+                if (result && result.recommendations) {
+                    console.log(
+                        "Received teaching recommendations:",
+                        result.recommendations
+                    );
 
-                // Process the API response based on structure
-                if (Array.isArray(result.recommendations)) {
-                    // Handle array format
-                    setRecommendations({
-                        recommendations: result.recommendations,
-                        user_skills: formattedSkills,
-                    });
-                } else if (result.recommendations.recommendations) {
-                    // Handle the case where API returns {recommendations: [...], user_skills: [...]}
-                    setRecommendations(result.recommendations);
+                    // Process the API response based on structure
+                    if (Array.isArray(result.recommendations)) {
+                        // Handle array format
+                        setRecommendations({
+                            recommendations: result.recommendations,
+                            user_skills: formattedSkills,
+                        });
+                    } else if (result.recommendations.recommendations) {
+                        // Handle the case where API returns {recommendations: [...], user_skills: [...]}
+                        setRecommendations(result.recommendations);
+                    } else {
+                        // Fallback for other formats
+                        const processedRecs = {
+                            recommendations:
+                                result.recommendations.specializations ||
+                                result.recommendations.specialization_cards ||
+                                result.recommendations.subject_areas ||
+                                result.recommendations,
+                            user_skills: formattedSkills,
+                        };
+                        setRecommendations(processedRecs);
+                    }
+                    
+                    toast.success("Recommendations loaded successfully");
                 } else {
-                    // Fallback for other formats
-                    const processedRecs = {
-                        recommendations:
-                            result.recommendations.specializations ||
-                            result.recommendations.specialization_cards ||
-                            result.recommendations,
-                        user_skills: formattedSkills,
-                    };
-                    setRecommendations(processedRecs);
+                    throw new Error("Invalid response format from API");
                 }
-            } else {
-                console.error("Failed to get recommendations:", result.message);
-                toast.error("Failed to load recommendations");
+            } catch (apiError) {
+                console.error("Error from recommendations API:", apiError);
+                
+                // Check if the error is related to 404 (API not found)
+                const errorMessage = apiError.message || "";
+                if (errorMessage.includes("404") || errorMessage.includes("failed with status 404")) {
+                    toast.error("Recommendation service is currently unavailable. Using fallback data instead.");
+                    console.warn("Using fallback recommendations data due to API unavailability");
+                } else {
+                    // Show detailed error for other issues
+                    toast.error(`API Error: ${apiError.message}`);
+                }
+                
+                // Check if the recommendationService already provided fallback data
+                if (apiError.fallbackData) {
+                    setRecommendations(apiError.fallbackData);
+                } else {
+                    // Create empty placeholder for recommendations with the skills we have
+                    setRecommendations({
+                        recommendations: [],
+                        user_skills: formattedSkills,
+                        error: apiError.message
+                    });
+                }
             }
         } catch (err) {
-            console.error("Error fetching recommendations:", err);
-            toast.error("Error loading recommendations");
+            console.error("Error in fetchRecommendations function:", err);
+            toast.error("Failed to process recommendations: " + err.message);
+            
+            // Ensure we have at least an empty recommendations object
+            setRecommendations({
+                recommendations: [],
+                user_skills: formattedSkills || [],
+                error: err.message
+            });
         } finally {
             setLoadingRecommendations(false);
         }
