@@ -430,7 +430,7 @@ const DevelopmentGoals = () => {
                     // Create empty placeholder for recommendations with the skills we have
                     setRecommendations({
                         recommendations: [],
-                        user_skills: formattedSkills,
+                        user_skills: formattedSkills || [],
                         error: apiError.message
                     });
                 }
@@ -556,9 +556,9 @@ const DevelopmentGoals = () => {
                             skill: requiredSkill.name,
                             specialization: specialization.title,
                             currentLevel: currentLevel,
-                            requiredLevel: requiredSkill.minimumProficiency,
-                            gap:
-                                requiredSkill.minimumProficiency - currentLevel,
+                            requiredLevel: "Advanced",
+                            requiredLevelText: "Advanced",
+                            isFromApi: false
                         });
                     }
                 });
@@ -614,9 +614,9 @@ const DevelopmentGoals = () => {
                                         skill: skillName,
                                         specialization: specialization.title,
                                         currentLevel: 0,
-                                        requiredLevel: 60, // Default to intermediate-advanced level requirement
-                                        gap: 60, // Gap is the same as required level if current is 0
-                                        isFromApi: true, // Mark that this came from API recommendations
+                                        requiredLevel: "Advanced",
+                                        requiredLevelText: "Advanced",
+                                        isFromApi: true
                                     });
                                 }
                             });
@@ -626,8 +626,8 @@ const DevelopmentGoals = () => {
             }
         });
 
-        // Sort gaps by size (largest first)
-        return gaps.sort((a, b) => b.gap - a.gap);
+        // Sort by employee count or name instead of gap size
+        return gaps.sort((a, b) => a.skill.localeCompare(b.skill));
     };
 
     // Toggle a specialization selection
@@ -775,8 +775,8 @@ const DevelopmentGoals = () => {
                         skill: requiredSkill.name,
                         specialization: specialization.title,
                         currentLevel: currentLevel,
-                        requiredLevel: requiredSkill.minimumProficiency,
-                        gap: requiredSkill.minimumProficiency - currentLevel,
+                        requiredLevel: "Advanced",
+                        requiredLevelText: "Advanced",
                         isFromApi: false,
                         createdAt: serverTimestamp(),
                         employeeName: employeeName,
@@ -1110,9 +1110,8 @@ const DevelopmentGoals = () => {
                         skill: skillName,
                         specialization: recommendation.specialization,
                         currentLevel: 0,
-                        requiredLevel: 70,
+                        requiredLevel: "Advanced",
                         requiredLevelText: "Advanced",
-                        gap: 70,
                         isFromApi: true,
                         createdAt: serverTimestamp(),
                         employeeName: employeeName,
@@ -1212,9 +1211,8 @@ const DevelopmentGoals = () => {
                             skill: skillName,
                             specialization: rec.specialization,
                             currentLevel: 0,
-                            requiredLevel: 70, // Default required level (numeric)
-                            requiredLevelText: "Advanced", // Text version for display
-                            gap: 70,
+                            requiredLevel: "Advanced",
+                            requiredLevelText: "Advanced",
                             isFromApi: true,
                             apiRec: rec,
                         });
@@ -1264,8 +1262,8 @@ const DevelopmentGoals = () => {
             });
         }
 
-        // Sort gaps by gap size (largest first)
-        setSkillGaps(allGaps.sort((a, b) => b.gap - a.gap));
+        // Sort by skill name instead of gap size
+        setSkillGaps(allGaps.sort((a, b) => a.skill.localeCompare(b.skill)));
     }, [
         skills,
         selectedSpecializations,
@@ -2171,7 +2169,7 @@ const DevelopmentGoals = () => {
                                                             : "bg-yellow-100 text-yellow-800"
                                                     }`}
                                                 >
-                                                    Gap: {gap.gap}%
+                                                    {gap.isFromApi ? "Skill Need" : "Skill Need"}
                                                 </span>
                                             </div>
                                             <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
@@ -2188,19 +2186,16 @@ const DevelopmentGoals = () => {
                                             </div>
                                             <div className="flex justify-between text-xs text-gray-500">
                                                 <span>
-                                                    Current:{" "}
-                                                    {gap.isFromApi
+                                                    Current Level: {gap.isFromApi
                                                         ? gap.currentLevel > 0
                                                             ? "Beginner"
                                                             : "None"
-                                                        : `${gap.currentLevel}%`}
+                                                        : "Beginner"}
                                                 </span>
                                                 <span>
-                                                    Required:{" "}
-                                                    {gap.isFromApi &&
-                                                    gap.requiredLevelText
+                                                    Required Level: {gap.isFromApi && gap.requiredLevelText
                                                         ? gap.requiredLevelText
-                                                        : `${gap.requiredLevel}%`}
+                                                        : "Advanced"}
                                                 </span>
                                             </div>
                                         </div>
