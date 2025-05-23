@@ -1,9 +1,8 @@
 import React, { useRef, useLayoutEffect, useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Label } from "recharts";
 import { db, auth } from "../../firebase";
-import { collection, query, getDocs, where } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { getUserData } from "../../services/userService";
-import { getUniversityEmployees } from "../../services/employeeService";
 
 // Default colors for departments
 const departmentColors = {
@@ -17,14 +16,9 @@ const departmentColors = {
     Other: "#6B7280",
 };
 
-// Sample data to use as fallback
-const SAMPLE_DATA = [
-    { name: "College of Criminology", value: 12, color: "#00B4D8" },
-    { name: "College of Education", value: 18, color: "#8B5CF6" },
-    { name: "College of Computer Studies", value: 15, color: "#60A5FA" },
-    { name: "College of Business Accountancy", value: 10, color: "#EC4899" },
-    { name: "College of Nursing", value: 8, color: "#FBBF24" },
-    { name: "Administration", value: 5, color: "#10B981" },
+// Empty data structure for when no data is available
+const EMPTY_DATA = [
+    { name: "No Data", value: 1, color: "#6B7280" },
 ];
 
 const NumberOfEmployeesChart = () => {
@@ -107,10 +101,8 @@ const NumberOfEmployeesChart = () => {
 
                 if (!user) {
                     console.error("No authenticated user found");
-                    setEmployeeData(SAMPLE_DATA);
-                    setTotal(
-                        SAMPLE_DATA.reduce((acc, item) => acc + item.value, 0)
-                    );
+                    setEmployeeData(EMPTY_DATA);
+                    setTotal(0);
                     setLoading(false);
                     return;
                 }
@@ -131,18 +123,14 @@ const NumberOfEmployeesChart = () => {
                     setUniversityId(userDataResult.data.universityId);
                 } else {
                     console.error("User doesn't have a university association");
-                    setEmployeeData(SAMPLE_DATA);
-                    setTotal(
-                        SAMPLE_DATA.reduce((acc, item) => acc + item.value, 0)
-                    );
+                    setEmployeeData(EMPTY_DATA);
+                    setTotal(0);
                     setLoading(false);
                 }
             } catch (error) {
                 console.error("Error getting user's university:", error);
-                setEmployeeData(SAMPLE_DATA);
-                setTotal(
-                    SAMPLE_DATA.reduce((acc, item) => acc + item.value, 0)
-                );
+                setEmployeeData(EMPTY_DATA);
+                setTotal(0);
                 setLoading(false);
             }
         };
@@ -165,44 +153,15 @@ const NumberOfEmployeesChart = () => {
                 console.error(
                     "Cannot fetch employee data: universityId is null"
                 );
-                setEmployeeData(SAMPLE_DATA);
-                setTotal(
-                    SAMPLE_DATA.reduce((acc, item) => acc + item.value, 0)
-                );
+                setEmployeeData(EMPTY_DATA);
+                setTotal(0);
                 setLoading(false);
                 return;
             }
 
             const departmentCounts = {};
-            let totalEmployeesFound = 0;
-
-            // 1. Try to get employees using the service function first
-            try {
-                const result = await getUniversityEmployees(universityId);
-                if (
-                    result.success &&
-                    result.employees &&
-                    result.employees.length > 0
-                ) {
-                    console.log(
-                        `Service function found ${result.employees.length} employees`
-                    );
-                    totalEmployeesFound += result.employees.length;
-
-                    // Process employees from service function
-                    result.employees.forEach((employee) => {
-                        if (employee) {
-                            const department = employee.department || "Other";
-                            departmentCounts[department] =
-                                (departmentCounts[department] || 0) + 1;
-                        }
-                    });
-                }
-            } catch (serviceError) {
-                console.error("Error using employee service:", serviceError);
-            }
-
-            // 2. Try direct Firestore query to university employees subcollection
+            
+            // ONLY query the university's employees subcollection
             try {
                 const universityEmployeesRef = collection(
                     db,
@@ -210,63 +169,30 @@ const NumberOfEmployeesChart = () => {
                     universityId,
                     "employees"
                 );
-                const universityEmployeesSnapshot = await getDocs(
-                    universityEmployeesRef
-                );
+                const universityEmployeesSnapshot = await getDocs(universityEmployeesRef);
                 console.log(
                     `University subcollection found ${universityEmployeesSnapshot.size} employees`
                 );
 
-                totalEmployeesFound += universityEmployeesSnapshot.size;
-
+                // Process employees
                 universityEmployeesSnapshot.forEach((doc) => {
                     const employeeData = doc.data();
                     if (employeeData) {
                         const department = employeeData.department || "Other";
-                        departmentCounts[department] =
+                        departmentCounts[department] = 
                             (departmentCounts[department] || 0) + 1;
                     }
                 });
+                
+                // Log the actual counts by department
+                console.log("Department counts:", departmentCounts);
+                
             } catch (universityQueryError) {
                 console.error(
                     "Error querying university employees subcollection:",
                     universityQueryError
                 );
             }
-
-            // 3. Try root employees collection (filter by universityId)
-            try {
-                const rootEmployeesRef = collection(db, "employees");
-                const rootEmployeesQuery = query(
-                    rootEmployeesRef,
-                    where("universityId", "==", universityId)
-                );
-                const rootEmployeesSnapshot = await getDocs(rootEmployeesQuery);
-                console.log(
-                    `Root collection found ${rootEmployeesSnapshot.size} employees`
-                );
-
-                totalEmployeesFound += rootEmployeesSnapshot.size;
-
-                rootEmployeesSnapshot.forEach((doc) => {
-                    const employeeData = doc.data();
-                    if (employeeData) {
-                        const department = employeeData.department || "Other";
-                        departmentCounts[department] =
-                            (departmentCounts[department] || 0) + 1;
-                    }
-                });
-            } catch (rootQueryError) {
-                console.error(
-                    "Error querying root employees collection:",
-                    rootQueryError
-                );
-            }
-
-            console.log(
-                `Total employees found across all queries: ${totalEmployeesFound}`
-            );
-            console.log("Department counts:", departmentCounts);
 
             // Convert to array format for the chart
             if (Object.keys(departmentCounts).length > 0) {
@@ -288,19 +214,19 @@ const NumberOfEmployeesChart = () => {
                 );
 
                 console.log("Final chart data:", chartData);
+                console.log("Total employee count:", employeeTotal);
+                
                 setEmployeeData(chartData);
                 setTotal(employeeTotal);
             } else {
-                console.log("No department data found, using sample data");
-                setEmployeeData(SAMPLE_DATA);
-                setTotal(
-                    SAMPLE_DATA.reduce((acc, item) => acc + item.value, 0)
-                );
+                console.log("No department data found, using empty data");
+                setEmployeeData(EMPTY_DATA);
+                setTotal(0);
             }
         } catch (error) {
             console.error("Error in fetchEmployeeData:", error);
-            setEmployeeData(SAMPLE_DATA);
-            setTotal(SAMPLE_DATA.reduce((acc, item) => acc + item.value, 0));
+            setEmployeeData(EMPTY_DATA);
+            setTotal(0);
         } finally {
             setLoading(false);
         }
@@ -320,16 +246,19 @@ const NumberOfEmployeesChart = () => {
         );
     }
 
-    // Always use meaningful dimensions
-    const chartWidth = Math.max(dimensions.width, 400); // Much wider minimum width
-    const chartHeight = Math.max(dimensions.height, 300); // Taller minimum height
+    // Use the full container width and height
+    const chartWidth = dimensions.width;
+    const chartHeight = dimensions.height;
 
-    // Calculate chart sizes relative to container but with reasonable limits
-    const innerRadius = Math.min(chartHeight * 0.18, 45);
-    const outerRadius = Math.min(chartHeight * 0.32, 80);
+    // Calculate chart sizes relative to container for a larger appearance
+    const innerRadius = Math.min(chartHeight * 0.25, 80); // Increased inner radius
+    const outerRadius = Math.min(chartHeight * 0.45, 140); // Increased outer radius
 
-    // Add padding to ensure labels have space
-    const containerPadding = 60; // More padding on each side
+    // Reduced padding to allow chart to take more space
+    const containerPadding = 30;
+
+    // Determine if we have actual data or empty state
+    const hasData = employeeData.length > 0 && employeeData[0].name !== "No Data";
 
     return (
         <div
@@ -344,17 +273,17 @@ const NumberOfEmployeesChart = () => {
             <PieChart
                 width={chartWidth - containerPadding * 2}
                 height={chartHeight - containerPadding * 2}
-                margin={{ top: 20, right: 40, bottom: 20, left: 40 }} // Additional chart margin
+                margin={{ top: 0, right: 0, bottom: 0, left: 0 }} // Reduced margins
             >
                 <Pie
-                    data={employeeData.length > 0 ? employeeData : SAMPLE_DATA}
-                    cx={(chartWidth - containerPadding * 2) / 2}
-                    cy={(chartHeight - containerPadding * 2) / 2}
+                    data={employeeData}
+                    cx="50%" // Center horizontally
+                    cy="50%" // Center vertically
                     innerRadius={innerRadius}
                     outerRadius={outerRadius}
-                    paddingAngle={3}
+                    paddingAngle={hasData ? 3 : 0}
                     dataKey="value"
-                    label={({
+                    label={hasData ? ({
                         cx,
                         cy,
                         midAngle,
@@ -365,7 +294,7 @@ const NumberOfEmployeesChart = () => {
                     }) => {
                         const RADIAN = Math.PI / 180;
                         // Increase label distance from chart
-                        const labelDistanceMultiplier = 1.8; // Much greater distance
+                        const labelDistanceMultiplier = 1.5; // Adjusted for better spacing
                         const x =
                             cx +
                             outerRadius *
@@ -378,24 +307,13 @@ const NumberOfEmployeesChart = () => {
                                 Math.sin(-midAngle * RADIAN);
 
                         // Get the name safely
-                        const data =
-                            employeeData.length > 0
-                                ? employeeData
-                                : SAMPLE_DATA;
-                        const name =
-                            payload?.name || data[index]?.name || "Department";
+                        const name = payload?.name || "Department";
 
                         // Determine if this slice is significant enough to show a label
-                        const totalVal =
-                            employeeData.length > 0
-                                ? employeeData.reduce(
-                                      (sum, entry) => sum + entry.value,
-                                      0
-                                  )
-                                : SAMPLE_DATA.reduce(
-                                      (sum, entry) => sum + entry.value,
-                                      0
-                                  );
+                        const totalVal = employeeData.reduce(
+                            (sum, entry) => sum + entry.value,
+                            0
+                        );
 
                         const percentage = (value / totalVal) * 100;
 
@@ -415,56 +333,51 @@ const NumberOfEmployeesChart = () => {
                                 textAnchor={x > cx ? "start" : "end"}
                                 dominantBaseline="middle"
                                 fill="#000"
-                                fontSize={10}
+                                fontSize={12} // Increased font size
                                 fontWeight="medium"
                                 pointerEvents="none"
                             >
                                 {displayName}
                             </text>
                         );
-                    }}
+                    } : null}
                 >
-                    {(employeeData.length > 0 ? employeeData : SAMPLE_DATA).map(
-                        (entry, index) => (
-                            <Cell
-                                key={`cell-${index}`}
-                                fill={entry.color}
-                                stroke="#fff"
-                                strokeWidth={1}
-                            />
-                        )
-                    )}
+                    {employeeData.map((entry, index) => (
+                        <Cell
+                            key={`cell-${index}`}
+                            fill={entry.color}
+                            stroke="#fff"
+                            strokeWidth={2} // Increased stroke width
+                        />
+                    ))}
 
                     <Label
                         content={({ viewBox }) => {
                             const { cx, cy } = viewBox;
-                            const displayTotal =
-                                employeeData.length > 0 ? total : 68;
 
                             return (
                                 <>
                                     <text
                                         x={cx}
-                                        y={cy - 2}
+                                        y={cy - 10} // Adjusted position
                                         textAnchor="middle"
                                         dominantBaseline="middle"
-                                        fontSize={28}
+                                        fontSize={42} // Much larger font size
                                         fontWeight="bold"
                                         fill="#000"
                                     >
-                                        {displayTotal}
+                                        {total}
                                     </text>
                                     <text
                                         x={cx}
-                                        y={cy + 22}
+                                        y={cy + 30} // Adjusted position
                                         textAnchor="middle"
                                         dominantBaseline="middle"
-                                        fontSize={11}
+                                        fontSize={16} // Larger font size
+                                        fontWeight="medium" // Added medium weight
                                         fill="#666"
                                     >
-                                        {employeeData.length > 0
-                                            ? "Total Employees"
-                                            : "Sample Data"}
+                                        {hasData ? "Total Employees" : "No Employees"}
                                     </text>
                                 </>
                             );

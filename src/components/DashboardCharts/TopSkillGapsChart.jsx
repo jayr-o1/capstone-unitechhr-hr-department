@@ -15,6 +15,10 @@ import { getUserData } from "../../services/userService";
 
 // Ensure exactly 5 valid skills
 const enforceFiveSkills = (data) => {
+    if (data.length === 0) {
+        return [{ skill: "No Data", employees: 0 }];
+    }
+    
     return data
         .slice(0, 5) // Trim to exactly 5 points
         .map((d) => ({
@@ -46,14 +50,8 @@ const TopSkillGapsChart = () => {
     const [universityId, setUniversityId] = useState(null);
     const [skillGapData, setSkillGapData] = useState([]);
     
-    // Default data in case the fetch fails
-    const defaultData = [
-        { skill: "Leadership", employees: 45 },
-        { skill: "Data Analysis", employees: 30 },
-        { skill: "Project Management", employees: 25 },
-        { skill: "Communication", employees: 50 },
-        { skill: "Technical Skills", employees: 40 },
-    ];
+    // Empty data for when no data is available
+    const emptyData = [{ skill: "No Data", employees: 0 }];
 
     // Get current user's university ID
     useEffect(() => {
@@ -63,7 +61,7 @@ const TopSkillGapsChart = () => {
                 if (!user) {
                     console.error("No authenticated user found");
                     setLoading(false);
-                    setSkillGapData(enforceFiveSkills(defaultData));
+                    setSkillGapData(emptyData);
                     return;
                 }
                 
@@ -74,12 +72,12 @@ const TopSkillGapsChart = () => {
                 } else {
                     console.error("User doesn't have a university association");
                     setLoading(false);
-                    setSkillGapData(enforceFiveSkills(defaultData));
+                    setSkillGapData(emptyData);
                 }
             } catch (error) {
                 console.error("Error getting user's university:", error);
                 setLoading(false);
-                setSkillGapData(enforceFiveSkills(defaultData));
+                setSkillGapData(emptyData);
             }
         };
         
@@ -97,89 +95,79 @@ const TopSkillGapsChart = () => {
         try {
             console.log("Fetching skill gap data with universityId:", universityId);
             
-            // For now, always use sample data since the skillGaps collection likely doesn't exist yet
-            console.log("Using sample skill gap data as this is a new feature");
-            const sampleData = [
-                { skill: "Leadership", employees: 45 },
-                { skill: "Data Analysis", employees: 30 },
-                { skill: "Project Management", employees: 25 },
-                { skill: "Communication", employees: 50 },
-                { skill: "Technical Skills", employees: 40 },
-            ];
+            // Initialize skill gap tracking
+            const skillGaps = {};
             
-            setSkillGapData(enforceFiveSkills(sampleData));
-            setLoading(false);
+            // Get employees from the university's employees subcollection
+            const employeesRef = collection(db, "universities", universityId, "employees");
+            const employeesSnapshot = await getDocs(employeesRef);
             
-            // The below code is commented out but kept for future implementation
-            /* 
-            // Get skills data from university's skills gap collection or similar
-            // This is a placeholder implementation - adjust according to your actual data structure
-            const skillsRef = collection(db, "universities", universityId, "skillGaps");
-            const skillsSnapshot = await getDocs(skillsRef);
+            // Process each employee
+            const fetchPromises = [];
             
-            if (!skillsSnapshot.empty) {
-                // If you have a dedicated skillGaps collection
-                const gapData = skillsSnapshot.docs.map(doc => ({
-                    skill: doc.id,
-                    employees: doc.data().count || 0
-                }));
+            employeesSnapshot.forEach((doc) => {
+                const employee = { id: doc.id, ...doc.data() };
                 
-                // Sort by the highest skill gap count
-                gapData.sort((a, b) => b.employees - a.employees);
+                // Get skill gaps for this employee
+                const skillGapsRef = collection(
+                    db, 
+                    "universities", 
+                    universityId, 
+                    "employees", 
+                    doc.id, 
+                    "skillGaps"
+                );
                 
-                setSkillGapData(enforceFiveSkills(gapData));
-            } else {
-                // If you don't have skillGaps collection, analyze employee skills
-                // This is just an example - implement according to your data structure
-                const employeesRef = collection(db, "universities", universityId, "employees");
-                const employeesSnapshot = await getDocs(employeesRef);
-                
-                // Map of skill gaps 
-                const skillGaps = {
-                    "Leadership": 0,
-                    "Data Analysis": 0, 
-                    "Project Management": 0,
-                    "Communication": 0,
-                    "Technical Skills": 0,
-                    "Teamwork": 0,
-                    "Problem Solving": 0,
-                    "Critical Thinking": 0,
-                };
-                
-                // Process employee skills
-                employeesSnapshot.forEach(doc => {
-                    const employeeData = doc.data();
-                    const skills = employeeData.skills || [];
-                    
-                    // Update skill gap counts based on missing skills
-                    Object.keys(skillGaps).forEach(skill => {
-                        if (!skills.includes(skill)) {
-                            skillGaps[skill]++;
-                        }
-                    });
+                const fetchPromise = getDocs(skillGapsRef).then((gapsSnapshot) => {
+                    if (!gapsSnapshot.empty) {
+                        gapsSnapshot.forEach((gapDoc) => {
+                            const gapData = gapDoc.data();
+                            const skillName = gapData.skill || "Unknown Skill";
+                            
+                            // Track this skill gap
+                            if (!skillGaps[skillName]) {
+                                skillGaps[skillName] = {
+                                    skill: skillName,
+                                    employees: 0
+                                };
+                            }
+                            
+                            // Increment the employee count for this skill
+                            skillGaps[skillName].employees++;
+                        });
+                    }
                 });
                 
-                // Convert to array format for the chart
-                const gapData = Object.entries(skillGaps).map(([skill, count]) => ({
-                    skill,
-                    employees: count
-                }));
-                
-                // Sort by the highest skill gap count
-                gapData.sort((a, b) => b.employees - a.employees);
-                
-                setSkillGapData(enforceFiveSkills(gapData));
+                fetchPromises.push(fetchPromise);
+            });
+            
+            // Wait for all skill gap queries to complete
+            await Promise.all(fetchPromises);
+            
+            // Convert to array and sort by number of employees (highest first)
+            const gapArray = Object.values(skillGaps);
+            gapArray.sort((a, b) => b.employees - a.employees);
+            
+            console.log("Skill gaps found:", gapArray);
+            
+            if (gapArray.length > 0) {
+                setSkillGapData(enforceFiveSkills(gapArray));
+            } else {
+                console.log("No skill gaps found, using empty data");
+                setSkillGapData(emptyData);
             }
-            */
+            
+            setLoading(false);
         } catch (error) {
             console.error("Error fetching skill gap data:", error);
-            // Fallback to default data
-            setSkillGapData(enforceFiveSkills(defaultData));
+            // Fallback to empty data
+            setSkillGapData(emptyData);
             setLoading(false);
         }
     };
 
     const data = skillGapData;
+    const hasData = data.length > 0 && data[0].skill !== "No Data";
 
     if (loading) {
         return (
@@ -191,27 +179,36 @@ const TopSkillGapsChart = () => {
 
     return (
         <div className="w-full h-100">
-            <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-                    <PolarGrid stroke="#ddd" />
-                    <PolarAngleAxis
-                        dataKey="skill"
-                        tick={{ fontSize: 12, fontWeight: 500 }}
-                    />
-                    <PolarRadiusAxis domain={[0, 50]} tick={false} />
-                    <Tooltip />
-                    <Legend content={renderLegend} />
-                    <Radar
-                        name="Employees"
-                        dataKey="employees"
-                        stroke="#3B82F6"
-                        strokeWidth={2}
-                        fill="#93C5FD"
-                        fillOpacity={0.6}
-                        connectNulls={true} // 🔥 FIX: Ensures smooth shape
-                    />
-                </RadarChart>
-            </ResponsiveContainer>
+            {!hasData ? (
+                <div className="w-full h-full flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                        <p className="mb-2">No training needs data available</p>
+                        <p className="text-sm">Add skill gaps in the Training Needs section</p>
+                    </div>
+                </div>
+            ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+                        <PolarGrid stroke="#ddd" />
+                        <PolarAngleAxis
+                            dataKey="skill"
+                            tick={{ fontSize: 12, fontWeight: 500 }}
+                        />
+                        <PolarRadiusAxis domain={[0, 'auto']} tick={false} />
+                        <Tooltip />
+                        <Legend content={renderLegend} />
+                        <Radar
+                            name="Employees"
+                            dataKey="employees"
+                            stroke="#3B82F6"
+                            strokeWidth={2}
+                            fill="#93C5FD"
+                            fillOpacity={0.6}
+                            connectNulls={true}
+                        />
+                    </RadarChart>
+                </ResponsiveContainer>
+            )}
         </div>
     );
 };
