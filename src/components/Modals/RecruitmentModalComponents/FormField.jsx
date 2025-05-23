@@ -83,6 +83,8 @@ const FormField = ({
                     placeholder=" " // Add a space to ensure the placeholder is "shown"
                     required={required}
                     min={min}
+                    // Remove the default "0" placeholder for number inputs when empty
+                    {...(type === "number" && { placeholder: "" })}
                 />
             )}
             {type !== "date" && (

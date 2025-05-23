@@ -20,9 +20,13 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
         salary: "",
         workSetup: "",
         availableSlots: 1,
+        experienceWeight: "",
+        skillsWeight: "",
+        educationWeight: "",
     });
     const [universityId, setUniversityId] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [weightError, setWeightError] = useState("");
 
     // Get current user's university ID
     useEffect(() => {
@@ -54,7 +58,36 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        
+        // For weight fields, ensure they're numbers and handle validation
+        if (name === "experienceWeight" || name === "skillsWeight" || name === "educationWeight") {
+            const numValue = value === "" ? "" : parseInt(value) || 0;
+            
+            // Update the form data with the new weight value
+            const updatedFormData = { 
+                ...formData, 
+                [name]: numValue 
+            };
+            
+            // Calculate the sum of all weights - convert empty strings to 0 for calculation
+            const expWeight = updatedFormData.experienceWeight === "" ? 0 : updatedFormData.experienceWeight;
+            const skillWeight = updatedFormData.skillsWeight === "" ? 0 : updatedFormData.skillsWeight;
+            const eduWeight = updatedFormData.educationWeight === "" ? 0 : updatedFormData.educationWeight;
+            
+            const totalWeight = expWeight + skillWeight + eduWeight;
+            
+            // Set error message if total is not 100
+            if (totalWeight !== 100) {
+                setWeightError(`Total weight must be 100. Current total: ${totalWeight}`);
+            } else {
+                setWeightError("");
+            }
+            
+            setFormData(updatedFormData);
+        } else {
+            // Handle non-weight fields normally
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
     const handleReset = () => {
@@ -81,7 +114,11 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
             salary: "",
             workSetup: "",
             availableSlots: 1,
+            experienceWeight: "",
+            skillsWeight: "",
+            educationWeight: "",
         });
+        setWeightError("");
     };
 
     const handleSubmit = async (e) => {
@@ -89,6 +126,19 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
 
         if (!formData.title || !formData.department || !formData.summary) {
             showErrorAlert("Please fill all required fields!");
+            return;
+        }
+
+        // Check if weights are filled
+        if (formData.experienceWeight === "" || formData.skillsWeight === "" || formData.educationWeight === "") {
+            showErrorAlert("Please fill all criteria weights!");
+            return;
+        }
+
+        // Check if weights sum to 100
+        const totalWeight = formData.experienceWeight + formData.skillsWeight + formData.educationWeight;
+        if (totalWeight !== 100) {
+            showErrorAlert(`Weight distribution must equal 100. Current total: ${totalWeight}`);
             return;
         }
 
@@ -120,6 +170,12 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
                 datePosted: serverTimestamp(),
                 newApplicants: false,
                 status: "Open",
+                // Add the weight fields
+                criteriaWeights: {
+                    experience: formData.experienceWeight,
+                    skills: formData.skillsWeight,
+                    education: formData.educationWeight
+                }
             };
 
             console.log("Creating job with universityId:", universityId);
@@ -154,6 +210,12 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
     };
 
     if (!isOpen) return null;
+
+    // Calculate the sum of all weights - convert empty strings to 0 for calculation
+    const expWeight = formData.experienceWeight === "" ? 0 : formData.experienceWeight;
+    const skillWeight = formData.skillsWeight === "" ? 0 : formData.skillsWeight;
+    const eduWeight = formData.educationWeight === "" ? 0 : formData.educationWeight;
+    const totalWeight = expWeight + skillWeight + eduWeight;
 
     return (
         <div
@@ -239,6 +301,65 @@ const AddJobModal = ({ isOpen, onClose, onJobAdded }) => {
                                 placeholder="Qualifications"
                                 exampleText="IMPORTANT: Enter each item on a separate line."
                             />
+                        </div>
+
+                        {/* Criteria Weights Section */}
+                        <div className="space-y-2">
+                            <h3 className="font-semibold text-gray-700">Criteria Weights</h3>
+                            <p className="text-sm text-gray-500 mb-2">
+                                Set the importance of each criteria for candidate evaluation. Total must equal 100%.
+                            </p>
+                            
+                            <div className="grid grid-cols-3 gap-4">
+                                <FormField
+                                    type="number"
+                                    name="experienceWeight"
+                                    value={formData.experienceWeight}
+                                    onChange={handleChange}
+                                    placeholder="Experience Weight"
+                                    exampleText="Weight for experience (0-100)"
+                                    min="0"
+                                    max="100"
+                                />
+                                <FormField
+                                    type="number"
+                                    name="skillsWeight"
+                                    value={formData.skillsWeight}
+                                    onChange={handleChange}
+                                    placeholder="Skills Weight"
+                                    exampleText="Weight for skills (0-100)"
+                                    min="0"
+                                    max="100"
+                                />
+                                <FormField
+                                    type="number"
+                                    name="educationWeight"
+                                    value={formData.educationWeight}
+                                    onChange={handleChange}
+                                    placeholder="Education Weight"
+                                    exampleText="Weight for education (0-100)"
+                                    min="0"
+                                    max="100"
+                                />
+                            </div>
+                            
+                            {/* Weight summary and error message */}
+                            <div className="flex justify-between items-center">
+                                <div className="text-sm">
+                                    <span className="font-semibold">Total: </span>
+                                    <span className={`${
+                                        totalWeight === 100
+                                        ? 'text-green-600' 
+                                        : 'text-red-600'
+                                    }`}>
+                                        {totalWeight}%
+                                    </span>
+                                    <span className="text-gray-500"> (must equal 100%)</span>
+                                </div>
+                                {weightError && (
+                                    <p className="text-red-500 text-sm">{weightError}</p>
+                                )}
+                            </div>
                         </div>
 
                         {/* Last Row: Salary, Work Setup, Available Slots */}
